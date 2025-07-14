@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <title>오늘의 운세</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+      font-family: 'Pretendard', sans-serif;
+      text-align: center;
+      padding: 40px;
+      animation: bgPulse 10s infinite;
+    }
+
+    @keyframes bgPulse {
+      0%, 100% { background-color: #f5f5f5; }
+      50% { background-color: #eaeaea; }
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #111;
+    }
+
+    input, button {
+      font-size: 20px;
+      padding: 12px;
+      margin: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      cursor: pointer;
+      background: white;
+      border: 2px solid #444;
+      transition: 0.2s;
+    }
+
+    button:active {
+      transform: scale(0.96);
+      background-color: #444;
+      color: white;
+    }
+
+    #fortune-box {
+      margin-top: 30px;
+      padding: 20px;
+      font-size: 20px;
+      background-color: #fff;
+      border: 2px solid #aaa;
+      border-radius: 12px;
+      display: none;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.1);
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    #buttons {
+      margin-top: 20px;
+    }
+
+    #fortune-category {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <audio id="bgm" autoplay loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/16/audio_3fdbfa412b.mp3" type="audio/mpeg">
+  </audio>
+
+  <h1 data-aos="fade-down">🔮 오늘의 운세</h1>
+
+  <div id="input-area" data-aos="fade-up">
+    <input type="text" id="name" placeholder="이름 또는 별명 입력">
+    <input type="date" id="birthday" max="2025-12-31">
+    <br>
+    <button onclick="showFortune()">운세 확인하기</button>
+  </div>
+
+  <div id="fortune-box" data-aos="zoom-in"></div>
+
+  <div id="buttons" style="display: none;">
+    <button onclick="resetPage()">🔁 다시하기</button>
+  </div>
+
+  <button onclick="location.href='sungilKiosk.html"
+    style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+           font-size: 22px; padding: 14px 30px; border-radius: 14px;
+           border: 2px solid #444; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+    🏠 홈으로
+  </button>
+
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>AOS.init();</script>
+  <script>
+    const categories = ["연애", "공부", "집중력", "운동", "우정", "인간관계", "자신감", "컨디션", "행운"];
+    const categoryEmoji = {
+      연애: "💖", 공부: "📚", 집중력: "🧠", 운동: "🏃", 우정: "🤝",
+      인간관계: "👥", 자신감: "💪", 컨디션: "😴", 행운: "🍀"
+    };
+
+    const items = ["노란 양말", "형광펜", "행운의 동전", "커피 한 잔", "파란 공책"];
+    const quotes = [
+      "성공은 우연이 아닌 선택이에요.",
+      "오늘도 당신은 최고예요!",
+      "작은 변화가 큰 미래를 만듭니다.",
+      "포기하지 마세요. 당신은 할 수 있어요."
+    ];
+    const disclaimers = [
+      "☝️ 운세는 재미로 보는 것! 너무 맹신하지 말고 오늘도 멋지게 보내세요!",
+      "😎 믿거나 말거나~ 중요한 건 너의 노력!",
+      "📚 진짜 미래는 지금 만드는 거예요!"
+    ];
+
+    function showFortune() {
+      const name = document.getElementById('name').value.trim();
+      const birthday = document.getElementById('birthday').value;
+      const box = document.getElementById("fortune-box");
+      const today = new Date().toISOString().split('T')[0];
+
+      if (!name || !birthday) {
+        alert("이름과 생년월일을 모두 입력해주세요!");
+        return;
+      }
+
+      const userKey = `fortune_${name}_${birthday}`;
+      const lastUsed = localStorage.getItem(userKey);
+
+      if (lastUsed === today) {
+        alert(`${name}님은 오늘 이미 운세를 확인하셨습니다! 내일 또 만나요 😊`);
+        return;
+      }
+
+      localStorage.setItem(userKey, today);
+
+      const dateStr = new Date().toLocaleDateString('ko-KR', {
+        year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+      });
+
+      const category = categories[Math.floor(Math.random() * categories.length)];
+      const fortune = `${categoryEmoji[category]} ${category}에 관련된 좋은 일이 생길 수 있어요!`;
+      const item = items[Math.floor(Math.random() * items.length)];
+      const quote = quotes[Math.floor(Math.random() * quotes.length)];
+      const disclaimer = disclaimers[Math.floor(Math.random() * disclaimers.length)];
+
+      box.innerHTML = `
+        <div>
+          <div style="font-size: 18px; margin-bottom: 6px;">📅 <strong>${dateStr}</strong></div>
+          <div style="font-size: 18px; margin-bottom: 15px;">👤 <strong>${name}님</strong>의 오늘의 운세</div>
+          <div id="fortune-category">${fortune}</div>
+          <div style="font-size: 18px;">🎁 행운 아이템: <strong>${item}</strong></div>
+          <div style="font-size: 16px; margin-top: 12px;">📝 오늘의 한마디: <em>“${quote}”</em></div>
+          <hr style="margin:20px auto; border: none; border-top: 1px dashed #aaa; width: 80%;">
+          <div style="font-size: 14px; color: #555;">${disclaimer}</div>
+        </div>
+      `;
+      box.style.display = "block";
+      document.getElementById("buttons").style.display = "block";
+    }
+
+    function resetPage() {
+      document.getElementById("name").value = "";
+      document.getElementById("birthday").value = "";
+      document.getElementById("fortune-box").style.display = "none";
+      document.getElementById("fortune-box").innerHTML = "";
+      document.getElementById("buttons").style.display = "none";
+    }
+  </script>
+</body>
+
+</html>
