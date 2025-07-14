@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <title>🍱 이번 주 급식</title>
+  <style>
+    body {
+      font-family: 'Apple SD Gothic Neo', sans-serif;
+      background: #eef4f8;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 800px;
+      margin: 0 auto 40px;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+
+    .date {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .dish {
+      font-size: 15px;
+      white-space: pre-line;
+      line-height: 1.5;
+    }
+
+    .nutrition {
+      font-size: 16px;
+      color: #666;
+      margin-top: 15px;
+    }
+
+    .quote-box {
+      margin-top: 20px;
+      padding: 20px;
+      background: #fff9e5;
+      border-radius: 12px;
+      font-size: 17px;
+      font-style: italic;
+      color: #555;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .week-section {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .week-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .flip-card {
+      background-color: transparent;
+      flex: 1 1 120px;
+      width: 150px;
+      height: 210px;
+      perspective: 1000px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .flip-card.flipped .flip-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-front, .flip-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .flip-front {
+      /* 기존 스타일 유지 */
+      font-weight: bold;
+      font-size: 20px;
+      border: 2px solid #444;
+      color: #333; /* 텍스트 색상을 어둡게 유지하여 가독성 확보 */
+    }
+
+    /* 파스텔톤 그라데이션 적용 */
+    .flip-card:nth-child(1) .flip-front { /* 월요일 */
+        background: linear-gradient(to bottom right, #cceeff, #aaddff);
+        border-color: #8bb4d1; /* 부드러운 청회색 테두리 */
+    }
+    .flip-card:nth-child(2) .flip-front { /* 화요일 */
+        background: linear-gradient(to bottom right, #d4edda, #b0e0bb);
+        border-color: #92b19e; /* 차분한 녹회색 테두리 */
+    }
+    .flip-card:nth-child(3) .flip-front { /* 수요일 */
+        background: linear-gradient(to bottom right, #fff0c1, #ffe48e);
+        border-color: #d1c18d; /* 부드러운 황갈색 테두리 */
+    }
+    .flip-card:nth-child(4) .flip-front { /* 목요일 */
+        background: linear-gradient(to bottom right, #ffe0ed, #ffc6e0);
+        border-color: #d1a5b6; /* 은은한 핑크 보라 테두리 */
+    }
+    .flip-card:nth-child(5) .flip-front { /* 금요일 */
+        background: linear-gradient(to bottom right, #ffe8d4, #ffdcb4);
+        border-color: #d1b49f; /* 따뜻한 베이지 오렌지 테두리 */
+    }
+
+    .flip-back {
+        /* background: #e0f8e9; 제거 */
+        transform: rotateY(180deg);
+        font-size: 15px;
+        line-height: 1.5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        overflow-y: auto;
+        border: 1px solid #ccc; /* 기본 테두리 유지 또는 아래에서 변경 */
+        white-space: pre-line;
+        padding: 16px;
+        text-align: center;
+        color: #333; /* 뒷면 텍스트 색상도 어둡게 유지 */
+    }
+
+    /* flip-back에도 동일한 파스텔톤 그라데이션 적용 */
+    .flip-card:nth-child(1) .flip-back { /* 월요일 */
+        background: linear-gradient(to bottom right, #cceeff, #aaddff);
+        border-color: #8bb4d1;
+    }
+    .flip-card:nth-child(2) .flip-back { /* 화요일 */
+        background: linear-gradient(to bottom right, #d4edda, #b0e0bb);
+        border-color: #92b19e;
+    }
+    .flip-card:nth-child(3) .flip-back { /* 수요일 */
+        background: linear-gradient(to bottom right, #fff0c1, #ffe48e);
+        border-color: #d1c18d;
+    }
+    .flip-card:nth-child(4) .flip-back { /* 목요일 */
+        background: linear-gradient(to bottom right, #ffe0ed, #ffc6e0);
+        border-color: #d1a5b6;
+    }
+    .flip-card:nth-child(5) .flip-back { /* 금요일 */
+        background: linear-gradient(to bottom right, #ffe8d4, #ffdcb4);
+        border-color: #d1b49f;
+    }
+
+    /* 오늘 요일 강조 스타일은 유지 (원한다면 이곳도 파스텔톤으로 변경 가능) */
+    .flip-front.today {
+        background-color: #dfffe2; /* 현재 연한 초록색 유지 */
+        border: 2px solid #4CAF50;
+        transform: scale(1.03);
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0, 128, 0, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+  <button onclick="location.href='sungilKiosk.html'" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+          font-size: 22px; padding: 14px 30px;
+          background: white; color: #111;
+          border: 2px solid #444; border-radius: 14px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+          transition: all 0.2s ease;
+          font-family: 'Pretendard', sans-serif;" onmousedown="this.style.transform='translateX(-50%) scale(0.96)'"
+    onmouseup="this.style.transform='translateX(-50%) scale(1)'"
+    ontouchstart="this.style.transform='translateX(-50%) scale(0.96)'"
+    ontouchend="this.style.transform='translateX(-50%) scale(1)'">
+    🏠 홈으로
+  </button>
+
+  <div class="card" id="today-section">
+    <h1>🍽️ 오늘의 급식</h1>
+    <div class="date" id="today-date">불러오는 중입니다...</div>
+    <div id="today-meal" class="dish"></div>
+    <div class="nutrition" id="today-nutrition"></div>
+    <div class="quote-box" id="meal-quote"></div>
+  </div>
+
+  <div class="week-section">
+    <h1>📅 이번 주 급식</h1>
+    <div class="week-grid" id="week-meals"></div>
+  </div>
+
+  <script type="module">
+    // config.js 파일에서 정보 불러오기
+    import { NEIS_API_KEY, NEIS_OFFICE_CODE, NEIS_SCHOOL_CODE } from 'script/config.js';
+
+    // NEIS Open API 설정 정보
+    const officeCode = NEIS_OFFICE_CODE;
+    const schoolCode = NEIS_SCHOOL_CODE;
+    const key = NEIS_API_KEY;
+
+    const now = new Date();
+    const yyyy = now.getFullYear(); // 수정된 변수명 적용
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}${mm}${dd}`;
+
+    const weekDays = [];
+    const monday = new Date(now);
+    // 현재 날짜를 기준으로 월요일을 계산합니다. (일요일:0 ~ 토요일:6)
+    // 현재 요일이 일요일(0)이면 6을 빼서 이전 주 월요일로, 그 외에는 (현재요일 - 1)을 빼서 현재 주 월요일로.
+    monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+    
+    for (let i = 0; i < 5; i++) { // 월요일부터 금요일까지 5일
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      weekDays.push({
+        key: `${y}${m}${day}`,
+        label: d.toLocaleDateString('ko-KR', { weekday: 'short' }) // '월', '화' 등으로 표시
+      });
+    }
+
+    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${key}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${weekDays[0].key}&MLSV_TO_YMD=${weekDays[4].key}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        // 급식 정보가 있는지 확인하고 없으면 빈 배열 사용
+        const meals = data.mealServiceDietInfo?.find(d => d.row)?.row || [];
+
+        // 오늘 급식 정보 찾기 (중식 기준)
+        const todayData = meals.find(m => m.MLSV_YMD === todayStr && m.MMEAL_SC_NM === "중식");
+        const todayMeal = document.getElementById("today-meal");
+        const todayDate = document.getElementById("today-date");
+        const todayNutrition = document.getElementById("today-nutrition");
+
+        // 오늘 날짜 표시
+        todayDate.textContent = new Date(now).toLocaleDateString("ko-KR", {
+          year: "numeric", month: "long", day: "numeric", weekday: "long"
+        });
+
+        if (todayData) {
+          // 메뉴 정보에서 괄호 안의 내용과 HTML 태그 제거 및 줄바꿈 처리
+          const dish = todayData.DDISH_NM.replace(/<br\s*\/?>/g, '\n').replace(/\([^)]*\)/g, "");
+          todayMeal.innerText = dish;
+          // 영양 정보도 HTML 태그 제거 및 콤마로 구분
+          todayNutrition.innerText = `칼로리: ${todayData.CAL_INFO} / 주요 영양소: ${todayData.NTR_INFO.replace(/<br\/?>/g, ', ')}`;
+        } else {
+          todayMeal.innerText = "오늘 급식 정보가 없습니다.";
+          todayNutrition.innerText = ""; // 정보가 없을 때 영양 정보도 비워줍니다.
+        }
+
+        // 🍀 동기부여 멘트 (날짜에 따라 달라짐)
+        const quotes = [
+            "🍚 오늘 급식 먹고 체력 만렙 찍자!",
+            "🍴 배고프면 집중력도 로그아웃됨.",
+            "📱 인스타 감성보다 급식 사진이 리얼 힐링이지.",
+            "🥗 진짜 멋있는 사람은 급식도 안 남긴다.",
+            "😎 밥 안 먹고 버티는 건 능력이 아니라 무리수!",
+            "🧃 점심은 소중해, 오늘도 리셋 타임!",
+            "🧠 공부는 몰라도 밥은 챙기자.",
+            "🚀 배 채워야 인생 추진력도 생긴다.",
+            "🎯 급식 먹는 건 자기관리의 시작.",
+            "💡 공복 상태로 천재 되긴 힘들어.",
+            "🙌 밥 먹는 것도 실력이야. 진심.",
+            "🧘 밥 잘 챙겨야 멘탈도 안 흔들림.",
+            "📆 오늘 급식이 오늘의 하이라이트.",
+            "🧑‍🍳 만든 분을 위해서라도 한 입 더!",
+            "😋 밥 한 끼에도 진심인 사람이 되자.",
+            "💬 밥심으로 살아가는 우리들 화이팅!",
+            "🥢 급식 줄 설 땐 좀 설레는 거 나만 그래?",
+            "🎧 음악보다 중요한 건… 밥이야.",
+            "🏃 오늘도 달리는 너, 연료는 급식이야.",
+            "🪞 거울 보기 전에 밥부터 먹자.",
+            "👕 패션도 중요하지만 밥심이 기본이지.",
+            "📚 수업보다 급식이 기다려지는 건 정상.",
+            "😴 점심 안 먹으면 오후는 에너지 OFF.",
+            "📶 급식은 내 하루의 충전기!",
+            "🥹 나 자신에게 주는 소소한 선물: 급식.",
+            "🌈 별일 없어도 밥은 챙기자. 그게 삶이지.",
+            "🔥 뭘 하든 에너지가 필요하니까.",
+            "📸 오늘 급식 비주얼 좀 괜찮은데?",
+            "🫶 먹고 웃고 살아가는 게 제일이야.",
+            "💭 내일 걱정은 내일 하고, 지금은 밥."
+        ];
+
+        const quoteBox = document.getElementById("meal-quote");
+        const dayOfMonth = now.getDate(); // 현재 날짜의 '일' 부분
+        quoteBox.textContent = quotes[(dayOfMonth - 1) % quotes.length];
+
+
+        // 주간 급식 카드 생성
+        const weekContainer = document.getElementById("week-meals");
+        weekDays.forEach(day => {
+            const meal = meals.find(m => m.MLSV_YMD === day.key && m.MMEAL_SC_NM === "중식");
+            // 메뉴 정보에서 괄호 안의 내용과 HTML 태그 제거 및 줄바꿈 처리
+            const dish = meal ? meal.DDISH_NM.replace(/<br\s*\/?>/g, '\n').replace(/\([^)]*\)/g, '') : "급식 정보가 없습니다.";
+
+            // ✅ 오늘 요일인지 확인하여 클래스 추가
+            const isToday = todayData && todayData.MLSV_YMD === day.key;
+            const frontClass = isToday ? 'flip-front today' : 'flip-front';
+
+            const flipCard = document.createElement("div");
+            flipCard.className = "flip-card";
+            flipCard.innerHTML = `
+                <div class="flip-inner">
+                <div class="${frontClass}">${day.label}</div>
+                <div class="flip-back">${dish}</div>
+                </div>
+            `;
+            // 카드 클릭 시 뒤집는 기능
+            flipCard.addEventListener("click", () => {
+                flipCard.classList.toggle("flipped");
+            });
+            weekContainer.appendChild(flipCard);
+        });
+      })
+      .catch(err => {
+        console.error("급식 정보를 불러오는 중 오류 발생:", err);
+        document.getElementById("today-meal").innerText = "급식 정보를 불러오는 데 실패했습니다. 다시 시도해주세요.";
+        document.getElementById("today-nutrition").innerText = "";
+        document.getElementById("today-date").innerText = "";
+      });
+  </script>
+</body>
+
+</html>
