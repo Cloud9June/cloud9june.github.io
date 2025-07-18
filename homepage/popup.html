@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>🎉 수상자 축하 팝업</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .popup {
+            position: relative;
+            width: 420px;
+            height: 300px;
+            padding: 20px 30px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .popup h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .slide {
+            margin-top: 20px;
+            min-height: 140px;
+            font-size: 18px;
+            color: #444;
+            transition: opacity 0.5s ease;
+        }
+
+        .emoji {
+            font-size: 24px;
+            margin-top: 10px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .close-btn:hover {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="popup" id="popup">
+        <button class="close-btn" onclick="window.close()">✖</button>
+        <h2>🎊 수상을 축하합니다!</h2>
+        <div class="slide" id="slideBox">
+            경기도 상업교육페스티벌<br><strong>장O우, 장O호, 양O욱, 김O현, 오O은</strong><br>
+            <div class="emoji">🏆</div>
+        </div>
+    </div>
+
+    <script>
+        const slides = [
+            '과정평가형 미용사(일반) 자격 취득<br><strong>김O서, 김O빈, 김O우, 김O민, 김O연, 심O현, 심O은, 심O영, 양O혜, 윤O연, 이O린, 이O아, 이O진, 이O혜, 이O빈, 장O지, 최O아, 최O정</strong><div class="emoji">💇‍♀️</div>',
+            '제23회 월드뷰티아트 디자인 국제 공모전<br><strong>안O솜(대상), 김O온(금상), 김O연(동상), 심O림(은상), 유O영(은상), 이O진(금상), 장O정(동상), 김O민(금상/은상), 이O빈(금상/은상)</strong><div class="emoji">🎨</div>',
+            '경기도 상업교육페스티벌<br><strong>장O우(금융실무 은상), 장O호(금융실무 은상), 양O욱(비즈니스프로그래밍 장려), 김O현(컴퓨터그래픽 동상), 오O은(경제골든벨 장려)</strong><div class="emoji">🏆</div>',
+            '대한민국 학생창의력 챔피언대회<br><strong>서프라이즈 팀: 장O희, 황O원, 하O나, 이O하, 박O윤<br>전O과 친구들 팀: 전O, 계O준, 김O훈, 이O일, 장O휘<br>정상인제로 팀: 김O연, 박O진, 최O수, 오O선, 최O희</strong><div class="emoji">🧠</div>',
+            '제34회 경기도 청소년 연극제<br><strong>남O늘(단체상 동상), 곽O권(우수연기상)</strong><div class="emoji">🎭</div>'
+        ];
+
+        let current = 0;
+        const slideBox = document.getElementById('slideBox');
+
+        setInterval(() => {
+            current = (current + 1) % slides.length;
+            slideBox.style.opacity = 0;
+            setTimeout(() => {
+                slideBox.innerHTML = slides[current];
+                slideBox.style.opacity = 1;
+            }, 400);
+        }, 4000); // 4초마다 전환
+    </script>
+
+</body>
+
+</html>
