@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로딩 중...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6fa;
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .dots {
+            font-size: 1.5em;
+            font-weight: bold;
+            height: 30px;
+            letter-spacing: 3px;
+            color: #3498db;
+            animation: dots 1.5s steps(4) infinite;
+        }
+
+        @keyframes dots {
+            0% {
+                content: '';
+            }
+
+            25% {
+                content: '.';
+            }
+
+            50% {
+                content: '..';
+            }
+
+            75% {
+                content: '...';
+            }
+
+            100% {
+                content: '';
+            }
+        }
+
+        .typing::after {
+            content: '';
+            display: inline-block;
+            width: 1ch;
+            animation: blink 0.7s step-end infinite;
+        }
+
+        @keyframes blink {
+
+            from,
+            to {
+                background-color: transparent;
+            }
+
+            50% {
+                background-color: #333;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>프로그램 준비 중입니다<span class="typing"></span></h1>
+    <div class="dots" id="dotEffect"></div>
+
+    <script>
+        const dotEffect = document.getElementById("dotEffect");
+        let dots = "";
+        setInterval(() => {
+            dots = dots.length >= 8 ? "" : dots + ".";
+            dotEffect.textContent = dots;
+        }, 300);
+    </script>
+
+</body>
+
+</html>
