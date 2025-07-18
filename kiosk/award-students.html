@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>🏆 수상자 축하 게시판</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .title {
+            font-size: 48px;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-list {
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(8px);
+            animation: popIn 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .card .event {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+
+        .card .names {
+            font-size: 20px;
+            margin-top: 6px;
+            color: #1b1b1b;
+        }
+
+        .emoji {
+            font-size: 26px;
+            margin-left: 8px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="title">🎉 우리 학교의 자랑스러운 수상자들 🎉</div>
+
+    <div class="card-list">
+        <div class="card">
+            <div class="event">과정평가형 미용사(일반) 자격 취득</div>
+            <div class="names">김O서, 김O빈, 김O우, 김O민, 김O연, 심O현, 심O은, 심O영, 양O혜, 윤O연,<br> 이O린, 이O아, 이O진, 이O혜, 이O빈, 장O지, 최O아, 최O정
+                학생 <span class="emoji">💇‍♀️</span></div>
+        </div>
+
+        <div class="card">
+            <div class="event">제23회 월드뷰티아트 디자인 국제 공모전</div>
+            <div class="names">안O솜(대상), 김O온(금상), 김O연(동상), 심O림(은상), 유O영(은상), 이O진(금상),<br> 장O정(동상), 김O민(금상/은상), 이O빈(금상/은상) 학생
+                <span class="emoji">🎨</span></div>
+        </div>
+
+        <div class="card">
+            <div class="event">경기도 상업교육페스티벌</div>
+            <div class="names">장O우(금융실무 은상), 장O호(금융실무 은상), 양O욱(비즈니스프로그래밍 장려),<br> 김O현(컴퓨터그래픽 동상), 오O은(경제골든벨 장려) 학생 <span
+                    class="emoji">🏆</span></div>
+        </div>
+
+        <div class="card">
+            <div class="event">대한민국 학생창의력 챔피언대회</div>
+            <div class="names">
+                서프라이즈 팀: 장O희, 황O원, 하O나, 이O하, 박O윤<br>
+                전O과 친구들 팀: 전O, 계O준, 김O훈, 이O일, 장O휘<br>
+                정상인제로 팀: 김O연, 박O진, 최O수, 오O선, 최O희 학생
+                <span class="emoji">🧠</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="event">제34회 경기도 청소년 연극제</div>
+            <div class="names">성일정보고등학교(단체상 동상), 곽O(우수연기상) 학생 <span class="emoji">🎭</span></div>
+        </div>
+    </div>
+
+</body>
+
+</html>
