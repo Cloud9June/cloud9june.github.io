@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>학생 급식 인원 확인</title>
+  <style>
+    body {
+      max-width: 800px;
+      margin: 40px auto;
+      font-family: 'Arial', sans-serif;
+    }
+
+    h2 {
+      margin-top: 40px;
+    }
+
+    .form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="number"] {
+      padding: 5px;
+      width: 100px;
+    }
+
+    select {
+      padding: 5px;
+    }
+
+    #calendar {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .weekdays, .calendar-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+    }
+
+    .calendar-cell {
+      padding: 10px;
+      height: 60px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .calendar-cell.active {
+      background-color: #e3f2fd;
+    }
+
+    .calendar-cell.disabled {
+      background-color: #eee;
+      color: #aaa;
+      font-weight: bold;
+    }
+
+    .calendar-cell.empty {
+      background-color: #f5f5f5;
+    }
+
+    .calendar-cell.weekend {
+        background-color: #f8f8f8;
+        color: #d32f2f;
+    }
+    .calendar-cell.weekend.disabled {
+        background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <h2>1. 학생 인원 등록 및 수정</h2>
+  <div class="form">
+    <label>연도:
+      <select id="yearSelect"></select>
+    </label>
+    <label>월:
+      <select id="monthSelect"></select>
+    </label>
+    <label>인원수:
+      <input type="number" id="studentCount" placeholder="예: 382">
+    </label>
+    <button id="saveBtn">저장</button>
+  </div>
+
+  <h2>2. 학생 급식 인원 확인</h2>
+  <div id="monthTitle" style="font-weight: bold; margin: 10px 0;"></div>
+  <div id="calendar"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
+      authDomain: "mealmanager-cda3b.firebaseapp.com",
+      projectId: "mealmanager-cda3b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const yearSelect = document.getElementById("yearSelect");
+    const monthSelect = document.getElementById("monthSelect");
+    const studentCountInput = document.getElementById("studentCount");
+    const saveBtn = document.getElementById("saveBtn");
+    const calendar = document.getElementById("calendar");
+    const monthTitle = document.getElementById("monthTitle");
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    for (let y = currentYear - 1; y <= currentYear + 1; y++) {
+      const opt = new Option(`${y}년`, y);
+      if (y === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+
+    for (let m = 1; m <= 12; m++) {
+      const opt = new Option(`${m}월`, m);
+      if (m === currentMonth) opt.selected = true;
+      monthSelect.appendChild(opt);
+    }
+
+    async function renderCalendar() {
+        const year = parseInt(yearSelect.value);
+        const month = parseInt(monthSelect.value);
+        calendar.innerHTML = "";
+
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+        const firstDayIndex = startDate.getDay(); // 0: Sunday, 1: Monday, ..., 6: Saturday
+        const lastDate = endDate.getDate();
+
+        // Fetch blockdays from blockDays collection
+        // 🚨🚨🚨 이 부분을 Firebase Firestore의 실제 문서 ID와 정확히 일치시킵니다. 🚨🚨🚨
+        // Firebase 콘솔에서 직접 복사한 "2025-7"과 같은 문자열을 아래 따옴표 안에 붙여넣고 테스트해보세요.
+        const targetDocId = `${year}-${String(month).padStart(2, '0')}`; // 현재 달력의 연도와 월로 생성된 ID
+        const blockDaysDocRef = doc(db, "blockedDays", targetDocId); // 👈👈👈 현재 사용되는 코드
+
+        // --- 테스트를 위한 하드코딩된 ID 사용 예시 ---
+        // 만약 위 dynamicDocId가 작동하지 않는다면, 이 줄을 사용하고 targetDocId 라인은 주석 처리하세요.
+        // 그리고 "2025-7" 부분에 Firebase에서 복사한 정확한 ID를 붙여넣으세요.
+        // const blockDaysDocRef = doc(db, "blockDays", "2025-7"); 
+        // ---------------------------------------------
+        
+        const blockDaysSnap = await getDoc(blockDaysDocRef);
+        
+        let blockdays = [];
+        if (blockDaysSnap.exists() && Array.isArray(blockDaysSnap.data().days)) {
+            blockdays = blockDaysSnap.data().days.map(day => parseInt(day));
+        }
+        
+        // --- 콘솔 로그 추가: blockdays 배열 확인 ---
+        console.log(`[DEBUG] Year: ${year}, Month: ${month}`);
+        console.log(`[DEBUG] Attempting to fetch doc ID: ${targetDocId}`); // 시도하는 ID를 정확히 보여줌
+        console.log(`[DEBUG] Blocked days for ${year}-${month}:`, blockdays);
+        console.log(`[DEBUG] blockDaysSnap exists:`, blockDaysSnap.exists());
+        if (blockDaysSnap.exists()) {
+            console.log(`[DEBUG] Raw data from blockDaysSnap:`, blockDaysSnap.data());
+        }
+        // --- 콘솔 로그 추가 끝 ---
+
+        // Fetch total student count
+        const studentDocRef = doc(db, "students", "total");
+        const studentSnap = await getDoc(studentDocRef);
+        const totalStudents = studentSnap.exists()
+            ? studentSnap.data()[`${year}`]?.[month] || 0
+            : 0;
+
+        monthTitle.textContent = `${year}년 ${month}월`;
+
+        const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
+        const header = document.createElement("div");
+        header.className = "weekdays";
+        daysOfWeek.forEach(d => {
+            const cell = document.createElement("div");
+            cell.textContent = d;
+            header.appendChild(cell);
+        });
+        calendar.appendChild(header);
+
+        let dateNum = 1;
+        for (let i = 0; i < 6; i++) { // Max 6 rows for calendar
+            const row = document.createElement("div");
+            row.className = "calendar-row";
+            for (let j = 0; j < 7; j++) { // 7 days a week
+                const cell = document.createElement("div");
+                cell.className = "calendar-cell";
+
+                // Fill empty cells before the first day of the month
+                if (i === 0 && j < firstDayIndex) {
+                    cell.classList.add("empty");
+                }
+                // Fill date cells
+                else if (dateNum <= lastDate) {
+                    const currentDayOfWeek = (firstDayIndex + dateNum - 1) % 7;
+                    const isWeekend = (currentDayOfWeek === 0 || currentDayOfWeek === 6);
+                    const isBlockDay = blockdays.includes(dateNum); // blockdays 배열에 해당 날짜가 있는지 확인
+
+                    cell.textContent = dateNum; // 항상 날짜 번호는 표시
+
+                    if (isWeekend) {
+                        cell.classList.add("weekend");
+                    }
+
+                    // isBlockDay 또는 isWeekend일 때 인원수를 표시하지 않음
+                    if (isBlockDay || isWeekend) {
+                        cell.classList.add("disabled");
+                    } else {
+                        // 차단된 날짜도 주말도 아닌 경우에만 학생 인원수 표시
+                        cell.classList.add("active");
+                        cell.innerHTML = `<div>${dateNum}</div><div style="font-size: 14px; color:#1976d2;">${totalStudents}명</div>`;
+                    }
+                    dateNum++;
+                }
+                // Fill empty cells after the last day of the month
+                else {
+                    cell.classList.add("empty");
+                }
+                row.appendChild(cell);
+            }
+            calendar.appendChild(row);
+            if (dateNum > lastDate) break;
+        }
+    }
+
+    saveBtn.onclick = async () => {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const count = parseInt(studentCountInput.value);
+      if (isNaN(count) || count < 0) {
+        alert("유효한 학생 수를 입력하세요.");
+        return;
+      }
+
+      const ref = doc(db, "students", "total");
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {};
+
+      if (!data[year]) data[year] = {};
+      data[year][month] = count;
+
+      await setDoc(ref, data);
+      alert("저장되었습니다.");
+      renderCalendar();
+    };
+
+    yearSelect.onchange = renderCalendar;
+    monthSelect.onchange = renderCalendar;
+
+    window.onload = renderCalendar;
+
+    // 2025-7 vs 2025-07 둘 다 테스트
+    const tryIds = ["2025-7", "2025-07"];
+
+    for (const id of tryIds) {
+    const testRef = doc(db, "blockDays", id);
+    const testSnap = await getDoc(testRef);
+    console.log(`[TEST] Document ID: ${id}, exists:`, testSnap.exists());
+    if (testSnap.exists()) {
+        console.log(`[TEST] Data:`, testSnap.data());
+    }
+    }
+
+  </script>
+</body>
+</html>

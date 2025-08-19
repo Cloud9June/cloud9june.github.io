@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>일자별 총 급식 인원(학생+교사)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { max-width: 880px; margin: 40px auto; font-family: Arial, sans-serif; color:#222; }
+    h1 { margin: 0 0 16px; font-size: 22px; }
+    h2 { margin: 28px 0 10px; font-size: 18px; }
+    .toolbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin: 10px 0 18px; }
+    .toolbar label { display:flex; align-items:center; gap:6px; }
+    select, button { padding: 8px 10px; font-size: 14px; }
+    button { cursor:pointer; border:1px solid #cfd8dc; background:#fafafa; border-radius:8px; }
+    button.primary { background:#e8f5e9; border-color:#81c784; color:#2e7d32; }
+    .note { font-size:13px; color:#666; margin-top:4px; }
+    .card { background:#fff; border:1px solid #e0e0e0; border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,0.06); }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    .list-wrap { max-height: 420px; overflow:auto; border:1px solid #eee; border-radius:8px; padding:10px; background:#fff; }
+    .row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px dashed #eee; font-size:14px; }
+    .row:last-child { border-bottom:0; }
+    .date { font-weight:700; }
+    .count { color:#1976d2; }
+
+    /* Summary */
+    .summary-subtitle { font-weight:700; margin: 10px 0 6px; }
+    .summary-line { margin: 6px 0; }
+    .summary-list { margin: 6px 0 0 18px; padding: 0; }
+    .summary-list li { margin: 4px 0; }
+    .pill { display:inline-block; padding:2px 8px; font-size:12px; border-radius:999px; border:1px solid #eee; background:#f7f7f7; }
+
+    .box { padding:12px; border:1px solid #eee; border-radius:10px; background:#fafafa; margin-top:10px; }
+    .muted { color:#777; font-size:13px; }
+  </style>
+</head>
+<body>
+  <h1>일자별 총 급식 인원(학생+교사)</h1>
+
+  <div class="toolbar card">
+    <label>연도:
+      <select id="yearSelect"></select>
+    </label>
+    <label>월:
+      <select id="monthSelect"></select>
+    </label>
+
+    <button id="calcBtn" class="primary">총원 계산/저장</button>
+    <span class="note">※ 페이지 로드시 자동 계산됩니다. 버튼은 수동 재계산/저장 용도입니다.</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2 id="title">출력</h2>
+      <div class="list-wrap" id="totalList">
+        <div class="muted">로딩 중…</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="summaryTitle">요약 - </h2>
+
+      <!-- 교사 박스 -->
+      <div class="box" id="teacherBox">
+        <div class="summary-subtitle">교사</div>
+        <div class="summary-line"><b>미신청자 명단</b></div>
+        <div id="teacherNoMealNames" class="summary-line muted">로딩 중…</div>
+        <div class="summary-line" style="margin-top:6px;"><b>특이사항</b></div>
+        <div id="teacherNotesWrap" class="summary-line">
+          <div class="muted">로딩 중…</div>
+        </div>
+      </div>
+
+      <!-- 학생 박스 -->
+      <div class="box" id="studentBox">
+        <div class="summary-subtitle">학생</div>
+        <div class="summary-line"><b>학생 급식 변동 내역</b></div>
+        <div id="studentAdjustWrap" class="summary-line">
+          <div class="muted">로딩 중…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, setDoc,
+      collection, getDocs, query, where
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
+      authDomain: "mealmanager-cda3b.firebaseapp.com",
+      projectId: "mealmanager-cda3b"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // DOM
+    const yearSelect = document.getElementById("yearSelect");
+    const monthSelect = document.getElementById("monthSelect");
+    const calcBtn = document.getElementById("calcBtn");
+    const totalList = document.getElementById("totalList");
+    const title = document.getElementById("title");
+    const summaryTitle = document.getElementById("summaryTitle");
+
+    const teacherNoMealNamesEl = document.getElementById("teacherNoMealNames");
+    const teacherNotesWrap = document.getElementById("teacherNotesWrap");
+    const studentAdjustWrap = document.getElementById("studentAdjustWrap");
+
+    // 기본 연/월
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    for (let y = currentYear - 1; y <= currentYear + 1; y++) {
+      const opt = new Option(`${y}년`, y);
+      if (y === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+    for (let m = 1; m <= 12; m++) {
+      const opt = new Option(`${m}월`, m);
+      if (m === currentMonth) opt.selected = true;
+      monthSelect.appendChild(opt);
+    }
+
+    // utils/refs
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const monthId = (y,m) => `${y}-${pad2(m)}`;
+    const studentsDailyRef          = (y,m) => doc(db, "studentsDaily", monthId(y,m));
+    const studentsDailyEffectiveRef = (y,m) => doc(db, "studentsDailyEffective", monthId(y,m));
+    const blockedDaysRef            = (y,m) => doc(db, "blockedDays" , monthId(y,m));
+    const totalsRef                 = (y,m) => doc(db, "totals"      , monthId(y,m));
+    const mealRequestsCol           = collection(db, "mealRequests");
+    const studentAbsencesRef        = (y,m) => doc(db, "studentAbsences", monthId(y,m)); // 학생 변동 내역
+
+    function toInt(value) {
+      if (typeof value === "number") return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+      if (typeof value === "string") {
+        const n = parseInt(value.replace(/[^0-9]/g,""),10);
+        return Number.isFinite(n) ? Math.max(0, n) : 0;
+      }
+      return 0;
+    }
+
+    // 학생: 차감 반영본 우선
+    async function fetchStudentDaysPreferEffective(year, month) {
+      const eff = await getDoc(studentsDailyEffectiveRef(year, month));
+      if (eff.exists() && eff.data().days && typeof eff.data().days === "object") {
+        const raw = eff.data().days, normalized = {};
+        for (const k of Object.keys(raw)) normalized[k] = toInt(raw[k]);
+        return normalized;
+      }
+      const base = await getDoc(studentsDailyRef(year, month));
+      if (base.exists() && base.data().days && typeof base.data().days === "object") {
+        const raw = base.data().days, normalized = {};
+        for (const k of Object.keys(raw)) normalized[k] = toInt(raw[k]);
+        return normalized;
+      }
+      return {};
+    }
+
+    async function fetchBlockedDays(year, month) {
+      const snap = await getDoc(blockedDaysRef(year, month));
+      if (snap.exists() && Array.isArray(snap.data().days)) return snap.data().days.map(Number);
+      return [];
+    }
+
+    // 교사: 날짜별 합계(총원 계산용)
+    async function countTeachersPerDay(year, month) {
+      try {
+        const qy = query(mealRequestsCol, where("year","==",year), where("month","==",month));
+        const snap = await getDocs(qy);
+        return aggregateTeacherDays(snap);
+      } catch (e) {
+        const qYear = query(mealRequestsCol, where("year","==",year));
+        const snap = await getDocs(qYear);
+        const filtered = { forEach: (fn)=> snap.forEach(ds => { const d=ds.data()||{}; if (d.month===month) fn(ds); }) };
+        return aggregateTeacherDays(filtered);
+      }
+      function aggregateTeacherDays(snapLike){
+        const perDay = {};
+        snapLike.forEach(ds => {
+          const raw = Array.isArray((ds.data()||{}).days) ? (ds.data().days) : [];
+          const uniqueDays = [...new Set(raw.map(Number).filter(Number.isInteger))];
+          uniqueDays.forEach(d => {
+            const key=String(d);
+            perDay[key]=(perDay[key]||0)+1;
+          });
+        });
+        return perDay;
+      }
+    }
+
+    // ✅ 교사 "급식 미신청" 이름 목록 & 수 (해당 월에 days 없음 또는 빈 배열)
+    async function getTeacherNoMealNames(year, month) {
+      const qy  = query(mealRequestsCol, where("year","==",year), where("month","==",month));
+      const snap = await getDocs(qy);
+      const names = [];
+      snap.forEach(ds => {
+        const d = ds.data() || {};
+        if (!Array.isArray(d.days) || d.days.length === 0) {
+          const name = d.name || d.teacherName || d.displayName || d.email || ds.id || "교사";
+          names.push(name);
+        }
+      });
+      return names;
+    }
+
+    // ✅ 교사 특이사항: 일부 날짜만 미신청(이름과 미신청 날짜 리스트)
+    async function listTeacherSpecialNotes(year, month, blocked) {
+      // 등교일 집합 만들기(주말/급식미실시 제외)
+      const startDate = new Date(year, month - 1, 1);
+      const endDate   = new Date(year, month, 0);
+      const firstDayIndex = startDate.getDay();
+      const lastDate  = endDate.getDate();
+      const blockedSet = new Set(blocked);
+
+      const schoolDays = [];
+      for (let d=1; d<=lastDate; d++){
+        const dow = (firstDayIndex + d - 1) % 7;
+        const isWeekend = (dow===0 || dow===6);
+        if (!isWeekend && !blockedSet.has(d)) schoolDays.push(d);
+      }
+
+      // 교사 문서 가져와서, days가 일부만 체크된 경우 미신청 날짜를 계산
+      const qy  = query(mealRequestsCol, where("year","==",year), where("month","==",month));
+      const snap = await getDocs(qy);
+
+      const notes = [];
+      snap.forEach(ds => {
+        const d = ds.data() || {};
+        const days = Array.isArray(d.days) ? [...new Set(d.days.map(Number).filter(Number.isInteger))] : [];
+        if (days.length === 0) return; // 전체 미신청자는 다른 섹션에서 처리
+        const name = d.name || d.teacherName || d.displayName || d.email || ds.id || "교사";
+        const daySet = new Set(days);
+        const missing = schoolDays.filter(x => !daySet.has(x));
+        if (missing.length > 0) {
+          // 표시는 모두(요청 예시대로), 너무 많으면 10개 제한 후 요약
+          const maxShow = 10;
+          const shownDays = missing.slice(0, maxShow).map(n => `${n}일`).join(", ");
+          const more  = missing.length > maxShow ? ` 외 ${missing.length - maxShow}일` : "";
+          notes.push(`${name} ${shownDays}${more} 미신청`);
+        }
+      });
+
+      return notes;
+    }
+
+    async function computeAndSaveTotals(year, month) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate   = new Date(year, month, 0);
+      const firstDayIndex = startDate.getDay();
+      const lastDate  = endDate.getDate();
+
+      const [studentDays, teacherDaysCount, blocked] = await Promise.all([
+        fetchStudentDaysPreferEffective(year, month),
+        countTeachersPerDay(year, month),
+        fetchBlockedDays(year, month)
+      ]);
+
+      const daysMap = {};
+      const strings = [];
+      for (let d=1; d<=lastDate; d++){
+        const dow = (firstDayIndex + d - 1) % 7;
+        const isWeekend = (dow===0 || dow===6);
+        if (isWeekend || blocked.includes(d)) continue;
+        const total = (studentDays[String(d)]||0) + (teacherDaysCount[String(d)]||0);
+        daysMap[String(d)] = total;
+        strings.push(`${year}-${pad2(month)}-${pad2(d)} - ${total}명`);
+      }
+      await setDoc(totalsRef(year, month), { days: daysMap, strings }, { merge:true });
+      return { strings, blocked };
+    }
+
+    function renderList(year, month, strings) {
+      title.textContent = `${year}년 ${month}월 결과`;
+      const list = document.createDocumentFragment();
+      const box = document.createElement("div");
+      totalList.innerHTML = "";
+      if (!strings || strings.length===0) {
+        totalList.innerHTML = `<div class="muted">결과가 없습니다. [총원 계산/저장]을 눌러 계산하세요.</div>`;
+        return;
+      }
+      strings.forEach(line=>{
+        const [dateStr, countStr] = line.split(" - ");
+        const row = document.createElement("div"); row.className="row";
+        const date = document.createElement("div"); date.className="date"; date.textContent=dateStr;
+        const count= document.createElement("div"); count.className="count"; count.textContent=countStr;
+        row.append(date, count); list.appendChild(row);
+      });
+      totalList.appendChild(list);
+    }
+
+    // ✅ 요약 렌더: 교사(미신청자 명단 + 특이사항) + 학생 변동 내역(studentAbsences)
+    async function renderSummary(year, month, blockedForNotes = null) {
+      // 제목: 요약 - 2025년 08월
+      summaryTitle.textContent = `요약 - ${year}년 ${pad2(month)}월`;
+
+      // 1) 교사 미신청자 명단
+      const noMealNames = await getTeacherNoMealNames(year, month);
+      teacherNoMealNamesEl.textContent = noMealNames.length > 0
+        ? noMealNames.join(", ")
+        : "없음";
+
+      // 2) 교사 특이사항
+      const blocked = blockedForNotes ?? await fetchBlockedDays(year, month);
+      const notes = await listTeacherSpecialNotes(year, month, blocked);
+      if (notes.length > 0) {
+        teacherNotesWrap.innerHTML = `<ul class="summary-list">${notes.map(t=>`<li>${t}</li>`).join("")}</ul>`;
+      } else {
+        teacherNotesWrap.innerHTML = `<div class="muted">특이사항이 없습니다.</div>`;
+      }
+
+      // 3) 학생 변동 내역
+      const absSnap = await getDoc(studentAbsencesRef(year, month));
+      const items = (absSnap.exists() && Array.isArray(absSnap.data().items)) ? absSnap.data().items : [];
+      if (items.length > 0) {
+        const liStudents = items.map(it => {
+          const count = toInt(it?.count ?? 0);
+          const situation = (it?.situation || it?.reason || "사유");
+          const fmt = (iso) => {
+            // iso: YYYY-MM-DD → MM.DD
+            if (!iso || typeof iso !== "string" || iso.length < 10) return "-";
+            const mm = iso.slice(5,7);
+            const dd = iso.slice(8,10);
+            return `${mm}.${dd}`;
+          };
+          const s = fmt(it?.start);
+          const e = fmt(it?.end);
+          return `<li>${situation} ${count}명 ${s}${(s===e||e==='-') ? "" : `~${e}`}</li>`;
+        }).join("");
+        studentAdjustWrap.innerHTML = `<ul class="summary-list">${liStudents}</ul>`;
+      } else {
+        studentAdjustWrap.innerHTML = `<div class="muted">등록된 변동 내역이 없습니다.</div>`;
+      }
+    }
+
+    // 수동: 버튼 클릭 시 재계산(알림 O)
+    calcBtn.onclick = async ()=>{
+      const year  = parseInt(yearSelect.value,10);
+      const month = parseInt(monthSelect.value,10);
+      try {
+        const { strings, blocked } = await computeAndSaveTotals(year, month);
+        renderList(year, month, strings);
+        await renderSummary(year, month, blocked);
+        alert("총원 계산 및 저장이 완료되었습니다.");
+      } catch(e) {
+        console.error(e);
+        alert("총원 계산 중 오류가 발생했습니다: " + (e?.message||e));
+      }
+    };
+
+    // 자동: 페이지 로드 시 계산(알림 X) + 요약 출력
+    async function autoComputeAndRender() {
+      const year  = parseInt(yearSelect.value,10);
+      const month = parseInt(monthSelect.value,10);
+      try {
+        const { strings, blocked } = await computeAndSaveTotals(year, month);
+        renderList(year, month, strings);
+        await renderSummary(year, month, blocked);
+      } catch (e) {
+        console.error(e);
+        totalList.innerHTML = `<div class="muted">자동 계산 중 오류가 발생했습니다. 버튼으로 다시 시도해주세요.</div>`;
+        teacherNoMealNamesEl.textContent = "—";
+        teacherNotesWrap.innerHTML = `<div class="muted">요약을 불러오지 못했습니다.</div>`;
+        studentAdjustWrap.innerHTML = `<div class="muted">요약을 불러오지 못했습니다.</div>`;
+      }
+    }
+
+    // 초기 로드에서 자동 계산 + 요약
+    window.addEventListener("load", autoComputeAndRender);
+
+    // (선택) 연/월 변경 시 자동 갱신을 원하면 주석 해제
+    // yearSelect.addEventListener("change", autoComputeAndRender);
+    // monthSelect.addEventListener("change", autoComputeAndRender);
+  </script>
+</body>
+</html>

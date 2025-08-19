@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>급식 신청</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { font-size: 1.8em; margin-bottom: 20px; }
+
+    #monthButtons button {
+      margin: 5px; padding: 10px 16px;
+      border: none; border-radius: 6px;
+      background: #ddd; cursor: pointer;
+    }
+    #monthButtons button.active { background: #1976d2; color: #fff; }
+    #monthButtons button.disabled { background: #ccc; cursor: not-allowed; }
+
+    #calendarArea { display: none; margin-top: 30px; }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      max-width: 880px;
+      margin: 20px auto;
+    }
+
+    /* 공통 셀 스타일 */
+    .calendar .cell {
+      padding: 8px 10px;
+      height: 60px;              /* ✅ 고정 높이 */
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      overflow: hidden;          /* ✅ 넘치면 잘라내기 */
+    }
+    .calendar .weekday {
+      height: 24px;
+      background: #E5E5E5;
+      color: #57648C;
+      line-height: 24px;
+      font-weight: 600;
+    }
+    .calendar .weekday:nth-child(1) { color: #e24666; }
+    .calendar .weekday:nth-child(7) { color: #0080ff; }
+
+    /* 날짜+배지 줄 */
+    .day-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      min-height: 22px;
+      flex: 0 0 auto;
+    }
+    .date-text { font-weight: 600; color: #222; }
+
+    /* ✅ 메모 배지: 한 줄, 넘치면 … */
+    .note-badge {
+      flex: 0 1 auto;
+      max-width: 100%;
+      margin-top: 4px;
+      padding: 2px;
+      font-size: 12px;
+      line-height: 16px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: red;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 체크 가능한 영역 */
+    .pick-area {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1 1 auto;
+    }
+    .pick-area input[type="checkbox"] { margin: 0; }
+
+    .buttons { margin-top: 20px; }
+    .buttons button {
+      margin: 0 5px; padding: 10px 20px;
+      border: none; border-radius: 6px;
+      background: #1976d2; color: #fff; cursor: pointer;
+    }
+    .buttons button:last-child { background: #dc143c; }
+
+    /* 비활성(주말/불가일) */
+    .calendar .disabled {
+      color: #666;
+      background: #f0f0f0;
+    }
+    .calendar .disabled .date-text {
+      color: #999;
+    }
+
+    #adminButton {
+      position: absolute; top: 20px; right: 20px;
+      padding: 8px 14px; background: #444; color: #fff;
+      border-radius: 6px; text-decoration: none; display: none;
+    }
+  </style>
+</head>
+<body>
+  <a id="adminButton" href="admin.html">관리자 페이지</a>
+  <h1 id="welcomeText">급식 신청</h1>
+
+  <div id="monthButtons"></div>
+
+  <div id="calendarArea">
+    <h2 id="calendarTitle"></h2>
+    <div class="calendar" id="calendar"></div>
+    <div class="buttons">
+      <button onclick="selectAll()">전체 선택</button>
+      <button onclick="deselectAll()">전체 해제</button>
+      <button onclick="saveData()">저장하기</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
+      authDomain: "mealmanager-cda3b.firebaseapp.com",
+      projectId: "mealmanager-cda3b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+
+    const now = new Date();
+    let currentYear = now.getFullYear();
+    const adminEmails = ["june@sungil-i.kr"];
+
+    let currentUser = null;
+    let selectedMonth = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const configSnap = await getDoc(doc(db, "mealConfig", "teacherYear"));
+      if (configSnap.exists()) currentYear = configSnap.data().year;
+
+      currentUser = user;
+      const name = user.displayName || user.email.split("@")[0];
+      document.getElementById("welcomeText").textContent = `${name} 선생님, 급식 신청하세요.`;
+
+      if (adminEmails.includes(user.email)) {
+        document.getElementById("adminButton").style.display = "inline-block";
+      }
+
+      await loadAllowedMonths();
+    });
+
+    async function loadAllowedMonths() {
+      const container = document.getElementById("monthButtons");
+      container.style.visibility = "hidden";   // 깜빡임 방지 (옵션)
+      container.innerHTML = "";
+
+      // 12개월 문서 참조 만들기
+      const refs = Array.from({ length: 12 }, (_, i) =>
+        doc(db, "mealSettings", `${currentYear}-${i + 1}`) // 기존 비패딩 포맷 유지
+      );
+
+      // 🔹 병렬로 모두 가져오기
+      const snaps = await Promise.all(refs.map((r) => getDoc(r)));
+
+      // 🔹 한 번에 DOM 반영
+      const frag = document.createDocumentFragment();
+      snaps.forEach((snap, idx) => {
+        const m = idx + 1;
+        const isActive = snap.exists() && snap.data().active === true;
+
+        const btn = document.createElement("button");
+        btn.textContent = `${m}월`;
+
+        if (isActive) {
+          btn.onclick = () => selectMonth(m, btn);
+        } else {
+          btn.disabled = true;
+          btn.classList.add("disabled");
+        }
+        frag.appendChild(btn);
+      });
+
+      container.appendChild(frag);
+      container.style.visibility = "visible";
+    }
+
+    async function selectMonth(month, button) {
+      selectedMonth = month;
+      document.querySelectorAll("#monthButtons button").forEach(b => b.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById("calendarArea").style.display = "block";
+      await generateCalendar(month); // 레이스 방지
+    }
+
+    // blocked/notes 안전 로더: 0패딩 우선, 비패딩 폴백 + 타입 정규화
+    async function getBlockedAndNotes(year, month, db) {
+      const idZero  = `${year}-${String(month).padStart(2, '0')}`;
+      const idPlain = `${year}-${month}`;
+
+      const tryRead = async (id) => {
+        const ref = doc(db, "blockedDays", id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return null;
+
+        const data = snap.data() || {};
+        const blocked = Array.isArray(data.days)
+          ? data.days.map(n => Number(n)).filter(n => Number.isFinite(n))
+          : [];
+        const rawNotes = data.notes || {};
+        const notes = {};
+        Object.keys(rawNotes).forEach(k => {
+          const kk = String(k);
+          const vv = String(rawNotes[k] ?? "");
+          notes[kk] = vv;
+        });
+        return { blocked, notes };
+      };
+
+      return (await tryRead(idZero)) || (await tryRead(idPlain)) || { blocked: [], notes: {} };
+    }
+
+    async function generateCalendar(month) {
+      document.getElementById("calendarTitle").textContent =
+        `${currentYear}년 ${String(month).padStart(2, '0')}월`;
+
+      const calendar = document.getElementById("calendar");
+      calendar.innerHTML = "";
+
+      const { blocked, notes } = await getBlockedAndNotes(currentYear, month, db);
+
+      const daysInMonth = new Date(currentYear, month, 0).getDate();
+      const startDay = new Date(currentYear, month - 1, 1).getDay();
+
+      const weekdays = ["일","월","화","수","목","금","토"];
+      weekdays.forEach(day => {
+        const head = document.createElement("div");
+        head.textContent = day;
+        head.classList.add("weekday", "cell");
+        calendar.appendChild(head);
+      });
+
+      for (let i = 0; i < startDay; i++) {
+        const hole = document.createElement("div");
+        hole.className = "cell";
+        hole.style.visibility = "hidden";
+        calendar.appendChild(hole);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(currentYear, month - 1, d);
+        const isWeekend = (date.getDay() === 0 || date.getDay() === 6);
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        // 날짜 줄 (날짜 + 배지 자리)
+        const headRow = document.createElement("div");
+        headRow.className = "day-head";
+
+        const dateSpan = document.createElement("span");
+        dateSpan.className = "date-text";
+        dateSpan.textContent = `${d}일`;
+        headRow.appendChild(dateSpan);
+
+        // 불가일이면 배지 표시
+        if (blocked.includes(d)) {
+          const badge = document.createElement("span");
+          badge.className = "note-badge";
+          badge.textContent = (notes[String(d)] || "급식미실시일");
+          headRow.appendChild(badge);
+        }
+
+        cell.appendChild(headRow);
+
+        if (isWeekend || blocked.includes(d)) {
+          cell.classList.add("disabled");
+        } else {
+          // 체크 가능한 영역
+          const pick = document.createElement("label");
+          pick.className = "pick-area";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = d;
+
+          const txt = document.createElement("span");
+          txt.textContent = `${d}일 선택`;
+
+          pick.appendChild(checkbox);
+          pick.appendChild(txt);
+          cell.appendChild(pick);
+        }
+
+        calendar.appendChild(cell);
+      }
+    }
+
+    window.selectAll = () => {
+      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => cb.checked = true);
+    };
+    window.deselectAll = () => {
+      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => cb.checked = false);
+    };
+
+    window.saveData = async () => {
+      const checkboxes = Array.from(document.querySelectorAll("#calendar input[type='checkbox']"));
+      const days = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value, 10));
+      const weekdays = ["일","월","화","수","목","금","토"];
+
+      // 1) 선택 0개: 기존 메시지로 확인 후 저장
+      if (days.length === 0) {
+        const ok = confirm("급식을 신청하지 않습니다. 맞습니까?");
+        if (!ok) return; // 취소 시 DB 저장 안 함
+
+        const data = {
+          uid: currentUser.uid,
+          name: currentUser.displayName,
+          email: currentUser.email,
+          year: currentYear,
+          month: selectedMonth,
+          days: [],
+          timestamp: new Date()
+        };
+        await setDoc(doc(db, "mealRequests", `${currentUser.uid}_${currentYear}_${selectedMonth}`), data);
+        alert("신청이 완료되었습니다.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      // 2) 선택 1개 이상: 목록 안내 → 확인 시 저장
+      const sortedDays = [...days].sort((a, b) => a - b);
+
+      const lines = [];
+      let line = [];
+      for (let i = 0; i < sortedDays.length; i++) {
+        const d = sortedDays[i];
+        const wd = new Date(currentYear, selectedMonth - 1, d).getDay();
+        line.push(`${String(d).padStart(2, "0")}일(${weekdays[wd]})`);
+
+        const next = sortedDays[i + 1];
+        if (next === undefined) {
+          // 마지막 항목
+          lines.push(line.join(", "));
+        } else {
+          const nextWd = new Date(currentYear, selectedMonth - 1, next).getDay();
+          if (nextWd < wd) { // 요일이 작아짐 = 새 주 시작
+            lines.push(line.join(", "));
+            line = [];
+          }
+        }
+      }
+
+      const dayList = lines.join("\n");
+
+      const confirmMsg =
+        `${currentYear}년 ${String(selectedMonth).padStart(2,"0")}월\n` +
+        `신청일\n${dayList}\n\n이대로 저장할까요?`;
+
+      const ok = confirm(confirmMsg);
+      if (!ok) return; // 취소 시 DB 저장 안 함
+
+      const data = {
+        uid: currentUser.uid,
+        name: currentUser.displayName,
+        email: currentUser.email,
+        year: currentYear,
+        month: selectedMonth,
+        days: sortedDays,
+        timestamp: new Date()
+      };
+      await setDoc(doc(db, "mealRequests", `${currentUser.uid}_${currentYear}_${selectedMonth}`), data);
+
+      alert("신청이 완료되었습니다.");
+      window.location.href = "index.html";
+    };
+  </script>
+</body>
+</html>

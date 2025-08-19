@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>급식 관리자 페이지</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    header {
+      background: #1976d2;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5em;
+    }
+    nav {
+      background: #eeeeee;
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      gap: 20px;
+    }
+    nav button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background: #90a4ae;
+      color: white;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #1976d2;
+    }
+    iframe {
+      width: 100%;
+      height: calc(100vh - 120px);
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <header>급식 관리자 페이지</header>
+  <nav>
+    <button id="menu1" class="active" onclick="showPage('setup')">급식 신청 가능 월 설정</button>
+    <button id="menu2" onclick="showPage('summary')">교사 급식인원확인</button>
+    <button id="menu3" onclick="showPage('student')">학생 급식인원확인</button>
+    <button id="menu4" onclick="showPage('total')">전체 급식인원확인</button>
+    <button id="menu5" onclick="showPage('meal')">급식신청화면</button>
+  </nav>
+
+  <section>
+    <iframe id="mainFrame" src="meal-settings.html"></iframe>
+  </section>
+
+  <script>
+    function showPage(pageName) {
+      const iframe = document.getElementById("mainFrame");
+      if (pageName === 'setup') {
+        iframe.src = "meal-settings.html";
+      } else if (pageName === 'summary') {
+        iframe.src = "meal-summary.html";
+      } else if (pageName === 'student') {
+        iframe.src = "meal-students.html";
+      } else if (pageName === 'total') {
+        iframe.src = "meal-total.html"
+      } else if (pageName === 'meal') {
+        location.href = "meal.html"
+        return;
+      }
+      document.getElementById("menu1").classList.toggle("active", pageName === 'setup');
+      document.getElementById("menu2").classList.toggle("active", pageName === 'summary');
+      document.getElementById("menu3").classList.toggle("active", pageName === 'student');
+      document.getElementById("menu4").classList.toggle("active", pageName === 'total');
+      document.getElementById("menu5").classList.toggle("active", pageName === 'meal');
+    }
+  </script>
+</body>
+</html>

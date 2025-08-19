@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>급식 신청</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+    }
+    #monthButtons button {
+      margin: 5px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #ddd;
+      cursor: pointer;
+    }
+    #monthButtons button.active {
+      background: #1976d2;
+      color: white;
+    }
+    #monthButtons button.disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #calendarArea {
+      display: none;
+      margin-top: 30px;
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      max-width: 880px;
+      margin: 20px auto;
+    }
+    .calendar div {
+      padding: 10px;
+      height: 60px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .calendar div.weekday {
+      height: 10px;
+      background: #E5E5E5;
+      color: #57648C;
+      line-height: 10px;
+    }
+    .calendar div.weekday:nth-child(1) {
+      color: #e24666;
+    }
+    .calendar div.weekday:nth-child(7) {
+      color: #0080ff;
+    }
+    .calendar input[type="checkbox"] {
+      margin-right: 6px;
+    }
+    .calendar .disabled {
+      color: #ccc;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    .buttons button {
+      margin: 0 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background: #1976d2;
+      color: white;
+      cursor: pointer;
+    }
+    .buttons button:last-child {
+        background: #dc143c;
+    }
+    #adminButton {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 14px;
+      background: #444;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <a id="adminButton" href="admin.html">관리자 페이지</a>
+  <h1 id="welcomeText">급식 신청</h1>
+  <div id="monthButtons"></div>
+  <div id="calendarArea">
+    <h2 id="calendarTitle"></h2>
+    <div class="calendar" id="calendar"></div>
+    <div class="buttons">
+      <button onclick="selectAll()">전체 선택</button>
+      <button onclick="deselectAll()">전체 해제</button>
+      <button onclick="saveData()">저장하기</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
+      authDomain: "mealmanager-cda3b.firebaseapp.com",
+      projectId: "mealmanager-cda3b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+    const now = new Date();
+    let currentYear = now.getFullYear();
+    const adminEmails = ["june@sungil-i.kr"];
+
+    let currentUser = null;
+    let selectedMonth = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const configSnap = await getDoc(doc(db, "mealConfig", "teacherYear"));
+        if (configSnap.exists()) {
+          currentYear = configSnap.data().year;
+        }
+
+        currentUser = user;
+        const name = user.displayName || user.email.split("@")[0];
+        document.getElementById("welcomeText").textContent = `${name} 선생님, 급식 신청하세요.`;
+        if (adminEmails.includes(user.email)) {
+          document.getElementById("adminButton").style.display = "inline-block";
+        }
+        await loadAllowedMonths();
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    async function loadAllowedMonths() {
+      const container = document.getElementById("monthButtons");
+      container.innerHTML = "";
+      for (let m = 1; m <= 12; m++) {
+        const settingsRef = doc(db, "mealSettings", `${currentYear}-${m}`);
+        const snap = await getDoc(settingsRef);
+        const isActive = snap.exists() && snap.data().active === true;
+
+        const btn = document.createElement("button");
+        btn.textContent = `${m}월`;
+        if (isActive) {
+          btn.onclick = () => selectMonth(m, btn);
+        } else {
+          btn.disabled = true;
+          btn.classList.add("disabled");
+        }
+        container.appendChild(btn);
+      }
+    }
+
+    async function selectMonth(month, button) {
+      selectedMonth = month;
+      document.querySelectorAll("#monthButtons button").forEach(b => b.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById("calendarArea").style.display = "block";
+      generateCalendar(month);
+    }
+
+    async function generateCalendar(month) {
+      document.getElementById("calendarTitle").textContent = `${currentYear}년 ${month.toString().padStart(2, '0')}월`;
+      
+      const calendar = document.getElementById("calendar");
+      calendar.innerHTML = "";
+
+      const blockRef = doc(db, "blockedDays", `${currentYear}-${month}`);
+      const snap = await getDoc(blockRef);
+      const blocked = snap.exists() ? snap.data().days : [];
+
+      const daysInMonth = new Date(currentYear, month, 0).getDate();
+      const startDay = new Date(currentYear, month - 1, 1).getDay();
+
+      const weekdays = ["일","월","화","수","목","금","토"];
+      weekdays.forEach(day => {
+        const cell = document.createElement("div");
+        cell.textContent = day;
+        cell.classList.add("weekday");
+        calendar.appendChild(cell);
+      });
+
+      for (let i = 0; i < startDay; i++) {
+        calendar.appendChild(document.createElement("div"));
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(currentYear, month - 1, d);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const cell = document.createElement("div");
+        if (isWeekend || blocked.includes(d)) {
+          cell.textContent = `${d}일`;
+          cell.classList.add("disabled");
+        } else {
+          const label = document.createElement("label");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = d;
+          label.appendChild(checkbox);
+          label.append(` ${d}일`);
+          cell.appendChild(label);
+        }
+        calendar.appendChild(cell);
+      }
+    }
+
+    window.selectAll = () => {
+      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => cb.checked = true);
+    }
+
+    window.deselectAll = () => {
+      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => cb.checked = false);
+    }
+
+    window.saveData = async () => {
+      const checkboxes = Array.from(document.querySelectorAll("#calendar input[type='checkbox']"));
+      const days = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value));
+
+      if (!days.length && !confirm("급식을 신청하지 않습니다. 맞습니까?")) return;
+
+      const data = {
+        uid: currentUser.uid,
+        name: currentUser.displayName,
+        email: currentUser.email,
+        year: currentYear,
+        month: selectedMonth,
+        days: days,
+        timestamp: new Date()
+      };
+      await setDoc(doc(db, "mealRequests", `${currentUser.uid}_${currentYear}_${selectedMonth}`), data);
+      alert("신청이 완료되었습니다.");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

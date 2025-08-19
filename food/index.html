@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>급식 신청 로그인</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #fff; /* 배경은 흰색 유지 */
+    }
+    .login-box {
+      background: #f9f9f9; /* 박스 배경만 살짝 회색톤 */
+      padding: 40px 50px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      text-align: center;
+      animation: fadeIn 0.6s ease-in-out;
+      border: 1px solid #e0e0e0;
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #2d3436;
+    }
+    button {
+      background-color: #0984e3;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background-color: #74b9ff;
+      transform: scale(1.05);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
+      authDomain: "mealmanager-cda3b.firebaseapp.com",
+      projectId: "mealmanager-cda3b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    window.googleLogin = () => {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          const user = result.user;
+          const email = user.email;
+          if (email.endsWith("@sungil-i.kr") || email.endsWith("@sungil.kr")) {
+            alert(`${user.displayName}님 환영합니다!`);
+            window.location.href = "meal.html";
+          } else {
+            alert("학교 계정으로만 로그인 가능합니다.");
+            auth.signOut();
+          }
+        })
+        .catch((error) => {
+          alert("로그인 실패: " + error.message);
+        });
+    };
+  </script>
+</head>
+<body>
+  <div class="login-box">
+    <h2>📌 교사용 급식 신청 로그인</h2>
+    <button onclick="googleLogin()">Google 계정으로 로그인</button>
+  </div>
+</body>
+</html>
