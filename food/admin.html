@@ -57,26 +57,71 @@
     <iframe id="mainFrame" src="meal-settings.html"></iframe>
   </section>
 
-  <script>
-    function showPage(pageName) {
-      const iframe = document.getElementById("mainFrame");
-      if (pageName === 'setup') {
-        iframe.src = "meal-settings.html";
-      } else if (pageName === 'summary') {
-        iframe.src = "meal-summary.html";
-      } else if (pageName === 'student') {
-        iframe.src = "meal-students.html";
-      } else if (pageName === 'total') {
-        iframe.src = "meal-total.html"
-      } else if (pageName === 'meal') {
-        location.href = "meal.html"
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
+      authDomain: "mealmanager-cda3b.firebaseapp.com",
+      projectId: "mealmanager-cda3b"
+    });
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const iframe = document.getElementById("mainFrame");
+    const menuBtns = {
+      setup:  document.getElementById("menu1"),
+      summary:document.getElementById("menu2"),
+      student:document.getElementById("menu3"),
+      total:  document.getElementById("menu4"),
+      meal:   document.getElementById("menu5"),
+    };
+
+    // 게이트 통과 전에는 iframe 로드 금지
+    let gatePassed = false;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("로그인이 필요합니다.");
+        location.href = "index.html";
         return;
       }
-      document.getElementById("menu1").classList.toggle("active", pageName === 'setup');
-      document.getElementById("menu2").classList.toggle("active", pageName === 'summary');
-      document.getElementById("menu3").classList.toggle("active", pageName === 'student');
-      document.getElementById("menu4").classList.toggle("active", pageName === 'total');
-      document.getElementById("menu5").classList.toggle("active", pageName === 'meal');
+      const email = user.email || "";
+      if (!/@sungil-i\.kr$/i.test(email)) {
+        alert("교내 계정(@sungil-i.kr)으로만 접근 가능합니다.");
+        await signOut(auth);
+        location.href = "index.html";
+        return;
+      }
+      // 관리자 확인
+      const roleSnap = await getDoc(doc(db, "roles", email));
+      const isAdmin = roleSnap.exists() && roleSnap.data().role === "admin";
+      if (!isAdmin) {
+        alert("관리자만 접근할 수 있는 페이지입니다.");
+        location.href = "meal.html";
+        return;
+      }
+
+      // ✅ 여기서부터 페이지 열기 허용
+      gatePassed = true;
+      iframe.src = "meal-settings.html"; // 최초 탭
+    });
+
+    window.showPage = function(pageName) {
+      if (!gatePassed) return; // 게이트 전엔 무시
+      if (pageName === 'setup')       iframe.src = "meal-settings.html";
+      else if (pageName === 'summary')iframe.src = "meal-summary.html";
+      else if (pageName === 'student')iframe.src = "meal-students.html";
+      else if (pageName === 'total')  iframe.src = "meal-total.html";
+      else if (pageName === 'meal')   { location.href = "meal.html"; return; }
+
+      menuBtns.setup.classList.toggle("active", pageName === 'setup');
+      menuBtns.summary.classList.toggle("active", pageName === 'summary');
+      menuBtns.student.classList.toggle("active", pageName === 'student');
+      menuBtns.total.classList.toggle("active", pageName === 'total');
+      menuBtns.meal.classList.toggle("active", pageName === 'meal');
     }
   </script>
 </body>
