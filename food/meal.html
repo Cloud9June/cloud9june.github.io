@@ -33,10 +33,9 @@
       margin: 20px auto;
     }
 
-    /* 공통 셀 스타일 */
     .calendar .cell {
       padding: 8px 10px;
-      height: 60px;              /* ✅ 고정 높이 */
+      height: 60px;
       background: #fff;
       border-radius: 6px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -44,7 +43,7 @@
       flex-direction: column;
       justify-content: flex-start;
       align-items: stretch;
-      overflow: hidden;          /* ✅ 넘치면 잘라내기 */
+      overflow: hidden;
     }
     .calendar .weekday {
       height: 24px;
@@ -56,7 +55,6 @@
     .calendar .weekday:nth-child(1) { color: #e24666; }
     .calendar .weekday:nth-child(7) { color: #0080ff; }
 
-    /* 날짜+배지 줄 */
     .day-head {
       display: flex;
       align-items: flex-start;
@@ -69,7 +67,6 @@
     }
     .date-text { font-weight: 600; color: #222; }
 
-    /* ✅ 메모 배지: 한 줄, 넘치면 … */
     .note-badge {
       flex: 0 1 auto;
       max-width: 100%;
@@ -85,7 +82,6 @@
       text-overflow: ellipsis;
     }
 
-    /* 체크 가능한 영역 */
     .pick-area {
       margin-top: 6px;
       display: flex;
@@ -103,14 +99,11 @@
     }
     .buttons button:last-child { background: #dc143c; }
 
-    /* 비활성(주말/불가일) */
     .calendar .disabled {
       color: #666;
       background: #f0f0f0;
     }
-    .calendar .disabled .date-text {
-      color: #999;
-    }
+    .calendar .disabled .date-text { color: #999; }
 
     #adminButton {
       position: absolute; top: 20px; right: 20px;
@@ -140,6 +133,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+    // ⚠️ firebaseConfig는 공개 전제(보안은 규칙으로). .env로 빌드 주입은 가능하나 런타임 공개는 정상입니다.
     const firebaseConfig = {
       apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
       authDomain: "mealmanager-cda3b.firebaseapp.com",
@@ -152,10 +146,21 @@
 
     const now = new Date();
     let currentYear = now.getFullYear();
-    const adminEmails = ["june@sungil-i.kr"];
 
     let currentUser = null;
     let selectedMonth = null;
+
+    // 🔐 Firestore roles 컬렉션에서 관리자 여부 확인
+    async function isAdmin(email) {
+      if (!email) return false;
+      try {
+        const snap = await getDoc(doc(db, "roles", email));
+        return snap.exists() && (snap.data().role === "admin");
+      } catch (e) {
+        console.error("roles 조회 실패:", e);
+        return false;
+      }
+    }
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -163,6 +168,7 @@
         return;
       }
 
+      // 연도 설정 불러오기
       const configSnap = await getDoc(doc(db, "mealConfig", "teacherYear"));
       if (configSnap.exists()) currentYear = configSnap.data().year;
 
@@ -170,8 +176,11 @@
       const name = user.displayName || user.email.split("@")[0];
       document.getElementById("welcomeText").textContent = `${name} 선생님, 급식 신청하세요.`;
 
-      if (adminEmails.includes(user.email)) {
+      // ✅ 관리자 UI 노출은 roles 기반
+      if (await isAdmin(user.email)) {
         document.getElementById("adminButton").style.display = "inline-block";
+      } else {
+        document.getElementById("adminButton").style.display = "none";
       }
 
       await loadAllowedMonths();
@@ -179,18 +188,14 @@
 
     async function loadAllowedMonths() {
       const container = document.getElementById("monthButtons");
-      container.style.visibility = "hidden";   // 깜빡임 방지 (옵션)
+      container.style.visibility = "hidden";
       container.innerHTML = "";
 
-      // 12개월 문서 참조 만들기
       const refs = Array.from({ length: 12 }, (_, i) =>
-        doc(db, "mealSettings", `${currentYear}-${i + 1}`) // 기존 비패딩 포맷 유지
+        doc(db, "mealSettings", `${currentYear}-${i + 1}`)
       );
-
-      // 🔹 병렬로 모두 가져오기
       const snaps = await Promise.all(refs.map((r) => getDoc(r)));
 
-      // 🔹 한 번에 DOM 반영
       const frag = document.createDocumentFragment();
       snaps.forEach((snap, idx) => {
         const m = idx + 1;
@@ -217,10 +222,10 @@
       document.querySelectorAll("#monthButtons button").forEach(b => b.classList.remove("active"));
       button.classList.add("active");
       document.getElementById("calendarArea").style.display = "block";
-      await generateCalendar(month); // 레이스 방지
+      await generateCalendar(month);
     }
 
-    // blocked/notes 안전 로더: 0패딩 우선, 비패딩 폴백 + 타입 정규화
+    // blocked/notes 로더
     async function getBlockedAndNotes(year, month, db) {
       const idZero  = `${year}-${String(month).padStart(2, '0')}`;
       const idPlain = `${year}-${month}`;
@@ -280,7 +285,6 @@
         const cell = document.createElement("div");
         cell.className = "cell";
 
-        // 날짜 줄 (날짜 + 배지 자리)
         const headRow = document.createElement("div");
         headRow.className = "day-head";
 
@@ -289,7 +293,6 @@
         dateSpan.textContent = `${d}일`;
         headRow.appendChild(dateSpan);
 
-        // 불가일이면 배지 표시
         if (blocked.includes(d)) {
           const badge = document.createElement("span");
           badge.className = "note-badge";
@@ -302,7 +305,6 @@
         if (isWeekend || blocked.includes(d)) {
           cell.classList.add("disabled");
         } else {
-          // 체크 가능한 영역
           const pick = document.createElement("label");
           pick.className = "pick-area";
 
@@ -334,10 +336,9 @@
       const days = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value, 10));
       const weekdays = ["일","월","화","수","목","금","토"];
 
-      // 1) 선택 0개: 기존 메시지로 확인 후 저장
       if (days.length === 0) {
         const ok = confirm("급식을 신청하지 않습니다. 맞습니까?");
-        if (!ok) return; // 취소 시 DB 저장 안 함
+        if (!ok) return;
 
         const data = {
           uid: currentUser.uid,
@@ -354,7 +355,6 @@
         return;
       }
 
-      // 2) 선택 1개 이상: 목록 안내 → 확인 시 저장
       const sortedDays = [...days].sort((a, b) => a - b);
 
       const lines = [];
@@ -366,11 +366,10 @@
 
         const next = sortedDays[i + 1];
         if (next === undefined) {
-          // 마지막 항목
           lines.push(line.join(", "));
         } else {
           const nextWd = new Date(currentYear, selectedMonth - 1, next).getDay();
-          if (nextWd < wd) { // 요일이 작아짐 = 새 주 시작
+          if (nextWd < wd) {
             lines.push(line.join(", "));
             line = [];
           }
@@ -384,7 +383,7 @@
         `신청일\n${dayList}\n\n이대로 저장할까요?`;
 
       const ok = confirm(confirmMsg);
-      if (!ok) return; // 취소 시 DB 저장 안 함
+      if (!ok) return;
 
       const data = {
         uid: currentUser.uid,
