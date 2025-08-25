@@ -70,7 +70,10 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, collection, getDocs, query, where, doc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
@@ -79,8 +82,10 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
+    // ---------- DOM ----------
     const yearSelect = document.getElementById("yearSelect");
     const monthSelect = document.getElementById("monthSelect");
     const daySelect = document.getElementById("daySelect");
@@ -120,7 +125,10 @@
       const day = parseInt(daySelect.value);
       const name = nameSearch.value.trim();
 
-      const q = query(collection(db, "mealRequests"), where("year", "==", year), where("month", "==", month));
+      const q = query(collection(db, "mealRequests"),
+        where("year", "==", year),
+        where("month", "==", month)
+      );
       const snapshot = await getDocs(q);
 
       let appliedCount = 0;
@@ -131,6 +139,7 @@
       for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
 
+        // 미신청자 표
         if (!Array.isArray(data.days) || data.days.length === 0) {
           const row = document.createElement("tr");
           row.innerHTML = `<td>${data.name}</td><td>${data.email}</td>`;
@@ -139,29 +148,31 @@
           continue;
         }
 
-        if (name && !data.name.includes(name)) continue;
+        // 필터
+        if (name && !String(data.name || "").includes(name)) continue;
         if (day && !data.days.includes(day)) continue;
 
+        // 신청자 표
         const row = document.createElement("tr");
         row.innerHTML = `<td>${data.name}</td><td>${data.email}</td>`;
 
         const dateCell = document.createElement("td");
-        data.days.sort((a, b) => a - b).forEach(d => {
+        [...data.days].sort((a, b) => a - b).forEach(d => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.checked = true;
           checkbox.dataset.id = docSnap.id;
           checkbox.dataset.day = d;
-          checkbox.dataset.name = data.name;
 
           checkbox.onchange = async () => {
+            // 관리자가 취소 (rules에서 admin 쓰기 허용 필요! 아래 B 참고)
             if (!checkbox.checked && confirm(`${month}월 ${d}일 급식을 정말 취소하시겠습니까?`)) {
               const ref = doc(db, "mealRequests", docSnap.id);
-              const snap = await getDoc(ref);
-              if (snap.exists()) {
-                const updatedDays = snap.data().days.filter(day => day !== d);
-                await setDoc(ref, { ...snap.data(), days: updatedDays });
+              const fresh = await getDoc(ref);
+              if (fresh.exists()) {
+                const updatedDays = (fresh.data().days || []).filter(x => x !== d);
+                await setDoc(ref, { ...fresh.data(), days: updatedDays });
                 alert(`${month}월 ${d}일 신청이 취소되었습니다.`);
                 loadData();
               }
@@ -169,6 +180,7 @@
               checkbox.checked = true;
             }
           };
+
           label.appendChild(checkbox);
           label.append(` ${d}일`);
           dateCell.appendChild(label);
@@ -184,61 +196,80 @@
     }
 
     async function loadTeachers() {
+      teacherSelect.innerHTML = `<option value="">선택하세요</option>`;
       const snapshot = await getDocs(collection(db, "mealRequests"));
       const seen = new Set();
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        if (!seen.has(data.email)) {
-          const opt = new Option(`${data.name} (${data.email})`, data.email);
-          teacherSelect.appendChild(opt);
-          seen.add(data.email);
+        const key = (data.email || "").toLowerCase();
+        if (key && !seen.has(key)) {
+          teacherSelect.appendChild(new Option(`${data.name} (${data.email})`, data.email));
+          seen.add(key);
         }
       });
     }
 
-    addBtn.onclick = async () => {
+    async function addMealForTeacher() {
       const email = teacherSelect.value;
-      const date = new Date(addDate.value);
-      if (!email || !addDate.value) {
-        alert("교사와 날짜를 선택하세요.");
-        return;
-      }
+      const dateStr = addDate.value;
+      if (!email || !dateStr) { alert("교사와 날짜를 선택하세요."); return; }
 
+      const date = new Date(dateStr);
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
       const day = date.getDate();
 
-      const q = query(collection(db, "mealRequests"), where("email", "==", email), where("year", "==", year), where("month", "==", month));
+      const q = query(collection(db, "mealRequests"),
+        where("email", "==", email),
+        where("year", "==", year),
+        where("month", "==", month)
+      );
       const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        alert("해당 교사의 급식 신청 데이터가 없습니다.");
-        return;
-      }
+      if (snapshot.empty) { alert("해당 교사의 급식 신청 데이터가 없습니다."); return; }
 
       const docSnap = snapshot.docs[0];
       const ref = doc(db, "mealRequests", docSnap.id);
       const data = docSnap.data();
 
-      if (data.days.includes(day)) {
+      if (Array.isArray(data.days) && data.days.includes(day)) {
         alert(`${month}월 ${day}일은 이미 신청되어 있습니다.`);
         return;
       }
-
       if (confirm(`${data.name} 선생님 ${month}월 ${day}일 급식을 추가 신청할까요?`)) {
-        const newDays = [...data.days, day].sort((a, b) => a - b);
+        const newDays = [...(data.days || []), day].sort((a,b)=>a-b);
         await setDoc(ref, { ...data, days: newDays });
         alert("신청이 완료되었습니다.");
         loadData();
       }
-    };
+    }
 
-    searchBtn.onclick = loadData;
-    window.onload = () => {
+    // ---------- 게이트: 로그인 → 도메인(@sungil-i.kr) → roles(admin) ----------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { alert("로그인이 필요합니다."); location.href = "index.html"; return; }
+      const email = user.email || "";
+      if (!/@sungil-i\.kr$/i.test(email)) {
+        alert("교내 계정(@sungil-i.kr)으로만 접근 가능합니다.");
+        await signOut(auth); location.href = "index.html"; return;
+      }
+
+      try {
+        const role = await getDoc(doc(db, "roles", email));
+        const isAdmin = role.exists() && role.data().role === "admin";
+        if (!isAdmin) { alert("관리자 전용 페이지입니다."); location.href = "meal.html"; return; }
+      } catch (e) {
+        console.error("roles 확인 실패:", e);
+        alert("권한 확인에 실패했습니다."); return;
+      }
+
+      // ✅ 여기서부터 데이터 로딩/쓰기 허용
       populateOptions();
-      loadData();
-      loadTeachers();
-    };
+      await loadData();
+      await loadTeachers();
+
+      searchBtn.onclick = loadData;
+      addBtn.onclick = addMealForTeacher;
+    });
   </script>
+
 </body>
 </html>
