@@ -1,89 +1,26 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>급식 신청 설정</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
   <style>
-    body {
-      width: 100%;
-      max-width: 800px;
-      margin: 50px auto 0 auto;
-      font-family: 'Pretendard', sans-serif;
-    }
-    h2 + p {
-      color: #444;
-      text-decoration: underline;
-    }
-    .select-wrapper {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      align-items: center;
-    }
-    .month-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .month-grid button {
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 1em;
-      background: #eeeeee;
-      cursor: pointer;
-    }
-    .month-grid button.active {
-      background: #1976d2;
-      color: white;
-    }
-    .calendar {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      max-width: 800px;
-      margin: 20px auto;
-    }
-    .calendar div {
-      padding: 10px 5px;
-      height: 60px;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    .calendar .weekday {
-      font-weight: bold;
-      background: #f0f0f0;
-      color: #333;
-      height: 10px;
-    }
-    .calendar .weekday:nth-child(1) {
-      color: #e24666;
-    }
-    .calendar .weekday:nth-child(7) {
-      color: #0080ff;
-    }
-    .calendar .disabled {
-      color: #ccc;
-    }
-    .nav-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 10px;
-    }
-    .note-input {
-      display:block;
-      width:80%;
-      margin-top:6px;
-      padding:6px 8px;
-      border:1px solid #ccc;
-      border-radius:6px;
-      font-size:0.9em;
-      background:#fafafa;
-    }
+    body { width:100%; max-width: 900px; margin: 50px auto 80px; font-family:'Pretendard',sans-serif; }
+    h2 + p { color:#444; text-decoration: underline; }
+    .select-wrapper { display:flex; gap:10px; margin-bottom:20px; align-items:center; flex-wrap:wrap; }
+    .month-grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; margin-top:20px; }
+    .month-grid button { padding:10px; border-radius:8px; font-size:1em; background:#eee; cursor:pointer; border:1px solid #e3e3e3; }
+    .month-grid button.active { background:#1976d2; color:#fff; }
+    .calendar { display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; max-width:900px; margin:20px auto; contain:content; }
+    .calendar div { padding:10px 6px; height:68px; background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.06); border:1px solid #ddd; }
+    .calendar .weekday { font-weight:700; background:#f3f4f6; color:#374151; height:36px; text-align:center; display:flex; align-items:center; justify-content:center; }
+    .calendar .weekday:nth-child(1){ color:#e24666; } .calendar .weekday:nth-child(7){ color:#0b7bff; }
+    .calendar .disabled { opacity:.6; background: #999;}
+    .note-input { display:block; width:80%; margin-top:6px; padding:6px 8px; border:none; border-radius:6px; font-size:.9em; background:#999; color: red; font-weight: bold;}
+    .skel { background:#eee; border:1px solid #e5e7eb; animation:pulse 1.1s infinite; }
+    @keyframes pulse { 0%{opacity:.55} 50%{opacity:.95} 100%{opacity:.55} }
+    .muted { color:#6b7280; font-size:.9em; }
   </style>
 </head>
 <body>
@@ -100,253 +37,298 @@
       <option value="2026">2026년</option>
     </select>
     <button id="saveTeacherYear">저장</button>
+    <span id="syncHint" class="muted" style="margin-left:8px; display:none">동기화 중…</span>
   </div>
+
   <div class="month-grid" id="monthGrid"></div>
 
-  <h2 style="margin-top: 40px;">2. 급식 신청 불가 일 설정</h2>
+  <h2 style="margin-top:40px;">2. 급식 신청 불가 일 설정</h2>
   <p>선택한 날은 급식을 신청할 수 없습니다.</p>
 
   <div class="select-wrapper">
     <button id="prevMonth">지난 달</button>
-    <label for="blockYear">연도: </label>
+    <label for="blockYear">연도:</label>
     <select id="blockYear"></select>
-    <label for="blockMonth">월: </label>
+    <label for="blockMonth">월:</label>
     <select id="blockMonth"></select>
     <button id="nextMonth">다음 달</button>
   </div>
+
   <div class="calendar" id="blockCalendar"></div>
 
   <script type="module">
+    /* ---------------- Firebase ---------------- */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, enableIndexedDbPersistence
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
       authDomain: "mealmanager-cda3b.firebaseapp.com",
       projectId: "mealmanager-cda3b"
     };
-
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    enableIndexedDbPersistence(db).catch(()=>{ /* 멀티탭 충돌 시 무시 */ });
+
+    /* ---------------- Gate (login → domain → admin) ---------------- */
+    async function gateAdmin() {
+      const user = await new Promise(resolve => {
+        const un = onAuthStateChanged(auth, u => { un(); resolve(u); });
+      });
+      if (!user) { alert("로그인이 필요합니다."); location.href="index.html"; throw new Error("not signed in"); }
+      const email = user.email || "";
+      if (!/@sungil-i\.kr$/i.test(email)) {
+        alert("교내 계정(@sungil-i.kr)으로만 접근 가능합니다.");
+        await signOut(auth); location.href="index.html"; throw new Error("wrong domain");
+      }
+      const roleSnap = await getDoc(doc(db, "roles", email));
+      if (!(roleSnap.exists() && roleSnap.data().role === "admin")) {
+        alert("관리자 전용 페이지입니다."); location.href="meal.html"; throw new Error("not admin");
+      }
+      return email;
+    }
+
+    /* ---------------- DOM ---------------- */
     const now = new Date();
     const currentYear = now.getFullYear();
 
     const yearSelect = document.getElementById("yearSelect");
     const monthGrid = document.getElementById("monthGrid");
     const teacherYearSelect = document.getElementById("teacherYearSelect");
-    const saveTeacherYear = document.getElementById("saveTeacherYear");
+    const saveTeacherYearBtn = document.getElementById("saveTeacherYear");
 
     const blockYear = document.getElementById("blockYear");
     const blockMonth = document.getElementById("blockMonth");
     const blockCalendar = document.getElementById("blockCalendar");
     const prevBtn = document.getElementById("prevMonth");
     const nextBtn = document.getElementById("nextMonth");
+    const syncHint = document.getElementById("syncHint");
 
+    /* ---------------- Utils ---------------- */
+    function debounce(fn, ms=300){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
     function populateYearOptions(selectEl) {
       selectEl.innerHTML = "";
       for (let y = currentYear - 1; y <= currentYear + 1; y++) {
         const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = `${y}년`;
+        opt.value = y; opt.textContent = `${y}년`;
         if (y === currentYear) opt.selected = true;
         selectEl.appendChild(opt);
       }
     }
 
-    async function loadTeacherYear() {
-      const configRef = doc(db, "mealConfig", "teacherYear");
-      const snap = await getDoc(configRef);
-      if (snap.exists()) {
-        teacherYearSelect.value = snap.data().year;
-      }
-    }
-
-    saveTeacherYear.onclick = async () => {
-      const y = parseInt(teacherYearSelect.value);
-      await setDoc(doc(db, "mealConfig", "teacherYear"), { year: y });
-      alert("교사 신청용 연도가 저장되었습니다.");
-    };
-
-    async function renderMonthButtons() {
-      const selectedYear = parseInt(yearSelect.value);
-      const promises = [];
-      for (let m = 1; m <= 12; m++) {
-        promises.push(getDoc(doc(db, "mealSettings", `${selectedYear}-${m}`)));
-      }
-      const results = await Promise.all(promises);
+    /* ---------------- Month actives: cache-first ---------------- */
+    function drawMonthButtons(year, activeMonths = []) {
       monthGrid.innerHTML = "";
-      results.forEach((snap, i) => {
-        const m = i + 1;
-        const settingsRef = doc(db, "mealSettings", `${selectedYear}-${m}`);
+      const set = new Set(activeMonths);
+      for (let m=1; m<=12; m++){
         const btn = document.createElement("button");
         btn.textContent = `${m}월`;
-        if (snap.exists() && snap.data().active) btn.classList.add("active");
+        if (set.has(m)) btn.classList.add("active");
+
+        // 낙관적 업데이트 + 캐시 갱신
         btn.onclick = async () => {
-          const isActive = btn.classList.contains("active");
-          await setDoc(settingsRef, { active: !isActive });
+          const willActive = !btn.classList.contains("active");
           btn.classList.toggle("active");
+          const key = `settings:${year}`;
+          const arr = JSON.parse(localStorage.getItem(key) || "[]");
+          const s = new Set(arr);
+          willActive ? s.add(m) : s.delete(m);
+          localStorage.setItem(key, JSON.stringify([...s]));
+          // 서버 반영
+          await setDoc(doc(db,"mealSettings",`${year}-${m}`), { active: willActive });
         };
+
         monthGrid.appendChild(btn);
-      });
+      }
     }
 
-    async function renderBlockedCalendar() {
-      const year = parseInt(blockYear.value);
-      const month = parseInt(blockMonth.value);
-      const daysInMonth = new Date(year, month, 0).getDate();
-      const startDay = new Date(year, month - 1, 1).getDay();
+    async function renderMonthButtons() {
+      const y = parseInt(yearSelect.value);
+      const cacheKey = `settings:${y}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        drawMonthButtons(y, JSON.parse(cached));   // 즉시
+      } else {
+        drawMonthButtons(y, []);                    // 골격 먼저
+      }
 
-      const docId = `${year}-${String(month).padStart(2, '0')}`;
-      const blockRef = doc(db, "blockedDays", docId);
-      const snap = await getDoc(blockRef);
-      let blocked = snap.exists() ? (snap.data().days || []) : [];
-      let notes = snap.exists() ? (snap.data().notes || {}) : {};
+      // 서버 최신값으로 갱신
+      const snaps = await Promise.all(
+        Array.from({length:12}, (_,i)=> getDoc(doc(db,"mealSettings",`${y}-${i+1}`)))
+      );
+      const actives = snaps.map((s,i)=> s.exists() && s.data().active ? (i+1) : null).filter(Boolean);
+      localStorage.setItem(cacheKey, JSON.stringify(actives));
+      drawMonthButtons(y, actives);                 // 조용히 업데이트
+    }
 
+    /* ---------------- Blocked days: cache-first ---------------- */
+    function buildCalendarUI({year, month, blocked, notes, onChange}) {
       blockCalendar.innerHTML = "";
+      const frag = document.createDocumentFragment();
+
       const weekdays = ["일","월","화","수","목","금","토"];
       weekdays.forEach(day => {
         const cell = document.createElement("div");
-        cell.textContent = day;
-        cell.classList.add("weekday");
-        blockCalendar.appendChild(cell);
+        cell.textContent = day; cell.className = "weekday";
+        frag.appendChild(cell);
       });
-      for (let i = 0; i < startDay; i++) blockCalendar.appendChild(document.createElement("div"));
 
-      // ✅ 백필할 항목을 모아 한 번만 저장
-      const backfill = {};
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const startDay = new Date(year, month - 1, 1).getDay();
+      for (let i = 0; i < startDay; i++) {
+        const hole = document.createElement("div"); hole.className="skel"; frag.appendChild(hole);
+      }
 
-      const persist = async () => {
-        await setDoc(blockRef, { days: blocked, notes }, { merge: true });
-      };
+      const blockedSet = new Set(blocked);
+      for (let d=1; d<=daysInMonth; d++){
+        const date = new Date(year, month-1, d);
+        const isWeekend = (date.getDay()===0 || date.getDay()===6);
 
-      for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(year, month - 1, d);
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         const cell = document.createElement("div");
-
-        if (isWeekend) {
-          cell.textContent = `${String(d).padStart(2, '0')}일`;
-          cell.classList.add("disabled");
-          blockCalendar.appendChild(cell);
-          continue;
+        if (isWeekend){
+          cell.textContent = `${String(d).padStart(2,'0')}일`;
+          cell.classList.add("disabled"); frag.appendChild(cell); continue;
         }
 
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.value = d;
-        checkbox.checked = blocked.includes(d);
+        checkbox.type="checkbox"; checkbox.value=d; checkbox.checked = blockedSet.has(d);
 
         const textSpan = document.createElement("span");
-        textSpan.textContent = ` ${String(d).padStart(2, '0')}일`;
+        textSpan.textContent = ` ${String(d).padStart(2,'0')}일`;
 
         const noteInput = document.createElement("input");
-        noteInput.type = "text";
-        noteInput.className = "note-input";
-        noteInput.placeholder = "메모를 입력하세요 (예: 급식미실시일)";
+        noteInput.type="text"; noteInput.className="note-input";
+        noteInput.placeholder="메모를 입력하세요 (예: 급식미실시일)";
         noteInput.value = notes[d] ?? "급식미실시일";
         noteInput.style.display = checkbox.checked ? "block" : "none";
+        if (checkbox.checked) cell.classList.add("disabled");
 
-        if (checkbox.checked) {
-          if (!blocked.includes(d)) blocked.push(d);
-          cell.classList.add("disabled");
-          const val = noteInput.value || "급식미실시일";
-          notes[d] = val;
-          noteInput.style.display = "block";
-
-          await updateDoc(blockRef, {
-            days: blocked,
-            [`notes.${d}`]: val
-          });
-        }
-
-        checkbox.onchange = async () => {
-          if (checkbox.checked) {
-            if (!blocked.includes(d)) blocked.push(d);
-            cell.classList.add("disabled");
-            if (!notes[d]) notes[d] = noteInput.value || "급식미실시일";
-            noteInput.style.display = "block";
+        checkbox.onchange = () => {
+          const n = Number(checkbox.value);
+          if (checkbox.checked){
+            blockedSet.add(n); cell.classList.add("disabled");
+            notes[n] = noteInput.value || "급식미실시일"; noteInput.style.display="block";
           } else {
-            blocked = blocked.filter(day => day !== d);
-            cell.classList.remove("disabled");
-            noteInput.style.display = "none";
-
-            // 메모 삭제 (중첩 필드 정확히 삭제)
-            delete notes[d]; // 로컬 상태도 정리
-            await updateDoc(blockRef, {
-              days: blocked,
-              [`notes.${d}`]: deleteField()
-            });
+            blockedSet.delete(n); cell.classList.remove("disabled");
+            delete notes[n]; noteInput.style.display="none";
           }
-          await persist();
+          onChange([...blockedSet], {...notes});
         };
 
-        noteInput.oninput = async (e) => {
+        noteInput.oninput = (e) => {
           const v = e.target.value.trim();
           notes[d] = v || "급식미실시일";
-          await persist();
+          if (checkbox.checked) onChange([...blockedSet], {...notes});
         };
 
-        label.appendChild(checkbox);
-        label.appendChild(textSpan);
-        cell.appendChild(label);
-        cell.appendChild(noteInput);
-        blockCalendar.appendChild(cell);
+        label.appendChild(checkbox); label.appendChild(textSpan);
+        cell.appendChild(label); cell.appendChild(noteInput);
+        frag.appendChild(cell);
       }
 
-      // ✅ 렌더 종료 시, 백필할 게 있으면 한 번만 저장
-      if (Object.keys(backfill).length > 0) {
-        await setDoc(blockRef, { notes: backfill }, { merge: true });
-      }
+      blockCalendar.appendChild(frag);
     }
 
-    yearSelect.addEventListener("change", renderMonthButtons);
-    blockYear.addEventListener("change", renderBlockedCalendar);
-    blockMonth.addEventListener("change", renderBlockedCalendar);
+    async function renderBlockedCalendar() {
+      const year  = parseInt(blockYear.value);
+      const month = parseInt(blockMonth.value);
+      const docId = `${year}-${String(month).padStart(2,'0')}`;
+      const blockRef = doc(db, "blockedDays", docId);
 
+      // 캐시 키
+      const cacheKey = `blocked:${docId}`;
+
+      // 🔧 저장 함수들을 먼저 정의하고(순서 중요!)
+      async function saveOnce(nextBlocked, nextNotes){
+        localStorage.setItem(cacheKey, JSON.stringify({blocked: nextBlocked, notes: nextNotes}));
+        await setDoc(blockRef, { days: nextBlocked, notes: nextNotes }); // 전체 동기화
+      }
+      const saveDebounced = debounce(saveOnce, 300);
+
+      // 캐시 먼저 읽어 UI 그림
+      let blocked = [], notes = {};
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) ({blocked, notes} = JSON.parse(cached));
+      buildCalendarUI({ year, month, blocked, notes, onChange: saveDebounced }); // ✅ 이제 정의 후 전달
+
+      // 서버 최신값으로 갱신
+      syncHint.style.display = "inline";
+      const snap = await getDoc(blockRef);
+      if (snap.exists()){
+        blocked = snap.data().days  || [];
+        notes   = snap.data().notes || {};
+        localStorage.setItem(cacheKey, JSON.stringify({blocked, notes}));
+        buildCalendarUI({ year, month, blocked, notes, onChange: saveDebounced });
+      }
+      syncHint.style.display = "none";
+    }
+
+
+    /* ---------------- Teacher year ---------------- */
+    async function loadTeacherYear() {
+      // 캐시 먼저
+      const cacheKey = "teacherYear";
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) teacherYearSelect.value = JSON.parse(cached);
+
+      // 서버 갱신
+      const snap = await getDoc(doc(db,"mealConfig","teacherYear"));
+      const y = snap.exists() ? (snap.data().year ?? currentYear) : currentYear;
+      teacherYearSelect.value = y;
+      localStorage.setItem(cacheKey, JSON.stringify(y));
+    }
+    saveTeacherYearBtn.onclick = async () => {
+      const y = parseInt(teacherYearSelect.value);
+      localStorage.setItem("teacherYear", JSON.stringify(y));
+      await setDoc(doc(db,"mealConfig","teacherYear"), { year: y }, { merge:true });
+      alert("교사 신청용 연도가 저장되었습니다.");
+    };
+
+    /* ---------------- Events ---------------- */
+    yearSelect.addEventListener("change", ()=> renderMonthButtons().catch(console.error));
+    blockYear.addEventListener("change", ()=> renderBlockedCalendar().catch(console.error));
+    blockMonth.addEventListener("change", ()=> renderBlockedCalendar().catch(console.error));
     prevBtn.onclick = () => {
-      let y = parseInt(blockYear.value);
-      let m = parseInt(blockMonth.value);
-      m--;
-      if (m === 0) {
-        m = 12;
-        y--;
-      }
-      blockYear.value = y;
-      blockMonth.value = m;
-      renderBlockedCalendar();
+      let y = parseInt(blockYear.value), m = parseInt(blockMonth.value) - 1;
+      if (m===0){ m=12; y--; } blockYear.value = y; blockMonth.value = m;
+      renderBlockedCalendar().catch(console.error);
     };
-
     nextBtn.onclick = () => {
-      let y = parseInt(blockYear.value);
-      let m = parseInt(blockMonth.value);
-      m++;
-      if (m === 13) {
-        m = 1;
-        y++;
-      }
-      blockYear.value = y;
-      blockMonth.value = m;
-      renderBlockedCalendar();
+      let y = parseInt(blockYear.value), m = parseInt(blockMonth.value) + 1;
+      if (m===13){ m=1; y++; } blockYear.value = y; blockMonth.value = m;
+      renderBlockedCalendar().catch(console.error);
     };
 
-    function init() {
-      populateYearOptions(yearSelect);
-      populateYearOptions(blockYear);
-      for (let m = 1; m <= 12; m++) {
-        const opt = document.createElement("option");
-        opt.value = m;
-        opt.textContent = `${m}월`;
-        blockMonth.appendChild(opt);
-      }
-      blockYear.value = currentYear;
-      blockMonth.value = now.getMonth() + 1;
-      renderMonthButtons();
-      renderBlockedCalendar();
-      loadTeacherYear();
-    }
+    /* ---------------- Init (after gate) ---------------- */
+    (async function start(){
+      try {
+        await gateAdmin();
+        populateYearOptions(yearSelect);
+        populateYearOptions(blockYear);
 
-    init();
+        // 월 select 미리 채우기
+        blockMonth.innerHTML = "";
+        for (let m=1; m<=12; m++){
+          const opt=document.createElement("option"); opt.value=m; opt.textContent=`${m}월`; blockMonth.appendChild(opt);
+        }
+        blockYear.value = currentYear;
+        blockMonth.value = now.getMonth()+1;
+
+        // 캐시 즉시 렌더 → 서버 갱신
+        await Promise.all([
+          renderMonthButtons(),
+          renderBlockedCalendar(),
+          loadTeacherYear()
+        ]);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
   </script>
 </body>
 </html>
