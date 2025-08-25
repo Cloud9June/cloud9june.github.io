@@ -93,6 +93,14 @@
     <button id="resetBtn">초기화</button>
   </div>
 
+  <!-- ✅ 추가: 같은 연도의 여러 달을 한 번에 선택/적용 -->
+  <div class="form" id="bulkMonthsWrap">
+    <label style="font-weight:bold;">일괄 적용 달 선택:</label>
+    <div id="bulkMonths" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    <label><input type="checkbox" id="bulkAllToggle"> 전체 선택</label>
+    <span class="hint">체크한 달에 한 번에 저장/초기화가 적용됩니다. (보기용 달은 위 셀렉트에서 선택)</span>
+  </div>
+
   <h2>2. 학생 급식 인원 확인/수정</h2>
   <div id="monthTitle"></div>
   <div id="legend">
@@ -163,6 +171,47 @@
       const opt = new Option(`${m}월`, m);
       if (m === currentMonth) opt.selected = true;
       monthSelect.appendChild(opt);
+    }
+
+    const bulkMonths = document.getElementById("bulkMonths");
+    const bulkAllToggle = document.getElementById("bulkAllToggle");
+
+    function renderBulkMonthCheckboxes(selectedYear) {
+      bulkMonths.innerHTML = "";
+      for (let m = 1; m <= 12; m++) {
+        const id = `bulk-month-${m}`;
+        const label = document.createElement("label");
+        label.setAttribute("for", id);
+        label.style.display = "inline-flex";
+        label.style.alignItems = "center";
+        label.style.gap = "4px";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = id;
+        cb.value = m;
+
+        const txt = document.createTextNode(`${m}월`);
+        label.appendChild(cb);
+        label.appendChild(txt);
+        bulkMonths.appendChild(label);
+      }
+      bulkAllToggle.checked = false;
+    }
+
+    // 최초 렌더 및 연도 변경 시 동기화
+    renderBulkMonthCheckboxes(parseInt(yearSelect.value, 10));
+    yearSelect.addEventListener("change", () => {
+      renderBulkMonthCheckboxes(parseInt(yearSelect.value, 10));
+    });
+    bulkAllToggle.addEventListener("change", () => {
+      const checks = bulkMonths.querySelectorAll('input[type="checkbox"]');
+      checks.forEach(cb => cb.checked = bulkAllToggle.checked);
+    });
+
+    function getSelectedMonthsForBulk() {
+      const checks = Array.from(bulkMonths.querySelectorAll('input[type="checkbox"]:checked'));
+      return checks.map(cb => parseInt(cb.value, 10)).sort((a,b)=>a-b);
     }
 
     // 유틸/참조
@@ -452,21 +501,60 @@
 
     // ---- 이벤트(버튼/셀렉트)
     function wireEvents() {
-      saveBtn.onclick = async ()=>{
-        const y = parseInt(yearSelect.value,10), m = parseInt(monthSelect.value,10);
+      saveBtn.onclick = async () => {
+        const y = parseInt(yearSelect.value,10);
+        const months = getSelectedMonthsForBulk();
         const count = toSafeInt(studentCountInput.value);
-        await saveMonthAllSchoolDays(y, m, count);
-        await saveEffectiveStudentsDays(y, m);
-        alert("저장되었습니다. (등교일 전체 채움)");
-        await renderCalendar();
+
+        if (months.length === 0) {
+          // 체크가 없으면 보기용 달에만 적용(기존 동작 호환)
+          const m = parseInt(monthSelect.value,10);
+          await saveMonthAllSchoolDays(y, m, count);
+          await saveEffectiveStudentsDays(y, m);
+          alert(`${y}년 ${m}월 저장되었습니다.`);
+          await renderCalendar();
+          return;
+        }
+
+        if (!confirm(`${y}년 ${months.join(", ")}월에 등교일 전체 ${count}명으로 저장할까요?`)) return;
+
+        await Promise.all(months.map(async (m) => {
+          await saveMonthAllSchoolDays(y, m, count);
+          await saveEffectiveStudentsDays(y, m);
+        }));
+
+        alert(`${y}년 ${months.join(", ")}월 저장이 완료되었습니다.`);
+        // 현재 “보기용 달”이 체크 목록에 있으면 화면 갱신
+        if (months.includes(parseInt(monthSelect.value,10))) {
+          await renderCalendar();
+        }
       };
-      resetBtn.onclick = async ()=>{
-        if (!confirm("정말로 이 달의 모든 등교일 인원을 0명으로 초기화하시겠습니까?")) return;
-        const y = parseInt(yearSelect.value,10), m = parseInt(monthSelect.value,10);
-        await saveMonthAllSchoolDays(y, m, 0);
-        await saveEffectiveStudentsDays(y, m);
-        alert("초기화 완료되었습니다. (등교일 전체 0명)");
-        await renderCalendar();
+
+      resetBtn.onclick = async () => {
+        const y = parseInt(yearSelect.value,10);
+        const months = getSelectedMonthsForBulk();
+
+        if (months.length === 0) {
+          const m = parseInt(monthSelect.value,10);
+          if (!confirm(`${y}년 ${m}월 등교일 전체를 0명으로 초기화할까요?`)) return;
+          await saveMonthAllSchoolDays(y, m, 0);
+          await saveEffectiveStudentsDays(y, m);
+          alert(`${y}년 ${m}월 초기화 완료`);
+          await renderCalendar();
+          return;
+        }
+
+        if (!confirm(`${y}년 ${months.join(", ")}월 등교일 전체를 0명으로 초기화할까요?`)) return;
+
+        await Promise.all(months.map(async (m) => {
+          await saveMonthAllSchoolDays(y, m, 0);
+          await saveEffectiveStudentsDays(y, m);
+        }));
+
+        alert(`${y}년 ${months.join(", ")}월 초기화 완료`);
+        if (months.includes(parseInt(monthSelect.value,10))) {
+          await renderCalendar();
+        }
       };
       addAbsenceBtn.onclick = ()=>{
         document.getElementById("absenceBody").appendChild(makeAbsenceRow());
