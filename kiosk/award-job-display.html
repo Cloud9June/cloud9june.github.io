@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>성과 & 취업 현황 (세로형 키오스크)</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0d10; --panel:#12161b; --card:#171c22; --text:#e8edf3; --muted:#9fb0c0; --accent:#4cc9f0; --gold:#ffd166;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family: Pretendard, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      background: radial-gradient(120% 120% at 50% -10%, #1b2330 0%, #0b0d10 60%, #050608 100%);
+      color:var(--text); overflow:hidden;
+    }
+    .app{height:100dvh; max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:12px; padding:14px}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); backdrop-filter: blur(6px);
+    }
+    .title{display:flex; align-items:baseline; gap:10px}
+    .title h1{margin:0; font-size: clamp(20px, 3.6vw, 36px)}
+    .subtitle{color:var(--muted); font-size: clamp(12px, 2.2vw, 18px)}
+    .btn{border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
+      color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer}
+    .tabs{display:grid; grid-template-columns:1fr 1fr; gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px}
+    .tab{text-align:center; padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; border:1px solid transparent}
+    .tab.active{background:linear-gradient(180deg, rgba(76,201,240,.25), rgba(76,201,240,.05)); border-color:rgba(76,201,240,.6)}
+    .summary{display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:var(--muted)}
+    .summary .pill{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); font-weight:600}
+    .list-wrap{position:relative; flex:1; min-height:0; border-radius:18px; background:var(--panel); overflow:hidden}
+    .page{position:absolute; inset:0; padding:14px; display:grid; opacity:0; transform:translateY(8px); transition:opacity .35s, transform .35s}
+    .page.active{opacity:1; transform:none}
+    /* 고정 10행 그리드: 각 행 높이를 동일하게 */
+    .cards{
+      height:100%; display:grid; gap:10px; grid-template-columns:1fr; grid-template-rows: repeat(10, 1fr);
+    }
+    .card{
+      display:grid; grid-template-columns:64px 1fr auto; align-items:center; gap:12px;
+      padding:12px; border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.2));
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .card.placeholder{
+      visibility:hidden; pointer-events:none; /* 공간은 유지하되 보이지 않게 */
+      border-color: transparent; background: transparent;
+    }
+    .avatar{
+      width:64px; height:64px; border-radius:14px; display:grid; place-items:center; font-weight:800;
+      background:linear-gradient(145deg, #263243, #151b25); color:var(--gold); border:1px solid rgba(255,255,255,.06);
+      font-size:20px;
+    }
+    .meta .line1{font-size: clamp(15px, 2.6vw, 22px); font-weight:800}
+    .meta .line2{font-size: clamp(12px, 2.2vw, 16px); color:var(--muted); margin-top:2px}
+    .badge{padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14); font-weight:800; font-size: clamp(11px, 2vw, 14px)}
+    .badge.gold{color:#2d2a00; background:linear-gradient(180deg,#ffd166,#e0b84b)}
+    .badge.silver{color:#1f2630; background:linear-gradient(180deg,#dfe6f1,#b6c0cc)}
+    .badge.bronze{color:#2a1a00; background:linear-gradient(180deg,#e6a87a,#c78452)}
+    .badge.public{background:rgba(51,154,240,.18); color:#cfe8ff; border-color:#2d82d6}
+    .badge.corp{background:rgba(173,181,189,.18); color:#f1f3f5; border-color:#8d959c}
+    .badge.agency{background:rgba(81,207,102,.18); color:#d9ffe7; border-color:#3aa957}
+    .controls{position:absolute; inset-inline:0; bottom:8px; display:flex; justify-content:center; gap:8px; pointer-events:none}
+    .dot{width:10px; height:10px; border-radius:999px; background:rgba(255,255,255,.25); transition:.25s; cursor: pointer; pointer-events: auto;}
+    .dot.active{background:var(--accent); transform:scale(1.15)}
+    footer{margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); overflow:hidden; min-height:42px}
+    .ticker{display:flex; gap:20px; white-space:nowrap; position:relative; left:0; animation:marq 22s linear infinite}
+    .ticker:hover{animation-play-state:paused}
+    @keyframes marq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+
+    /* 라이트 모드 */
+    .light{
+      --bg:#f6f8fb; --panel:#ffffff; --card:#ffffff; --text:#0d1b2a; --muted:#536273; --accent:#0077ff;
+      background: linear-gradient(180deg, #f7fbff, #eef3f9);
+    }
+    .light .avatar{background:linear-gradient(145deg, #e9f1ff, #dce6f7)}
+    .light .card{background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.01))}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="title">
+        <h1>성일정보고 성과 & 취업 현황</h1>
+        <div class="subtitle" id="period">2025학년도</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnTheme">다크/라이트</button>
+        <button class="btn" id="btnFullscreen">풀스크린</button>
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과(수상)</div>
+      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단·대기업 취업</div>
+    </div>
+
+    <div class="summary" id="summary">
+      <div class="pill">총 인원 <strong id="countTotal">0</strong>명</div>
+      <div class="pill">페이지 <strong id="pageInfo">1/1</strong></div>
+      <div class="pill" id="extraInfo">자동 전환 중…</div>
+    </div>
+
+    <div class="list-wrap" id="viewport">
+      <div class="controls" id="dots"></div>
+    </div>
+
+    <footer>
+      <div class="ticker" id="ticker">
+        <span>👏 2025 전국 기능경기대회 입상 다수</span><span>•</span>
+        <span>🎉 공기업·대기업 취업자 전년 대비 증가</span><span>•</span>
+        <span>📣 자세한 명단은 학교 홈페이지/QR에서 확인</span><span>•</span>
+        <span>👍 성일정보고 학생 여러분 자랑스럽습니다!</span>
+
+        <span>👏 2025 전국 기능경기대회 입상 다수</span><span>•</span>
+        <span>🎉 공기업·대기업 취업자 전년 대비 증가</span><span>•</span>
+        <span>📣 자세한 명단은 학교 홈페이지/QR에서 확인</span><span>•</span>
+        <span>👍 성일정보고 학생 여러분 자랑스럽습니다!</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    /************ 데이터 샘플 ************/
+    const awards = [
+      { comp:"전국 기능경기대회(IT네트워크)", name:"김형준", prize:"금상", year:2025, icon:"🖧" },
+      { comp:"경기도 상업경진대회(프레젠테이션)", name:"박지민", prize:"은상", year:2025, icon:"🖥️" },
+      { comp:"정보올림피아드", name:"이도윤", prize:"동상", year:2025, icon:"💡" },
+      { comp:"앱 개발 공모전", name:"최서아", prize:"금상", year:2025, icon:"📱" },
+      { comp:"해킹방어대회", name:"정하준", prize:"은상", year:2025, icon:"🛡️" },
+      { comp:"AI 경진대회", name:"윤시우", prize:"우수상", year:2025, icon:"🤖" },
+      { comp:"빅데이터 경진대회", name:"김민서", prize:"동상", year:2025, icon:"📊" },
+      { comp:"웹콘텐츠 공모전", name:"오예린", prize:"장려상", year:2025, icon:"🌐" },
+      { comp:"로봇제어 경진", name:"강태윤", prize:"금상", year:2025, icon:"🤖" },
+      { comp:"UI/UX 챌린지", name:"박하림", prize:"은상", year:2025, icon:"🎨" },
+      // 다음 페이지 예시로 2명만
+      { comp:"핀테크 공모전", name:"김다온", prize:"장려상", year:2025, icon:"💳" },
+      { comp:"클라우드 챌린지", name:"이유진", prize:"우수상", year:2025, icon:"☁️" },
+    ];
+    const jobs = [
+      { company:"한국전력공사", name:"김도현", type:"공기업", dept:"전력IT", emoji:"⚡" },
+      { company:"삼성전자", name:"이민주", type:"대기업", dept:"서버SW", emoji:"🔷" },
+      { company:"국민건강보험공단", name:"박서윤", type:"공단", dept:"정보보안", emoji:"💠" },
+      { company:"SK하이닉스", name:"정현우", type:"대기업", dept:"데이터", emoji:"🧠" },
+      { company:"한국수자원공사", name:"최유진", type:"공기업", dept:"스마트시스템", emoji:"💧" },
+      { company:"네이버", name:"강지후", type:"대기업", dept:"FE개발", emoji:"🟩" },
+      { company:"LH공사", name:"문예빈", type:"공기업", dept:"스마트시티", emoji:"🏙️" },
+      { company:"카카오", name:"윤태민", type:"대기업", dept:"플랫폼", emoji:"🟨" },
+      { company:"도로교통공단", name:"서지안", type:"공단", dept:"교통AI", emoji:"🚦" },
+      { company:"포스코", name:"오하린", type:"대기업", dept:"제조IT", emoji:"🏗️" },
+      { company:"한전KDN", name:"김시현", type:"공기업", dept:"전력ICT", emoji:"💡" },
+      { company:"현대자동차", name:"박도영", type:"대기업", dept:"자율주행", emoji:"🚗" },
+    ];
+
+    /************ 설정(핵심) ************/
+    const PAGE_SIZE = 10;          // ★ 항상 10칸 유지
+    const AUTO_INTERVAL_MS = 6000; // 자동 전환 주기
+
+    let currentTab = "awards";
+    let pageIndex = 0;
+    let autoTimer = null;
+    let pages = [];
+
+    const viewport   = document.getElementById("viewport");
+    const dots       = document.getElementById("dots");
+    const pageInfo   = document.getElementById("pageInfo");
+    const countTotal = document.getElementById("countTotal");
+    const extraInfo  = document.getElementById("extraInfo");
+
+    /************ 유틸 ************/
+    const chunk = (arr, size) => arr.reduce((acc, _, i) => (i%size?acc:acc.concat([arr.slice(i,i+size)])), []);
+    const maskName = (name) => {
+      const arr = [...name]; if(arr.length===2) return arr[0]+"○";
+      if(arr.length>=3) return arr[0]+"○"+arr.slice(2).join(""); return name;
+    };
+    const prizeClass = (p) => p.includes("금")?"gold":p.includes("은")?"silver":p.includes("동")?"bronze":"";
+    const typeClass  = (t) => t.includes("공기업")?"public":t.includes("공단")?"agency":"corp";
+
+    /************ 렌더 ************/
+    function render(){
+      const data = currentTab==="awards" ? awards : jobs;
+      countTotal.textContent = data.length;
+
+      // PAGE_SIZE로 강제 고정된 페이지 분할
+      const ch = chunk(data, PAGE_SIZE);
+
+      viewport.innerHTML = ""; dots.innerHTML = "";
+      pages = [];
+
+      ch.forEach((group, idx) => {
+        // 남는 칸을 placeholder로 채워 10칸 유지
+        const filled = group.slice();
+        while(filled.length < PAGE_SIZE){
+          filled.push({ __placeholder: true });
+        }
+
+        const page = document.createElement("div");
+        page.className = "page" + (idx===0 ? " active":"");
+
+        const cards = document.createElement("div");
+        cards.className = "cards";
+
+        filled.forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          if(item.__placeholder){ card.classList.add("placeholder"); }
+
+          const avatar = document.createElement("div");
+          avatar.className = "avatar";
+
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          const line1 = document.createElement("div"); line1.className = "line1";
+          const line2 = document.createElement("div"); line2.className = "line2";
+
+          const badge = document.createElement("div");
+          badge.className = "badge";
+
+          if(currentTab==="awards"){
+            avatar.textContent = item.icon || "🏆";
+            line1.innerHTML = item.comp || "";
+            line2.innerHTML = item.name ? `${maskName(item.name)} · ${item.year||""}` : "";
+            badge.textContent = item.prize || "";
+            badge.className += " " + (item.prize ? prizeClass(item.prize) : "");
+          }else{
+            avatar.textContent = item.emoji || "🏢";
+            line1.innerHTML = (item.company && item.name) ? `${item.company} – ${maskName(item.name)}` : "";
+            line2.innerHTML = item.dept || "";
+            badge.textContent = item.type || "";
+            badge.className += " " + (item.type ? typeClass(item.type) : "");
+          }
+
+          meta.appendChild(line1); meta.appendChild(line2);
+          card.appendChild(avatar); card.appendChild(meta); card.appendChild(badge);
+          cards.appendChild(card);
+        });
+
+        page.appendChild(cards);
+        viewport.appendChild(page);
+        pages.push(page);
+
+        const dot = document.createElement("div");
+        dot.className = "dot" + (idx===0 ? " active":"");
+        dot.addEventListener("click", ()=>{ 
+          stopAuto();               // 수동으로 누르면 자동 슬라이드 일시정지
+          goToPage(idx); 
+          startAuto();              // 다시 자동 슬라이드 재시작
+        });
+        dots.appendChild(dot);
+      });
+
+      pageIndex = 0;
+      updatePageInfo();
+      extraInfo.textContent = "자동 전환 중…";
+    }
+
+    function updatePageInfo(){
+      const total = pages.length || 1;
+      pageInfo.textContent = `${pageIndex+1}/${total}`;
+      [...dots.children].forEach((d,i)=>d.classList.toggle("active", i===pageIndex));
+    }
+    function goToPage(i){
+      if(pages.length===0) return;
+      pages.forEach((p,idx)=>p.classList.toggle("active", idx===i));
+      pageIndex = i; updatePageInfo();
+    }
+    function nextPage(){ if(pages.length) goToPage((pageIndex+1)%pages.length); }
+    function startAuto(){ stopAuto(); autoTimer = setInterval(nextPage, AUTO_INTERVAL_MS); }
+    function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
+
+    /************ 스와이프 ************/
+    let touchStartY = null;
+    viewport.addEventListener("touchstart", e=>{ touchStartY = e.touches[0].clientY; stopAuto(); extraInfo.textContent="일시정지(터치)"; }, {passive:true});
+    viewport.addEventListener("touchend", e=>{
+      if(touchStartY==null) return;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if(Math.abs(dy) > 40){ dy < 0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
+      touchStartY=null; startAuto(); extraInfo.textContent="자동 전환 중…";
+    }, {passive:true});
+
+    /************ 탭/버튼 ************/
+    document.getElementById("tab-awards").addEventListener("click", ()=>setActiveTab("awards"));
+    document.getElementById("tab-jobs").addEventListener("click", ()=>setActiveTab("jobs"));
+    function setActiveTab(key){
+      currentTab = key;
+      document.getElementById("tab-awards").classList.toggle("active", key==="awards");
+      document.getElementById("tab-jobs").classList.toggle("active", key==="jobs");
+      render(); startAuto();
+    }
+
+    document.getElementById("btnTheme").addEventListener("click", ()=>{ document.body.classList.toggle("light"); });
+    document.getElementById("btnFullscreen").addEventListener("click", async ()=>{
+      try{ if(!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); }catch(e){}
+    });
+
+    // 초기 렌더
+    render(); startAuto();
+  </script>
+</body>
+</html>
