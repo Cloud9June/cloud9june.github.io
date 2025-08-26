@@ -76,6 +76,9 @@
     }
     .light .avatar{background:linear-gradient(145deg, #e9f1ff, #dce6f7)}
     .light .card{background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.01))}
+    .light .badge.public {background: rgba(51,154,240,.15); color: #0b5394; border-color: #2d82d6;}
+    .light .badge.corp {background: rgba(173,181,189,.2); color: #343a40; border-color: #8d959c;}
+    .light .badge.agency {background: rgba(81,207,102,.2); color: #2b8a3e; border-color: #3aa957;}
   </style>
 </head>
 <body>
@@ -154,7 +157,7 @@
     ];
 
     /************ 설정(핵심) ************/
-    const PAGE_SIZE = 10;          // ★ 항상 10칸 유지
+    const PAGE_SIZE = 7;          // ★ 항상 10칸 유지
     const AUTO_INTERVAL_MS = 6000; // 자동 전환 주기
 
     let currentTab = "awards";
