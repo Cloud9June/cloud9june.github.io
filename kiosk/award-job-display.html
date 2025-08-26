@@ -69,7 +69,7 @@
     .ticker{display:flex; gap:20px; white-space:nowrap; position:relative; left:0; animation:marq 22s linear infinite}
     .ticker:hover{animation-play-state:paused}
     @keyframes marq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
-
+    
     /* 라이트 모드 */
     .light{
       --bg:#f6f8fb; --panel:#ffffff; --card:#ffffff; --text:#0d1b2a; --muted:#536273; --accent:#0077ff;
@@ -92,7 +92,7 @@
       </div>
       <div class="actions">
         <button class="btn" id="btnTheme">다크/라이트</button>
-        <button class="btn" id="btnFullscreen">풀스크린</button>
+        <button class="btn" id="btnTogglePlay">⏸ 일시정지</button>
       </div>
     </header>
 
@@ -113,13 +113,13 @@
 
     <footer>
       <div class="ticker" id="ticker">
-        <span>👏 2025 각종 대회 입상 다수</span><span>•</span>
-        <span>🎉 공기업·대기업 취업자 전년 대비 증가</span><span>•</span>
+        <span>👏 2025 각종 대회에서 다수 입상</span><span>•</span>
+        <span>🎉 공기업·대기업 취업자를 매년 꾸준히 배출</span><span>•</span>
         <span>📣 자세한 명단은 학교 홈페이지에서 확인</span><span>•</span>
         <span>👍 성일정보고 학생 여러분 자랑스럽습니다!</span>
 
-        <span>👏 2025 각종 대회 입상 다수</span><span>•</span>
-        <span>🎉 공기업·대기업 취업자 전년 대비 증가</span><span>•</span>
+        <span>👏 2025 각종 대회에서 다수 입상</span><span>•</span>
+        <span>🎉 공기업·대기업 취업자를 매년 꾸준히 배출</span><span>•</span>
         <span>📣 자세한 명단은 학교 홈페이지에서 확인</span><span>•</span>
         <span>👍 성일정보고 학생 여러분 자랑스럽습니다!</span>
       </div>
@@ -358,8 +358,19 @@
     }
 
     document.getElementById("btnTheme").addEventListener("click", ()=>{ document.body.classList.toggle("light"); });
-    document.getElementById("btnFullscreen").addEventListener("click", async ()=>{
-      try{ if(!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); }catch(e){}
+    let isPaused = false;
+
+    document.getElementById("btnTogglePlay").addEventListener("click", ()=>{
+      if(isPaused){
+        startAuto();
+        document.getElementById("btnTogglePlay").textContent = "⏸ 일시정지";
+        extraInfo.textContent = "자동 전환 중…";
+      }else{
+        stopAuto();
+        document.getElementById("btnTogglePlay").textContent = "▶ 다시재생";
+        extraInfo.textContent = "일시정지됨";
+      }
+      isPaused = !isPaused;
     });
 
     // 초기 렌더
