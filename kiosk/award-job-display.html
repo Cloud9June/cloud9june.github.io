@@ -104,7 +104,7 @@
         <div class="subtitle" id="period">2025학년도</div>
       </div>
       <div class="actions">
-        <button class="btn" id="btnTheme">다크/라이트</button>
+        <button class="btn" id="btnTheme">🌙 다크모드</button>
         <button class="btn" id="btnTogglePlay">⏸️ 일시정지</button>
       </div>
     </header>
@@ -387,7 +387,17 @@
     }
 
     // 테마 토글
-    document.getElementById("btnTheme").addEventListener("click", ()=>{ document.body.classList.toggle("light"); });
+    // document.getElementById("btnTheme").addEventListener("click", ()=>{ document.body.classList.toggle("light"); });
+    const btnTheme = document.getElementById("btnTheme");
+
+    btnTheme.addEventListener("click", () => {
+      document.body.classList.toggle("light");
+      if(document.body.classList.contains("light")){
+        btnTheme.textContent = "☀️ 라이트모드";
+      } else {
+        btnTheme.textContent = "🌙 다크모드";
+      }
+    });
 
     // 일시정지/재생 토글
     document.getElementById("btnTogglePlay").addEventListener("click", ()=>{
