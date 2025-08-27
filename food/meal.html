@@ -110,6 +110,30 @@
       padding: 8px 14px; background: #444; color: #fff;
       border-radius: 6px; text-decoration: none; display: none;
     }
+    #toast {
+      visibility: hidden;
+      min-width: 280px;
+      max-width: 400px;
+      background-color: rgba(50, 50, 50, 0.9);
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 16px 20px;
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      font-size: 15px;
+      line-height: 1.4;
+      opacity: 0;
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
   </style>
 </head>
 <body>
@@ -121,12 +145,23 @@
   <div id="calendarArea">
     <h2 id="calendarTitle"></h2>
     <div class="calendar" id="calendar"></div>
+    
+    <div id="editBanner" style="display:none;max-width:880px;margin:10px auto 0;
+      padding:10px 14px;border-radius:8px;background:#fff8e1;color:#7a5600;
+      border:1px solid #ffe082;text-align:left;">
+      <b>수정 모드</b> — 이 달에 이미 신청한 내역이 있습니다.<br>
+      변경을 원하시면, 새롭게 체크하신 후 변경사항 저장 버튼을 누르세요.
+      <span id="lastSaved"></span>
+    </div>
+    
     <div class="buttons">
       <button onclick="selectAll()">전체 선택</button>
       <button onclick="deselectAll()">전체 해제</button>
-      <button onclick="saveData()">저장하기</button>
+      <button id="saveBtn" onclick="saveData()">저장하기</button>
     </div>
   </div>
+
+  <div id="toast"></div>  
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -215,14 +250,6 @@
 
       container.appendChild(frag);
       container.style.visibility = "visible";
-    }
-
-    async function selectMonth(month, button) {
-      selectedMonth = month;
-      document.querySelectorAll("#monthButtons button").forEach(b => b.classList.remove("active"));
-      button.classList.add("active");
-      document.getElementById("calendarArea").style.display = "block";
-      await generateCalendar(month);
     }
 
     // blocked/notes 로더
@@ -324,6 +351,55 @@
       }
     }
 
+    let existingDays = [];      // 이전에 저장되어 있던 날짜들
+    let isEditMode = false;     // 수정 모드 여부
+
+    async function selectMonth(month, button) {
+      selectedMonth = month;
+      document.querySelectorAll("#monthButtons button").forEach(b => b.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById("calendarArea").style.display = "block";
+
+      // 1) 달력 먼저 그림
+      await generateCalendar(month);
+
+      // 2) 내 기존 신청 불러와서 체크
+      const docId = `${currentUser.uid}_${currentYear}_${selectedMonth}`;
+      const snap = await getDoc(doc(db, "mealRequests", docId));
+
+      if (snap.exists()) {
+        const d = snap.data() || {};
+        existingDays = Array.isArray(d.days) ? d.days.map(Number) : [];
+        isEditMode = true;
+
+        // 체크박스 반영
+        document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => {
+          cb.checked = existingDays.includes(parseInt(cb.value, 10));
+        });
+
+        // 배너/버튼 문구
+        document.getElementById("editBanner").style.display = "block";
+        const ts = d.timestamp?.toDate?.() || d.timestamp || null;
+        document.getElementById("lastSaved").textContent =
+          ts ? ` (저장 시각: ${new Date(ts).toLocaleString()})` : "";
+        document.getElementById("saveBtn").textContent = "변경사항 저장";
+      } else {
+        existingDays = [];
+        isEditMode = false;
+        document.getElementById("editBanner").style.display = "none";
+        document.getElementById("saveBtn").textContent = "신청하기";
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = "show";
+      setTimeout(() => {
+        toast.className = toast.className.replace("show", "");
+      }, 2500); // 2.5초 후 사라짐
+    }
+
     window.selectAll = () => {
       document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => cb.checked = true);
     };
@@ -333,71 +409,44 @@
 
     window.saveData = async () => {
       const checkboxes = Array.from(document.querySelectorAll("#calendar input[type='checkbox']"));
-      const days = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value, 10));
-      const weekdays = ["일","월","화","수","목","금","토"];
+      const days = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value, 10)).sort((a,b)=>a-b);
 
-      if (days.length === 0) {
-        const ok = confirm("급식을 신청하지 않습니다. 맞습니까?");
-        if (!ok) return;
+      // 수정 모드일 때 변경 없으면 안내
+      const same =
+        isEditMode &&
+        days.length === existingDays.length &&
+        days.every((v, i) => v === existingDays.sort((a,b)=>a-b)[i]);
 
-        const data = {
-          uid: currentUser.uid,
-          name: currentUser.displayName,
-          email: currentUser.email,
-          year: currentYear,
-          month: selectedMonth,
-          days: [],
-          timestamp: new Date()
-        };
-        await setDoc(doc(db, "mealRequests", `${currentUser.uid}_${currentYear}_${selectedMonth}`), data);
-        alert("신청이 완료되었습니다.");
-        window.location.href = "index.html";
+      if (same) {
+        alert("변경된 내용이 없습니다.");
         return;
       }
 
-      const sortedDays = [...days].sort((a, b) => a - b);
-
-      const lines = [];
-      let line = [];
-      for (let i = 0; i < sortedDays.length; i++) {
-        const d = sortedDays[i];
-        const wd = new Date(currentYear, selectedMonth - 1, d).getDay();
-        line.push(`${String(d).padStart(2, "0")}일(${weekdays[wd]})`);
-
-        const next = sortedDays[i + 1];
-        if (next === undefined) {
-          lines.push(line.join(", "));
-        } else {
-          const nextWd = new Date(currentYear, selectedMonth - 1, next).getDay();
-          if (nextWd < wd) {
-            lines.push(line.join(", "));
-            line = [];
-          }
-        }
+      // 0개 선택(미신청) 확인
+      if (days.length === 0) {
+        const ok = confirm(isEditMode
+          ? "기존 신청 내역을 모두 취소합니다. 진행할까요?"
+          : "급식을 신청하지 않습니다. 맞습니까?");
+        if (!ok) return;
       }
 
-      const dayList = lines.join("\n");
-
-      const confirmMsg =
-        `${currentYear}년 ${String(selectedMonth).padStart(2,"0")}월\n` +
-        `신청일\n${dayList}\n\n이대로 저장할까요?`;
-
-      const ok = confirm(confirmMsg);
-      if (!ok) return;
-
+      const docId = `${currentUser.uid}_${currentYear}_${selectedMonth}`;
       const data = {
         uid: currentUser.uid,
-        name: currentUser.displayName,
+        name: currentUser.displayName || currentUser.email.split("@")[0],
         email: currentUser.email,
         year: currentYear,
         month: selectedMonth,
-        days: sortedDays,
+        days,
         timestamp: new Date()
       };
-      await setDoc(doc(db, "mealRequests", `${currentUser.uid}_${currentYear}_${selectedMonth}`), data);
 
-      alert("신청이 완료되었습니다.");
-      window.location.href = "index.html";
+      await setDoc(doc(db, "mealRequests", docId), data);
+
+      showToast(isEditMode ? "변경사항이 저장되었습니다 ✅" : "신청이 완료되었습니다 🎉");
+      
+      // 최신 상태로 다시 그려주고 배너 유지
+      await selectMonth(selectedMonth, document.querySelector("#monthButtons .active"));
     };
   </script>
 </body>
