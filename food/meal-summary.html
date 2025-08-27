@@ -236,7 +236,7 @@
         return;
       }
       if (confirm(`${data.name} 선생님 ${month}월 ${day}일 급식을 추가 신청할까요?`)) {
-        const newDays = [...(data.days || []), day].sort((a,b)=>a-b);
+        const newDays = Array.from(new Set([...data.days, addedDay])).sort((a,b)=>a-b);
         await setDoc(ref, { ...data, days: newDays });
         alert("신청이 완료되었습니다.");
         loadData();
