@@ -105,7 +105,7 @@
       </div>
       <div class="actions">
         <button class="btn" id="btnTheme">다크/라이트</button>
-        <button class="btn" id="btnTogglePlay">⏸ 일시정지</button>
+        <button class="btn" id="btnTogglePlay">⏸️ 일시정지</button>
       </div>
     </header>
 
@@ -142,7 +142,7 @@
   <script>
     /************ 데이터 ************/
     const awards = [
-      { comp:"2025년 경기도 기능경기대회", name:"심다은", prize:"장려상", year:2025, icon:"🛠️" },
+      { comp:"2025년 경기도 기능경기대회", name:"심다은", prize:"장려상", year:2025, icon:"💇🏻‍♀️" },
       { comp:"제25회 경기도상업교육페스티벌", name:"장연우", prize:"은상", year:2025, icon:"📊" },
       { comp:"제25회 경기도상업교육페스티벌", name:"장인호", prize:"은상", year:2025, icon:"📊" },
       { comp:"제25회 경기도상업교육페스티벌", name:"양현욱", prize:"장려상", year:2025, icon:"📊" },
@@ -174,39 +174,39 @@
 
     const jobs = [
       { company:"새마을금고", dept:"금융경영과", name:"권은비", type:"금융기관", emoji:"🏦" },
-      { company:"해병대부사관(6월)", dept:"금융경영과", name:"최은학", type:"군(부사관)", emoji:"🎖️" },
-      { company:"해병대부사관(6월)", dept:"스마트웹콘텐츠과", name:"황인교", type:"군(부사관)", emoji:"🎖️" },
+      { company:"해병대부사관(6월)", dept:"금융경영과", name:"최은학", type:"군(부사관)", emoji:"🪖" },
+      { company:"해병대부사관(6월)", dept:"스마트웹콘텐츠과", name:"황인교", type:"군(부사관)", emoji:"🪖" },
       { company:"메이리츠증권", dept:"금융경영과", name:"오예은", type:"금융기관", emoji:"💹" },
       { company:"기술보증기금", dept:"회계정보과", name:"김지환", type:"공기업", emoji:"🏛️" },
       { company:"SOOP (구, 아프리카TV)", dept:"금융경영과", name:"이아랑", type:"민간기업", emoji:"📺" },
-      { company:"육군부사관(7월)", dept:"창업마케팅과", name:"이성민", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"강동하", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"강소현", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"권유주", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"김동혁", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"김태빈", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"문소연", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"박미지", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"박유진", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"박지은", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"서희라", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이준우", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이지현", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이지훈", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이태민", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"임은수", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"장진우", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"조한희", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"최수빈", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"한예은", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"허지우", type:"군(부사관)", emoji:"🎖️" },
-      { company:"육군부사관(7월), 공군부사관(8월)", dept:"소프트웨어개발과", name:"김지민", type:"군(부사관)", emoji:"🎖️" },
+      { company:"육군부사관(7월)", dept:"창업마케팅과", name:"이성민", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"강동하", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"강소현", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"권유주", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"김동혁", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"김태빈", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"문소연", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"박미지", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"박유진", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"박지은", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"서희라", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이준우", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이지현", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이지훈", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"이태민", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"임은수", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"장진우", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"조한희", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"최수빈", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"한예은", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"부사관과", name:"허지우", type:"군(부사관)", emoji:"🪖" },
+      { company:"육군부사관(7월), 공군부사관(8월)", dept:"소프트웨어개발과", name:"김지민", type:"군(부사관)", emoji:"🪖" },
       { company:"한국농수산식품유통공사", dept:"회계정보과", name:"임형준", type:"공기업", emoji:"🏛️" },
       { company:"(주)제이비케이랩", dept:"금융경영과", name:"윤찬빈", type:"민간기업", emoji:"🔬" },
       { company:"(주)제이비케이랩", dept:"금융경영과", name:"이채령", type:"민간기업", emoji:"🔬" },
       { company:"(주)제이비케이랩", dept:"금융경영과", name:"장민주", type:"민간기업", emoji:"🔬" },
-      { company:"공군부사관(8월)", dept:"부사관과", name:"김보화", type:"군(부사관)", emoji:"🎖️" },
-      { company:"공군부사관(8월)", dept:"부사관과", name:"허찬우", type:"군(부사관)", emoji:"🎖️" },
+      { company:"공군부사관(8월)", dept:"부사관과", name:"김보화", type:"군(부사관)", emoji:"🪖" },
+      { company:"공군부사관(8월)", dept:"부사관과", name:"허찬우", type:"군(부사관)", emoji:"🪖" },
       { company:"하나은행", dept:"금융경영과과", name:"오예은", type:"금융기관", emoji:"🏦" },
       { company:"하나은행", dept:"회계정보과", name:"김한울", type:"금융기관", emoji:"🏦" },
     ];
@@ -394,10 +394,10 @@
       isPaused = !isPaused;
       if(isPaused){
         stopAuto();
-        document.getElementById("btnTogglePlay").textContent="▶ 다시재생";
+        document.getElementById("btnTogglePlay").textContent="▶️ 다시재생";
         extraInfo.textContent="일시정지됨";
       }else{
-        document.getElementById("btnTogglePlay").textContent="⏸ 일시정지";
+        document.getElementById("btnTogglePlay").textContent="⏸️ 일시정지";
         extraInfo.textContent="자동 전환 중…";
         startAuto();
       }
@@ -411,4 +411,3 @@
   </script>
 </body>
 </html>
-
