@@ -26,7 +26,7 @@
     .subtitle{color:var(--muted); font-size: clamp(12px, 2.2vw, 18px)}
     .btn{border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
       color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; min-width:110px; text-align:center;}
-    .tabs{display:grid; grid-template-columns:1fr 1fr; gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px}
+    .tabs{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px}
     .tab{text-align:center; padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; border:1px solid transparent}
     .tab.active{background:linear-gradient(180deg, rgba(76,201,240,.25), rgba(76,201,240,.05)); border-color:rgba(76,201,240,.6)}
     .summary{display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:var(--muted)}
@@ -51,11 +51,12 @@
     }
     .meta .line1{font-size: clamp(15px, 2.6vw, 22px); font-weight:800}
     .meta .line2{font-size: clamp(12px, 2.2vw, 16px); color:var(--muted); margin-top:2px}
+
     .badge{padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14); font-weight:800; font-size: clamp(11px, 2vw, 14px)}
     .badge.gold{color:#2d2a00; background:linear-gradient(180deg,#ffd166,#e0b84b)}
     .badge.silver{color:#1f2630; background:linear-gradient(180deg,#dfe6f1,#b6c0cc)}
     .badge.bronze{color:#2a1a00; background:linear-gradient(180deg,#e6a87a,#c78452)}
-    /* GRAND PRIZE (대상) — 색 + 크라운 + 쉬머 */
+    /* 대상(Grand) */
     .badge.grand{
       position:relative; color:#1f1400;
       background: linear-gradient(180deg,#ffeaa7 0%, #ffd166 55%, #fcbf49 100%);
@@ -71,10 +72,16 @@
     }
     @keyframes shimmer{ from{background-position:-120% 0;} to{background-position:120% 0;} }
 
+    /* 취업 유형 */
     .badge.public{background:rgba(51,154,240,.18); color:#cfe8ff; border-color:#2d82d6}
     .badge.corp{background:rgba(173,181,189,.18); color:#f1f3f5; border-color:#8d959c}
     .badge.agency{background:rgba(81,207,102,.18); color:#d9ffe7; border-color:#3aa957}
     .badge.military {color: #f9f9f9; font-weight: 800; border: 1px solid #2e3b13; background:repeating-linear-gradient(45deg,#4b5320 0 10px,#3b3c36 10px 20px,#556b2f 20px 30px,#2f4f2f 30px 40px); background-size: 80px 80px; box-shadow: inset 0 0 4px rgba(0,0,0,.4);}
+
+    /* 도제 상태 */
+    .badge.apprentice{ background:linear-gradient(180deg,#94d2bd,#4fb08f); color:#0b2e26; border-color:#2b8c72; }
+    .badge.excellent{ background:linear-gradient(180deg,#cddafd,#6ea8fe); color:#0b3c74; border-color:#4682d9; }
+
     .controls{position:absolute; inset-inline:0; bottom:8px; display:flex; justify-content:center; gap:8px; pointer-events:none}
     .dot{width:10px; height:10px; border-radius:999px; background:rgba(255,255,255,.25); transition:.25s; cursor:pointer; pointer-events:auto;}
     .dot.active{background:var(--accent); transform:scale(1.15)}
@@ -112,6 +119,7 @@
     <div class="tabs" role="tablist">
       <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과(수상)</div>
       <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단·대기업 취업</div>
+      <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제(Since 2017)</div>
     </div>
 
     <div class="summary" id="summary">
@@ -142,7 +150,7 @@
   <script>
     /************ 데이터 ************/
     const awards = [
-      { comp:"2025년 경기도 기능경기대회", name:"심다은", prize:"장려상", year:2025, icon:"💇🏻‍♀️" },
+      { comp:"2025년 경기도 기능경기대회", name:"심다은", prize:"장려상", year:2025, icon:"🛠️" },
       { comp:"제25회 경기도상업교육페스티벌", name:"장연우", prize:"은상", year:2025, icon:"📊" },
       { comp:"제25회 경기도상업교육페스티벌", name:"장인호", prize:"은상", year:2025, icon:"📊" },
       { comp:"제25회 경기도상업교육페스티벌", name:"양현욱", prize:"장려상", year:2025, icon:"📊" },
@@ -211,8 +219,66 @@
       { company:"하나은행", dept:"회계정보과", name:"김한울", type:"금융기관", emoji:"🏦" },
     ];
 
+    const doje = [
+      { company:"기원테크", dept: "디지털정보과", name:"서규환, 임동주, 조성현", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"소프트퓨전", dept: "디지털정보과", name:"박현기, 안용찬, 이용진", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"스피맥스", dept: "디지털정보과", name:"박주영, 이정한, 정주환", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"아와소프트", dept: "디지털정보과", name:"박주희, 김건, 남상엽", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"아침소프트", dept: "디지털정보과", name:"강태민", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"애니콤정보통신", dept: "디지털정보과", name:"김동엽, 배성민, 조현준", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"우정하이텍", dept: "디지털정보과", name:"배동연, 최시온", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"웰데이타시스템", dept: "디지털정보과", name:"강찬, 김어진, 이민석", year:2018, cohort:"도제1기", status:"도제기업" },
+      { company:"제이알정보기술", dept: "디지털정보과", name:"정기홍, 정용환", year:2018, cohort:"도제1기", status:"도제기업" },
+
+      { company:"소프트퓨전", dept: "소프트웨어개발과", name:"김건우, 노태원", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"아침소프트", dept: "소프트웨어개발과", name:"이재용, 한이수", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"엔조이소프트", dept: "소프트웨어개발과", name:"정용준, 최병준", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"와임", dept: "소프트웨어개발과", name:"박현우, 이주현", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"위드아이에스", dept: "소프트웨어개발과", name:"박시완, 이민우", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"이노알에스", dept: "소프트웨어개발과", name:"김건아, 한상옥", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"한길더블유아이티", dept: "소프트웨어개발과", name:"김재우, 정현진", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"이음시스템즈", dept: "소프트웨어개발과", name:"박세영, 왕윤아, 조웅빈", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"엠케어코리아", dept: "소프트웨어개발과", name:"이성진", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"웰데이타시스템", dept: "소프트웨어개발과", name:"박도현, 임현우, 최원영", year:2020, cohort:"도제3기", status:"도제기업" },
+      { company:"지우정보기술", dept: "소프트웨어개발과", name:"이정주, 장민수", year:2020, cohort:"도제3기", status:"도제기업" },
+
+      { company:"넷아이디", dept: "소프트웨어개발과", name:"마희재", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"디에스티인터내셔날", dept: "소프트웨어개발과", name:"김예준", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"소프트보울", dept: "소프트웨어개발과", name:"박성민, 이영준", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"스마트콘", dept: "소프트웨어개발과", name:"김민규, 문재선, 정정희", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"씨아이테크", dept: "소프트웨어개발과", name:"강별, 양승우, 이수지", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"아침소프트", dept: "소프트웨어개발과", name:"김상원, 양수호", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"에프아이솔루션", dept: "소프트웨어개발과", name:"박찬희, 임성식", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"엠클라우독", dept: "소프트웨어개발과", name:"김영준", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"유아이네트웍스", dept: "소프트웨어개발과", name:"박진형, 유근영, 이승찬", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"이아이씨엔", dept: "소프트웨어개발과", name:"김정빈, 신현호", year:2022, cohort:"도제5기", status:"도제기업" },
+      { company:"투비스마트", dept: "소프트웨어개발과", name:"구현우, 조홍근, 최승원", year:2022, cohort:"도제5기", status:"도제기업" },
+
+      { company:"넷매니아", dept: "소프트웨어개발과", name:"김도윤, 장우진", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"모아소프트", dept: "소프트웨어개발과", name:"허성영, 허승", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"비디젠", dept: "소프트웨어개발과", name:"박승지", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"비젠트로", dept: "소프트웨어개발과", name:"김태한, 손태영, 이상준", year:2023, cohort:"도제6기", status:"우수기업" },   // 수정
+      { company:"세피스", dept: "소프트웨어개발과", name:"김지인, 박재현", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"소프트보울", dept: "소프트웨어개발과", name:"강주호, 정하은", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"소프트캠프", dept: "소프트웨어개발과", name:"박보현, 서에녹, 송주환, 홍대영", year:2023, cohort:"도제6기", status:"우수기업" }, // 수정
+      { company:"시큐레이어", dept: "소프트웨어개발과", name:"김유강, 김민석, 문시영, 박재우", year:2023, cohort:"도제6기", status:"우수기업" }, // 수정
+      { company:"에프아이솔루션", dept: "소프트웨어개발과", name:"민경석, 배성진", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"윈즈시스템", dept: "소프트웨어개발과", name:"강주훈", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"이액티브", dept: "소프트웨어개발과", name:"김용민, 정상윤", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"지우정보기술", dept: "소프트웨어개발과", name:"고준성, 주승곤", year:2023, cohort:"도제6기", status:"도제기업" },
+      { company:"투비스마트", dept: "소프트웨어개발과", name:"안우림, 정한얼", year:2023, cohort:"도제6기", status:"도제기업" },
+
+      { company:"모빌리오", dept: "소프트웨어개발과", name:"김준, 김태우, 이상혁", year:2024, cohort:"도제7기", status:"도제기업" },
+      { company:"비욘드데이터", dept: "소프트웨어개발과", name:"우진호, 조준성, 최율, 한승규", year:2024, cohort:"도제7기", status:"도제기업" },
+      { company:"시스너", dept: "소프트웨어개발과", name:"연주영, 이도훈", year:2024, cohort:"도제7기", status:"도제기업" },
+      { company:"애니셀", dept: "소프트웨어개발과", name:"김민준, 이화준, 정은교, 최환", year:2024, cohort:"도제7기", status:"도제기업" },
+      { company:"에스티엔인포텍", dept: "소프트웨어개발과", name:"박준호, 최문찬", year:2024, cohort:"도제7기", status:"도제기업" },
+      { company:"우정하이텍", dept: "소프트웨어개발과", name:"배서준, 정아영", year:2024, cohort:"도제7기", status:"도제기업" },
+      { company:"유플러스시스템", dept: "소프트웨어개발과", name:"강정묵, 김지호", year:2024, cohort:"도제7기", status:"도제기업" },
+      { company:"투비스마트", dept: "소프트웨어개발과", name:"김현빈, 오진규", year:2024, cohort:"도제7기", status:"도제기업" },
+    ];
+
     /************ 유틸 ************/
-    // 이름 마스킹: 여러 명도 콤마/줄바꿈 단위로 각각 처리
     const maskName = (name) => {
       if (!name) return "";
       return String(name).split(/[,\n]+/g).map(n=>{
@@ -222,8 +288,6 @@
         return n.trim();
       }).join(", ");
     };
-
-    // 인원 카운트: "총 18명(...)" 패턴 우선, 없으면 콤마/줄바꿈으로 계산
     function countPeople(name){
       if(!name) return 0;
       const m = String(name).match(/총\s*([0-9]+)\s*명/);
@@ -239,26 +303,23 @@
       if (p.includes("동"))   return "bronze";
       return "";
     };
-    // const typeClass  = (t) => t?.includes("공기업")?"public":t?.includes("공단")?"agency":"corp";
     const typeClass  = (t) => {
       if (!t) return "";
       if (t.includes("공기업")) return "public";
-      if (t.includes("공단")) return "agency";
-      if (t.includes("군")) return "military";   // ✅ 군(부사관)용
+      if (t.includes("공단"))   return "agency";
+      if (t.includes("군"))     return "military";
       return "corp";
     };
+    const statusClass = (s) => s?.includes("우수") ? "excellent" : "apprentice";
 
-    // 화면 높이에 따라 PAGE_SIZE 결정
+    // 반응형 rows 계산
     function computePageSizeByHeight(availHeightPx){
-      const perRow = 110;                      // 1행의 대략적 높이(필요시 미세 조정)
+      const perRow = 110;
       const raw = Math.floor(availHeightPx/perRow);
       const clamped = Math.max(4, Math.min(12, raw));
-      const candidates=[12,10,9,8,7,6,5,4];    // 보기 좋은 개수로 스냅
+      const candidates=[12,10,9,8,7,6,5,4];
       let best=clamped, diff=Infinity;
-      for(const n of candidates){
-        const d=Math.abs(n-clamped);
-        if(d<diff){ diff=d; best=n; }
-      }
+      for(const n of candidates){ const d=Math.abs(n-clamped); if(d<diff){ diff=d; best=n; } }
       return best;
     }
     function getResponsivePageSize(){
@@ -281,15 +342,18 @@
     /************ 렌더 ************/
     const chunk=(arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slice(i,i+size)])),[]);
     function render(){
-      const data = currentTab==="awards" ? awards : jobs;
+      const data =
+        currentTab==="awards" ? awards :
+        currentTab==="jobs"   ? jobs   :
+                                doje;
 
-      // 총 인원 표시: awards는 이름 합산, jobs는 항목 수
-      const totalCount = currentTab==="awards"
-        ? awards.reduce((sum,it)=>sum+countPeople(it.name),0)
-        : jobs.length;
+      // 총 인원: awards/doje=이름 합산, jobs=항목 수
+      const totalCount =
+        currentTab==="awards" ? awards.reduce((s,it)=>s+countPeople(it.name),0) :
+        currentTab==="doje"   ? doje.reduce((s,it)=>s+countPeople(it.name),0)   :
+                                jobs.length;
       countTotal.textContent=totalCount;
 
-      // 반응형 행 수 계산
       PAGE_SIZE=getResponsivePageSize();
 
       const ch = chunk(data, PAGE_SIZE);
@@ -323,12 +387,18 @@
             line2.innerHTML=item.name?`${maskName(item.name)} · ${item.year||""}`:"";
             badge.textContent=item.prize||"";
             badge.className+=" "+(item.prize?prizeClass(item.prize):"");
-          }else{
+          }else if(currentTab==="jobs"){
             avatar.textContent=item.emoji||"🏢";
             line1.innerHTML=item.company||"";
-            line2.innerHTML=(item.dept||"")+" "+(item.name?maskName(item.name):"");
+            line2.innerHTML = (item.dept || "") + " " + (item.name ? maskName(item.name) : "");
             badge.textContent=item.type||"";
             badge.className+=" "+(item.type?typeClass(item.type):"");
+          }else{ // doje
+            avatar.textContent="🧑🏻‍💻";
+            line1.innerHTML=item.company||"";
+            line2.innerHTML=(item.dept || "") + " " +(item.name?maskName(item.name):"")+" · "+(item.year||"")+(item.cohort?`(${item.cohort})`:"");
+            badge.textContent=item.status||"";
+            badge.className+=" "+(item.status?statusClass(item.status):"");
           }
 
           meta.appendChild(line1); meta.appendChild(line2);
@@ -379,24 +449,20 @@
     // 탭 전환
     document.getElementById("tab-awards").addEventListener("click", ()=>setActiveTab("awards"));
     document.getElementById("tab-jobs").addEventListener("click", ()=>setActiveTab("jobs"));
+    document.getElementById("tab-doje").addEventListener("click", ()=>setActiveTab("doje"));
     function setActiveTab(key){
       currentTab=key;
       document.getElementById("tab-awards").classList.toggle("active", key==="awards");
       document.getElementById("tab-jobs").classList.toggle("active", key==="jobs");
+      document.getElementById("tab-doje").classList.toggle("active", key==="doje");
       render(); if(!isPaused) startAuto();
     }
 
     // 테마 토글
-    // document.getElementById("btnTheme").addEventListener("click", ()=>{ document.body.classList.toggle("light"); });
     const btnTheme = document.getElementById("btnTheme");
-
     btnTheme.addEventListener("click", () => {
       document.body.classList.toggle("light");
-      if(document.body.classList.contains("light")){
-        btnTheme.textContent = "☀️ 라이트모드";
-      } else {
-        btnTheme.textContent = "🌙 다크모드";
-      }
+      btnTheme.textContent = document.body.classList.contains("light") ? "☀️ 라이트모드" : "🌙 다크모드";
     });
 
     // 일시정지/재생 토글
