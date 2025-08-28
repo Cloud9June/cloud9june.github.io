@@ -1,1 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>성과 & 취업 현황 (세로형 키오스크)</title>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0d10; --panel:#12161b; --card:#171c22; --text:#e8edf3; --muted:#9fb0c0; --accent:#4cc9f0; --gold:#ffd166;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family: Pretendard, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      background: radial-gradient(120% 120% at 50% -10%, #1b2330 0%, #0b0d10 60%, #050608 100%);
+      color:var(--text); overflow:hidden;
+    }
+    .app{height:100dvh; max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:12px; padding:14px}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); backdrop-filter: blur(6px);
+    }
+    .title{display:flex; align-items:baseline; gap:10px}
+    .title h1{margin:0; font-size: clamp(20px, 3.6vw, 36px)}
+    .subtitle{color:var(--muted); font-size: clamp(12px, 2.2vw, 18px)}
+    .btn{border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
+      color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; min-width:110px; text-align:center;}
+    .tabs{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px;}
+    .tab{text-align:center; padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; border:1px solid transparent; transition: all 1s;}
+    .tab.active{background:linear-gradient(180deg, rgba(76,201,240,.25), rgba(76,201,240,.05)); border-color:rgba(76,201,240,.6);}
+    .summary{display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:var(--muted)}
+    .summary .pill{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); font-weight:600}
+    .list-wrap{position:relative; flex:1; min-height:0; border-radius:18px; background:var(--panel); overflow:hidden}
+    .page{position:absolute; inset:0; padding:14px; display:grid; opacity:0; transform:translateY(8px); transition:opacity .35s, transform .35s}
+    .page.active{opacity:1; transform:none}
+    .cards{
+      height:100%; display:grid; gap:10px; grid-template-columns:1fr;
+      grid-template-rows: repeat(var(--rows, 10), 1fr);
+    }
+    .card{
+      display:grid; grid-template-columns:64px 1fr auto; align-items:center; gap:12px;
+      padding:12px; border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.2));
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .card.placeholder{ visibility:hidden; pointer-events:none; border-color:transparent; background:transparent; }
+    .avatar{
+      width:64px; height:64px; border-radius:14px; display:grid; place-items:center; font-weight:800;
+      background:linear-gradient(145deg, #263243, #151b25); color:var(--gold); border:1px solid rgba(255,255,255,.06);
+      font-size:20px;
+    }
+    .meta .line1{font-size: clamp(15px, 2.6vw, 22px); font-weight:800}
+    .meta .line2{font-size: clamp(12px, 2.2vw, 16px); color:var(--muted); margin-top:2px}
 
+    .badge{padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14); font-weight:800; font-size: clamp(11px, 2vw, 14px)}
+    .badge.gold{color:#2d2a00; background:linear-gradient(180deg,#ffd166,#e0b84b)}
+    .badge.silver{color:#1f2630; background:linear-gradient(180deg,#dfe6f1,#b6c0cc)}
+    .badge.bronze{color:#2a1a00; background:linear-gradient(180deg,#e6a87a,#c78452)}
+    /* 대상(Grand) */
+    .badge.grand{
+      position:relative; color:#1f1400;
+      background: linear-gradient(180deg,#ffeaa7 0%, #ffd166 55%, #fcbf49 100%);
+      border-color:#e6a700; border-width:2px; padding-left:34px;
+      box-shadow:0 0 0 1px rgba(255,215,0,.35) inset, 0 8px 18px rgba(252,191,73,.35);
+      overflow:hidden;
+    }
+    .badge.grand::before{ content:"👑"; position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:16px; }
+    .badge.grand::after{
+      content:""; position:absolute; inset:0;
+      background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.35) 35%, rgba(255,255,255,0) 70%);
+      background-size:200% 100%; animation: shimmer 2.4s linear infinite; pointer-events:none; mix-blend-mode: soft-light;
+    }
+    @keyframes shimmer{ from{background-position:-120% 0;} to{background-position:120% 0;} }
+
+    /* 취업 유형 */
+    .badge.public{background:rgba(51,154,240,.18); color:#cfe8ff; border-color:#2d82d6}
+    .badge.corp{background:rgba(173,181,189,.18); color:#f1f3f5; border-color:#8d959c}
+    .badge.agency{background:rgba(81,207,102,.18); color:#d9ffe7; border-color:#3aa957}
+    .badge.military {color: #f9f9f9; font-weight: 800; border: 1px solid #2e3b13; background:repeating-linear-gradient(45deg,#4b5320 0 10px,#3b3c36 10px 20px,#556b2f 20px 30px,#2f4f2f 30px 40px); background-size: 80px 80px; box-shadow: inset 0 0 4px rgba(0,0,0,.4);}
+
+    /* 도제 상태 */
+    /* .badge.apprentice{ background:linear-gradient(180deg,#94d2bd,#4fb08f); color:#0b2e26; border-color:#2b8c72; } */
+    .badge.excellent{ background: linear-gradient(180deg, #fff176, #fbc02d); color: #3b2f00; border-color: #f9a825; }
+    .badge.apprentice{ background:linear-gradient(180deg,#cddafd,#6ea8fe); color:#0b3c74; border-color:#4682d9; }
+
+    .controls{position:absolute; inset-inline:0; bottom:8px; display:flex; justify-content:center; gap:8px; pointer-events:none}
+    .dot{width:10px; height:10px; border-radius:999px; background:rgba(255,255,255,.25); transition:.25s; cursor:pointer; pointer-events:auto;}
+    .dot.active{background:var(--accent); transform:scale(1.15)}
+
+    footer{margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); overflow:hidden; min-height:42px}
+    .ticker{display:flex; gap:20px; white-space:nowrap; position:relative; left:0; animation:marq 22s linear infinite}
+    .ticker:hover{animation-play-state:paused}
+    @keyframes marq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+
+    #viewport.fadeout {
+      opacity:0;
+      transition: opacity .35s;
+    }
+    #viewport {
+      transition: opacity .35s;
+    }
+
+    /* 라이트 모드 */
+    .light{
+      --bg:#f6f8fb; --panel:#ffffff; --card:#ffffff; --text:#0d1b2a; --muted:#536273; --accent:#0077ff;
+      background: linear-gradient(180deg, #f7fbff, #eef3f9);
+    }
+    .light .avatar{background:linear-gradient(145deg, #e9f1ff, #dce6f7)}
+    .light .card{background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.01))}
+    .light .badge.public {background: rgba(51,154,240,.15); color: #0b5394; border-color: #2d82d6;}
+    .light .badge.corp {background: rgba(173,181,189,.2); color: #343a40; border-color: #8d959c;}
+    .light .badge.agency {background: rgba(81,207,102,.2); color: #2b8a3e; border-color: #3aa957;}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="title">
+        <h1>성일정보고 성과 & 취업 현황</h1>
+        <div class="subtitle" id="period">2025학년도</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnTheme">🌙 다크모드</button>
+        <button class="btn" id="btnTogglePlay">⏸️ 일시정지</button>
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과(수상)</div>
+      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단·대기업 취업</div>
+      <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제(Since 2017)</div>
+    </div>
+
+    <div class="summary" id="summary">
+      <div class="pill">총 인원 <strong id="countTotal">0</strong>명</div>
+      <div class="pill">페이지 <strong id="pageInfo">1/1</strong></div>
+      <div class="pill" id="extraInfo">자동 전환 중…</div>
+    </div>
+
+    <div class="list-wrap" id="viewport">
+      <div class="controls" id="dots"></div>
+    </div>
+
+    <footer>
+      <div class="ticker" id="ticker">
+        <span>👏 2025 각종 대회에서 다수 입상</span><span>•</span>
+        <span>🎉 공기업·대기업 취업자를 매년 꾸준히 배출</span><span>•</span>
+        <span>📣 자세한 내용은 학교 홈페이지에서 확인</span><span>•</span>
+        <span>👍 성일정보고 학생 여러분 자랑스럽습니다!</span>
+
+        <span>👏 2025 각종 대회에서 다수 입상</span><span>•</span>
+        <span>🎉 공기업·대기업 취업자를 매년 꾸준히 배출</span><span>•</span>
+        <span>📣 자세한 명단은 학교 홈페이지에서 확인</span><span>•</span>
+        <span>👍 성일정보고 학생 여러분 자랑스럽습니다!</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="./data.js"></script>
+  <script>
+    /************ 유틸 ************/
+    const maskName = (name) => {
+      if (!name) return "";
+      return String(name).split(/[,\n]+/g).map(n=>{
+        const arr=[...n.trim()];
+        if(arr.length===2) return arr[0]+"○";
+        if(arr.length>=3) return arr[0]+"○"+arr.slice(2).join("");
+        return n.trim();
+      }).join(", ");
+    };
+    function countPeople(name){
+      if(!name) return 0;
+      const m = String(name).match(/총\s*([0-9]+)\s*명/);
+      if(m) return parseInt(m[1],10);
+      return String(name).split(/[,\n]+/g).map(s=>s.trim()).filter(Boolean).length;
+    }
+
+    const prizeClass = (p) => {
+      if (!p) return "";
+      if (p.includes("대상")) return "grand";
+      if (p.includes("금"))   return "gold";
+      if (p.includes("은"))   return "silver";
+      if (p.includes("동"))   return "bronze";
+      return "";
+    };
+    const typeClass  = (t) => {
+      if (!t) return "";
+      if (t.includes("공기업")) return "public";
+      if (t.includes("공단"))   return "agency";
+      if (t.includes("군"))     return "military";
+      return "corp";
+    };
+    const statusClass = (s) => s?.includes("우량") ? "excellent" : "apprentice";
+
+    // 반응형 rows 계산
+    function computePageSizeByHeight(availHeightPx){
+      const perRow = 110;
+      const raw = Math.floor(availHeightPx/perRow);
+      const clamped = Math.max(4, Math.min(12, raw));
+      const candidates=[12,10,9,8,7,6,5,4];
+      let best=clamped, diff=Infinity;
+      for(const n of candidates){ const d=Math.abs(n-clamped); if(d<diff){ diff=d; best=n; } }
+      return best;
+    }
+    function getResponsivePageSize(){
+      const rect = viewport.getBoundingClientRect();
+      return computePageSizeByHeight(rect.height);
+    }
+
+    /************ 상태/설정 ************/
+    const AUTO_INTERVAL_MS = 6000;
+    let PAGE_SIZE = 7;
+    let currentTab="awards", pageIndex=0, autoTimer=null, pages=[];
+    let isPaused=false;
+
+    const viewport=document.getElementById("viewport");
+    const dots=document.getElementById("dots");
+    const pageInfo=document.getElementById("pageInfo");
+    const countTotal=document.getElementById("countTotal");
+    const extraInfo=document.getElementById("extraInfo");
+
+    /************ 자동순환 ************/
+    const TAB_ORDER = ["awards", "jobs", "doje"];
+
+    function nextAcross(){
+      if (pages.length && pageIndex < pages.length - 1) {
+        goToPage(pageIndex + 1);
+      } else {
+        const i = TAB_ORDER.indexOf(currentTab);
+        const nextTab = TAB_ORDER[(i + 1) % TAB_ORDER.length];
+        // setActiveTab가 render()를 호출하므로, 탭만 바꾸면 1페이지부터 다시 표시됨
+        setActiveTab(nextTab);
+      }
+    }
+
+    /************ 렌더 ************/
+    const chunk=(arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slice(i,i+size)])),[]);
+    function render(){
+      const data =
+        currentTab==="awards" ? awards :
+        currentTab==="jobs"   ? jobs   :
+                                doje;
+
+      // 총 인원: awards/doje=이름 합산, jobs=항목 수
+      const totalCount =
+        currentTab==="awards" ? awards.reduce((s,it)=>s+countPeople(it.name),0) :
+        currentTab==="doje"   ? doje.reduce((s,it)=>s+countPeople(it.name),0)   :
+                                jobs.length;
+      countTotal.textContent=totalCount;
+
+      PAGE_SIZE=getResponsivePageSize();
+
+      const dotsEl = document.getElementById("dots");
+
+      viewport.innerHTML = "";
+      pages = [];
+
+      const ch = chunk(data, PAGE_SIZE);
+      viewport.innerHTML=""; dots.innerHTML=""; pages=[];
+
+      ch.forEach((group, idx)=>{
+        const filled=group.slice();
+        while(filled.length<PAGE_SIZE) filled.push({__placeholder:true});
+
+        const page=document.createElement("div");
+        page.className="page"+(idx===0?" active":"");
+
+        const cards=document.createElement("div");
+        cards.className="cards";
+        cards.style.setProperty("--rows", PAGE_SIZE);
+
+        filled.forEach((item)=>{
+          const card=document.createElement("div");
+          card.className="card";
+          if(item.__placeholder) card.classList.add("placeholder");
+
+          const avatar=document.createElement("div"); avatar.className="avatar";
+          const meta=document.createElement("div"); meta.className="meta";
+          const line1=document.createElement("div"); line1.className="line1";
+          const line2=document.createElement("div"); line2.className="line2";
+          const badge=document.createElement("div"); badge.className="badge";
+
+          if(currentTab==="awards"){
+            avatar.textContent=item.icon||"🏆";
+            line1.innerHTML=item.comp||"";
+            line2.innerHTML=item.name?`${maskName(item.name)} · ${item.year||""}`:"";
+            badge.textContent=item.prize||"";
+            badge.className+=" "+(item.prize?prizeClass(item.prize):"");
+          }else if(currentTab==="jobs"){
+            avatar.textContent=item.emoji||"🏢";
+            line1.innerHTML=item.company||"";
+            line2.innerHTML = (item.dept || "") + " " + (item.name ? maskName(item.name) : "");
+            badge.textContent=item.type||"";
+            badge.className+=" "+(item.type?typeClass(item.type):"");
+          }else{ // doje
+            avatar.textContent="🧑🏻‍💻";
+            line1.innerHTML=item.company||"";
+            line2.innerHTML=(item.dept || "") + " " +(item.name?maskName(item.name):"")+" · "+(item.year||"")+(item.cohort?`(${item.cohort})`:"");
+            badge.textContent=item.status||"";
+            badge.className+=" "+(item.status?statusClass(item.status):"");
+          }
+
+          meta.appendChild(line1); meta.appendChild(line2);
+          card.appendChild(avatar); card.appendChild(meta); card.appendChild(badge);
+          cards.appendChild(card);
+        });
+
+        page.appendChild(cards);
+        viewport.appendChild(page);
+        pages.push(page);
+
+        const dot=document.createElement("div");
+        dot.className="dot"+(idx===0?" active":"");
+        dot.addEventListener("click",()=>{ stopAuto(); goToPage(idx); startAuto(); });
+        dots.appendChild(dot);
+      });
+
+      pageIndex=0;
+      updatePageInfo();
+      extraInfo.textContent=isPaused?"일시정지됨":"자동 전환 중…";
+    }
+
+    function updatePageInfo(){
+      const total=pages.length||1;
+      pageInfo.textContent=`${pageIndex+1}/${total}`;
+      [...dots.children].forEach((d,i)=>d.classList.toggle("active",i===pageIndex));
+    }
+    function goToPage(i){
+      if(!pages.length) return;
+      pages.forEach((p,idx)=>p.classList.toggle("active", idx===i));
+      pageIndex=i; updatePageInfo();
+    }
+    function nextPage(){ if(pages.length) goToPage((pageIndex+1)%pages.length); }
+    // function startAuto(){ stopAuto(); if(!isPaused) autoTimer=setInterval(nextPage, AUTO_INTERVAL_MS); }
+    function startAuto(){ stopAuto(); if(!isPaused) autoTimer=setInterval(nextAcross, AUTO_INTERVAL_MS); }
+    function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
+
+    function renderTicker(tabKey){
+      const items = tickerTexts[tabKey] || [];
+      const ticker = document.getElementById("ticker");
+      if(!ticker) return;
+      const once = items.map((t,i)=>`<span>${t}</span>${i<items.length-1?'<span>•</span>':''}`).join("");
+      ticker.innerHTML = once + once;
+    }
+
+    /************ 상호작용 ************/
+    // 스와이프
+    let touchStartY=null;
+    viewport.addEventListener("touchstart", e=>{ touchStartY=e.touches[0].clientY; stopAuto(); extraInfo.textContent="일시정지(터치)"; }, {passive:true});
+    viewport.addEventListener("touchend", e=>{
+      if(touchStartY==null) return;
+      const dy=e.changedTouches[0].clientY - touchStartY;
+      if(Math.abs(dy)>40){ dy<0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
+      touchStartY=null; if(!isPaused){ startAuto(); extraInfo.textContent="자동 전환 중…"; }
+    }, {passive:true});
+
+    // 탭 전환
+    document.getElementById("tab-awards").addEventListener("click", ()=>setActiveTab("awards"));
+    document.getElementById("tab-jobs").addEventListener("click", ()=>setActiveTab("jobs"));
+    document.getElementById("tab-doje").addEventListener("click", ()=>setActiveTab("doje"));
+    function setActiveTab(key){
+      // 먼저 모든 페이지를 천천히 사라지게
+      viewport.classList.add("fadeout");
+      setTimeout(()=>{
+        currentTab=key;
+        document.getElementById("tab-awards").classList.toggle("active", key==="awards");
+        document.getElementById("tab-jobs").classList.toggle("active", key==="jobs");
+        document.getElementById("tab-doje").classList.toggle("active", key==="doje");
+        render();
+        renderTicker(key);
+        if(!isPaused) startAuto();
+        viewport.classList.remove("fadeout");
+      }, 350); // .35s와 맞추기
+    }
+
+    // 테마 토글
+    const btnTheme = document.getElementById("btnTheme");
+    btnTheme.addEventListener("click", () => {
+      document.body.classList.toggle("light");
+      btnTheme.textContent = document.body.classList.contains("light") ? "☀️ 라이트모드" : "🌙 다크모드";
+    });
+
+    // 일시정지/재생 토글
+    document.getElementById("btnTogglePlay").addEventListener("click", ()=>{
+      isPaused = !isPaused;
+      if(isPaused){
+        stopAuto();
+        document.getElementById("btnTogglePlay").textContent="▶️ 다시재생";
+        extraInfo.textContent="일시정지됨";
+      }else{
+        document.getElementById("btnTogglePlay").textContent="⏸️ 일시정지";
+        extraInfo.textContent="자동 전환 중…";
+        startAuto();
+      }
+    });
+
+    // 리사이즈 시 rows 재계산
+    window.addEventListener("resize", ()=>{ render(); if(!isPaused) startAuto(); });
+
+    // 초기 렌더
+    render(); renderTicker(currentTab); startAuto();
+  </script>
+</body>
+</html>
