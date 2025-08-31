@@ -26,7 +26,7 @@
     .subtitle{color:var(--muted); font-size: clamp(12px, 2.2vw, 18px)}
     .btn{border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
       color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; min-width:110px; text-align:center;}
-    .tabs{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px;}
+    .tabs{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px;}
     .tab{text-align:center; padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; border:1px solid transparent; transition: all 1s;}
     .tab.active{background:linear-gradient(180deg, rgba(76,201,240,.25), rgba(76,201,240,.05)); border-color:rgba(76,201,240,.6);}
     .summary{display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:var(--muted)}
@@ -44,6 +44,18 @@
       border:1px solid rgba(255,255,255,.08);
     }
     .card.placeholder{ visibility:hidden; pointer-events:none; border-color:transparent; background:transparent; }
+    .card.elite {
+      background: linear-gradient(145deg, #ff6b6b, #a61e1e);
+      border: 2px solid #ff8787;
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.4); }
+      to   { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+    }
+    
     .avatar{
       width:64px; height:64px; border-radius:14px; display:grid; place-items:center; font-weight:800;
       background:linear-gradient(145deg, #263243, #151b25); color:var(--gold); border:1px solid rgba(255,255,255,.06);
@@ -69,6 +81,18 @@
       content:""; position:absolute; inset:0;
       background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.35) 35%, rgba(255,255,255,0) 70%);
       background-size:200% 100%; animation: shimmer 2.4s linear infinite; pointer-events:none; mix-blend-mode: soft-light;
+    }
+    .badge.elite {
+      background: linear-gradient(180deg,#ff6b6b,#c92a2a);
+      color: #fff;
+      border: 2px solid #a61e1e;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,107,107,.6); }
+      70% { box-shadow: 0 0 10px 10px rgba(255,107,107,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,107,107,0); }
     }
     @keyframes shimmer{ from{background-position:-120% 0;} to{background-position:120% 0;} }
 
@@ -129,6 +153,7 @@
       <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과(수상)</div>
       <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단·대기업 취업</div>
       <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제(Since 2017)</div>
+      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 부사관</div>
     </div>
 
     <div class="summary" id="summary">
@@ -220,7 +245,7 @@
     const extraInfo=document.getElementById("extraInfo");
 
     /************ 자동순환 ************/
-    const TAB_ORDER = ["awards", "jobs", "doje"];
+    const TAB_ORDER = ["awards", "jobs", "doje", "nco"];
 
     function nextAcross(){
       if (pages.length && pageIndex < pages.length - 1) {
@@ -233,18 +258,34 @@
       }
     }
 
+    function getNcoSortKey(cohort){
+      if(!cohort) return 999; // 값 없으면 뒤로
+      let num = parseInt(cohort.replace(/[^0-9]/g,""), 10);
+      if(cohort.includes("동아리")){
+        return num - 9; // 14 -> 5, 15 -> 6
+      } else {
+        return num; // 부사관과 그대로
+      }
+    }
+
     /************ 렌더 ************/
     const chunk=(arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slice(i,i+size)])),[]);
     function render(){
-      const data =
+      let data =
         currentTab==="awards" ? awards :
         currentTab==="jobs"   ? jobs   :
-                                doje;
+        currentTab==="doje"   ? doje   :
+                                nco;
 
+      if(currentTab==="nco"){
+        data = [...data].sort((a,b)=>getNcoSortKey(a.cohort) - getNcoSortKey(b.cohort));
+      }
+      
       // 총 인원: awards/doje=이름 합산, jobs=항목 수
       const totalCount =
         currentTab==="awards" ? awards.reduce((s,it)=>s+countPeople(it.name),0) :
         currentTab==="doje"   ? doje.reduce((s,it)=>s+countPeople(it.name),0)   :
+        currentTab==="nco"    ? data.length :
                                 jobs.length;
       countTotal.textContent=totalCount;
 
@@ -292,12 +333,31 @@
             line2.innerHTML = (item.dept || "") + " " + (item.name ? maskName(item.name) : "");
             badge.textContent=item.type||"";
             badge.className+=" "+(item.type?typeClass(item.type):"");
-          }else{ // doje
+          }else if(currentTab==="doje"){ // doje
             avatar.textContent="🧑🏻‍💻";
             line1.innerHTML=item.company||"";
             line2.innerHTML=(item.dept || "") + " " +(item.name?maskName(item.name):"")+" · "+(item.year||"")+(item.cohort?`(${item.cohort})`:"");
             badge.textContent=item.status||"";
             badge.className+=" "+(item.status?statusClass(item.status):"");
+          }else if(currentTab==="nco"){
+            avatar.textContent = item.emoji || "🪖";
+            line1.innerHTML = item.company || "";
+            line2.innerHTML = (item.dept||"") + " " + (item.name ? maskName(item.name) : "");
+            badge.textContent = item.cohort || "";
+            badge.className += " apprentice"; // 기본은 파란색
+
+            // 특수부대 리스트
+            const eliteUnits = [
+              "707특수임무단",
+              "해군특수전전단(UDT)",
+              "해난구조전대(SSU)",
+              "공군 제259특수임무대대(CCT)",
+              "제6탐색구조비행전대(SART)"
+            ];
+
+            if (eliteUnits.some(unit => (item.company||"").includes(unit))) {
+              card.classList.add("elite");   // ✅ 카드 전체 강조
+            }
           }
 
           meta.appendChild(line1); meta.appendChild(line2);
@@ -358,6 +418,7 @@
     document.getElementById("tab-awards").addEventListener("click", ()=>setActiveTab("awards"));
     document.getElementById("tab-jobs").addEventListener("click", ()=>setActiveTab("jobs"));
     document.getElementById("tab-doje").addEventListener("click", ()=>setActiveTab("doje"));
+    document.getElementById("tab-nco").addEventListener("click", ()=>setActiveTab("nco"));
     function setActiveTab(key){
       // 먼저 모든 페이지를 천천히 사라지게
       viewport.classList.add("fadeout");
@@ -366,6 +427,7 @@
         document.getElementById("tab-awards").classList.toggle("active", key==="awards");
         document.getElementById("tab-jobs").classList.toggle("active", key==="jobs");
         document.getElementById("tab-doje").classList.toggle("active", key==="doje");
+        document.getElementById("tab-nco").classList.toggle("active", key==="nco");
         render();
         renderTicker(key);
         if(!isPaused) startAuto();
