@@ -134,6 +134,33 @@
     .light .badge.public {background: rgba(51,154,240,.15); color: #0b5394; border-color: #2d82d6;}
     .light .badge.corp {background: rgba(173,181,189,.2); color: #343a40; border-color: #8d959c;}
     .light .badge.agency {background: rgba(81,207,102,.2); color: #2b8a3e; border-color: #3aa957;}
+
+    @media (max-width: 480px) {
+      .app { padding: 10px; gap: 10px;}
+      header { gap: 8px; }
+      .title { min-width: 0; flex: 1 1 auto; }
+      .title h1 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+      .subtitle { font-size: 12px; }
+
+      .actions { display: flex; gap: 6px; flex: 0 0 auto; white-space: nowrap; }
+      .btn { padding: 8px 10px; min-width: auto; font-size: 13px; border-radius: 10px; }
+
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab {flex: 0 0 auto; padding: 10px; font-size: 14px; }
+
+      .summary { gap: 6px; }
+      .summary .pill { padding: 6px 8px; font-size: 12px; }
+
+      .cards { gap: 8px; }
+      .card { grid-template-columns: 52px 1fr auto; gap: 10px; padding: 10px; border-radius: 12px; }
+      .avatar { width: 52px; height: 52px; font-size: 18px; border-radius: 12px; }
+      .meta .line1 { font-size: 16px; }
+      .meta .line2 { font-size: 13px; }
+      .badge { font-size: 12px; padding: 5px 8px; }
+
+      footer { padding: 8px 10px; }
+      .ticker { gap: 14px; animation-duration: 26s; }
+    }
   </style>
 </head>
 <body>
