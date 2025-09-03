@@ -23,6 +23,7 @@
     }
     .title{display:flex; align-items:baseline; gap:10px}
     .title h1{margin:0; font-size: clamp(20px, 3.6vw, 36px)}
+    .mob-br{ display:none; }
     .subtitle{color:var(--muted); font-size: clamp(12px, 2.2vw, 18px)}
     .btn{border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
       color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; min-width:110px; text-align:center;}
@@ -138,6 +139,7 @@
     @media (max-width: 480px) {
       .app { padding: 10px; gap: 10px;}
       header { gap: 8px; }
+      .mob-br{ display:inline; } 
       .title { min-width: 0; flex: 1 1 auto; }
       .title h1 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
       .subtitle { font-size: 12px; }
@@ -167,7 +169,7 @@
   <div class="app" id="app">
     <header>
       <div class="title">
-        <h1>성일정보고 성과 & 취업 현황</h1>
+        <h1>성일정보고<br class="mob-br">성과 & 취업 현황</h1>
         <div class="subtitle" id="period">2025학년도</div>
       </div>
       <div class="actions">
@@ -177,10 +179,10 @@
     </header>
 
     <div class="tabs" role="tablist">
-      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과(수상)</div>
-      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단·대기업 취업</div>
-      <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제(Since 2016)</div>
-      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 부사관</div>
+      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과<br class="mob-br">(수상)</div>
+      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단<br class="mob-br">·대기업 취업</div>
+      <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제<br class="mob-br">(Since 2016)</div>
+      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 부사관<br class="mob-br">임관</div>
     </div>
 
     <div class="summary" id="summary">
