@@ -16,7 +16,13 @@
       background: radial-gradient(120% 120% at 50% -10%, #1b2330 0%, #0b0d10 60%, #050608 100%);
       color:var(--text); overflow:hidden;
     }
-    .app{height:100dvh; max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:12px; padding:14px}
+    /* ▼▼ 변경: 실제 보이는 높이 기반 */
+    .app{height: calc(var(--vh, 1vh) * 100); max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:12px; padding:14px}
+    @supports (height: 100dvh){
+      .app{ height: 100dvh; }
+    }
+    /* ▲▲ */
+
     header{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
       padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); backdrop-filter: blur(6px);
@@ -112,7 +118,11 @@
     .dot{width:10px; height:10px; border-radius:999px; background:rgba(255,255,255,.25); transition:.25s; cursor:pointer; pointer-events:auto;}
     .dot.active{background:var(--accent); transform:scale(1.15)}
 
-    footer{margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); overflow:hidden; min-height:42px}
+    footer{
+      margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); overflow:hidden; min-height:42px;
+      /* ▼ 추가: 하단 안전영역 패딩 */
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    }
     .ticker{display:flex; gap:20px; white-space:nowrap; position:relative; left:0; animation:marq 22s linear infinite}
     .ticker:hover{animation-play-state:paused}
     @keyframes marq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
@@ -182,7 +192,7 @@
       <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과<br class="mob-br">(수상)</div>
       <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단<br class="mob-br">·대기업 취업</div>
       <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제<br class="mob-br">(Since 2016)</div>
-      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 부사관<br class="mob-br">임관</div>
+      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 부사관<br class="mob-br"> 임관</div>
     </div>
 
     <div class="summary" id="summary">
@@ -209,6 +219,18 @@
       </div>
     </footer>
   </div>
+
+  <!-- ▼ 추가: 실제 보이는 viewport 높이를 CSS 변수로 주입 -->
+  <script>
+    function setVH(){
+      const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
+      document.documentElement.style.setProperty('--vh', `${h}px`);
+    }
+    setVH();
+    window.addEventListener('resize', setVH);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', setVH);
+  </script>
+  <!-- ▲ -->
 
   <script src="./data.js?ver=2"></script>
   <script>
