@@ -231,6 +231,72 @@ const nco = [
     { company:"제6탐색구조비행전대(SART)", dept:"창업마케팅과", name:"강나루", cohort:"부사관 동아리 14기", emoji:"🐺" },
 ];
 
+const admissions = [
+    // --- 4년제대학(주요대학: 강조) ---
+    { category:"4년제대학", isPremier:true,  univ:"건국대학교", count:1, major:"정치외교과",         name:"최유경" },
+    { category:"4년제대학", isPremier:true,  univ:"숭실대학교", count:1, major:"글로벌미디어학부",     name:"이원준" },
+    { category:"4년제대학", isPremier:true,  univ:"아주대학교", count:1, major:"소프트웨어학과",       name:"손은규" },
+    { category:"4년제대학", isPremier:true,  univ:"단국대학교", count:1, major:"경영학과",             name:"최유경" },
+    { category:"4년제대학", isPremier:true,  univ:"서경대학교", count:1, major:"메이크업디자인과",     name:"박서아" },
+    { category:"4년제대학", isPremier:true,  univ:"광운대학교", count:1, major:"소프트웨어학부",       name:"강서영" },
+
+    // --- 4년제대학(일반) ---
+    { category:"4년제대학", isPremier:false, univ:"명지대학교", count:1, major:"디지털미디어학부",     name:"이서아" },
+    { category:"4년제대학", isPremier:false, univ:"상지대학교", count:1, major:"소프트웨어학과",       name:"최예나" },
+    { category:"4년제대학", isPremier:false, univ:"을지대학교", count:1, major:"화장품과학전공",       name:"손은혜" },
+    { category:"4년제대학", isPremier:false, univ:"을지대학교", count:1, major:"인문사회계열",         name:"박서아" },
+    { category:"4년제대학", isPremier:false, univ:"을지대학교", count:1, major:"자연계열",             name:"변진화" },
+    { category:"4년제대학", isPremier:false, univ:"평택대학교", count:1, major:"사회복지과",           name:"변하민" },
+    { category:"4년제대학", isPremier:false, univ:"단국대학교(천안)", count:1, major:"해병대군사학과", name:"장경건" },
+    { category:"4년제대학", isPremier:false, univ:"경동대학교", count:1, major:"간호학과",             name:"이아현" },
+    { category:"4년제대학", isPremier:false, univ:"한국나사렛대학교", count:1, major:"태권도학과",   name:"유준상" },
+    { category:"4년제대학", isPremier:false, univ:"동국대학교(듀이카)", count:1, major:"유아교육과", name:"김선림" },
+    { category:"4년제대학", isPremier:false, univ:"동국대학교(경주)", count:1, major:"소방방제과",   name:"조한결" },
+    { category:"4년제대학", isPremier:false, univ:"건국대학교(글로벌)", count:1, major:"패션디자인학과", name:"노은서" },
+
+    // --- 전문대(집계형) ---
+    { category:"전문대", isPremier:false, univ:"신구대학교",       count:22, major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"동서울대학교",     count:15, major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"폴리텍대학교",     count:9,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"명지전문대학교",   count:4,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"국제대학교",       count:1,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"한양여대학교",     count:3,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"연성대학교",       count:2,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"그 외",           count:31, major:"", name:"" },
+
+    // --- 선취업후진학 (상위권 대학은 강조) ---
+    { category:"선취업후진학", isPremier:true,  univ:"국민대학교",   count:1, major:"기업융합법학과",       name:"박지나" },
+    { category:"선취업후진학", isPremier:true,  univ:"홍익대학교",   count:1, major:"디자인예술경영학부",   name:"장수진" },
+    { category:"선취업후진학", isPremier:true,  univ:"중앙대학교",   count:1, major:"지식경영학부",         name:"윤정희" },
+    { category:"선취업후진학", isPremier:true,  univ:"홍익대학교",   count:1, major:"디자인예술경영학부",   name:"박한울" },
+    { category:"선취업후진학", isPremier:true,  univ:"동국대학교",   count:1, major:"사회복지학과",         name:"문정연" },
+    { category:"선취업후진학", isPremier:true,  univ:"홍익대학교",   count:1, major:"디자인예술경영학부",   name:"신유진" },
+    { category:"선취업후진학", isPremier:true,  univ:"동국대학교",   count:1, major:"융합보안학과",         name:"서태풍" },
+    { category:"선취업후진학", isPremier:true,  univ:"국민대학교",   count:1, major:"기업경영학부",         name:"김은희" },
+    { category:"선취업후진학", isPremier:true,  univ:"경희대학교",   count:1, major:"국제통상금융투자학부", name:"허지원" },
+    { category:"선취업후진학", isPremier:true,  univ:"숭실대학교",   count:1, major:"금융경제학과",         name:"전채원" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"조승호" },
+    { category:"선취업후진학", isPremier:true,  univ:"홍익대학교",   count:1, major:"디자인예술경영학부",   name:"송윤서" },
+    { category:"선취업후진학", isPremier:true,  univ:"경희대학교",   count:1, major:"국제통상금융투자학부", name:"고아현" },
+    { category:"선취업후진학", isPremier:true,  univ:"홍익대학교",   count:1, major:"디자인예술경영학부",   name:"김홍주" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"이지예" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"이동환" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"한다현" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"오홍걸" },
+    { category:"선취업후진학", isPremier:false, univ:"명지대학교",   count:1, major:"부동산학과",           name:"이슬" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"권태완" },
+    { category:"선취업후진학", isPremier:true,  univ:"중앙대학교",   count:1, major:"지식경영학부",         name:"장윤지" },
+    { category:"선취업후진학", isPremier:true,  univ:"숙명여대학교", count:1, major:"",                   name:"박지원" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"허지웅" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업융합학부",         name:"김수민" },
+    { category:"선취업후진학", isPremier:true,  univ:"국민대학교",   count:1, major:"기업경영학부",         name:"김나영" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업경영학부",         name:"권희진" },
+    { category:"선취업후진학", isPremier:true,  univ:"한양대학교",   count:1, major:"산업경영학부",         name:"박다사랑" },
+    { category:"선취업후진학", isPremier:true,  univ:"경희대학교",   count:1, major:"국제통상학금융투자학과", name:"김서은" },
+    { category:"선취업후진학", isPremier:true,  univ:"중앙대학교",   count:1, major:"지식경영학부",         name:"장한이" },
+    { category:"선취업후진학", isPremier:true,  univ:"중앙대학교",   count:1, major:"지식경영학부",         name:"김연경" },
+];
+
 
 const tickerTexts = {
     awards: [
@@ -255,6 +321,12 @@ const tickerTexts = {
     "🪖 부사관·군 특수부대 진출 다수",
     "💪 체력·정신력을 겸비한 전문 부사관 양성",
     "🎯 707·UDT·CCT·SSU 등 특수부대 진출 성과",
+    "📣 자세한 내용은 학교 홈페이지 또는 학교로 문의 바랍니다"
+    ],
+    admissions: [
+    "🎓 4년제·전문대·선취업후진학 다양한 경로",
+    "🌟 건국·아주·숭실·단국 등 주요대학 합격",
+    "🔗 전공 연계·맞춤형 진학 상담 운영",
     "📣 자세한 내용은 학교 홈페이지 또는 학교로 문의 바랍니다"
     ],
 };
