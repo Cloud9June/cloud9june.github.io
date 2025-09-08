@@ -63,6 +63,30 @@
       to   { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
     }
     
+    .card.elite-univ {
+      background: linear-gradient(145deg, #4cc9f0, #4361ee); /* 청색 계열 */
+      border: 2px solid #a0e9ff;  /* 은은한 하늘색 테두리 */
+      box-shadow: 
+        0 0 20px rgba(67, 97, 238, 0.6), 
+        0 0 40px rgba(76, 201, 240, 0.4); /* 푸른빛 글로우 */
+      animation: pulseBlue 3s infinite alternate; /* 천천히 맥동하는 느낌 */
+    }
+    /* 부드러운 파동 효과 */
+    @keyframes pulseBlue {
+      from {
+        box-shadow: 0 0 12px rgba(67, 97, 238, 0.6),
+                    0 0 24px rgba(76, 201, 240, 0.3);
+      }
+      to {
+        box-shadow: 0 0 28px rgba(67, 97, 238, 0.8),
+                    0 0 56px rgba(76, 201, 240, 0.5);
+      }
+    }
+    .card.elite-univ .meta .line2 {
+      color: #eaf2ff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    }
+
     .avatar{
       width:64px; height:64px; border-radius:14px; display:grid; place-items:center; font-weight:800;
       background:linear-gradient(145deg, #263243, #151b25); color:var(--gold); border:1px solid rgba(255,255,255,.06);
@@ -193,6 +217,7 @@
       <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단<br class="mob-br">·대기업 취업</div>
       <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제<br class="mob-br">(Since 2016)</div>
       <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 부사관<br class="mob-br"> 임관</div>
+      <div class="tab" role="tab" id="tab-admissions" aria-selected="false">🎓 진학<br class="mob-br">(대학)</div>
     </div>
 
     <div class="summary" id="summary">
@@ -283,6 +308,20 @@
       return computePageSizeByHeight(rect.height);
     }
 
+    function admissionsCountItem(it){
+      // count 숫자면 그 값, 없고 이름 있으면 1, 그 외 1
+      if (typeof it.count === "number") return it.count;
+      if (it.count && /^\d+$/.test(it.count)) return parseInt(it.count,10);
+      if (it.name) return 1;
+      return 1;
+    }
+    function groupDisplay(g){
+      if (g==="4년제대학") return "4년제대학"; // 표기는 4년제대학
+      if (g==="전문대")  return "전문대학";
+      if (g==="선취업후진학") return "선취업후진학";
+      return g||"";
+    }
+
     /************ 상태/설정 ************/
     const AUTO_INTERVAL_MS = 6000;
     let PAGE_SIZE = 7;
@@ -296,7 +335,7 @@
     const extraInfo=document.getElementById("extraInfo");
 
     /************ 자동순환 ************/
-    const TAB_ORDER = ["awards", "jobs", "doje", "nco"];
+    const TAB_ORDER = ["awards", "jobs", "doje", "nco", "admissions"];
 
     function nextAcross(){
       if (pages.length && pageIndex < pages.length - 1) {
@@ -326,7 +365,8 @@
         currentTab==="awards" ? awards :
         currentTab==="jobs"   ? jobs   :
         currentTab==="doje"   ? doje   :
-                                nco;
+        currentTab==="nco"    ? nco    :
+                                admissions;
 
       if(currentTab==="nco"){
         data = [...data].sort((a,b)=>getNcoSortKey(a.cohort) - getNcoSortKey(b.cohort));
@@ -337,6 +377,7 @@
         currentTab==="awards" ? awards.reduce((s,it)=>s+countPeople(it.name),0) :
         currentTab==="doje"   ? doje.reduce((s,it)=>s+countPeople(it.name),0)   :
         currentTab==="nco"    ? data.length :
+        currentTab==="admissions" ? admissions.reduce((s,it)=>s + admissionsCountItem(it), 0) :
                                 jobs.length;
       countTotal.textContent=totalCount;
 
@@ -396,7 +437,7 @@
             line2.innerHTML = (item.dept||"") + " " + (item.name ? maskName(item.name) : "");
             badge.textContent = item.cohort || "";
             badge.className += " apprentice"; // 기본은 파란색
-
+          
             // 특수부대 리스트
             const eliteUnits = [
               "707특수임무단",
@@ -408,6 +449,32 @@
 
             if (eliteUnits.some(unit => (item.company||"").includes(unit))) {
               card.classList.add("elite");   // ✅ 카드 전체 강조
+            }
+          }else if(currentTab==="admissions"){
+            avatar.textContent = "🎓";
+            line1.innerHTML = item.univ || ""; // 대학명  
+
+            const parts = [];
+            if (item.major) parts.push(item.major);
+            if (item.track) parts.push(item.track);
+            if (item.name)  parts.push(maskName(item.name));
+            line2.innerHTML = parts.join(" · ");
+
+            badge.textContent = groupDisplay(item.category);
+            if (item.category === "4년제대학" || item.category === "선취업후진학") {
+              badge.classList.add("grand");
+            }
+            if (item.count && !item.name) {
+              line2.innerHTML = (line2.innerHTML ? line2.innerHTML + " · " : "") + `${item.count}명`;
+            }
+
+            const eliteUnivs = [
+              "한양대학교", "중앙대학교", "경희대학교", "홍익대학교", "국민대학교", "건국대학교", 
+              "아주대학교", "동국대학교", "숭실대학교", "광운대학교", "단국대학교"
+            ];
+
+            if (eliteUnivs.some(unit => (item.univ||"").includes(unit))) {
+              card.classList.add("elite-univ");   // ✅ 카드 전체 강조
             }
           }
 
@@ -470,6 +537,7 @@
     document.getElementById("tab-jobs").addEventListener("click", ()=>setActiveTab("jobs"));
     document.getElementById("tab-doje").addEventListener("click", ()=>setActiveTab("doje"));
     document.getElementById("tab-nco").addEventListener("click", ()=>setActiveTab("nco"));
+    document.getElementById("tab-admissions").addEventListener("click", ()=>setActiveTab("admissions"));
     function setActiveTab(key){
       // 먼저 모든 페이지를 천천히 사라지게
       viewport.classList.add("fadeout");
@@ -479,6 +547,7 @@
         document.getElementById("tab-jobs").classList.toggle("active", key==="jobs");
         document.getElementById("tab-doje").classList.toggle("active", key==="doje");
         document.getElementById("tab-nco").classList.toggle("active", key==="nco");
+        document.getElementById("tab-admissions").classList.toggle("active", key==="admissions");
         render();
         renderTicker(key);
         if(!isPaused) startAuto();
