@@ -254,16 +254,6 @@ const admissions = [
     { category:"4년제대학", isPremier:false, univ:"동국대학교(경주)", count:1, major:"소방방제과",   name:"조한결" },
     { category:"4년제대학", isPremier:false, univ:"건국대학교(글로벌)", count:1, major:"패션디자인학과", name:"노은서" },
 
-    // --- 전문대(집계형) ---
-    { category:"전문대", isPremier:false, univ:"신구대학교",       count:22, major:"", name:"" },
-    { category:"전문대", isPremier:false, univ:"동서울대학교",     count:15, major:"", name:"" },
-    { category:"전문대", isPremier:false, univ:"폴리텍대학교",     count:9,  major:"", name:"" },
-    { category:"전문대", isPremier:false, univ:"명지전문대학교",   count:4,  major:"", name:"" },
-    { category:"전문대", isPremier:false, univ:"국제대학교",       count:1,  major:"", name:"" },
-    { category:"전문대", isPremier:false, univ:"한양여대학교",     count:3,  major:"", name:"" },
-    { category:"전문대", isPremier:false, univ:"연성대학교",       count:2,  major:"", name:"" },
-    { category:"전문대", isPremier:false, univ:"그 외",           count:31, major:"", name:"" },
-
     // --- 선취업후진학 (상위권 대학은 강조) ---
     { category:"선취업후진학", isPremier:true,  univ:"국민대학교",   count:1, major:"기업융합법학과",       name:"박지나" },
     { category:"선취업후진학", isPremier:true,  univ:"홍익대학교",   count:1, major:"디자인예술경영학부",   name:"장수진" },
@@ -295,6 +285,16 @@ const admissions = [
     { category:"선취업후진학", isPremier:true,  univ:"경희대학교",   count:1, major:"국제통상학금융투자학과", name:"김서은" },
     { category:"선취업후진학", isPremier:true,  univ:"중앙대학교",   count:1, major:"지식경영학부",         name:"장한이" },
     { category:"선취업후진학", isPremier:true,  univ:"중앙대학교",   count:1, major:"지식경영학부",         name:"김연경" },
+    
+    // --- 전문대(집계형) ---
+    { category:"전문대", isPremier:false, univ:"신구대학교",       count:22, major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"동서울대학교",     count:15, major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"폴리텍대학교",     count:9,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"명지전문대학교",   count:4,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"국제대학교",       count:1,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"한양여대학교",     count:3,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"연성대학교",       count:2,  major:"", name:"" },
+    { category:"전문대", isPremier:false, univ:"그 외",           count:31, major:"", name:"" },
 ];
 
 
