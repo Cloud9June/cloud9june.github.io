@@ -34,7 +34,7 @@
     .btn{border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
       color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; min-width:110px; text-align:center;}
     .tabs{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px;}
-    .tab{text-align:center; padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; border:1px solid transparent; transition: all 1s;}
+    .tab{position: relative; text-align:center; padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; border:1px solid transparent; transition: all 1s;}
     .tab.active{background:linear-gradient(180deg, rgba(76,201,240,.25), rgba(76,201,240,.05)); border-color:rgba(76,201,240,.6);}
     .summary{display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:var(--muted)}
     .summary .pill{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); font-weight:600}
@@ -189,6 +189,10 @@
       transition: opacity .35s;
     }
 
+    .mini-badge{ display:inline-flex; align-items:center; gap:4px; margin-left:6px; margin-top:4px; padding:2px 6px; border-radius:999px; font-size:11px; font-weight:700; line-height:1; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:var(--muted); vertical-align:middle; }
+    .mini-badge.year{ border-color: rgba(76,201,240,.45); background: rgba(76,201,240,.12); color: #9fdaf3; }
+    .mini-badge.agg{ border-color: rgba(255,215,0,.35); background: rgba(255,215,0,.12); color: #ffe38a; }
+
     /* 라이트 모드 */
     .light{
       --bg:#f6f8fb; --panel:#ffffff; --card:#ffffff; --text:#0d1b2a; --muted:#536273; --accent:#0077ff;
@@ -201,6 +205,9 @@
     .light .badge.agency {background: rgba(81,207,102,.2); color: #2b8a3e; border-color: #3aa957;}
     .light .card.elite-univ .meta .line2 { color: var(--muted); text-shadow: none; }
     .light .card.elite-award .meta .line1, .light .card.elite-award .meta .line2 { color: var(--text); text-shadow: none; }
+    .light .mini-badge{ border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); color:#495057; }
+    .light .mini-badge.year{ border-color: rgba(0,119,255,.25); background: rgba(0,119,255,.08); color:#0b66d6; }
+    .light .mini-badge.agg{ border-color: rgba(252,191,73,.35); background: rgba(252,191,73,.12); color:#a26900; }
 
     @media (max-width: 925px) {
       .mob-br{ display:inline; } 
@@ -235,6 +242,7 @@
 
       footer { padding: 8px 10px; }
       .ticker { gap: 14px; animation-duration: 26s; }
+      .mini-badge{ font-size:9px; padding:2px 5px; margin-left:4px; }
     }
   </style>
 </head>
@@ -253,11 +261,26 @@
     </header>
 
     <div class="tabs" role="tablist">
-      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과<br class="mob-br">(수상·자격증)</div>
-      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 취업<br class="mob-br">(대기업·공기업)</div>
-      <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제<br class="mob-br">(Since 2016)</div>
-      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 군임관<br class="mob-br">(부사관)</div>
-      <div class="tab" role="tab" id="tab-admissions" aria-selected="false">🎓 진학<br class="mob-br">(대학)</div>
+      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">
+        🏆 성과<br class="mob-br">(수상·자격증)
+        <span class="mini-badge year" title="올해 데이터">🗓 2025</span>
+      </div>
+      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">
+        💼 취업<br class="mob-br">(대기업·공기업)
+        <span class="mini-badge year" title="올해 데이터">🗓 2025</span>
+      </div>
+      <div class="tab" role="tab" id="tab-doje" aria-selected="false">
+        🏢 도제<br class="mob-br">(Since 2016)
+        <span class="mini-badge agg" title="누적 데이터">∑ 누적</span>
+      </div>
+      <div class="tab" role="tab" id="tab-nco" aria-selected="false">
+        🪖 군임관<br class="mob-br">(부사관)
+        <span class="mini-badge agg" title="누적 데이터">∑ 누적</span>
+      </div>
+      <div class="tab" role="tab" id="tab-admissions" aria-selected="false">
+        🎓 진학<br class="mob-br">(대학)
+        <span class="mini-badge agg" title="누적 데이터">∑ 누적</span>
+      </div>
     </div>
 
     <div class="summary" id="summary">
@@ -337,8 +360,8 @@
     function computePageSizeByHeight(availHeightPx){
       const perRow = 110;
       const raw = Math.floor(availHeightPx/perRow);
-      const clamped = Math.max(4, Math.min(12, raw));
-      const candidates=[12,10,9,8,7,6,5,4];
+      const clamped = Math.max(3, Math.min(12, raw));
+      const candidates=[12,10,9,8,7,6,5,4,3];
       let best=clamped, diff=Infinity;
       for(const n of candidates){ const d=Math.abs(n-clamped); if(d<diff){ diff=d; best=n; } }
       return best;
@@ -426,7 +449,7 @@
                                 admissions;
 
       if(currentTab==="nco"){
-        data = [...data].sort((a,b)=>getNcoSortKey(a.cohort) - getNcoSortKey(b.cohort));
+        data = [...data].sort((a,b)=>getNcoSortKey(b.cohort) - getNcoSortKey(a.cohort));
       }
       
       // 총 인원: awards/doje=이름 합산, jobs=항목 수
