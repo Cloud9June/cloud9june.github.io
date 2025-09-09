@@ -12,33 +12,22 @@ if (isIOSLike()) document.documentElement.classList.add('is-ios');
 
 /* ========== 0) 모든 기기에서 뷰포트 높이 보정 ========== */
 function setVH() {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
-  const vv = window.visualViewport;
+  // window.innerHeight와 visualViewport.height 중 더 작은 값을 선택하여
+  // 주소창이나 툴바가 가리는 영역을 고려한 실제 가시 높이를 계산합니다.
+  const height = Math.min(window.innerHeight, (window.visualViewport?.height ?? window.innerHeight));
   
-  let viewportHeight;
-  if (vv && isIOS) {
-    // iOS (사파리, 크롬)에서는 visualViewport가 정확함.
-    viewportHeight = vv.height;
-  } else if (vv && !isIOS) {
-    // 안드로이드에서는 innerHeight와 visualViewport를 비교하여 실제 가시 영역 추정.
-    viewportHeight = Math.min(window.innerHeight, vv.height);
-  } else {
-    // visualViewport를 지원하지 않는 경우 (구형 브라우저 등).
-    viewportHeight = window.innerHeight;
-  }
-
-  // 미세한 오차를 고려해 -0.5px
-  const vh = (viewportHeight - 0.5) * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  // --vh 변수 설정
+  document.documentElement.style.setProperty('--vh', `${height * 0.01}px`);
 }
 
-// 모든 뷰포트 변화 이벤트에 리스너 추가
+// 초기 로드 시 실행
 setVH();
+
+// 리사이즈, 스크롤 등 뷰포트 관련 이벤트에 리스너 추가
 window.addEventListener('resize', setVH, { passive: true });
-window.addEventListener('orientationchange', setVH, { passive: true });
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', setVH);
-  window.visualViewport.addEventListener('scroll', setVH);
+  window.visualViewport.addEventListener('resize', setVH, { passive: true });
+  window.visualViewport.addEventListener('scroll', setVH, { passive: true });
 }
 
 /* ========== 1) 데이터 유틸 ========== */
