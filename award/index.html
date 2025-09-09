@@ -189,6 +189,9 @@
       transition: opacity .35s;
     }
 
+    .summary .quick-link{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:600; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--text); cursor:pointer; user-select:none; font-size: 11px; }
+    .summary .quick-link:hover{ background:rgba(255,255,255,.08); }
+
     .mini-badge{ display:inline-flex; align-items:center; gap:4px; margin-left:6px; margin-top:4px; padding:2px 6px; border-radius:999px; font-size:11px; font-weight:700; line-height:1; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:var(--muted); vertical-align:middle; }
     .mini-badge.year{ border-color: rgba(76,201,240,.45); background: rgba(76,201,240,.12); color: #9fdaf3; }
     .mini-badge.agg{ border-color: rgba(255,215,0,.35); background: rgba(255,215,0,.12); color: #ffe38a; }
@@ -208,6 +211,7 @@
     .light .mini-badge{ border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); color:#495057; }
     .light .mini-badge.year{ border-color: rgba(0,119,255,.25); background: rgba(0,119,255,.08); color:#0b66d6; }
     .light .mini-badge.agg{ border-color: rgba(252,191,73,.35); background: rgba(252,191,73,.12); color:#a26900; }
+    .light .summary .quick-link{ border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); color:var(--text); }
 
     @media (hover: none) and (pointer: coarse) {
       .list-wrap,
@@ -306,6 +310,7 @@
       <div class="pill">총 인원 <strong id="countTotal">0</strong>명</div>
       <div class="pill">페이지 <strong id="pageInfo">1/1</strong></div>
       <div class="pill" id="extraInfo">자동 전환 중…</div>
+      <div class="quick-link" id="openOverview" title="효과 제거, 심플한 전체 목록으로">📄 한 번에 보기</div>
     </div>
 
     <div class="list-wrap" id="viewport">
@@ -696,6 +701,10 @@
 
     // 초기 렌더
     render(); renderTicker(currentTab); startAuto();
+
+    document.getElementById('openOverview').addEventListener('click', () => {
+      location.href = `overview.html?tab=${encodeURIComponent(currentTab)}`;
+    });
   </script>
 </body>
 </html>
