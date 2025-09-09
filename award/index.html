@@ -189,16 +189,23 @@
     .light .badge.agency {background: rgba(81,207,102,.2); color: #2b8a3e; border-color: #3aa957;}
     .light .card.elite-univ .meta .line2 { color: var(--muted); text-shadow: none; }
 
+    @media (max-width: 925px) {
+      .mob-br{ display:inline; } 
+    }
+    @media (max-width: 830px) {
+      header { flex-direction: column; align-items: center; text-align: center; padding: 8px 10px; gap: 8px; }
+      .btn { padding: 6px 10px; min-width: auto; font-size: 13px; border-radius: 10px; }
+    }
     @media (max-width: 480px) {
       .app { padding: 10px; gap: 10px;}
-      header { gap: 8px; }
+      header { flex-direction: column; align-items: center; text-align: center; padding: 8px 10px; gap: 8px; }
       .mob-br{ display:inline; } 
-      .title { min-width: 0; flex: 1 1 auto; }
-      .title h1 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-      .subtitle { font-size: 12px; }
+      .title { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; min-width: auto; }
+      .title h1 { font-size: 18px; line-height: 1.2; margin: 0; text-align: center; }
+      .subtitle { font-size: 10px; margin: 0; text-align: center; }
 
-      .actions { display: flex; gap: 6px; flex: 0 0 auto; white-space: nowrap; }
-      .btn { padding: 8px 10px; min-width: auto; font-size: 13px; border-radius: 10px; }
+      .actions { width: 100%; display: flex; gap: 6px; margin-top: 4px; width: 100%; justify-content: center; align-items: center; flex-wrap: wrap; }
+      .btn { padding: 6px 10px; min-width: auto; font-size: 11px; border-radius: 10px; }
 
       .tabs::-webkit-scrollbar { display: none; }
       .tab {flex: 0 0 auto; padding: 10px; font-size: 14px; }
@@ -222,7 +229,7 @@
   <div class="app" id="app">
     <header>
       <div class="title">
-        <h1>성일정보고<br class="mob-br">성과 & 취업 현황</h1>
+        <h1>성일정보고 성과 & 취업 현황</h1>
         <div class="subtitle" id="period">2025학년도</div>
       </div>
       <div class="actions">
@@ -233,10 +240,10 @@
     </header>
 
     <div class="tabs" role="tablist">
-      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과<br class="mob-br">(수상)</div>
-      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 공사·공단<br class="mob-br">·대기업 취업</div>
+      <div class="tab active" role="tab" id="tab-awards" aria-selected="true">🏆 성과<br class="mob-br">(수상·자격증)</div>
+      <div class="tab" role="tab" id="tab-jobs" aria-selected="false">💼 취업<br class="mob-br">(대기업·공기업)</div>
       <div class="tab" role="tab" id="tab-doje" aria-selected="false">🏢 도제<br class="mob-br">(Since 2016)</div>
-      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 부사관<br class="mob-br"> 임관</div>
+      <div class="tab" role="tab" id="tab-nco" aria-selected="false">🪖 군임관<br class="mob-br">(부사관)</div>
       <div class="tab" role="tab" id="tab-admissions" aria-selected="false">🎓 진학<br class="mob-br">(대학)</div>
     </div>
 
