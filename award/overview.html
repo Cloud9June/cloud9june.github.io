@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>한 번에 보기 - 성일정보고</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f9fc; --panel:#ffffff; --text:#0d1b2a; --muted:#5b6775; --line:#e6edf5; --accent:#0b66d6;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:Pretendard,system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",Arial,sans-serif;
+       background:var(--bg); color:var(--text);}
+  .wrap{max-width:1080px;margin:0 auto;padding:12px}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .hgroup{display:flex;gap:10px;align-items:baseline}
+  h1{margin:0;font-size:20px}
+  .sub{color:var(--muted);font-size:13px}
+  .actions{display:flex;gap:6px}
+  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .tab{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;font-size:13px}
+  .tab.active{border-color:var(--accent); color:#fff; background:var(--accent)}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .search{flex:1 1 220px;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  .search input{border:0;outline:0;width:100%;font-size:14px}
+  .counter{color:var(--muted);font-size:13px}
+  .table{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+  .thead,.row{display:grid;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .thead{background:#f1f4f9;font-weight:800}
+  .row:last-child{border-bottom:0}
+  /* 컬럼 프리셋 */
+  .grid-awards    { grid-template-columns: 1.2fr 0.7fr 0.6fr 1.5fr; }
+  .grid-jobs      { grid-template-columns: 1.3fr 1fr 0.9fr 0.8fr; }
+  .grid-doje      { grid-template-columns: 1.2fr 1fr 0.9fr 0.7fr 0.6fr; }
+  .grid-nco       { grid-template-columns: 1.3fr 1fr 0.9fr 0.7fr; }
+  .grid-adm       { grid-template-columns: 1.2fr 1.2fr 0.9fr 0.9fr; }
+
+  /* 밀도 높게 */
+  .thead, .row { gap:10px; }
+  .row{font-size:14px;line-height:1.28}
+  .muted{color:var(--muted)}
+  .badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;border:1px solid var(--line);font-size:12px;font-weight:700}
+  .grand{background:#ffeaa7;border-color:#e6a700}
+  .mono{font-variant-numeric: tabular-nums}
+
+  /* 모바일 최적화 */
+  @media (max-width: 560px) {
+    .row{font-size:13px}
+    .grid-awards    { grid-template-columns: 1.2fr 0.7fr 0.5fr 1.4fr; }
+    .grid-jobs      { grid-template-columns: 1.2fr 0.9fr 0.8fr 0.7fr; }
+    .grid-doje      { grid-template-columns: 1.1fr 1fr 0.8fr 0.6fr 0.6fr; }
+    .grid-nco       { grid-template-columns: 1.2fr 0.9fr 0.8fr 0.6fr; }
+    .grid-adm       { grid-template-columns: 1.1fr 1.1fr 0.8fr 0.8fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="hgroup">
+      <h1>한 번에 보기</h1>
+      <div class="sub" id="subtitle"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="history.back()">← 돌아가기</button>
+      <!-- <button class="btn" onclick="window.print()">🖨️ 인쇄/저장</button> -->
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <div class="tab" data-tab="awards">🏆 성과</div>
+    <div class="tab" data-tab="jobs">💼 취업</div>
+    <div class="tab" data-tab="doje">🏢 도제</div>
+    <div class="tab" data-tab="nco">🪖 군임관</div>
+    <div class="tab" data-tab="admissions">🎓 진학</div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      🔎<input id="q" type="search" placeholder="이름·대학·회사·학과 등 검색" />
+    </div>
+    <div class="counter"><span id="count">0</span>건</div>
+  </div>
+
+  <div class="table">
+    <div class="thead" id="thead"></div>
+    <div id="tbody"></div>
+  </div>
+</div>
+
+<script src="./data.js"></script>
+<script>
+  // 유틸
+  const maskName = (name) => {
+    if (!name) return "";
+    return String(name).split(/[,\n]+/g).map(n=>{
+      const arr=[...n.trim()];
+      if(arr.length===2) return arr[0]+"○";
+      if(arr.length>=3) return arr[0]+"○"+arr.slice(2).join("");
+      return n.trim();
+    }).join(", ");
+  };
+  const qs = (k)=> new URLSearchParams(location.search).get(k);
+  let current = qs('tab') || 'awards';
+
+  const datasets = {
+    awards, jobs, doje, nco, admissions
+  };
+
+  const headers = {
+    awards:    { cols:['대회/자격','상훈','연도','이름'],       cls:'grid-awards' },
+    jobs:      { cols:['회사','학과','이름','유형'],             cls:'grid-jobs'   },
+    doje:      { cols:['회사','학과','이름','연도','기수'],      cls:'grid-doje'   },
+    nco:       { cols:['부대/기관','학과','이름','기수'],        cls:'grid-nco'    },
+    admissions:{ cols:['대학','전공/트랙','이름/인원','구분'],    cls:'grid-adm'    },
+  };
+
+  const subtitle = document.getElementById('subtitle');
+  function setSubtitle(key){
+    const map = {
+      awards:'성과(수상·자격증)',
+      jobs:'취업',
+      doje:'도제',
+      nco:'군임관(부사관)',
+      admissions:'진학(대학)',
+    };
+    subtitle.textContent = map[key] || '';
+  }
+
+  // 탭 처리
+  const tabEls = [...document.querySelectorAll('.tab')];
+  tabEls.forEach(el=>{
+    el.addEventListener('click', ()=>{
+      current = el.dataset.tab;
+      render();
+    });
+  });
+
+  // 검색
+  const q = document.getElementById('q');
+  q.addEventListener('input', ()=> renderRows());
+
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+  const countEl = document.getElementById('count');
+
+  function render(){
+    // 탭 활성화
+    tabEls.forEach(t=> t.classList.toggle('active', t.dataset.tab===current));
+    setSubtitle(current);
+
+    // 헤더 렌더
+    const h = headers[current];
+    thead.className = 'thead ' + h.cls;
+    thead.innerHTML = h.cols.map(c=>`<div>${c}</div>`).join('');
+
+    // 행 렌더
+    renderRows();
+  }
+
+  function renderRows(){
+    const list = (datasets[current] || []);
+    const h = headers[current];
+    const keyword = q.value.trim().toLowerCase();
+
+    const filtered = !keyword ? list : list.filter(item=>{
+      const txt = JSON.stringify(item).toLowerCase();
+      return txt.includes(keyword);
+    });
+
+    countEl.textContent = filtered.length;
+
+    tbody.innerHTML = '';
+    tbody.className = h.cls;
+
+    const frag = document.createDocumentFragment();
+
+    filtered.forEach(it=>{
+      const row = document.createElement('div');
+      row.className = 'row ' + h.cls;
+
+      if (current==='awards'){
+        row.innerHTML = `
+          <div>${it.comp||it.cert||''}</div>
+          <div>${it.prize||''}</div>
+          <div class="mono">${it.year||''}</div>
+          <div>${it.name?maskName(it.name):''}</div>
+        `;
+      } else if (current==='jobs'){
+        row.innerHTML = `
+          <div>${it.company||''}</div>
+          <div>${it.dept||''}</div>
+          <div>${it.name?maskName(it.name):''}</div>
+          <div>${it.type||''}</div>
+        `;
+      } else if (current==='doje'){
+        row.innerHTML = `
+          <div>${it.company||''}</div>
+          <div>${it.dept||''}</div>
+          <div>${it.name?maskName(it.name):''}</div>
+          <div class="mono">${it.year||''}</div>
+          <div>${it.cohort||''}</div>
+        `;
+      } else if (current==='nco'){
+        row.innerHTML = `
+          <div>${it.company||''}</div>
+          <div>${it.dept||''}</div>
+          <div>${it.name?maskName(it.name):''}</div>
+          <div>${it.cohort||''}</div>
+        `;
+      } else if (current==='admissions'){
+        // count가 있고 name이 없으면 집계형
+        const nameOrCount = it.name ? maskName(it.name) : (it.count ? `${it.count}명` : '');
+        row.innerHTML = `
+          <div>${it.univ||''}</div>
+          <div>${[it.major, it.track].filter(Boolean).join(' · ')}</div>
+          <div>${nameOrCount}</div>
+          <div>${it.category||''}</div>
+        `;
+      }
+      frag.appendChild(row);
+    });
+
+    tbody.appendChild(frag);
+  }
+
+  // 초기 탭/렌더
+  // 쿼리로 온 탭이 유효하지 않으면 awards로.
+  if (!headers[current]) current = 'awards';
+  // 탭 버튼 active 초기화
+  tabEls.forEach(t=> t.classList.toggle('active', t.dataset.tab===current));
+  render();
+</script>
+</body>
+</html>
