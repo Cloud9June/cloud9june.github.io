@@ -10,17 +10,32 @@ function isIOSLike() {
 }
 if (isIOSLike()) document.documentElement.classList.add('is-ios');
 
-/* 실제 보이는 viewport 높이를 CSS 변수로 주입 (전 플랫폼 공통) */
+/* ========== 0) 모든 기기에서 뷰포트 높이 보정 ========== */
 function setVH() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
   const vv = window.visualViewport;
-  const height = vv ? vv.height : window.innerHeight;
-  const h = (height - 0.5) * 0.01; // 미세 오차 여유
-  document.documentElement.style.setProperty('--vh', `${h}px`);
+  
+  let viewportHeight;
+  if (vv && isIOS) {
+    // iOS (사파리, 크롬)에서는 visualViewport가 정확함.
+    viewportHeight = vv.height;
+  } else if (vv && !isIOS) {
+    // 안드로이드에서는 innerHeight와 visualViewport를 비교하여 실제 가시 영역 추정.
+    viewportHeight = Math.min(window.innerHeight, vv.height);
+  } else {
+    // visualViewport를 지원하지 않는 경우 (구형 브라우저 등).
+    viewportHeight = window.innerHeight;
+  }
+
+  // 미세한 오차를 고려해 -0.5px
+  const vh = (viewportHeight - 0.5) * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
 }
+
+// 모든 뷰포트 변화 이벤트에 리스너 추가
 setVH();
 window.addEventListener('resize', setVH, { passive: true });
 window.addEventListener('orientationchange', setVH, { passive: true });
-window.addEventListener('pageshow', setVH, { passive: true });
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', setVH);
   window.visualViewport.addEventListener('scroll', setVH);
