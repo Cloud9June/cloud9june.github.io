@@ -284,7 +284,7 @@
   </script>
   <!-- ▲ -->
 
-  <script src="./data.js?ver=2"></script>
+  <script src="./data.js?ver=4"></script>
   <script>
     /************ 유틸 ************/
     const maskName = (name) => {
@@ -512,12 +512,7 @@
               line2.innerHTML = (line2.innerHTML ? line2.innerHTML + " · " : "") + `${item.count}명`;
             }
 
-            const eliteUnivs = [
-              "한양대학교", "중앙대학교", "경희대학교", "홍익대학교", "국민대학교", "건국대학교", 
-              "아주대학교", "동국대학교", "숭실대학교", "광운대학교", "단국대학교"
-            ];
-
-            if (eliteUnivs.some(unit => (item.univ||"").includes(unit))) {
+            if (item.isPremier) {
               card.classList.add("elite-univ");   // ✅ 카드 전체 강조
             }
           }
