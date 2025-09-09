@@ -233,12 +233,15 @@
       .summary { gap: 6px; }
       .summary .pill { padding: 6px 8px; font-size: 12px; }
 
-      .cards { gap: 8px; }
-      .card { grid-template-columns: 52px 1fr auto; gap: 10px; padding: 10px; border-radius: 12px; }
-      .avatar { width: 52px; height: 52px; font-size: 18px; border-radius: 12px; }
-      .meta .line1 { font-size: 16px; }
-      .meta .line2 { font-size: 13px; }
-      .badge { font-size: 12px; padding: 5px 8px; }
+      .page { padding: 10px; }
+      .cards { gap: 6px; }
+      .card { grid-template-columns: 48px 1fr auto; padding: 8px 10px; border-radius: 10px; }
+      .avatar { width: 48px; height: 48px; font-size: 16px; border-radius: 10px; }
+      .meta .line1 { font-size: 15px; line-height: 1.18; }
+      .meta .line2 { font-size: 12px; line-height: 1,18; margin-top: 1px; }
+      .badge { font-size: 11px; padding: 3px 6px; border-radius: 9px; }
+      .controls { bottom: 6px; }
+      .dot { width: 8px; height: 8px; }
 
       footer { padding: 8px 10px; }
       .ticker { gap: 14px; animation-duration: 26s; }
@@ -358,7 +361,7 @@
 
     // 반응형 rows 계산
     function computePageSizeByHeight(availHeightPx){
-      const perRow = 110;
+      const perRow = 84;
       const raw = Math.floor(availHeightPx/perRow);
       const clamped = Math.max(3, Math.min(12, raw));
       const candidates=[12,10,9,8,7,6,5,4,3];
