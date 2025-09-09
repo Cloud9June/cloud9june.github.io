@@ -295,6 +295,20 @@ const admissions = [
     { category:"전문대", isPremier:false, univ:"한양여대학교",     count:3,  major:"", name:"" },
     { category:"전문대", isPremier:false, univ:"연성대학교",       count:2,  major:"", name:"" },
     { category:"전문대", isPremier:false, univ:"그 외",           count:31, major:"", name:"" },
+
+    // --- 대학(집계) ---
+    { category:"2025졸업생", isPremier:false, univ:"건국대학교 외 10개 대학", count:11, major:"", name:"" },
+    { category:"2025졸업생", isPremier:false, univ:"명지전문대학 외 18개 대학", count:56, major:"", name:"" },
+    { category:"2024졸업생", isPremier:false, univ:"숭실대학교 외 10개 대학", count:12, major:"", name:"" },
+    { category:"2024졸업생", isPremier:false, univ:"한양여자대학교 외 22개 대학", count:50, major:"", name:"" },
+    { category:"2023졸업생", isPremier:false, univ:"이화여자대학교 외 12개 대학", count:14, major:"", name:"" },
+    { category:"2023졸업생", isPremier:false, univ:"인하공업전문대학 외 23개 대학", count:56, major:"", name:"" },
+    { category:"2022졸업생", isPremier:false, univ:"이화여자대학교 외 10개 대학", count:11, major:"", name:"" },
+    { category:"2022졸업생", isPremier:false, univ:"ICT폴리텍대학 외 16개 대학", count:44, major:"", name:"" },
+    { category:"2021졸업생", isPremier:false, univ:"단국대학교 외 6개 대학", count:9, major:"", name:"" },
+    { category:"2021졸업생", isPremier:false, univ:"인하공업전문대학 외 15개 대학", count:41, major:"", name:"" },
+    
+    
 ];
 
 
