@@ -131,7 +131,7 @@ const chunk = (arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slic
 
 /* ========== 5) “몇 행 보여줄지” 1차 추정치 ========== */
 function computePageSizeByHeight(availHeightPx){
-  const perRowGuess = (window.innerWidth <= 480) ? 68 : 110; // 대략치
+  const perRowGuess = (window.innerWidth <= 480) ? 72 : 110; // 대략치
   const raw = Math.floor(availHeightPx / perRowGuess);
   const clamped = Math.max(3, Math.min(12, raw));
   const candidates=[12,10,9,8,7,6,5,4,3];
@@ -157,39 +157,42 @@ function measureRowHeight(){
 }
 
 /* 실제 영역 기준으로 행수 자동 보정(넘치면 줄이고, 남으면 1행까지 늘림) */
-function autoFitRows(){
+function autoFitRows() {
   const page = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
-  if(!cards) return;
-
-  let safety = 20;
+  if (!cards) return;
 
   // 1) 넘치면 한 행씩 줄이기
-  while (safety-- > 0) {
-    if (cards.scrollHeight <= cards.clientHeight || PAGE_SIZE <= 3) break;
+  while (cards.scrollHeight > cards.clientHeight && PAGE_SIZE > 3) {
     PAGE_SIZE--;
-    render(false);
-    const p = document.querySelector('.page.active');
-    if(!p) break;
+    // 변경된 PAGE_SIZE로 다시 렌더링 (플레이스홀더 개수만 변경)
+    cards.style.setProperty("--rows", PAGE_SIZE);
+    
+    // 플레이스홀더를 다시 계산하여 적용
+    const totalCards = page.querySelectorAll('.card:not(.placeholder)').length;
+    let placeholderCount = PAGE_SIZE - (totalCards % PAGE_SIZE);
+    if(placeholderCount === PAGE_SIZE) placeholderCount = 0;
+    
+    // 기존 플레이스홀더 삭제
+    page.querySelectorAll('.placeholder').forEach(p => p.remove());
+
+    // 새로운 플레이스홀더 생성
+    for(let i=0; i<placeholderCount; i++) {
+        const p = document.createElement("div");
+        p.className = "card placeholder";
+        cards.appendChild(p);
+    }
   }
 
-  // 2) 남으면 한 행씩 늘려보기 (폰트/툴바 지연 고려해 여유 완화)
-  safety = 20;
-  while (safety-- > 0) {
-    const perRow = measureRowHeight();
-    if (!perRow || PAGE_SIZE >= 12) break;
-
-    const nowPage = document.querySelector('.page.active');
-    const nowCards = nowPage?.querySelector('.cards');
-    if(!nowCards) break;
-
-    const spare = nowCards.clientHeight - nowCards.scrollHeight;
-    if (spare >= perRow - 2) { // 거의 1행 들어갈 만큼 남으면 +1
-      PAGE_SIZE++;
-      render(false);
-      continue;
-    }
-    break;
+  // 2) 남으면 한 행씩 늘려보기
+  const perRow = measureRowHeight();
+  if (perRow && PAGE_SIZE < 12) {
+      const spare = cards.clientHeight - cards.scrollHeight;
+      // 여유 공간이 1.5행 높이 이상이면 한 행 추가
+      if (spare > perRow * 1.5) {
+          PAGE_SIZE++;
+          render(false); // 재귀 호출
+      }
   }
 }
 
@@ -366,20 +369,42 @@ function renderTicker(tabKey){
   ticker.innerHTML = once + once;
 }
 
-/* ========== 9) 터치: 일시정지 + 스와이프(상/하) ========== */
-let touchStartY=null;
-viewport.addEventListener("touchstart", e=>{
-  touchStartY=e.touches[0].clientY;
-  stopAuto();
-  extraInfo.textContent="일시정지(터치)";
-}, {passive:true});
-viewport.addEventListener("touchend", e=>{
-  if(touchStartY==null) return;
-  const dy=e.changedTouches[0].clientY - touchStartY;
-  if(Math.abs(dy)>40){ dy<0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
-  touchStartY=null;
-  if(!isPaused){ startAuto(); extraInfo.textContent="자동 전환 중…"; }
-}, {passive:true});
+// /* ========== 9) 터치: 일시정지 + 스와이프(상/하) ========== */
+// let touchStartY=null;
+// viewport.addEventListener("touchstart", e=>{
+//   touchStartY=e.touches[0].clientY;
+//   stopAuto();
+//   extraInfo.textContent="일시정지(터치)";
+// }, {passive:true});
+// viewport.addEventListener("touchend", e=>{
+//   if(touchStartY==null) return;
+//   const dy=e.changedTouches[0].clientY - touchStartY;
+//   if(Math.abs(dy)>40){ dy<0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
+//   touchStartY=null;
+//   if(!isPaused){ startAuto(); extraInfo.textContent="자동 전환 중…"; }
+// }, {passive:true});
+
+/* ========== 9) 터치: 일시정지 + 스와이프(좌/우) ========== */
+let touchStartX = null; // y 대신 x로 변경
+viewport.addEventListener("touchstart", e => {
+    touchStartX = e.touches[0].clientX; // clientY 대신 clientX 사용
+    stopAuto();
+    extraInfo.textContent = "일시정지(터치)";
+}, { passive: true });
+viewport.addEventListener("touchend", e => {
+    if (touchStartX == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX; // dy 대신 dx 사용
+    if (Math.abs(dx) > 40) { // 임계값
+        // 오른쪽으로 스와이프 (dx > 0) -> 이전 페이지
+        // 왼쪽으로 스와이프 (dx < 0) -> 다음 페이지
+        dx > 0 ? goToPage((pageIndex - 1 + pages.length) % pages.length) : nextPage();
+    }
+    touchStartX = null;
+    if (!isPaused) {
+        startAuto();
+        extraInfo.textContent = "자동 전환 중…";
+    }
+}, { passive: true });
 
 /* (터치 기기) 텍스트 선택/복사/꾹 클릭 메뉴 방지 */
 (function () {
