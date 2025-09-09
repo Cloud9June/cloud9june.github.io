@@ -4,7 +4,7 @@
    ========================================================= */
 
 /* --- 테마 색상 (다크 기본) --- */
-:root{ --bg:#0b0d10; --panel:#12161b; --card:#171c22; --text:#e8edf3; --muted:#9fb0c0; --accent:#4cc9f0; --gold:#ffd166; }
+:root{ -vh: 1vh; --bg:#0b0d10; --panel:#12161b; --card:#171c22; --text:#e8edf3; --muted:#9fb0c0; --accent:#4cc9f0; --gold:#ffd166; }
 
 /* --- 리셋/공통 --- */
 *{ box-sizing:border-box; }
@@ -17,7 +17,7 @@ body{
 }
 
 /* --- 앱 컨테이너 --- */
-.app { height: calc(var(--vh, 1vh) * 100); max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 14px; }
+.app { height: 100vh; height: calc(var(--vh, 1vh) * 100); max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 14px; }
 
 /* --- 헤더 --- */
 header{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); backdrop-filter:blur(6px); }
