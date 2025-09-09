@@ -16,10 +16,12 @@
       background: radial-gradient(120% 120% at 50% -10%, #1b2330 0%, #0b0d10 60%, #050608 100%);
       color:var(--text); overflow:hidden;
     }
-
-    /* 앱 래퍼: 실제 보이는 높이 기반 */
+    /* ▼▼ 변경: 실제 보이는 높이 기반 */
     .app{height: calc(var(--vh, 1vh) * 100); max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:12px; padding:14px}
-    @supports (height: 100dvh){ .app{ height: 100dvh; } }
+    @supports (height: 100dvh){
+      .app{ height: 100dvh; }
+    }
+    /* ▲▲ */
 
     header{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -29,25 +31,16 @@
     .title h1{margin:0; font-size: clamp(20px, 3.6vw, 36px)}
     .mob-br{ display:none; }
     .subtitle{color:var(--muted); font-size: clamp(12px, 2.2vw, 18px)}
-
-    .btn{
-      border:1px solid rgba(255,255,255,.12);
-      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
-      color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer;
-      min-width:110px; text-align:center;
-    }
-
+    .btn{border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
+      color:var(--text); border-radius:12px; padding:10px 14px; font-weight:600; cursor:pointer; min-width:110px; text-align:center;}
     .tabs{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; background:rgba(255,255,255,.04); padding:8px; border-radius:16px;}
     .tab{position: relative; text-align:center; padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; border:1px solid transparent; transition: all 1s;}
     .tab.active{background:linear-gradient(180deg, rgba(76,201,240,.25), rgba(76,201,240,.05)); border-color:rgba(76,201,240,.6);}
-
     .summary{display:flex; gap:10px; flex-wrap:wrap; align-items:center; color:var(--muted)}
     .summary .pill{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); font-weight:600}
-
     .list-wrap{position:relative; flex:1; min-height:0; border-radius:18px; background:var(--panel); overflow:hidden}
     .page{position:absolute; inset:0; padding:14px; display:grid; opacity:0; transform:translateY(8px); transition:opacity .35s, transform .35s}
     .page.active{opacity:1; transform:none}
-
     .cards{
       height:100%; display:grid; gap:10px; grid-template-columns:1fr;
       grid-template-rows: repeat(var(--rows, 10), 1fr);
@@ -71,38 +64,58 @@
     .effects-on .card.elite-univ::after { animation: breathe 4s ease-in-out infinite; }
     .effects-on .card.elite-award::after { animation: breathe 4s ease-in-out infinite; }
     .effects-on .badge.grand::after { animation: shimmer 2.4s linear infinite; }
-
+    
     .card.elite {
       background: linear-gradient(145deg, #ff6b6b, #a61e1e);
       border: 2px solid #ff8787;
       box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
       animation: none;
     }
-    @keyframes glow { from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);} to { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);} }
 
+    @keyframes glow {
+      from { box-shadow: 0 0 10px rgba(255, 0, 0, 0.4); }
+      to   { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+    }
+    
     .card.elite-univ {
-      background: linear-gradient(145deg, #4cc9f0, #4361ee);
-      border: 2px solid #a0e9ff;
-      box-shadow: 0 0 20px rgba(67, 97, 238, 0.6), 0 0 40px rgba(76, 201, 240, 0.4);
+      background: linear-gradient(145deg, #4cc9f0, #4361ee); /* 청색 계열 */
+      border: 2px solid #a0e9ff;  /* 은은한 하늘색 테두리 */
+      box-shadow: 
+        0 0 20px rgba(67, 97, 238, 0.6), 
+        0 0 40px rgba(76, 201, 240, 0.4); /* 푸른빛 글로우 */
       animation: none;
     }
+    /* 부드러운 파동 효과 */
     @keyframes pulseBlue {
-      from { box-shadow: 0 0 12px rgba(67, 97, 238, 0.6), 0 0 24px rgba(76, 201, 240, 0.3); }
-      to   { box-shadow: 0 0 28px rgba(67, 97, 238, 0.8), 0 0 56px rgba(76, 201, 240, 0.5); }
+      from {
+        box-shadow: 0 0 12px rgba(67, 97, 238, 0.6),
+                    0 0 24px rgba(76, 201, 240, 0.3);
+      }
+      to {
+        box-shadow: 0 0 28px rgba(67, 97, 238, 0.8),
+                    0 0 56px rgba(76, 201, 240, 0.5);
+      }
     }
-
-    .card.elite-univ .meta .line2 { color:#eaf2ff; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
-
+    .card.elite-univ .meta .line2 {
+      color: #eaf2ff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    }
     .card.elite-award {
-      background: linear-gradient(145deg, #ffda6a, #f4a261);
+      background: linear-gradient(145deg, #ffda6a, #f4a261); /* 골드톤 */
       border: 2px solid #e1a200;
       box-shadow: 0 6px 16px rgba(244, 162, 97, .35);
-      position: relative; overflow: hidden;
+      position: relative;
+      overflow: hidden;
     }
     .card.elite-award .meta .line1,
-    .card.elite-award .meta .line2 { color:#fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
-
-    @keyframes breathe { 0%,100%{opacity:.14; transform:scale(.98);} 50%{opacity:.32; transform:scale(1);} }
+    .card.elite-award .meta .line2 {
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    }
+    @keyframes breathe {
+      0%,100% { opacity: .14; transform: scale(.98); }
+      50%     { opacity: .32; transform: scale(1); }
+    }
 
     .avatar{
       width:64px; height:64px; border-radius:14px; display:grid; place-items:center; font-weight:800;
@@ -116,7 +129,7 @@
     .badge.gold{color:#2d2a00; background:linear-gradient(180deg,#ffd166,#e0b84b)}
     .badge.silver{color:#1f2630; background:linear-gradient(180deg,#dfe6f1,#b6c0cc)}
     .badge.bronze{color:#2a1a00; background:linear-gradient(180deg,#e6a87a,#c78452)}
-
+    /* 대상(Grand) */
     .badge.grand{
       position:relative; color:#1f1400;
       background: linear-gradient(180deg,#ffeaa7 0%, #ffd166 55%, #fcbf49 100%);
@@ -128,14 +141,20 @@
     .badge.grand::after{
       content:""; position:absolute; inset:0;
       background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.35) 35%, rgba(255,255,255,0) 70%);
-      background-size:200% 100%; pointer-events:none; mix-blend-mode: soft-light;
+      background-size:200% 100%; animation: shimmer 2.4s linear infinite; pointer-events:none; mix-blend-mode: soft-light;
     }
-
     .badge.elite {
       background: linear-gradient(180deg,#ff6b6b,#c92a2a);
-      color: #fff; border: 2px solid #a61e1e; animation: pulse 1.5s infinite;
+      color: #fff;
+      border: 2px solid #a61e1e;
+      animation: pulse 1.5s infinite;
     }
-    @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,107,107,.6);} 70%{box-shadow:0 0 10px 10px rgba(255,107,107,0);} 100%{box-shadow:0 0 0 0 rgba(255,107,107,0);} }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,107,107,.6); }
+      70% { box-shadow: 0 0 10px 10px rgba(255,107,107,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,107,107,0); }
+    }
     @keyframes shimmer{ from{background-position:-120% 0;} to{background-position:120% 0;} }
 
     /* 취업 유형 */
@@ -145,6 +164,7 @@
     .badge.military {color: #f9f9f9; font-weight: 800; border: 1px solid #2e3b13; background:repeating-linear-gradient(45deg,#4b5320 0 10px,#3b3c36 10px 20px,#556b2f 20px 30px,#2f4f2f 30px 40px); background-size: 80px 80px; box-shadow: inset 0 0 4px rgba(0,0,0,.4);}
 
     /* 도제 상태 */
+    /* .badge.apprentice{ background:linear-gradient(180deg,#94d2bd,#4fb08f); color:#0b2e26; border-color:#2b8c72; } */
     .badge.excellent{ background: linear-gradient(180deg, #fff176, #fbc02d); color: #3b2f00; border-color: #f9a825; }
     .badge.apprentice{ background:linear-gradient(180deg,#cddafd,#6ea8fe); color:#0b3c74; border-color:#4682d9; }
 
@@ -154,14 +174,20 @@
 
     footer{
       margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); overflow:hidden; min-height:42px;
+      /* ▼ 추가: 하단 안전영역 패딩 */
       padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     }
     .ticker{display:flex; gap:20px; white-space:nowrap; position:relative; left:0; animation:marq 22s linear infinite}
     .ticker:hover{animation-play-state:paused}
     @keyframes marq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
 
-    #viewport.fadeout { opacity:0; transition: opacity .35s; }
-    #viewport { transition: opacity .35s; }
+    #viewport.fadeout {
+      opacity:0;
+      transition: opacity .35s;
+    }
+    #viewport {
+      transition: opacity .35s;
+    }
 
     .mini-badge{ display:inline-flex; align-items:center; gap:4px; margin-left:6px; margin-top:4px; padding:2px 6px; border-radius:999px; font-size:11px; font-weight:700; line-height:1; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:var(--muted); vertical-align:middle; }
     .mini-badge.year{ border-color: rgba(76,201,240,.45); background: rgba(76,201,240,.12); color: #9fdaf3; }
@@ -183,8 +209,9 @@
     .light .mini-badge.year{ border-color: rgba(0,119,255,.25); background: rgba(0,119,255,.08); color:#0b66d6; }
     .light .mini-badge.agg{ border-color: rgba(252,191,73,.35); background: rgba(252,191,73,.12); color:#a26900; }
 
-    /* 반응형 */
-    @media (max-width: 925px) { .mob-br{ display:inline; } }
+    @media (max-width: 925px) {
+      .mob-br{ display:inline; } 
+    }
     @media (max-width: 830px) {
       header { flex-direction: column; align-items: center; text-align: center; padding: 8px 10px; gap: 8px; }
       .btn { padding: 6px 10px; min-width: auto; font-size: 13px; border-radius: 10px; }
@@ -197,7 +224,7 @@
       .title h1 { font-size: 18px; line-height: 1.2; margin: 0; text-align: center; }
       .subtitle { font-size: 10px; margin: 0; text-align: center; }
 
-      .actions { width: 100%; display: flex; gap: 6px; margin-top: 4px; justify-content: center; align-items: center; flex-wrap: wrap; }
+      .actions { width: 100%; display: flex; gap: 6px; margin-top: 4px; width: 100%; justify-content: center; align-items: center; flex-wrap: wrap; }
       .btn { padding: 6px 10px; min-width: auto; font-size: 11px; border-radius: 10px; }
 
       .tabs::-webkit-scrollbar { display: none; }
@@ -211,7 +238,7 @@
       .card { grid-template-columns: 48px 1fr auto; padding: 8px 10px; border-radius: 10px; }
       .avatar { width: 48px; height: 48px; font-size: 16px; border-radius: 10px; }
       .meta .line1 { font-size: 15px; line-height: 1.18; }
-      .meta .line2 { font-size: 12px; line-height: 1.18; margin-top: 1px; }
+      .meta .line2 { font-size: 12px; line-height: 1,18; margin-top: 1px; }
       .badge { font-size: 11px; padding: 3px 6px; border-radius: 9px; }
       .controls { bottom: 6px; }
       .dot { width: 8px; height: 8px; }
@@ -284,7 +311,7 @@
     </footer>
   </div>
 
-  <!-- 실제 보이는 viewport 높이를 CSS 변수로 주입 -->
+  <!-- ▼ 추가: 실제 보이는 viewport 높이를 CSS 변수로 주입 -->
   <script>
     function setVH(){
       const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
@@ -294,6 +321,7 @@
     window.addEventListener('resize', setVH);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', setVH);
   </script>
+  <!-- ▲ -->
 
   <script src="./data.js?ver=2"></script>
   <script>
@@ -313,6 +341,7 @@
       if(m) return parseInt(m[1],10);
       return String(name).split(/[,\n]+/g).map(s=>s.trim()).filter(Boolean).length;
     }
+
     const prizeClass = (p) => {
       if (!p) return "";
       if (p.includes("대상")) return "grand";
@@ -330,52 +359,58 @@
     };
     const statusClass = (s) => s?.includes("우량") ? "excellent" : "apprentice";
 
-    /************ 반응형 rows 계산 ************/
-    function measureRowHeight() {
-      const page = document.querySelector('.page.active');
-      if (!page) return 110; // fallback
-      const cards = page.querySelector('.cards');
-      const first = cards?.querySelector('.card:not(.placeholder)');
-      if (!cards || !first) return 110;
-      const cs = getComputedStyle(cards);
-      const gap = parseFloat(cs.rowGap || cs.gap || 0);
-      const h = first.getBoundingClientRect().height;
-      return h + gap + 2; // 안전 여유
-    }
+    // 반응형 rows 계산
     function computePageSizeByHeight(availHeightPx){
-      const perRow = measureRowHeight();
-      const raw = Math.floor(availHeightPx/perRow);
-      const minRows = 3, maxRows = 12;
-      return Math.max(minRows, Math.min(maxRows, raw));
-    }
-    function fitRowsToViewport(){
-      // 오버플로우면 한 줄씩 줄이되, 매번 새 DOM 기준으로 재측정
-      let safety = 6;
-      while (safety-- > 0) {
-        const page = document.querySelector('.page.active');
-        const cards = page?.querySelector('.cards');
-        if (!cards) break;
-        if (cards.scrollHeight <= cards.clientHeight || PAGE_SIZE <= 3) break;
-        PAGE_SIZE--;
-        render(false); // 자동계산 OFF로 재렌더
+      let perRow;
+      if (window.innerWidth <= 480) {
+        perRow = 86;
+      } else {
+        perRow = 110;
       }
+      const raw = Math.floor(availHeightPx/perRow);
+      const clamped = Math.max(3, Math.min(12, raw));
+      const candidates=[12,10,9,8,7,6,5,4,3];
+      let best=clamped, diff=Infinity;
+      for(const n of candidates){ const d=Math.abs(n-clamped); if(d<diff){ diff=d; best=n; } }
+      return best;
+    }
+    function getResponsivePageSize(){
+      const rect = viewport.getBoundingClientRect();
+      return computePageSizeByHeight(rect.height);
     }
 
-    /************ 상태/설정 ************/
+    function admissionsCountItem(it){
+      // count 숫자면 그 값, 없고 이름 있으면 1, 그 외 1
+      if (typeof it.count === "number") return it.count;
+      if (it.count && /^\d+$/.test(it.count)) return parseInt(it.count,10);
+      if (it.name) return 1;
+      return 1;
+    }
+    function groupDisplay(g){
+      if (g==="4년제대학") return "4년제대학"; // 표기는 4년제대학
+      if (g==="전문대")  return "전문대학";
+      if (g==="선취업후진학") return "선취업후진학";
+      return g||"";
+    }
+
     const root = document.body;
     const btnFx = document.getElementById('fxToggle');
 
     // 기본 ON
     root.classList.add('effects-on');
     updateFxLabel();
+
     btnFx.addEventListener('click', ()=>{
       root.classList.toggle('effects-on');
       updateFxLabel();
     });
+
     function updateFxLabel(){
-      btnFx.textContent = root.classList.contains('effects-on') ? '✨ 효과 ON' : '✨ 효과 OFF';
+      const on = root.classList.contains('effects-on');
+      btnFx.textContent = on ? '✨ 효과 ON' : '✨ 효과 OFF';
     }
 
+    /************ 상태/설정 ************/
     const AUTO_INTERVAL_MS = 6000;
     let PAGE_SIZE = 7;
     let currentTab="awards", pageIndex=0, autoTimer=null, pages=[];
@@ -389,28 +424,31 @@
 
     /************ 자동순환 ************/
     const TAB_ORDER = ["awards", "jobs", "doje", "nco", "admissions"];
+
     function nextAcross(){
       if (pages.length && pageIndex < pages.length - 1) {
         goToPage(pageIndex + 1);
       } else {
         const i = TAB_ORDER.indexOf(currentTab);
         const nextTab = TAB_ORDER[(i + 1) % TAB_ORDER.length];
+        // setActiveTab가 render()를 호출하므로, 탭만 바꾸면 1페이지부터 다시 표시됨
         setActiveTab(nextTab);
       }
     }
 
     function getNcoSortKey(cohort){
-      if(!cohort) return 999;
+      if(!cohort) return 999; // 값 없으면 뒤로
       let num = parseInt(cohort.replace(/[^0-9]/g,""), 10);
-      if(cohort.includes("동아리")){ return num - 9; } // 14 -> 5, 15 -> 6
-      return num;
+      if(cohort.includes("동아리")){
+        return num - 9; // 14 -> 5, 15 -> 6
+      } else {
+        return num; // 부사관과 그대로
+      }
     }
 
     /************ 렌더 ************/
     const chunk=(arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slice(i,i+size)])),[]);
-
-    function render(autoSize = true){
-      // 1) 데이터 선택
+    function render(){
       let data =
         currentTab==="awards" ? awards :
         currentTab==="jobs"   ? jobs   :
@@ -418,31 +456,30 @@
         currentTab==="nco"    ? nco    :
                                 admissions;
 
-      // 2) 부사관 정렬 (최신 기수 먼저)
       if(currentTab==="nco"){
         data = [...data].sort((a,b)=>getNcoSortKey(b.cohort) - getNcoSortKey(a.cohort));
       }
-
-      // 3) 총합 표시
+      
+      // 총 인원: awards/doje=이름 합산, jobs=항목 수
       const totalCount =
         currentTab==="awards" ? awards.reduce((s,it)=>s+countPeople(it.name),0) :
         currentTab==="doje"   ? doje.reduce((s,it)=>s+countPeople(it.name),0)   :
         currentTab==="nco"    ? data.length :
         currentTab==="admissions" ? admissions.reduce((s,it)=>s + admissionsCountItem(it), 0) :
-                                   jobs.length;
+                                jobs.length;
       countTotal.textContent=totalCount;
 
-      // 4) 자동 행수 계산 (autoSize일 때만)
-      if (autoSize) {
-        const rect = viewport.getBoundingClientRect();
-        PAGE_SIZE = computePageSizeByHeight(rect.height);
-      }
+      PAGE_SIZE=getResponsivePageSize();
 
-      // 5) 페이지/카드 렌더
+      const dotsEl = document.getElementById("dots");
+
+      viewport.innerHTML = "";
+      pages = [];
+
+      const ch = chunk(data, PAGE_SIZE);
       viewport.innerHTML=""; dots.innerHTML=""; pages=[];
-      const groups = chunk(data, PAGE_SIZE);
 
-      groups.forEach((group, idx)=>{
+      ch.forEach((group, idx)=>{
         const filled=group.slice();
         while(filled.length<PAGE_SIZE) filled.push({__placeholder:true});
 
@@ -470,42 +507,62 @@
             line2.innerHTML=item.name?`${maskName(item.name)} · ${item.year||""}`:"";
             badge.textContent=item.prize||"";
             badge.className+=" "+(item.prize?prizeClass(item.prize):"");
-            if (item.isPremier) card.classList.add("elite-award");
-          }
-          else if(currentTab==="jobs"){
+
+            if (item.isPremier) {
+              card.classList.add("elite-award");
+            }
+          }else if(currentTab==="jobs"){
             avatar.textContent=item.emoji||"🏢";
             line1.innerHTML=item.company||"";
-            line2.innerHTML=(item.dept||"")+" "+(item.name?maskName(item.name):"");
+            line2.innerHTML = (item.dept || "") + " " + (item.name ? maskName(item.name) : "");
             badge.textContent=item.type||"";
             badge.className+=" "+(item.type?typeClass(item.type):"");
-          }
-          else if(currentTab==="doje"){
+          }else if(currentTab==="doje"){ // doje
             avatar.textContent="🧑🏻‍💻";
             line1.innerHTML=item.company||"";
-            line2.innerHTML=(item.dept||"")+" "+(item.name?maskName(item.name):"")+" · "+(item.year||"")+(item.cohort?`(${item.cohort})`:"");
+            line2.innerHTML=(item.dept || "") + " " +(item.name?maskName(item.name):"")+" · "+(item.year||"")+(item.cohort?`(${item.cohort})`:"");
             badge.textContent=item.status||"";
             badge.className+=" "+(item.status?statusClass(item.status):"");
-          }
-          else if(currentTab==="nco"){
-            avatar.textContent=item.emoji||"🪖";
-            line1.innerHTML=item.company||"";
-            line2.innerHTML=(item.dept||"")+" "+(item.name?maskName(item.name):"");
-            badge.textContent=item.cohort||"";
-            badge.className+=" apprentice";
-            const eliteUnits=[
-              "707특수임무단","해군특수전전단(UDT)","해난구조전대(SSU)","공군 제259특수임무대대(CCT)","제6탐색구조비행전대(SART)"
+          }else if(currentTab==="nco"){
+            avatar.textContent = item.emoji || "🪖";
+            line1.innerHTML = item.company || "";
+            line2.innerHTML = (item.dept||"") + " " + (item.name ? maskName(item.name) : "");
+            badge.textContent = item.cohort || "";
+            badge.className += " apprentice"; // 기본은 파란색
+          
+            // 특수부대 리스트
+            const eliteUnits = [
+              "707특수임무단",
+              "해군특수전전단(UDT)",
+              "해난구조전대(SSU)",
+              "공군 제259특수임무대대(CCT)",
+              "제6탐색구조비행전대(SART)"
             ];
-            if (eliteUnits.some(unit => (item.company||"").includes(unit))) card.classList.add("elite");
-          }
-          else if(currentTab==="admissions"){
-            avatar.textContent="🎓";
-            line1.innerHTML=item.univ||"";
-            const parts=[]; if(item.major) parts.push(item.major); if(item.track) parts.push(item.track); if(item.name) parts.push(maskName(item.name));
-            line2.innerHTML=parts.join(" · ");
-            badge.textContent=groupDisplay(item.category);
-            if (item.category==="4년제대학" || item.category==="선취업후진학") badge.classList.add("grand");
-            if (item.count && !item.name) line2.innerHTML=(line2.innerHTML?line2.innerHTML+" · ":"")+`${item.count}명`;
-            if (item.isPremier) card.classList.add("elite-univ");
+
+            if (eliteUnits.some(unit => (item.company||"").includes(unit))) {
+              card.classList.add("elite");   // ✅ 카드 전체 강조
+            }
+          }else if(currentTab==="admissions"){
+            avatar.textContent = "🎓";
+            line1.innerHTML = item.univ || ""; // 대학명  
+
+            const parts = [];
+            if (item.major) parts.push(item.major);
+            if (item.track) parts.push(item.track);
+            if (item.name)  parts.push(maskName(item.name));
+            line2.innerHTML = parts.join(" · ");
+
+            badge.textContent = groupDisplay(item.category);
+            if (item.category === "4년제대학" || item.category === "선취업후진학") {
+              badge.classList.add("grand");
+            }
+            if (item.count && !item.name) {
+              line2.innerHTML = (line2.innerHTML ? line2.innerHTML + " · " : "") + `${item.count}명`;
+            }
+
+            if (item.isPremier) {
+              card.classList.add("elite-univ");   // ✅ 카드 전체 강조
+            }
           }
 
           meta.appendChild(line1); meta.appendChild(line2);
@@ -523,28 +580,9 @@
         dots.appendChild(dot);
       });
 
-      // 6) 첫 렌더 뒤 오버플로우 보정은 autoSize일 때만 1회 수행
-      if (autoSize) {
-        fitRowsToViewport(); // 내부에서 render(false)로 재렌더할 수 있음
-      }
-
-      // 7) 페이지 UI 갱신
       pageIndex=0;
       updatePageInfo();
       extraInfo.textContent=isPaused?"일시정지됨":"자동 전환 중…";
-    }
-
-    function admissionsCountItem(it){
-      if (typeof it.count === "number") return it.count;
-      if (it.count && /^\d+$/.test(it.count)) return parseInt(it.count,10);
-      if (it.name) return 1;
-      return 1;
-    }
-    function groupDisplay(g){
-      if (g==="4년제대학") return "4년제대학";
-      if (g==="전문대")  return "전문대학";
-      if (g==="선취업후진학") return "선취업후진학";
-      return g||"";
     }
 
     function updatePageInfo(){
@@ -558,7 +596,7 @@
       pageIndex=i; updatePageInfo();
     }
     function nextPage(){ if(pages.length) goToPage((pageIndex+1)%pages.length); }
-
+    // function startAuto(){ stopAuto(); if(!isPaused) autoTimer=setInterval(nextPage, AUTO_INTERVAL_MS); }
     function startAuto(){ stopAuto(); if(!isPaused) autoTimer=setInterval(nextAcross, AUTO_INTERVAL_MS); }
     function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
 
@@ -573,9 +611,8 @@
     /************ 상호작용 ************/
     // 스와이프
     let touchStartY=null;
-    const viewportEl=document.getElementById("viewport");
-    viewportEl.addEventListener("touchstart", e=>{ touchStartY=e.touches[0].clientY; stopAuto(); extraInfo.textContent="일시정지(터치)"; }, {passive:true});
-    viewportEl.addEventListener("touchend", e=>{
+    viewport.addEventListener("touchstart", e=>{ touchStartY=e.touches[0].clientY; stopAuto(); extraInfo.textContent="일시정지(터치)"; }, {passive:true});
+    viewport.addEventListener("touchend", e=>{
       if(touchStartY==null) return;
       const dy=e.changedTouches[0].clientY - touchStartY;
       if(Math.abs(dy)>40){ dy<0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
@@ -589,6 +626,7 @@
     document.getElementById("tab-nco").addEventListener("click", ()=>setActiveTab("nco"));
     document.getElementById("tab-admissions").addEventListener("click", ()=>setActiveTab("admissions"));
     function setActiveTab(key){
+      // 먼저 모든 페이지를 천천히 사라지게
       viewport.classList.add("fadeout");
       setTimeout(()=>{
         currentTab=key;
@@ -597,11 +635,11 @@
         document.getElementById("tab-doje").classList.toggle("active", key==="doje");
         document.getElementById("tab-nco").classList.toggle("active", key==="nco");
         document.getElementById("tab-admissions").classList.toggle("active", key==="admissions");
-        render(true);           // 자동 계산 ON
+        render();
         renderTicker(key);
         if(!isPaused) startAuto();
         viewport.classList.remove("fadeout");
-      }, 350);
+      }, 350); // .35s와 맞추기
     }
 
     // 테마 토글
@@ -625,11 +663,11 @@
       }
     });
 
-    // 리사이즈 시 재계산
-    window.addEventListener("resize", ()=>{ render(true); if(!isPaused) startAuto(); });
+    // 리사이즈 시 rows 재계산
+    window.addEventListener("resize", ()=>{ render(); if(!isPaused) startAuto(); });
 
     // 초기 렌더
-    render(true); renderTicker(currentTab); startAuto();
+    render(); renderTicker(currentTab); startAuto();
   </script>
 </body>
 </html>
