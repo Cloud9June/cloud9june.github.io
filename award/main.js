@@ -131,7 +131,7 @@ const chunk = (arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slic
 
 /* ========== 5) “몇 행 보여줄지” 1차 추정치 ========== */
 function computePageSizeByHeight(availHeightPx){
-  const perRowGuess = (window.innerWidth <= 480) ? 72 : 130; // 대략치
+  const perRowGuess = (window.innerWidth <= 480) ? 85 : 110; // 대략치
   const raw = Math.floor(availHeightPx / perRowGuess);
   const clamped = Math.max(3, Math.min(12, raw));
   const candidates=[12,10,9,8,7,6,5,4,3];
