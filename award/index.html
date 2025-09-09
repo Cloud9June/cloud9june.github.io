@@ -209,6 +209,22 @@
     .light .mini-badge.year{ border-color: rgba(0,119,255,.25); background: rgba(0,119,255,.08); color:#0b66d6; }
     .light .mini-badge.agg{ border-color: rgba(252,191,73,.35); background: rgba(252,191,73,.12); color:#a26900; }
 
+    @media (hover: none) and (pointer: coarse) {
+      .list-wrap,
+      .list-wrap * ,
+      header,
+      .tabs,
+      .summary,
+      footer {
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none; /* iOS: 길게 눌렀을 때 호출 메뉴 차단 */
+        -webkit-tap-highlight-color: transparent; /* 안드/크롬 하이라이트 제거 */
+      }
+
+      .list-wrap { touch-action: pan-y; }
+    }
     @media (max-width: 925px) {
       .mob-br{ display:inline; } 
     }
@@ -445,6 +461,18 @@
         return num; // 부사관과 그대로
       }
     }
+
+    (function () {
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      if (!isTouch) return;
+
+      const target = document.getElementById('viewport'); // 리스트 영역만 막음(원하면 document로 변경)
+      const prevent = (e) => { e.preventDefault(); };
+
+      ['contextmenu', 'selectstart', 'dragstart'].forEach(evt =>
+        target.addEventListener(evt, prevent, { passive: false })
+      );
+    })();
 
     /************ 렌더 ************/
     const chunk=(arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slice(i,i+size)])),[]);
