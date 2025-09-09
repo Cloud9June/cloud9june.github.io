@@ -55,18 +55,14 @@
     /* 기본은 OFF (정적 스타일만) */
     .card.elite-univ::after { animation: none !important; }
     .card.elite-univ { box-shadow: 0 6px 12px rgba(0,0,0,.25); }
+    .card.elite-award::after { animation: none !important; }
     .badge.grand::after { animation: none; }
 
     /* ON일 때만 애니메이션/강조 효과 */
-    .effects-on .card.elite {
-      animation: glow 2s infinite alternate;
-    }
-    .effects-on .card.elite-univ { 
-      animation: pulseBlue 3s infinite alternate;
-    }
-    .effects-on .card.elite-univ::after { 
-      animation: breathe 4s ease-in-out infinite; 
-    }
+    .effects-on .card.elite { animation: glow 2s infinite alternate; }
+    .effects-on .card.elite-univ { animation: pulseBlue 3s infinite alternate; }
+    .effects-on .card.elite-univ::after { animation: breathe 4s ease-in-out infinite; }
+    .effects-on .card.elite-award::after { animation: breathe 4s ease-in-out infinite; }
     .effects-on .badge.grand::after { animation: shimmer 2.4s linear infinite; }
     
     .card.elite {
@@ -103,6 +99,22 @@
     .card.elite-univ .meta .line2 {
       color: #eaf2ff;
       text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    }
+    .card.elite-award {
+      background: linear-gradient(145deg, #ffda6a, #f4a261); /* 골드톤 */
+      border: 2px solid #e1a200;
+      box-shadow: 0 6px 16px rgba(244, 162, 97, .35);
+      position: relative;
+      overflow: hidden;
+    }
+    .card.elite-award .meta .line1,
+    .card.elite-award .meta .line2 {
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    }
+    @keyframes breathe {
+      0%,100% { opacity: .14; transform: scale(.98); }
+      50%     { opacity: .32; transform: scale(1); }
     }
 
     .avatar{
@@ -188,6 +200,7 @@
     .light .badge.corp {background: rgba(173,181,189,.2); color: #343a40; border-color: #8d959c;}
     .light .badge.agency {background: rgba(81,207,102,.2); color: #2b8a3e; border-color: #3aa957;}
     .light .card.elite-univ .meta .line2 { color: var(--muted); text-shadow: none; }
+    .light .card.elite-award .meta .line1, .light .card.elite-award .meta .line2 { color: var(--text); text-shadow: none; }
 
     @media (max-width: 925px) {
       .mob-br{ display:inline; } 
@@ -284,7 +297,7 @@
   </script>
   <!-- ▲ -->
 
-  <script src="./data.js?ver=4"></script>
+  <script src="./data.js?ver=2"></script>
   <script>
     /************ 유틸 ************/
     const maskName = (name) => {
@@ -463,6 +476,10 @@
             line2.innerHTML=item.name?`${maskName(item.name)} · ${item.year||""}`:"";
             badge.textContent=item.prize||"";
             badge.className+=" "+(item.prize?prizeClass(item.prize):"");
+
+            if (item.isPremier) {
+              card.classList.add("elite-award");
+            }
           }else if(currentTab==="jobs"){
             avatar.textContent=item.emoji||"🏢";
             line1.innerHTML=item.company||"";
