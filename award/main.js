@@ -1,29 +1,32 @@
 /* =========================================================
-   성일정보고 성과 & 취업 현황 - 메인 스크립트 (최종본 v1)
-   - data.js가 awards/jobs/doje/nco/admissions, tickerTexts 제공
-   - 초기화/자동행수조절 안정화
+   성일정보고 성과 & 취업 현황 - 메인 스크립트 (안드/아이폰 모두 맞춤)
+   - 기능/디자인 변경 없음 / 뷰포트·행수 자동보정만 강화
    ========================================================= */
 
-/* ---------- 전역(재할당용) ---------- */
-let root, btnFx, btnTheme, btnTogglePlay;
-let viewport, dots, pageInfo, countTotal, extraInfo;
-let PAGE_SIZE = 7;
-let currentTab = "awards";
-let pageIndex = 0;
-let autoTimer = null;
-let pages = [];
-let isPaused = false;
+/* ========== 0) iOS 판별 + --vh 설정 ========== */
+function isIOSLike() {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  return /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+}
+if (isIOSLike()) document.documentElement.classList.add('is-ios');
 
-const AUTO_INTERVAL_MS = 6000;
-const TAB_ORDER = ["awards", "jobs", "doje", "nco", "admissions"];
-
-/* ---------- 유틸: 실제 보이는 viewport 높이를 CSS 변수로 주입 ---------- */
-function setVH(){
-  const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
+/* 실제 보이는 viewport 높이를 CSS 변수로 주입 (전 플랫폼 공통) */
+function setVH() {
+  const vv = window.visualViewport;
+  const height = vv ? vv.height : window.innerHeight;
+  const h = (height - 0.5) * 0.01; // 미세 오차 여유
   document.documentElement.style.setProperty('--vh', `${h}px`);
 }
+setVH();
+window.addEventListener('resize', setVH, { passive: true });
+window.addEventListener('orientationchange', setVH, { passive: true });
+window.addEventListener('pageshow', setVH, { passive: true });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setVH);
+  window.visualViewport.addEventListener('scroll', setVH);
+}
 
-/* ---------- 유틸: 이름 마스킹 ---------- */
+/* ========== 1) 데이터 유틸 ========== */
 const maskName = (name) => {
   if (!name) return "";
   return String(name).split(/[,\n]+/g).map(n=>{
@@ -34,7 +37,6 @@ const maskName = (name) => {
   }).join(", ");
 };
 
-/* ---------- 유틸: 인원수 계산 ---------- */
 function countPeople(name){
   if(!name) return 0;
   const m = String(name).match(/총\s*([0-9]+)\s*명/);
@@ -42,7 +44,6 @@ function countPeople(name){
   return String(name).split(/[,\n]+/g).map(s=>s.trim()).filter(Boolean).length;
 }
 
-/* ---------- 유틸: 배지/타입/상태 클래스 ---------- */
 const prizeClass = (p) => {
   if (!p) return "";
   if (p.includes("대상")) return "grand";
@@ -60,7 +61,6 @@ const typeClass  = (t) => {
 };
 const statusClass = (s) => s?.includes("우량") ? "excellent" : "apprentice";
 
-/* ---------- 유틸: 진학 카운팅/표기 ---------- */
 function admissionsCountItem(it){
   if (typeof it.count === "number") return it.count;
   if (it.count && /^\d+$/.test(it.count)) return parseInt(it.count,10);
@@ -74,11 +74,61 @@ function groupDisplay(g){
   return g||"";
 }
 
-/* ---------- 반응형: 1차(추정) 행 수 계산 ---------- */
+/* ========== 2) 전역 상태 ========== */
+const root = document.body;
+const btnFx = document.getElementById('fxToggle');
+const viewport = document.getElementById("viewport");
+const dots = document.getElementById("dots");
+const pageInfo = document.getElementById("pageInfo");
+const countTotal = document.getElementById("countTotal");
+const extraInfo = document.getElementById("extraInfo");
+
+const AUTO_INTERVAL_MS = 6000;
+let PAGE_SIZE = 7;
+let currentTab = "awards";
+let pageIndex = 0;
+let autoTimer = null;
+let pages = [];
+let isPaused = false;
+
+/* ========== 3) 효과 토글 ========== */
+root.classList.add('effects-on');
+updateFxLabel();
+btnFx.addEventListener('click', ()=>{
+  root.classList.toggle('effects-on');
+  updateFxLabel();
+});
+function updateFxLabel(){
+  const on = root.classList.contains('effects-on');
+  btnFx.textContent = on ? '✨ 효과 ON' : '✨ 효과 OFF';
+}
+
+/* ========== 4) 정렬/탭/페이지 유틸 ========== */
+const TAB_ORDER = ["awards", "jobs", "doje", "nco", "admissions"];
+
+function getNcoSortKey(cohort){
+  if(!cohort) return 999;
+  let num = parseInt(cohort.replace(/[^0-9]/g,""), 10);
+  if(cohort.includes("동아리")) return num - 9;
+  return num;
+}
+
+function nextAcross(){
+  if (pages.length && pageIndex < pages.length - 1) {
+    goToPage(pageIndex + 1);
+  } else {
+    const i = TAB_ORDER.indexOf(currentTab);
+    const nextTab = TAB_ORDER[(i + 1) % TAB_ORDER.length];
+    setActiveTab(nextTab);
+  }
+}
+
+const chunk = (arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slice(i,i+size)])),[]);
+
+/* ========== 5) “몇 행 보여줄지” 1차 추정치 ========== */
 function computePageSizeByHeight(availHeightPx){
-  // 기기 폭에 따라 대략적인 카드 높이 추정
-  const perRow = (window.innerWidth <= 480) ? 68 : 110;
-  const raw = Math.floor(availHeightPx / perRow);
+  const perRowGuess = (window.innerWidth <= 480) ? 68 : 110; // 대략치
+  const raw = Math.floor(availHeightPx / perRowGuess);
   const clamped = Math.max(3, Math.min(12, raw));
   const candidates=[12,10,9,8,7,6,5,4,3];
   let best=clamped, diff=Infinity;
@@ -88,63 +138,49 @@ function computePageSizeByHeight(availHeightPx){
   }
   return best;
 }
-function getResponsivePageSize(){
-  const rect = viewport.getBoundingClientRect();
-  return computePageSizeByHeight(rect.height);
-}
 
-/* ---------- NCO 정렬 키 (동아리/학과 규칙) ---------- */
-function getNcoSortKey(cohort){
-  if(!cohort) return 999;
-  let num = parseInt(cohort.replace(/[^0-9]/g,""), 10);
-  if(cohort.includes("동아리")){
-    return num - 9; // 14 -> 5, 15 -> 6
-  }else{
-    return num;     // 부사관과 그대로
-  }
-}
-
-/* ---------- 배열을 페이지로 나누기 ---------- */
-const chunk = (arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slice(i,i+size)])),[]);
-
-/* ---------- 1행(카드 + 행간) 실제 높이 측정 ---------- */
+/* 실제 1행 높이 측정(카드+gap) */
 function measureRowHeight(){
   const page = document.querySelector('.page.active');
   if(!page) return null;
   const cards = page.querySelector('.cards');
   const first = cards?.querySelector('.card:not(.placeholder)');
   if(!cards || !first) return null;
-
   const cs = getComputedStyle(cards);
   const gap = parseFloat(cs.rowGap || cs.gap || 0);
   const h = first.getBoundingClientRect().height;
-  return h + gap + 1; // 여유 1px
+  return h + gap + 1;
 }
 
-/* ---------- 실제 영역에 딱 맞게 행수 자동 보정 ---------- */
+/* 실제 영역 기준으로 행수 자동 보정(넘치면 줄이고, 남으면 1행까지 늘림) */
 function autoFitRows(){
-  // 1) 넘치면 한 행씩 줄이기
-  let safety = 20;
-  while (safety-- > 0) {
-    const cards = document.querySelector('.page.active .cards');
-    if (!cards) return;
-    if (cards.scrollHeight <= cards.clientHeight || PAGE_SIZE <= 3) break;
+  const page = document.querySelector('.page.active');
+  const cards = page?.querySelector('.cards');
+  if(!cards) return;
 
+  let safety = 20;
+
+  // 1) 넘치면 한 행씩 줄이기
+  while (safety-- > 0) {
+    if (cards.scrollHeight <= cards.clientHeight || PAGE_SIZE <= 3) break;
     PAGE_SIZE--;
-    render(false); // DOM 교체됨 → 다음 루프에서 새로 쿼리
+    render(false);
+    const p = document.querySelector('.page.active');
+    if(!p) break;
   }
 
-  // 2) 남으면 한 행씩 늘려보기
+  // 2) 남으면 한 행씩 늘려보기 (폰트/툴바 지연 고려해 여유 완화)
   safety = 20;
   while (safety-- > 0) {
-    const cards = document.querySelector('.page.active .cards');
-    if (!cards) return;
-
     const perRow = measureRowHeight();
     if (!perRow || PAGE_SIZE >= 12) break;
 
-    const spare = cards.clientHeight - cards.scrollHeight;
-    if (spare >= perRow - 1) {
+    const nowPage = document.querySelector('.page.active');
+    const nowCards = nowPage?.querySelector('.cards');
+    if(!nowCards) break;
+
+    const spare = nowCards.clientHeight - nowCards.scrollHeight;
+    if (spare >= perRow - 2) { // 거의 1행 들어갈 만큼 남으면 +1
       PAGE_SIZE++;
       render(false);
       continue;
@@ -153,18 +189,7 @@ function autoFitRows(){
   }
 }
 
-/* ---------- 탭 자동 넘김(페이지 끝나면 다음 탭) ---------- */
-function nextAcross(){
-  if (pages.length && pageIndex < pages.length - 1) {
-    goToPage(pageIndex + 1);
-  } else {
-    const i = TAB_ORDER.indexOf(currentTab);
-    const nextTab = TAB_ORDER[(i + 1) % TAB_ORDER.length];
-    setActiveTab(nextTab); // setActiveTab이 render() 호출
-  }
-}
-
-/* ---------- 렌더링 ---------- */
+/* ========== 6) 메인 렌더 ========== */
 function render(autoFit = true){
   let data =
     currentTab==="awards" ? awards :
@@ -173,21 +198,19 @@ function render(autoFit = true){
     currentTab==="nco"    ? nco    :
                             admissions;
 
-  // 부사관: 뒷기수 → 앞기수 내림차순
   if(currentTab==="nco"){
     data = [...data].sort((a,b)=>getNcoSortKey(b.cohort) - getNcoSortKey(a.cohort));
   }
 
-  // 상단 요약 카운트
   const totalCount =
-    currentTab==="awards"     ? awards.reduce((s,it)=>s+countPeople(it.name),0) :
-    currentTab==="doje"       ? doje.reduce((s,it)=>s+countPeople(it.name),0)   :
-    currentTab==="nco"        ? data.length :
+    currentTab==="awards" ? awards.reduce((s,it)=>s+countPeople(it.name),0) :
+    currentTab==="doje"   ? doje.reduce((s,it)=>s+countPeople(it.name),0)   :
+    currentTab==="nco"    ? data.length :
     currentTab==="admissions" ? admissions.reduce((s,it)=>s + admissionsCountItem(it), 0) :
                                 jobs.length;
-  countTotal.textContent = totalCount;
+  countTotal.textContent=totalCount;
 
-  // 1차: 추정치로 PAGE_SIZE 결정
+  // 1차 추정 PAGE_SIZE
   const rect = viewport.getBoundingClientRect();
   PAGE_SIZE = computePageSizeByHeight(rect.height);
 
@@ -196,8 +219,8 @@ function render(autoFit = true){
   dots.innerHTML = "";
   pages = [];
 
-  const ch = chunk(data, PAGE_SIZE);
-  ch.forEach((group, idx)=>{
+  const groups = chunk(data, PAGE_SIZE);
+  groups.forEach((group, idx)=>{
     const filled = group.slice();
     while(filled.length < PAGE_SIZE) filled.push({__placeholder:true});
 
@@ -226,7 +249,6 @@ function render(autoFit = true){
         if(item.name){
           const names = String(item.name).split(/[,\n]+/g).map(s=>maskName(s.trim())).filter(Boolean);
           if (window.innerWidth <= 412 && names.length > 1) {
-            // 412px 이하: "첫 번째 외 n명"
             line2.innerHTML = `${names[0]} 외 ${names.length - 1}명 · ${item.year||""}`;
           } else {
             line2.innerHTML = `${names.join(", ")} · ${item.year||""}`;
@@ -237,46 +259,38 @@ function render(autoFit = true){
 
         badge.textContent=item.prize||"";
         badge.className+=" "+(item.prize?prizeClass(item.prize):"");
+        if (item.isPremier) card.classList.add("elite-award"); // 전국/국제 등 강조
 
-        // 전국/국제(프리미어) 강조: 데이터의 isPremier 기반
-        if (item.isPremier) {
-          card.classList.add("elite-award");
-        }
-      }
-      else if(currentTab==="jobs"){
+      }else if(currentTab==="jobs"){
         avatar.textContent=item.emoji||"🏢";
         line1.innerHTML=item.company||"";
         line2.innerHTML = (item.dept || "") + " " + (item.name ? maskName(item.name) : "");
         badge.textContent=item.type||"";
         badge.className+=" "+(item.type?typeClass(item.type):"");
-      }
-      else if(currentTab==="doje"){
+
+      }else if(currentTab==="doje"){
         avatar.textContent="🧑🏻‍💻";
         line1.innerHTML=item.company||"";
         line2.innerHTML=(item.dept || "") + " " +(item.name?maskName(item.name):"")+" · "+(item.year||"")+(item.cohort?`(${item.cohort})`:"");
         badge.textContent=item.status||"";
         badge.className+=" "+(item.status?statusClass(item.status):"");
-      }
-      else if(currentTab==="nco"){
+
+      }else if(currentTab==="nco"){
         avatar.textContent = item.emoji || "🪖";
         line1.innerHTML = item.company || "";
         line2.innerHTML = (item.dept||"") + " " + (item.name ? maskName(item.name) : "");
         badge.textContent = item.cohort || "";
-        badge.className += " apprentice"; // 기본 파란색
+        badge.className += " apprentice";
 
-        // 특수부대 강조(카드 전체 빨강)
         const eliteUnits = [
-          "707특수임무단",
-          "해군특수전전단(UDT)",
-          "해난구조전대(SSU)",
-          "공군 제259특수임무대대(CCT)",
-          "제6탐색구조비행전대(SART)"
+          "707특수임무단","해군특수전전단(UDT)","해난구조전대(SSU)",
+          "공군 제259특수임무대대(CCT)","제6탐색구조비행전대(SART)"
         ];
         if (eliteUnits.some(unit => (item.company||"").includes(unit))) {
           card.classList.add("elite");
         }
-      }
-      else if(currentTab==="admissions"){
+
+      }else if(currentTab==="admissions"){
         avatar.textContent = "🎓";
         line1.innerHTML = item.univ || "";
 
@@ -293,11 +307,7 @@ function render(autoFit = true){
         if (item.count && !item.name) {
           line2.innerHTML = (line2.innerHTML ? line2.innerHTML + " · " : "") + `${item.count}명`;
         }
-
-        // 좋은 대학 강조(파랑): 데이터의 isPremier 기반
-        if (item.isPremier) {
-          card.classList.add("elite-univ");
-        }
+        if (item.isPremier) card.classList.add("elite-univ");
       }
 
       meta.appendChild(line1); meta.appendChild(line2);
@@ -319,18 +329,20 @@ function render(autoFit = true){
   updatePageInfo();
   extraInfo.textContent = isPaused ? "일시정지됨" : "자동 전환 중…";
 
-  // ★ 렌더 끝난 뒤, 실제 높이 기준으로 자동 보정(사파리/크롬 UI 차이 흡수)
-  if (autoFit) autoFitRows();
+  // 렌더 직후 다단계 자동 보정 (툴바/폰트 지연 흡수)
+  if (autoFit) {
+    autoFitRows();
+    setTimeout(autoFitRows, 60);
+    setTimeout(autoFitRows, 300);
+  }
 }
 
-/* ---------- 페이지 정보/도트 업데이트 ---------- */
+/* ========== 7) 페이지/자동전환 ========== */
 function updatePageInfo(){
   const total=pages.length||1;
   pageInfo.textContent=`${pageIndex+1}/${total}`;
   [...dots.children].forEach((d,i)=>d.classList.toggle("active",i===pageIndex));
 }
-
-/* ---------- 페이지 이동 ---------- */
 function goToPage(i){
   if(!pages.length) return;
   pages.forEach((p,idx)=>p.classList.toggle("active", idx===i));
@@ -338,11 +350,10 @@ function goToPage(i){
 }
 function nextPage(){ if(pages.length) goToPage((pageIndex+1)%pages.length); }
 
-/* ---------- 자동 전환 ---------- */
 function startAuto(){ stopAuto(); if(!isPaused) autoTimer=setInterval(nextAcross, AUTO_INTERVAL_MS); }
 function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
 
-/* ---------- 티커 텍스트 렌더 ---------- */
+/* ========== 8) 티커 렌더 ========== */
 function renderTicker(tabKey){
   const localTicker = (typeof tickerTexts!=="undefined" && tickerTexts) ? (tickerTexts[tabKey]||[]) : [];
   const ticker = document.getElementById("ticker");
@@ -351,7 +362,36 @@ function renderTicker(tabKey){
   ticker.innerHTML = once + once;
 }
 
-/* ---------- 탭 전환 ---------- */
+/* ========== 9) 터치: 일시정지 + 스와이프(상/하) ========== */
+let touchStartY=null;
+viewport.addEventListener("touchstart", e=>{
+  touchStartY=e.touches[0].clientY;
+  stopAuto();
+  extraInfo.textContent="일시정지(터치)";
+}, {passive:true});
+viewport.addEventListener("touchend", e=>{
+  if(touchStartY==null) return;
+  const dy=e.changedTouches[0].clientY - touchStartY;
+  if(Math.abs(dy)>40){ dy<0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
+  touchStartY=null;
+  if(!isPaused){ startAuto(); extraInfo.textContent="자동 전환 중…"; }
+}, {passive:true});
+
+/* (터치 기기) 텍스트 선택/복사/꾹 클릭 메뉴 방지 */
+(function () {
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (!isTouch) return;
+  const target = document.getElementById('viewport');
+  const prevent = (e) => { e.preventDefault(); };
+  ['contextmenu','selectstart','dragstart'].forEach(evt => target.addEventListener(evt, prevent, { passive:false }));
+})();
+
+/* ========== 10) 탭 전환/테마/일시정지 버튼 ========== */
+document.getElementById("tab-awards").addEventListener("click", ()=>setActiveTab("awards"));
+document.getElementById("tab-jobs").addEventListener("click", ()=>setActiveTab("jobs"));
+document.getElementById("tab-doje").addEventListener("click", ()=>setActiveTab("doje"));
+document.getElementById("tab-nco").addEventListener("click", ()=>setActiveTab("nco"));
+document.getElementById("tab-admissions").addEventListener("click", ()=>setActiveTab("admissions"));
 function setActiveTab(key){
   viewport.classList.add("fadeout");
   setTimeout(()=>{
@@ -368,107 +408,34 @@ function setActiveTab(key){
   }, 350);
 }
 
-/* ---------- 초기화 ---------- */
-function init(){
-  // VH 변수 반영(초기 1회)
-  setVH();
+const btnTheme = document.getElementById("btnTheme");
+btnTheme.addEventListener("click", () => {
+  document.body.classList.toggle("light");
+  btnTheme.textContent = document.body.classList.contains("light") ? "☀️ 라이트모드" : "🌙 다크모드";
+});
 
-  // DOM 캐시
-  root = document.body;
-  btnFx = document.getElementById('fxToggle');
-  btnTheme = document.getElementById("btnTheme");
-  btnTogglePlay = document.getElementById("btnTogglePlay");
-  viewport = document.getElementById("viewport");
-  dots = document.getElementById("dots");
-  pageInfo = document.getElementById("pageInfo");
-  countTotal = document.getElementById("countTotal");
-  extraInfo = document.getElementById("extraInfo");
-
-  // 효과 토글(기본 ON)
-  root.classList.add('effects-on');
-  function updateFxLabel(){
-    const on = root.classList.contains('effects-on');
-    btnFx.textContent = on ? '✨ 효과 ON' : '✨ 효과 OFF';
-  }
-  updateFxLabel();
-  btnFx.addEventListener('click', ()=>{
-    root.classList.toggle('effects-on');
-    updateFxLabel();
-  });
-
-  // 터치 스와이프(일시정지/페이지 전환)
-  let touchStartY=null;
-  viewport.addEventListener("touchstart", e=>{
-    touchStartY=e.touches[0].clientY;
+document.getElementById("btnTogglePlay").addEventListener("click", ()=>{
+  isPaused = !isPaused;
+  if(isPaused){
     stopAuto();
-    extraInfo.textContent="일시정지(터치)";
-  }, {passive:true});
-  viewport.addEventListener("touchend", e=>{
-    if(touchStartY==null) return;
-    const dy=e.changedTouches[0].clientY - touchStartY;
-    if(Math.abs(dy)>40){ dy<0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
-    touchStartY=null;
-    if(!isPaused){ startAuto(); extraInfo.textContent="자동 전환 중…"; }
-  }, {passive:true});
-
-  // 터치 기기: 텍스트 선택/복사/꾹 클릭 메뉴 방지
-  (function () {
-    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    if (!isTouch) return;
-    const target = viewport; // 필요 시 document로 확대 가능
-    const prevent = (e) => { e.preventDefault(); };
-    ['contextmenu','selectstart','dragstart'].forEach(evt => target.addEventListener(evt, prevent, { passive:false }));
-  })();
-
-  // 탭 전환
-  document.getElementById("tab-awards").addEventListener("click", ()=>setActiveTab("awards"));
-  document.getElementById("tab-jobs").addEventListener("click", ()=>setActiveTab("jobs"));
-  document.getElementById("tab-doje").addEventListener("click", ()=>setActiveTab("doje"));
-  document.getElementById("tab-nco").addEventListener("click", ()=>setActiveTab("nco"));
-  document.getElementById("tab-admissions").addEventListener("click", ()=>setActiveTab("admissions"));
-
-  // 테마 토글
-  btnTheme.addEventListener("click", () => {
-    document.body.classList.toggle("light");
-    btnTheme.textContent = document.body.classList.contains("light") ? "☀️ 라이트모드" : "🌙 다크모드";
-  });
-
-  // 일시정지/재생
-  btnTogglePlay.addEventListener("click", ()=>{
-    isPaused = !isPaused;
-    if(isPaused){
-      stopAuto();
-      btnTogglePlay.textContent="▶️ 다시재생";
-      extraInfo.textContent="일시정지됨";
-    }else{
-      btnTogglePlay.textContent="⏸️ 일시정지";
-      extraInfo.textContent="자동 전환 중…";
-      startAuto();
-    }
-  });
-
-  // 리사이즈: VH 재반영 + 레이아웃 재계산
-  window.addEventListener('resize', setVH);
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', setVH);
-  window.addEventListener("resize", ()=>{ render(true); if(!isPaused) startAuto(); });
-
-  // 초기 렌더
-  render(true);
-  renderTicker(currentTab);
-  startAuto();
-
-  // 한 번에 보기(동일 탭) - 새 탭 아님
-  const openOverview = document.getElementById('openOverview');
-  if (openOverview) {
-    openOverview.addEventListener('click', () => {
-      location.href = `overview.html?tab=${encodeURIComponent(currentTab)}`;
-    });
+    document.getElementById("btnTogglePlay").textContent="▶️ 다시재생";
+    extraInfo.textContent="일시정지됨";
+  }else{
+    document.getElementById("btnTogglePlay").textContent="⏸️ 일시정지";
+    extraInfo.textContent="자동 전환 중…";
+    startAuto();
   }
-}
+});
 
-/* ---------- 스크립트 시작(로드 순서 보장: data.js → main.js with defer) ---------- */
-if (document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+/* ========== 11) 리사이즈 시 재계산 ========== */
+window.addEventListener("resize", ()=>{ render(true); if(!isPaused) startAuto(); });
+
+/* ========== 12) 초기 구동 ========== */
+render(true);
+renderTicker(currentTab);
+startAuto();
+
+/* ========== 13) 한 번에 보기 (동일 탭) ========== */
+document.getElementById('openOverview').addEventListener('click', () => {
+  location.href = `overview.html?tab=${encodeURIComponent(currentTab)}`;
+});
