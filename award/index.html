@@ -51,11 +51,29 @@
       border:1px solid rgba(255,255,255,.08);
     }
     .card.placeholder{ visibility:hidden; pointer-events:none; border-color:transparent; background:transparent; }
+
+    /* 기본은 OFF (정적 스타일만) */
+    .card.elite-univ::after { animation: none !important; }
+    .card.elite-univ { box-shadow: 0 6px 12px rgba(0,0,0,.25); }
+    .badge.grand::after { animation: none; }
+
+    /* ON일 때만 애니메이션/강조 효과 */
+    .effects-on .card.elite {
+      animation: glow 2s infinite alternate;
+    }
+    .effects-on .card.elite-univ { 
+      animation: pulseBlue 3s infinite alternate;
+    }
+    .effects-on .card.elite-univ::after { 
+      animation: breathe 4s ease-in-out infinite; 
+    }
+    .effects-on .badge.grand::after { animation: shimmer 2.4s linear infinite; }
+    
     .card.elite {
       background: linear-gradient(145deg, #ff6b6b, #a61e1e);
       border: 2px solid #ff8787;
       box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
-      animation: glow 2s infinite alternate;
+      animation: none;
     }
 
     @keyframes glow {
@@ -69,7 +87,7 @@
       box-shadow: 
         0 0 20px rgba(67, 97, 238, 0.6), 
         0 0 40px rgba(76, 201, 240, 0.4); /* 푸른빛 글로우 */
-      animation: pulseBlue 3s infinite alternate; /* 천천히 맥동하는 느낌 */
+      animation: none;
     }
     /* 부드러운 파동 효과 */
     @keyframes pulseBlue {
@@ -208,6 +226,7 @@
         <div class="subtitle" id="period">2025학년도</div>
       </div>
       <div class="actions">
+        <button class="btn" id="fxToggle">✨ 효과 ON</button>
         <button class="btn" id="btnTheme">🌙 다크모드</button>
         <button class="btn" id="btnTogglePlay">⏸️ 일시정지</button>
       </div>
@@ -321,6 +340,23 @@
       if (g==="전문대")  return "전문대학";
       if (g==="선취업후진학") return "선취업후진학";
       return g||"";
+    }
+
+    const root = document.body;
+    const btnFx = document.getElementById('fxToggle');
+
+    // 기본 ON
+    root.classList.add('effects-on');
+    updateFxLabel();
+
+    btnFx.addEventListener('click', ()=>{
+      root.classList.toggle('effects-on');
+      updateFxLabel();
+    });
+
+    function updateFxLabel(){
+      const on = root.classList.contains('effects-on');
+      btnFx.textContent = on ? '✨ 효과 ON' : '✨ 효과 OFF';
     }
 
     /************ 상태/설정 ************/
