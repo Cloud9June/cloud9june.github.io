@@ -16,18 +16,8 @@ body{
   overflow:hidden;
 }
 
-/* --- 앱 컨테이너 (실제 보이는 높이 기반) --- */
-.app{ height:calc(var(--vh,1vh) * 100); max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:12px; padding:14px; }
-
-/* 최신 브라우저(안드 포함)에서 주소창 제외 최소 뷰포트 우선 */
-@supports (height: 100svh) {
-  .app:not(.is-ios) { height: 100svh; } /* iOS 제외 */
-}
-
-/* 그다음 100dvh(안드 크롬/삼성 등에서 잘 맞음) */
-@supports (height: 100dvh) {
-  .app:not(.is-ios) { height: 100dvh; }
-}
+/* --- 앱 컨테이너 --- */
+.app { height: calc(var(--vh, 1vh) * 100); max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 14px; }
 
 /* --- 헤더 --- */
 header{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:16px; background:rgba(255,255,255,.03); backdrop-filter:blur(6px); }
