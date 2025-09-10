@@ -1,6 +1,7 @@
 /* =========================================================
    성일정보고 성과 & 취업 현황 - 스타일시트
-   - 최종본 버전1
+   - 최종본 버전2
+   - 튜토리얼 오버레이 추가
    ========================================================= */
 
 /* --- 테마 색상 (다크 기본) --- */
@@ -154,8 +155,78 @@ footer{ margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(2
     -webkit-user-select:none; -ms-user-select:none; user-select:none;
     -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
   }
-  .list-wrap{ touch-action:pan-y; }
+  /* .list-wrap{ touch-action:pan-y; } */
+  .list-wrap{ touch-action:pan-x; } /* 변경: 가로 스크롤만 허용 */
 }
+
+/* 튜토리얼 오버레이 스타일 */
+#tutorial-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* 반투명 검은색 배경 */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* 다른 모든 요소 위에 표시 */
+  color: #fff;
+  text-align: center;
+  user-select: none;
+  touch-action: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+@media(max-width:1024px){ #tutorial-overlay { display: flex; } }
+.tutorial-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+.guide-text {
+  font-size: 24px;
+  font-weight: bold;
+}
+.guide-text.sub-text {
+  font-size: 16px;
+  font-weight: normal;
+  color: #ccc;
+}
+.highlight {
+  color: #ffde71; /* 눈에 띄는 색상 */
+}
+.close-btn {
+  padding: 10px 20px;
+  background-color: #0b66d6;
+  border-radius: 999px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 30px;
+}
+/* 스와이프 애니메이션 */
+.swipe-animation {
+  position: relative;
+  width: 150px;
+  height: 100px;
+}
+.hand {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 30px;
+  left: 5px;
+  animation: swipe 2s ease-in-out infinite;
+}
+@keyframes swipe {
+  0% { transform: translateX(0); opacity: 1; }
+  50% { transform: translateX(100px); opacity: 0.5; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
 
 /* --- 반응형 --- */
 @media(max-width:925px){ .mob-br{ display:inline; } }
