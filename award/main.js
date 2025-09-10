@@ -1,7 +1,32 @@
 /* =========================================================
    성일정보고 성과 & 취업 현황 - 메인 스크립트 (안드/아이폰 모두 맞춤)
    - 기능/디자인 변경 없음 / 뷰포트·행수 자동보정만 강화
+   - 튜토리얼 오버레이 추가
    ========================================================= */
+
+// 튜토리얼 관련
+const tutorialOverlay = document.getElementById('tutorial-overlay');
+const closeBtn = document.querySelector('.close-btn');
+const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+
+// 사용자가 튜토리얼을 본 적이 없다면 오버레이 표시
+if (hasSeenTutorial === 'false' || hasSeenTutorial === null) {
+  tutorialOverlay.style.display = 'flex';
+}
+
+// 닫기 버튼 또는 오버레이 클릭 시
+closeBtn.addEventListener('click', () => {
+  tutorialOverlay.style.display = 'none';
+  // 로컬 스토리지에 '튜토리얼을 봤다'고 저장
+  localStorage.setItem('hasSeenTutorial', 'false');
+});
+
+tutorialOverlay.addEventListener('click', (e) => {
+  if (e.target.id === 'tutorial-overlay') {
+    tutorialOverlay.style.display = 'none';
+    localStorage.setItem('hasSeenTutorial', 'false');
+  }
+});
 
 /* ========== 0) iOS 판별 + --vh 설정 ========== */
 function isIOSLike() {
