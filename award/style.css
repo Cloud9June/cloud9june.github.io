@@ -1,6 +1,6 @@
 /* =========================================================
    성일정보고 성과 & 취업 현황 - 스타일시트
-   - 최종본 버전2
+   - 최종본 버전1
    - 튜토리얼 오버레이 추가
    ========================================================= */
 
@@ -196,6 +196,11 @@ footer{ margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(2
 }
 .highlight {
   color: #ffde71; /* 눈에 띄는 색상 */
+}
+.guide-text.more-info {
+  font-size: 14px;
+  font-weight: normal;
+  color: #ccc;
 }
 .close-btn {
   padding: 10px 20px;
