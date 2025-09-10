@@ -20,13 +20,13 @@ if (!hasSeenTutorial && isTouchDevice) {
 closeBtn.addEventListener('click', () => {
   tutorialOverlay.style.display = 'none';
   // 테스트용으로 true로 설정합니다.
-  localStorage.setItem('hasSeenTutorial', 'true'); 
+  localStorage.setItem('hasSeenTutorial', 'false'); 
 });
 
 tutorialOverlay.addEventListener('click', (e) => {
   if (e.target.id === 'tutorial-overlay') {
     tutorialOverlay.style.display = 'none';
-    localStorage.setItem('hasSeenTutorial', 'true');
+    localStorage.setItem('hasSeenTutorial', 'false');
   }
 });
 
