@@ -2,94 +2,699 @@
 <html lang="ko">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>로딩 중...</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>교육정보부 • 링크 허브</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <style>
+        :root {
+            --bg: #0b0d10;
+            --panel: #12161b;
+            --card: #171c22;
+            --text: #e8edf3;
+            --muted: #9fb0c0;
+            --accent: #4cc9f0;
+            --accent-2: #80ed99;
+            --ring: #233042;
+            --shadow: 0 10px 25px rgba(0, 0, 0, .35);
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #f4f6fa;
-            font-family: 'Pretendard', sans-serif;
+            height: 100%;
+            margin: 0
+        }
+
+        body {
+            font-family: Pretendard, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background:
+                radial-gradient(1200px 800px at 10% -10%, #10202c 0%, transparent 60%),
+                radial-gradient(900px 700px at 110% 10%, #1a2330 0%, transparent 60%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 18px 80px
+        }
+
+        header {
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            flex-direction: column;
-            color: #333;
+            gap: 16px;
+            margin: 10px 0 18px
         }
 
-        h1 {
-            font-size: 2em;
+        .logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #1b2633, #0f151c);
+            display: grid;
+            place-items: center;
+            box-shadow: var(--shadow);
+            border: 1px solid #223041
+        }
+
+        .logo span {
+            font-size: 26px;
+            filter: drop-shadow(0 2px 6px rgba(76, 201, 240, .35))
+        }
+
+        .tit h1 {
+            font-size: 26px;
+            margin: 0
+        }
+
+        .tit p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 14px
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 14px 0 28px
+        }
+
+        .search {
+            flex: 1 1 320px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--panel);
+            border: 1px solid #223041;
+            border-radius: 14px;
+            padding: 10px 14px
+        }
+
+        .search input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 15px
+        }
+
+        .pill {
+            padding: 8px 12px;
+            border: 1px solid #223041;
+            background: var(--panel);
+            color: var(--muted);
+            border-radius: 999px;
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+            transition: all .2s ease
+        }
+
+        .pill:hover {
+            border-color: #2e425b;
+            color: var(--text)
+        }
+
+        .grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(1, minmax(0, 1fr))
+        }
+
+        @media (min-width:560px) {
+            .grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+        }
+
+        @media (min-width:960px) {
+            .grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr))
+            }
+        }
+
+        .card {
+            position: relative;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, 0)), var(--card);
+            border: 1px solid #223041;
+            box-shadow: var(--shadow);
+            padding: 16px;
+            overflow: hidden;
+            transition: transform .15s ease, border-color .2s ease, box-shadow .2s ease
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #2e425b;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, .4)
+        }
+
+        .icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
             margin-bottom: 10px;
+            background: #0e151c;
+            border: 1px solid #223041;
+            font-size: 22px
         }
 
-        .dots {
-            font-size: 1.5em;
-            font-weight: bold;
-            height: 30px;
-            letter-spacing: 3px;
-            color: #3498db;
-            animation: dots 1.5s steps(4) infinite;
+        .card h3 {
+            margin: 6px 0 6px;
+            font-size: 18px
         }
 
-        @keyframes dots {
+        .card p {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 14px;
+            min-height: 38px
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #2a3a4f;
+            background: #0f151c;
+            color: #cfe3f5;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all .2s
+        }
+
+        .btn:hover {
+            border-color: #3a5271;
+            transform: translateY(-1px)
+        }
+
+        .badge {
+            font-size: 11px;
+            color: #a9bed0;
+            border: 1px dashed #2a3a4f;
+            padding: 4px 8px;
+            border-radius: 999px
+        }
+
+        .meta {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px
+        }
+
+        .cat {
+            font-size: 12px;
+            color: #9fb0c0;
+            margin: 18px 2px 8px
+        }
+
+        footer {
+            margin-top: 36px;
+            color: var(--muted);
+            font-size: 12px;
+            text-align: center
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #95a9ba;
+            margin-top: 10px
+        }
+
+        /* ===== Retro LED Ticker ===== */
+        .led-ticker {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #223041;
+            margin: 8px 0 18px;
+            height: 48px;
+            background:
+                radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 1.5px),
+                #000;
+            /* LED 보드 배경 */
+            background-size: 8px 8px;
+            box-shadow: inset 0 0 18px rgba(0, 0, 0, .65);
+        }
+
+        .led-ticker-track {
+            display: inline-block;
+            white-space: nowrap;
+            will-change: transform;
+            padding-left: 100%;
+            /* 시작을 오른쪽 밖에서 */
+            animation: ledScroll 20s linear infinite;
+            font: 700 18px/48px ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            color: #24ff6d;
+            /* LED 색 */
+            letter-spacing: .5px;
+            text-shadow:
+                0 0 3px rgba(36, 255, 109, .7),
+                0 0 8px rgba(36, 255, 109, .4);
+        }
+
+        /* 마우스 올리면 일시정지 */
+        .led-ticker:hover .led-ticker-track {
+            animation-play-state: paused;
+        }
+
+        /* 반응형 폰트 크기 살짝 축소 */
+        @media (max-width:560px) {
+            .led-ticker {
+                height: 42px;
+            }
+
+            .led-ticker-track {
+                font-size: 16px;
+                line-height: 42px;
+            }
+        }
+
+        /* 스크롤 애니메이션 */
+        @keyframes ledScroll {
             0% {
-                content: '';
-            }
-
-            25% {
-                content: '.';
-            }
-
-            50% {
-                content: '..';
-            }
-
-            75% {
-                content: '...';
+                transform: translateX(0);
             }
 
             100% {
-                content: '';
+                transform: translateX(-100%);
             }
         }
 
-        .typing::after {
-            content: '';
+        /* 메시지 사이 구분자 점멸(옛 전광판 느낌) */
+        .led-sep {
+            margin: 0 18px;
             display: inline-block;
-            width: 1ch;
-            animation: blink 0.7s step-end infinite;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #24ff6d;
+            box-shadow:
+                0 0 4px rgba(36, 255, 109, .9),
+                0 0 10px rgba(36, 255, 109, .5);
+            vertical-align: middle;
+            animation: blink 1s steps(1, end) infinite;
         }
 
         @keyframes blink {
-
-            from,
-            to {
-                background-color: transparent;
-            }
-
             50% {
-                background-color: #333;
+                opacity: .25;
+                box-shadow: none;
             }
+        }
+
+        /* Accordion 기본 스타일 */
+        .accordion {
+            border-top: 1px solid #223041;
+        }
+
+        .accordion:first-of-type {
+            border-top: none;
+        }
+
+        .accordion-toggle {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 600;
+            padding: 10px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accordion-toggle::after {
+            content: "＋";
+            font-weight: bold;
+            transition: transform .2s ease;
+        }
+
+        .accordion-toggle.active::after {
+            content: "－";
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .3s ease;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .accordion-content a.btn {
+            flex: 1 1 45%;
         }
     </style>
 </head>
 
 <body>
+    <div class="wrap">
+        <header>
+            <div class="logo" aria-hidden="true"><span>🔗</span></div>
+            <div class="tit">
+                <h1>교육정보부 링크 허브</h1>
+                <p>업무·홍보·설문·신청 링크를 한 곳에서 빠르게 찾아 이동하세요.</p>
+            </div>
+        </header>
 
-    <h1>프로그램 준비 중입니다<span class="typing"></span></h1>
-    <div class="dots" id="dotEffect"></div>
+        <!-- ===== Retro LED Ticker (헤더 아래에 넣기) ===== -->
+        <div class="led-ticker" role="region" aria-label="최근 성과 전광판">
+            <div class="led-ticker-track" id="ledTrack" aria-live="polite"></div>
+        </div>
+
+        <div class="toolbar">
+            <div class="search" role="search">
+                <span aria-hidden="true">🔍</span>
+                <input id="q" type="search" placeholder="검색: 급식, 공개수업, 평가계획, 생활지도, 취업…" autocomplete="off" />
+            </div>
+            <button class="pill" data-filter="all">전체</button>
+            <button class="pill" data-filter="service">내부업무</button>
+            <button class="pill" data-filter="promo">성과/홍보</button>
+            <button class="pill" data-filter="external">외부/공식</button>
+        </div>
+
+        <!-- ===== 링크 카드들 ===== -->
+        <div class="grid" id="grid">
+            <!-- 학교 공식/공유 자료 -->
+            <article class="card" data-tags="학교 홈페이지 업무공유 외부 공식 external" data-cat="external">
+                <div class="icon">🏫</div>
+                <h3>학교 공식/공유 자료</h3>
+                <p>학교 홈페이지 및 2025 업무공유 시트.</p>
+                <div class="actions">
+                    <a class="btn" href="https://sungili-h.goesn.kr/sungili-h/main.do" target="_blank" rel="noopener">학교
+                        홈페이지</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1L5w5XQi1daMOXLadC0kAxFjP5nA8vPX1jYgssdDTFRM/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">업무공유시트</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1GsHg_z4wuqMyrl_7CA_Kc3CN-ox1dAK-dwKOZNGQpsc/edit?gid=1092647692#gid=1092647692"
+                        target="_blank" rel="noopener">학사일정달력</a>
+                </div>
+                <div class="meta"><span class="badge">공식</span><span class="badge">공유</span></div>
+            </article>
+
+            <!-- 업무포털 (에듀파인·나이스 통합) -->
+            <article class="card" id="card-work-portal" data-tags="업무포털 에듀파인 나이스 NEIS K-에듀파인 통합 외부" data-cat="external">
+                <div class="icon">🧑‍💼</div>
+                <h3>업무포털 (통합 서비스)</h3>
+                <p>에듀파인 · 나이스 통합 접속 서비스.<br>접속이 원활하지 않을 경우 개별 주소를 이용하세요.</p>
+                <div class="actions" style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <a class="btn" href="https://goe.eduptl.kr/bpm_lgn_lg00_001.do" target="_blank"
+                            rel="noopener">업무포털 (통합)</a>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <a class="btn" href="https://klef.goe.go.kr/keris_ui/login.do" target="_blank"
+                            rel="noopener">K-에듀파인 (개별 접속)</a>
+                        <a class="btn" href="http://goe.neis.go.kr/" target="_blank" rel="noopener">나이스 (개별 접속)</a>
+                    </div>
+                </div>
+                <div class="meta"><span class="badge">공식</span><span class="badge">외부</span></div>
+            </article>
+
+            <!-- 수업교환 -->
+            <article class="card" data-tags="수업교환" data-cat="service">
+                <div class="icon">🔄</div>
+                <h3>수업교환</h3>
+                <p>수업교환 신청</p>
+                <div class="actions">
+                    <a class="btn"
+                        href="https://docs.google.com/forms/d/e/1FAIpQLSdD7SJuvnBQTe2CL7mW_BJqmY--vrY5skViCX6UfZfJNwc6NQ/viewform"
+                        target="_blank" rel="noopener">수업교환 신청</a>
+                </div>
+                <div class="meta"><span class="badge">수업</span></div>
+            </article>
+
+            <!-- 교육정보부 서비스 안내 (Accordion) -->
+            <article class="card" id="card-eduinfo-service" data-tags="교육정보부 서비스 안내 신청 확인 계정 홈페이지 태블릿 소프트웨어"
+                data-cat="service">
+                <div class="icon">📮</div>
+                <h3>교육정보부 서비스 안내</h3>
+                <p>업무 신청(모든 교사)과 신청 현황 확인(교육정보부 전용)을 접어서 관리합니다.</p>
+
+                <div class="accordion">
+                    <button class="accordion-toggle">📌 신청 (모든 교사)</button>
+                    <div class="accordion-content">
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSd-YPb34M7GtwhEonIlDXG7JUuERg4oh22HwcA3_kG3x0EP_Q/viewform"
+                            target="_blank" rel="noopener">A/S 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSdo2kQ7L4Zz0smxum2UWMAX0zUI6MyLsqXwsvNxqt6M8tSyqw/viewform"
+                            target="_blank" rel="noopener">계정 초기화 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSejklgRxtk5yyUXd6MHuMcCfkEms6cZCeveTid7AxKaHEkMug/viewform"
+                            target="_blank" rel="noopener">홈페이지 관리 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSfCELmwTI1nDHrIoix6PYPT2JZBbPgOx3yqE-rMMD3PeW1UFQ/viewform?usp=header"
+                            target="_blank" rel="noopener">태블릿 앱 설치 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">태블릿 반납/신청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1qb6zSTBWCatj9M_dfgRNm60hSjzop0Py38tWpmgDTtI/edit?usp=sharing"
+                            target="_blank" rel="noopener">재학생 구글 계정</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">소프트웨어 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">기타 문의</a>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <button class="accordion-toggle">🔎 확인 (교육정보부)</button>
+                    <div class="accordion-content">
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1dEG3y7OlfOY1g6lVLKsrOjPw9mb7FKzp9S1yTHyjhfw/edit?resourcekey=&gid=355206611#gid=355206611"
+                            target="_blank" rel="noopener">A/S 확인</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1bT_gxw3tsnloKXZXJn1JaRkWeovGUkQcHStm0kkuN7Y/edit?resourcekey=&gid=2009402439#gid=2009402439"
+                            target="_blank" rel="noopener">계정 확인</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">홈페이지 확인</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1bdlCe0XeRnAwQcXqjBsbSnnlpBw94IJIv_P-VFKwTf8/edit?usp=sharing"
+                            target="_blank" rel="noopener">태블릿 앱 설치 확인</a>
+                    </div>
+                </div>
+
+                <div class="meta"><span class="badge">서비스</span></div>
+            </article>
+
+            <!-- 시설/환경 수리 신청 -->
+            <article class="card" data-tags="시설 환경 수리 신청" data-cat="service">
+                <div class="icon">🛠️</div>
+                <h3>시설·환경 수리 신청</h3>
+                <p>시설/환경 수리 요청 입력 시트.</p>
+                <div class="actions">
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/15UvLkwg2xT_J31qIecDhl6v4df6dR8cTWxL_QKHqW2k/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">수리 신청</a>
+                </div>
+                <div class="meta"><span class="badge">업무</span></div>
+            </article>
+
+            <!-- 일일 근무현황 -->
+            <article class="card" data-tags="일일 근무 현황 주번 교통 급식 야자 메뉴얼" data-cat="service">
+                <div class="icon">📋</div>
+                <h3>일일 근무현황</h3>
+                <p>주번/교통/급식/야자 근무 현황 및 매뉴얼.</p>
+                <div class="actions">
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1fooMUmUyiABOSiesvtd9FoD2Fs8jRq1VB_T9nYSkOCo/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">현황 시트</a>
+                </div>
+                <div class="meta"><span class="badge">업무</span></div>
+            </article>
+
+            <!-- 성과/홍보 -->
+            <article class="card" data-tags="성과 수상 홍보 키오스크 award" data-cat="promo">
+                <div class="icon">🏆</div>
+                <h3>성과(수상) 허브</h3>
+                <p>신관 1층 키오스크 및 온라인 성과 게시.</p>
+                <div class="actions">
+                    <a class="btn" href="/award" target="_blank" rel="noopener">성과 보기</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/12T8NvLL8AOve2t4fZfZedyYtknL4tIp-tOfQaTulQ7Q/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">성과 입력</a>
+                </div>
+                <div class="meta"><span class="badge">/award</span></div>
+            </article>
+
+            <!-- 급식 시스템 -->
+            <article class="card" data-tags="급식 신청 식단 서비스 service" data-cat="service">
+                <div class="icon">🍱</div>
+                <h3>급식 정보/신청</h3>
+                <p>주간 식단 확인과 신청/집계(교사/학생용 구성).</p>
+                <div class="actions">
+                    <a class="btn" href="/food" target="_blank" rel="noopener">급식 시스템 바로가기</a>
+                </div>
+                <div class="meta"><span class="badge">/food</span><span class="badge">Firebase</span></div>
+            </article>
+
+            <!-- 도서관(마중물) -->
+            <article class="card" data-tags="도서관 마중물 소장자료 희망도서 알라딘" data-cat="external">
+                <div class="icon">📚</div>
+                <h3>도서관(마중물)</h3>
+                <p>소장자료 검색, 희망도서 신청, 도서정보 확인.</p>
+                <div class="actions">
+                    <a class="btn"
+                        href="https://read365.edunet.net/PureScreen/SchoolSearch?schoolName=%EC%84%B1%EC%9D%BC%EC%A0%95%EB%B3%B4%EA%B3%A0%EB%93%B1%ED%95%99%EA%B5%90&provCode=J10&neisCode=J100000624"
+                        target="_blank" rel="noopener">소장자료 검색</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/108QMoAkDu3peFlJKVJOOWx0nqHZCy_O0WN_1UeSgtwA/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">희망도서 신청</a>
+                    <a class="btn" href="https://www.aladin.co.kr/" target="_blank" rel="noopener">도서정보(알라딘)</a>
+                </div>
+                <div class="meta"><span class="badge">도서관</span></div>
+            </article>
+
+        </div>
+
+
+        <p class="hint">※ 카드 추가/수정은 교육정보부장 김형준에게 문의해 주세요.</p>
+        <footer>
+            © <span id="yy"></span> 성일정보고등학교 교육정보부
+        </footer>
+    </div>
 
     <script>
-        const dotEffect = document.getElementById("dotEffect");
-        let dots = "";
-        setInterval(() => {
-            dots = dots.length >= 8 ? "" : dots + ".";
-            dotEffect.textContent = dots;
-        }, 300);
-    </script>
+        // 연도
+        document.getElementById('yy').textContent = new Date().getFullYear();
 
+        // 검색 & 카테고리 필터
+        const q = document.getElementById('q');
+        const cards = [...document.querySelectorAll('.card')];
+        const pills = [...document.querySelectorAll('.pill')];
+        let activeCat = 'all';
+
+        function applyFilter() {
+            const keyword = (q.value || '').trim().toLowerCase();
+            cards.forEach(c => {
+                const tags = (c.dataset.tags || '').toLowerCase();
+                const inCat = activeCat === 'all' ? true : (c.dataset.cat === activeCat);
+                const hit = !keyword || tags.includes(keyword) || c.querySelector('h3').textContent
+                    .toLowerCase().includes(keyword);
+                c.style.display = (inCat && hit) ? '' : 'none';
+            });
+        }
+        q.addEventListener('input', applyFilter);
+        pills.forEach(p => {
+            p.addEventListener('click', () => {
+                activeCat = p.dataset.filter;
+                pills.forEach(x => x.style.outline = '');
+                p.style.outline = '2px solid var(--accent)';
+                applyFilter();
+            });
+        });
+        pills[0].style.outline = '2px solid var(--accent)';
+
+        // ===== Retro LED Ticker =====
+        // 여기에 "최근 성과"를 자유롭게 추가/수정하세요.
+        const achievements = [
+            "🏆 2025년 제15회 전국상업경진대회 비즈니스프로그래밍 은상 - 양○욱",
+            "🏆 2025년 제15회 전국상업경진대회 세무실무 은상 — 장○호",
+            "🏆 2025년 제15회 전국상업경진대회 금융실무 동상 - 장○우",
+            "🫡 2025학년도 부사관반 재학생 전원 합격(공군24명, 육군22명, 해병대2명)",
+            "🏢 메리츠증권・하나은행 금융경영과 오○은, 새마을금고 금융경영과 권○비, 하나은행 회계정보과 김○울, 기술보증기금 회계정보과 김○환, 한국농수산식품유통공사 회계정보과 임○준"
+        ];
+
+        // 구분자(점멸 LED 점) 생성
+        function sep() {
+            const s = document.createElement('span');
+            s.className = 'led-sep';
+            return s;
+        }
+
+        const track = document.getElementById('ledTrack');
+
+        function renderTicker() {
+            track.innerHTML = "";
+            // 메시지들을 이어붙여 긴 트랙 생성 (양끝에도 구분자)
+            track.appendChild(sep());
+            achievements.forEach((msg, i) => {
+                const span = document.createElement('span');
+                span.textContent = " " + msg + " ";
+                track.appendChild(span);
+                track.appendChild(sep());
+            });
+            // 내용 길이에 따라 스크롤 속도 자동 보정 (문자 수 기반 대략)
+            const chars = achievements.join("  ").length;
+            const base = 20; // 기본 20초
+            const speed = Math.max(12, Math.min(40, Math.round(chars / 8))); // 12~40s 사이
+            track.style.animationDuration = speed + "s";
+        }
+
+        // 초기 렌더
+        renderTicker();
+
+        // 접근성: 포커스 시 일시정지/해제
+        track.tabIndex = 0;
+        track.addEventListener('focus', () => track.style.animationPlayState = 'paused');
+        track.addEventListener('blur', () => track.style.animationPlayState = 'running');
+
+        // Accordion 동작
+        document.querySelectorAll('.accordion-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+                const content = btn.nextElementSibling;
+                if (btn.classList.contains('active')) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                } else {
+                    content.style.maxHeight = null;
+                }
+            });
+        });
+
+
+        // 필요 시 실시간 갱신 예시:
+        // achievements.unshift("🆕 새 소식 추가!");
+        // renderTicker();
+
+        // /*
+        //   ----- 카드 추가 가이드 -----
+        //   <article class="card" data-tags="키워드 공백구분" data-cat="service|survey|schedule|eval|student|promo|external">
+        //     <div class="icon">🎯</div>
+        //     <h3>제목</h3>
+        //     <p>짧은 설명</p>
+        //     <div class="actions">
+        //       <a class="btn" href="URL1" target="_blank" rel="noopener">버튼명1</a>
+        //       <a class="btn" href="URL2" target="_blank" rel="noopener">버튼명2</a>
+        //       <!-- 필요한 만큼 버튼 추가 -->
+        //     </div>
+        //     <div class="meta"><span class="badge">태그</span></div>
+        //   </article>
+        // */
+    </script>
 </body>
 
 </html>
