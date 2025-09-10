@@ -19,7 +19,7 @@ if (!hasSeenTutorial && isTouchDevice) {
 // 닫기 버튼 또는 오버레이 클릭 시
 closeBtn.addEventListener('click', () => {
   tutorialOverlay.style.display = 'none';
-  // 테스트용으로 true로 설정합니다.
+  // 테스트용으로 아래 주석처리함. 정식 사용시 주석 해제해야 함.
   // localStorage.setItem('hasSeenTutorial', 'false'); 
 });
 
