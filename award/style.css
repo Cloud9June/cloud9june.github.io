@@ -2,6 +2,12 @@
    성일정보고 성과 & 취업 현황 - 스타일시트
    - 최종본 버전1
    - 튜토리얼 오버레이 추가
+   - 터치기기만 튜토리얼 생성
+   ========================================================= */
+
+/* =========================================================
+   성일정보고 성과 & 취업 현황 - 스타일시트
+   - 최종본 버전1
    ========================================================= */
 
 /* --- 테마 색상 (다크 기본) --- */
@@ -178,7 +184,6 @@ footer{ margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(2
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-@media(max-width:767px){ #tutorial-overlay { display: flex; } }
 .tutorial-content {
   display: flex;
   flex-direction: column;
