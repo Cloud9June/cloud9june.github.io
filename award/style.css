@@ -178,7 +178,7 @@ footer{ margin-top:6px; padding:10px 12px; border-radius:16px; background:rgba(2
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-@media(max-width:1024px){ #tutorial-overlay { display: flex; } }
+@media(max-width:767px){ #tutorial-overlay { display: flex; } }
 .tutorial-content {
   display: flex;
   flex-direction: column;
