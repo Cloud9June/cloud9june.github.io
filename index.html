@@ -324,6 +324,39 @@
             }
         }
 
+        /* ===== 전광판 토글 ===== */
+        .ticker-wrap {
+            margin: 6px 0 18px;
+        }
+
+        .ticker-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid #223041;
+            background: var(--panel);
+            color: var(--text);
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .ticker-toggle:hover {
+            border-color: #2e425b;
+        }
+
+        #ledTicker {
+            display: none;
+        }
+
+        /* 기본 닫힘 */
+        #ledTicker.is-open {
+            display: block;
+        }
+
+        /* 열렸을 때만 표시 */
+
         /* Accordion 기본 스타일 */
         .accordion {
             border-top: 1px solid #223041;
@@ -371,6 +404,62 @@
         .accordion-content a.btn {
             flex: 1 1 45%;
         }
+
+        /* ===== 상단 빠른 검색바 ===== */
+        .quick-search {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: var(--panel);
+            border: 1px solid #223041;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin: 10px 0 18px;
+        }
+
+        .quick-search input {
+            flex: 1 1 260px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        .qs-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .qs-btn {
+            border: 1px solid #2a3a4f;
+            background: #0f151c;
+            color: #cfe3f5;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+
+        .qs-btn:hover {
+            border-color: #3a5271;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width:560px) {
+            .quick-search {
+                flex-wrap: wrap;
+            }
+
+            .qs-buttons {
+                width: 100%;
+            }
+
+            .qs-btn {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 
@@ -384,10 +473,22 @@
             </div>
         </header>
 
-        <!-- ===== Retro LED Ticker (헤더 아래에 넣기) ===== -->
-        <div class="led-ticker" role="region" aria-label="최근 성과 전광판">
-            <div class="led-ticker-track" id="ledTrack" aria-live="polite"></div>
+        <!-- ===== 전광판 토글 ===== -->
+        <div class="ticker-wrap">
+            <button class="ticker-toggle" id="tickerToggle" type="button">최근 성과 전광판 열기</button>
+            <div class="led-ticker" id="ledTicker" role="region" aria-label="최근 성과 전광판" aria-hidden="true">
+                <div class="led-ticker-track" id="ledTrack"></div>
+            </div>
         </div>
+        <!-- ===== 상단 빠른 검색바 ===== -->
+        <div class="quick-search" role="search">
+            <input id="qsInput" type="search" placeholder="검색어 입력…" />
+            <div class="qs-buttons">
+                <button class="qs-btn" id="qsGoogle" type="button">Google</button>
+                <button class="qs-btn" id="qsNaver" type="button">Naver</button>
+            </div>
+        </div>
+
 
         <div class="toolbar">
             <div class="search" role="search">
@@ -639,28 +740,57 @@
 
         function renderTicker() {
             track.innerHTML = "";
-            // 메시지들을 이어붙여 긴 트랙 생성 (양끝에도 구분자)
             track.appendChild(sep());
-            achievements.forEach((msg, i) => {
+            achievements.forEach((msg) => {
                 const span = document.createElement('span');
                 span.textContent = " " + msg + " ";
                 track.appendChild(span);
                 track.appendChild(sep());
             });
-            // 내용 길이에 따라 스크롤 속도 자동 보정 (문자 수 기반 대략)
+            // 길이에 따른 속도 보정 + 애니메이션 켜기
             const chars = achievements.join("  ").length;
-            const base = 20; // 기본 20초
-            const speed = Math.max(12, Math.min(40, Math.round(chars / 8))); // 12~40s 사이
-            track.style.animationDuration = speed + "s";
+            const speed = Math.max(20, Math.min(45, Math.round(chars / 6))); // 20~45s
+            track.style.animation = `ledScroll ${speed}s linear infinite`;
         }
 
-        // 초기 렌더
-        renderTicker();
 
         // 접근성: 포커스 시 일시정지/해제
         track.tabIndex = 0;
         track.addEventListener('focus', () => track.style.animationPlayState = 'paused');
         track.addEventListener('blur', () => track.style.animationPlayState = 'running');
+
+        const ticker = document.getElementById('ledTicker');
+        const toggleBtn = document.getElementById('tickerToggle');
+
+        // 열기
+        function openTicker() {
+            ticker.classList.add('is-open');
+            ticker.setAttribute('aria-hidden', 'false');
+            toggleBtn.textContent = '최근 성과 전광판 닫기';
+            renderTicker(); // 내용 렌더 + 애니메이션 시작
+        }
+        // 닫기
+        function closeTicker() {
+            ticker.classList.remove('is-open');
+            ticker.setAttribute('aria-hidden', 'true');
+            toggleBtn.textContent = '최근 성과 전광판 열기';
+            // 애니메이션 정지
+            track.style.animation = 'none';
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            const isOpen = ticker.classList.contains('is-open');
+            if (isOpen) closeTicker();
+            else openTicker();
+        });
+
+        // 접근성: 포커스/호버 시 일시정지 동작 유지 (선택)
+        track.tabIndex = 0;
+        track.addEventListener('focus', () => track.style.animationPlayState = 'paused');
+        track.addEventListener('blur', () => track.style.animationPlayState = 'running');
+        ticker.addEventListener('mouseenter', () => track.style.animationPlayState = 'paused');
+        ticker.addEventListener('mouseleave', () => track.style.animationPlayState = 'running');
+
 
         // Accordion 동작
         document.querySelectorAll('.accordion-toggle').forEach(btn => {
@@ -674,6 +804,86 @@
                 }
             });
         });
+
+        // ===== 상단 빠른 검색바 (FIX) =====
+        (function () {
+            // 중복 바인딩 방지
+            if (window.__qsBound) return;
+            window.__qsBound = true;
+
+            const input = document.getElementById('qsInput');
+            const gBtn = document.getElementById('qsGoogle');
+            const nBtn = document.getElementById('qsNaver');
+
+            const DEFAULT_KEY = 'eduinfo.search.default'; // 'google' | 'naver'
+            let defaultEngine = localStorage.getItem(DEFAULT_KEY) || 'google';
+
+            // 중복 오픈 방지 락
+            const OPEN_LOCK_MS = 600;
+            let lastOpenAt = 0;
+
+            function openSearch(engine, q) {
+                if (!q) {
+                    input.focus();
+                    return;
+                }
+
+                // 600ms 이내 중복 호출 차단
+                const now = Date.now();
+                if (now - lastOpenAt < OPEN_LOCK_MS) return;
+                lastOpenAt = now;
+
+                const enc = encodeURIComponent(q.trim());
+                const url = (engine === 'naver') ?
+                    `https://search.naver.com/search.naver?query=${enc}` :
+                    `https://www.google.com/search?q=${enc}`;
+
+                window.open(url, '_blank', 'noopener');
+
+                // 최근 사용 엔진 기억 + 버튼 하이라이트
+                localStorage.setItem(DEFAULT_KEY, engine);
+                defaultEngine = engine;
+                highlightDefault();
+            }
+
+            // 접두어: g/G/ㄱ → Google, n/N/ㄴ → Naver
+            function smartSearch() {
+                const val = (input.value || '').trim();
+                if (!val) return input.focus();
+                const m = val.match(/^([gnGNㄱㄴ])\s+(.*)$/);
+                if (m) {
+                    const key = m[1].toLowerCase();
+                    const engine = (key === 'g' || key === 'ㄱ') ? 'google' :
+                        (key === 'n' || key === 'ㄴ') ? 'naver' :
+                        defaultEngine;
+                    openSearch(engine, m[2]);
+                } else {
+                    openSearch(defaultEngine, val);
+                }
+            }
+
+            // 엔터 = 기본엔진(접두어 우선). 한글 조합 중이면 무시
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    if (e.isComposing) return; // 한글 조합 중 엔터 무시
+                    e.preventDefault();
+                    e.stopPropagation(); // 다른 핸들러로 퍼지지 않게
+                    smartSearch();
+                }
+            }, {
+                passive: false
+            });
+
+            // 버튼
+            gBtn.addEventListener('click', () => openSearch('google', input.value));
+            nBtn.addEventListener('click', () => openSearch('naver', input.value));
+
+            function highlightDefault() {
+                gBtn.style.outline = (defaultEngine === 'google') ? '2px solid var(--accent)' : '';
+                nBtn.style.outline = (defaultEngine === 'naver') ? '2px solid var(--accent)' : '';
+            }
+            highlightDefault();
+        })();
 
 
         // 필요 시 실시간 갱신 예시:
