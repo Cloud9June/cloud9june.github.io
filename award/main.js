@@ -50,32 +50,21 @@ function shouldOverflow(cards, slackPx = 1) {
   return (lastRect.bottom - safeBottom) > slackPx;
 }
 
-// 안전한 자동 전환 (2프레임 연속 오버플로우 확인)
-function checkAndMaybeFallback(tabKey) {
-  const page  = document.querySelector('.page.active');
-  const cards = page?.querySelector('.cards');
-  if (!cards) return;
-
-  requestAnimationFrame(() => {
-    const first = isClippingAtRow(cards, 3, 12); 
-    requestAnimationFrame(() => {
-      const second = isClippingAtRow(cards, 3, 12);
-      if (second) {
-        showFallbackAndRedirect(tabKey);
-      }
-    });
-  });
-}
-
-// N번째(기본 3번째) "실카드"가 컨테이너 하단을 넘는지 감지
-function isClippingAtRow(cards, rowIndex = 3) {
+// 3번째 카드가 잘렸는지 감지
+// 이 함수도 PAGE_SIZE 조건 없이 순수하게 잘림 여부만 확인하도록 수정
+function isClippingAtRow(cards, rowIndex = 3, slackPx = 2) {
   const realCards = cards.querySelectorAll('.card:not(.placeholder)');
-  if (realCards.length < rowIndex) return false;
+  
+  // rowIndex 값(기본값 3)보다 카드가 적으면 검사하지 않습니다.
+  if (realCards.length < rowIndex) {
+    console.log("skip check: cards.length", realCards.length, "< rowIndex", rowIndex);
+    return false;
+  }
 
-  const target = realCards[rowIndex - 1];
+  const target = realCards[rowIndex - 1]; // 정확히 rowIndex 번째 카드
   const tRect = target.getBoundingClientRect();
-
   const cardsRect = cards.getBoundingClientRect();
+
   const viewportHeight = window.visualViewport
     ? window.visualViewport.height
     : window.innerHeight;
@@ -83,16 +72,37 @@ function isClippingAtRow(cards, rowIndex = 3) {
   const safeBottom = Math.min(cardsRect.bottom, viewportHeight) - 2;
   const overlap = tRect.bottom - safeBottom;
 
-  console.log("check row", rowIndex,
-              "cardBottom:", tRect.bottom,
-              "safeBottom:", safeBottom,
-              "overlap:", overlap,
-              "PAGE_SIZE:", PAGE_SIZE);
+  console.log(
+    "check row", rowIndex,
+    "cardBottom:", tRect.bottom,
+    "safeBottom:", safeBottom,
+    "overlap:", overlap,
+    "PAGE_SIZE:", PAGE_SIZE
+  );
 
-  // ★ 핵심: 카드가 3개일 때 && 3번째 카드가 1px이라도 잘리면 true
-  return (PAGE_SIZE === 3) && (overlap > 0);
+  // 3번째 카드가 실제 존재하고, 잘린 경우에만 true를 반환합니다.
+  return (overlap > slackPx);
 }
 
+/* =========================================================
+   수정된 코드: 2프레임 연속 오버플로우 확인
+   ========================================================= */
+
+function checkAndMaybeFallback(tabKey) {
+  const page  = document.querySelector('.page.active');
+  const cards = page?.querySelector('.cards');
+  if (!cards) return;
+
+  requestAnimationFrame(() => {
+    const firstCheck = isClippingAtRow(cards, 3, 12); 
+    requestAnimationFrame(() => {
+      const secondCheck = isClippingAtRow(cards, 3, 12);
+      if (firstCheck && secondCheck) {
+        showFallbackAndRedirect(tabKey);
+      }
+    });
+  });
+}
 
 // 렌더 완료 직후 한 번 호출
 function setupAutoFallbackObservers(tabKey) {
@@ -296,6 +306,12 @@ function autoFitRows() {
   const cards = page?.querySelector('.cards');
   if (!cards) return;
 
+  // 수정된 부분: PAGE_SIZE가 3보다 작아질 경우, 3으로 고정하고 폴백을 실행합니다.
+  if (PAGE_SIZE < 3) {
+    showFallbackAndRedirect(currentTab);
+    return;
+  }
+
   while (cards.scrollHeight > cards.clientHeight && PAGE_SIZE > 3) {
     PAGE_SIZE--;
     cards.style.setProperty("--rows", PAGE_SIZE);
@@ -321,17 +337,6 @@ function autoFitRows() {
       }
   }
 
-  const lastPage  = document.querySelector('.page.active');
-  const lastCards = lastPage?.querySelector('.cards');
-
-  // 기존: 마지막 카드 기준 → 무조건 true 나옴
-  // if (lastCards && shouldOverflow(lastCards, 1)) {
-
-  // 수정: 3번째 카드 기준 + PAGE_SIZE<=3 조건
-  if (lastCards && isClippingAtRow(lastCards, 3, 30)) {
-    showFallbackAndRedirect(currentTab);
-    return;
-  }
 }
 
 /* ========== 6) 메인 렌더 ========== */
