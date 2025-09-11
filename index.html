@@ -544,6 +544,10 @@
                 overflow: visible;
                 text-overflow: unset;
             }
+
+            .meal-text {
+                font-size: 12px;
+            }
         }
     </style>
 </head>
@@ -996,77 +1000,68 @@
 
         // ===== 오늘 급식 (NEIS) =====
         (function () {
-            const textEl = $('todayMealText'); // 이게 null이면 아래 로직은 그냥 스킵
-            if (!textEl) return;
+        const textEl = $('todayMealText');
+        if (!textEl) return;
 
-            const officeCode = "J10",
-                schoolCode = "7530591",
-                key = "86d5824114ac4902a87d57ce9146867d";
+        const officeCode = "J10",
+        schoolCode = "7530591",
+        key = "86d5824114ac4902a87d57ce9146867d";
 
-            function todayYMD() {
-                const kst = new Date(new Date().toLocaleString('en-US', {
-                    timeZone: 'Asia/Seoul'
-                }));
-                const y = kst.getFullYear(),
-                    m = String(kst.getMonth() + 1).padStart(2, '0'),
-                    d = String(kst.getDate()).padStart(2, '0');
-                return `${y}${m}${d}`;
+        const CACHE_KEY = "todayMealCache";
+
+        function todayYMD() {
+        const kst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+        const y = kst.getFullYear(),
+        m = String(kst.getMonth() + 1).padStart(2, '0'),
+        d = String(kst.getDate()).padStart(2, '0');
+        return `${y}${m}${d}`;
+        }
+
+        function formatMenu(s) {
+        if (!s) return '';
+        return s.replace(/<br\s*\/?>/gi, ' · ' ) .replace(/\([^)]*\)/g, '' ) .replace(/\b\d+\./g, '' )
+            .replace(/\s{2,}/g, ' ' ) .trim(); } async function fetchMeal() { const ymd=todayYMD(); const
+            url=`https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${encodeURIComponent(key)}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${ymd}&MLSV_TO_YMD=${ymd}`;
+            try { const res=await fetch(url); const data=await res.json(); if (data &&
+            Array.isArray(data.mealServiceDietInfo)) { const withRow=data.mealServiceDietInfo.find(x=>
+            Array.isArray(x.row));
+            const rows = withRow ? withRow.row : [];
+            if (rows.length) {
+            const target = rows.find(r => (r.MMEAL_SC_NM || '').includes('중식')) || rows[0];
+            const text = formatMenu(target && target.DDISH_NM);
+            return text || null;
             }
-
-            function formatMenu(s) {
-                if (!s) return '';
-                return s.replace(/<br\s*\/?>/gi, ' · ')
-                    .replace(/\([^)]*\)/g, '')
-                    .replace(/\b\d+\./g, '')
-                    .replace(/\s{2,}/g, ' ')
-                    .trim();
             }
-            async function getJSON(url) {
-                const r = await fetch(url);
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
+            } catch (e) {
+            console.warn("급식 불러오기 실패:", e);
             }
-
-            // function corsA(u) {
-            //     return `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
-            // }
-
-            // function corsB(u) {
-            //     return `https://cors.isomorphic-git.org/${u}`;
-            // }
+            return null;
+            }
 
             async function loadMeal() {
-                const ymd = todayYMD();
-                const base =
-                    `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${encodeURIComponent(key)}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${ymd}&MLSV_TO_YMD=${ymd}`;
-                const urls = [base];
-                let data = null,
-                    ok = false;
-                for (const u of urls) {
-                    try {
-                        data = await getJSON(u);
-                        ok = true;
-                        break;
-                    } catch (e) {
-                        console.warn('[NEIS] try failed:', u, e);
-                    }
-                }
-                let text = "";
-                if (ok && data && Array.isArray(data.mealServiceDietInfo)) {
-                    const withRow = data.mealServiceDietInfo.find(x => x && Array.isArray(x.row));
-                    const rows = withRow ? withRow.row : [];
-                    if (rows.length) {
-                        // 우리 학교는 '중식'만 → 중식 우선
-                        const target = rows.find(r => (r.MMEAL_SC_NM || '').includes('중식')) || rows[0];
-                        text = formatMenu(target && target.DDISH_NM);
-                    }
-                }
-                textEl.textContent = text || '등록된 급식 정보가 없습니다.';
+            const today = todayYMD();
+
+            // 1) 캐시 먼저 확인
+            const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+            if (cache.date === today && cache.text) {
+                textEl.textContent = cache.text; // 즉시 표시
+                return;
+            } else {
+                textEl.textContent = "🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중...";
+            }
+
+            // 2) 백그라운드에서 새로 요청
+            const text = await fetchMeal();
+            if (text) {
+            textEl.textContent = text;
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
+            } else if (!cache.text) {
+            textEl.textContent = "❌ 등록된 급식 정보가 없습니다.";
+            }
             }
 
             loadMeal();
-
-        })();
+            })();
 
         // Accordion 동작
         document.querySelectorAll('.accordion-toggle').forEach(btn => {
