@@ -60,17 +60,36 @@ function checkAndMaybeFallback(tabKey) {
   const cards = page?.querySelector('.cards');
   if (!cards) return;
 
-  // 1프레임 후 다시 측정 (레이아웃/폰트 적용 대기)
   requestAnimationFrame(() => {
-    const first = shouldOverflow(cards, 2);
-    // 2프레임 후 한 번 더 확인
+    const first = isClippingAtRow(cards, 3, 4); // 3행이 잘리는지
     requestAnimationFrame(() => {
-      const second = shouldOverflow(cards, 2);
-      if (second && PAGE_SIZE <= 3) {
+      const second = isClippingAtRow(cards, 3, 4); // 2프레임 연속 확인
+      if (second) {
         showFallbackAndRedirect(tabKey);
       }
     });
   });
+}
+
+// N번째(기본 3번째) "실카드"가 안전 하단선을 넘는지 감지
+function isClippingAtRow(cards, rowIndex = 3, slackPx = 4) {
+  const realCards = cards.querySelectorAll('.card:not(.placeholder)');
+  if (realCards.length < rowIndex) return false;
+
+  const target = realCards[rowIndex - 1]; // 3행 = index 2
+  const tRect   = target.getBoundingClientRect();
+  const cardsRect = cards.getBoundingClientRect();
+
+  const dotsEl   = document.getElementById('dots');
+  const dotsRect = dotsEl ? dotsEl.getBoundingClientRect() : null;
+
+  // 도트가 있으면 그 윗부분, 없으면 카드컨테이너 하단을 안전 하단선으로 사용
+  const safeBottom = Math.min(
+    cardsRect.bottom - 2,
+    dotsRect ? (dotsRect.top - 6) : Infinity
+  );
+
+  return (tRect.bottom - safeBottom) > slackPx; // 4px 초과 시 '진짜 잘림'
 }
 
 // 렌더 완료 직후 한 번 호출
@@ -328,8 +347,8 @@ function autoFitRows() {
 
   const lastPage  = document.querySelector('.page.active');
   const lastCards = lastPage?.querySelector('.cards');
-  if (lastCards && PAGE_SIZE <= 3 && shouldOverflow(lastCards, 0)) {
-    // 최소 3행으로도 수용 불가 → 오버레이 & 이동
+  if (lastCards && isClippingAtRow(lastCards, 3, 4)) {
+    // 3행이 정상적으로 못 들어가면 → 오버레이 & 이동
     showFallbackAndRedirect(currentTab);
     return;
   }
