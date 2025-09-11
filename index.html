@@ -50,7 +50,34 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            margin: 10px 0 18px
+        }
+        .spacer { flex: 1; }
+
+        .now {
+            display:flex;
+            flex-direction:column;
+            align-items:flex-end;
+            gap:4px;
+            min-width: 170px;
+        }
+        .now-date {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .now-time {
+            font-weight: 700;
+            border: 1px solid #2a3a4f;
+            background: var(--panel);
+            color: var(--text);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-variant-numeric: tabular-nums; /* 숫자 폭 일정 */
+        }
+
+        /* 모바일에서 줄바꿈되면 오른쪽 정렬 유지 */
+        @media (max-width:560px) {
+            header { flex-wrap: wrap; }
+            .now { width:100%; align-items:flex-end; }
         }
 
         .logo {
@@ -526,6 +553,12 @@
                 <h1>교육정보부 링크 허브</h1>
                 <p>업무·홍보·설문·신청 링크를 한 곳에서 빠르게 찾아 이동하세요.</p>
             </div>
+
+            <div class="spacer"></div>
+            <div class="now" id="now">
+                <div class="now-date" id="nowDate">--.--.-- (--)</div>
+                <div class="now-time" id="nowTime">--:--:--</div>
+            </div>
         </header>
 
         <!-- ===== 전광판 토글 ===== -->
@@ -559,6 +592,7 @@
             </div>
             <button class="pill" data-filter="all">전체</button>
             <button class="pill" data-filter="service">내부업무</button>
+            <button class="pill" data-filter="class">수업</button>
             <button class="pill" data-filter="promo">성과/홍보</button>
             <button class="pill" data-filter="external">외부/공식</button>
         </div>
@@ -579,6 +613,9 @@
                     <a class="btn"
                         href="https://docs.google.com/spreadsheets/d/1GsHg_z4wuqMyrl_7CA_Kc3CN-ox1dAK-dwKOZNGQpsc/edit?gid=1092647692#gid=1092647692"
                         target="_blank" rel="noopener">학사일정달력</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1V-2yqslTObYJFBBvNBUkkKkCGg1eEmXBthpSiw9dpyQ/edit?gid=1545665429#gid=1545665429"
+                        target="_blank" rel="noopener">홍보일정달력</a>
                     <a class="btn"
                         href="https://meet.google.com/gyf-jefx-dnn" target="_blank" rel="noopener">온라인교무실</a>
                 </div>
@@ -605,9 +642,41 @@
                 </div>
                 <div class="meta"><span class="badge">공식</span><span class="badge">외부</span></div>
             </article>
+            
+            <!-- 에듀테크 사이트 -->
+            <article class="card" data-tags="에듀테크 AI 퀴즈 수업지원" data-cat="class">
+                <div class="icon">💡</div>
+                <h3>디지털 수업 도구</h3>
+                <p>수업과 학습에 활용할 수 있는 주요 에듀테크 플랫폼 모음</p>
+                <div class="actions">
+                    <a class="btn" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
+                    <a class="btn" href="https://gemini.google.com/app" target="_blank" rel="noopener">Google Gemini</a>
+                    <a class="btn" href="https://www.notion.com/ko/product" target="_blank" rel="noopener">Notion</a>
+                    <a class="btn" href="https://quizn.show/" target="_blank" rel="noopener">퀴즈앤</a>
+                    <a class="btn" href="https://www.tkbell.co.kr/" target="_blank" rel="noopener">팅커벨</a>
+                </div>
+                <div class="meta"><span class="badge">에듀테크</span></div>
+            </article>
+
+            <article class="card" data-tags="구글 클래스룸 시트 슬라이드 독스 킵 캘린더" data-cat="class">
+                <div class="icon">🗂️</div>
+                <h3>구글 수업 툴킷</h3>
+                <p>수업과 협업에 활용할 수 있는 구글 도구 모음</p>
+                <div class="actions">
+                    <a class="btn" href="https://classroom.google.com/" target="_blank" rel="noopener">클래스룸</a>
+                    <a class="btn" href="https://sheets.google.com/" target="_blank" rel="noopener">시트</a>
+                    <a class="btn" href="https://drive.google.com/" target="_blank" rel="noopener">드라이브</a>
+                    <a class="btn" href="https://keep.google.com/" target="_blank" rel="noopener">킵</a>
+                    <a class="btn" href="https://mail.google.com/" target="_blank" rel="noopener">메일</a>
+                    <a class="btn" href="https://slides.google.com/" target="_blank" rel="noopener">슬라이드</a>
+                    <a class="btn" href="https://docs.google.com/" target="_blank" rel="noopener">독스</a>                    
+                    <a class="btn" href="https://calendar.google.com/" target="_blank" rel="noopener">캘린더</a>
+                </div>
+                <div class="meta"><span class="badge">구글</span></div>
+            </article>
 
             <!-- 수업교환 -->
-            <article class="card" data-tags="수업교환" data-cat="service">
+            <article class="card" data-tags="수업교환" data-cat="class">
                 <div class="icon">🔄</div>
                 <h3>수업교환</h3>
                 <p>수업교환 신청</p>
@@ -615,6 +684,9 @@
                     <a class="btn"
                         href="https://docs.google.com/forms/d/e/1FAIpQLSdD7SJuvnBQTe2CL7mW_BJqmY--vrY5skViCX6UfZfJNwc6NQ/viewform"
                         target="_blank" rel="noopener">수업교환 신청</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1L5w5XQi1daMOXLadC0kAxFjP5nA8vPX1jYgssdDTFRM/edit?gid=1700399829#gid=1700399829"
+                        target="_blank" rel="noopener">수업교환 일지(확인)</a>    
                 </div>
                 <div class="meta"><span class="badge">수업</span></div>
             </article>
@@ -1005,6 +1077,44 @@
                 }
             });
         });
+
+        // ===== 헤더 우측 실시간 시계(KST) =====
+        (function () {
+            const $ = (id) => document.getElementById(id);
+            const elDate = $('nowDate');
+            const elTime = $('nowTime');
+            if (!elDate || !elTime) return;
+
+            const DOW = ['일','월','화','수','목','금','토'];
+            const two = (n) => String(n).padStart(2, '0');
+
+            function nowKST() {
+                // 브라우저 지역과 무관하게 한국시간
+                return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+            }
+
+            function render() {
+                const d = nowKST();
+                const y = d.getFullYear();
+                const m = two(d.getMonth() + 1);
+                const day = two(d.getDate());
+                const w = DOW[d.getDay()];
+                const hh = two(d.getHours());
+                const mm = two(d.getMinutes());
+                const ss = two(d.getSeconds());
+
+                elDate.textContent = `${y}.${m}.${day} (${w})`;
+                elTime.textContent = `${hh}:${mm}:${ss}`;
+            }
+
+            render();
+            // 초 경계에 맞춰 부드럽게: 다음 초까지 맞춘 뒤 1초 간격
+            const firstDelay = 1000 - (nowKST().getMilliseconds());
+            setTimeout(() => {
+                render();
+                setInterval(render, 1000);
+            }, firstDelay);
+        })();
 
 
 
