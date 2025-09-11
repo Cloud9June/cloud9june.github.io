@@ -14,6 +14,7 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 let isFallback = false;
 let fallbackTimer = null;
 let suppressFallbackUntil = 0; // 이 시각 전까지 폴백 금지
+let fallbackRecheckTimer = null;
 
 // 사용자가 튜토리얼을 본 적이 없다면 오버레이 표시
 if (!hasSeenTutorial && isTouchDevice) {
@@ -57,8 +58,21 @@ function shouldOverflow(cards, slack = 2) {
 
 // 안전한 자동 전환(2프레임 연속 오버플로우 확인)
 function checkAndMaybeFallback(tabKey) {
-  // ★ 돌아온 직후에는 폴백 금지
-  if (Date.now() < suppressFallbackUntil) return;
+  // ★ 억제 중이면 한 번만 재검사 예약
+  if (Date.now() < suppressFallbackUntil) {
+    const remain = suppressFallbackUntil - Date.now();
+    if (!fallbackRecheckTimer) {
+      fallbackRecheckTimer = setTimeout(() => {
+        fallbackRecheckTimer = null;
+        // 폰트/툴바 안정화 후 2프레임 연속으로 다시 확인
+        requestAnimationFrame(() => {
+          isClippingAtRow(document.querySelector('.page.active')?.querySelector('.cards'), 3, 4);
+          requestAnimationFrame(() => checkAndMaybeFallback(tabKey));
+        });
+      }, Math.max(0, remain + 100)); // 살짝 여유
+    }
+    return;
+  }
 
   const page  = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
@@ -317,8 +331,18 @@ function measureRowHeight(){
 
 /* 실제 영역 기준으로 행수 자동 보정(넘치면 줄이고, 남으면 1행까지 늘림) */
 function autoFitRows() {
-  // ★ 돌아온 직후에는 폴백 금지
-  if (Date.now() < suppressFallbackUntil) return;
+  // ★ 억제 중이면 재검사만 예약하고 빠짐
+  if (Date.now() < suppressFallbackUntil) {
+    const remain = suppressFallbackUntil - Date.now();
+    if (!fallbackRecheckTimer) {
+      fallbackRecheckTimer = setTimeout(() => {
+        fallbackRecheckTimer = null;
+        autoFitRows();
+        checkAndMaybeFallback(currentTab);
+      }, Math.max(0, remain + 100));
+    }
+    return;
+  }
 
   const page = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
@@ -651,14 +675,15 @@ document.getElementById('openOverview').addEventListener('click', () => {
 
 // “뒤로 오면” 폴백 일시 정지 + 오버레이/타이머 정리
 window.addEventListener('pageshow', (e) => {
-  // bfcache 복원/뒤로오기 모두 포함
-  // 1) 오버레이/타이머 정리
+  // 오버레이/타이머 정리 (기존 그대로)
   const ov = document.getElementById('fallbackOverlay');
   if (ov) { ov.classList.add('hidden'); ov.setAttribute('aria-hidden', 'true'); }
   isFallback = false;
   if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
 
-  // 2) overview에서 돌아온 경우 감지 → 폴백 잠시 금지
+  // 이전 예약도 정리
+  if (fallbackRecheckTimer) { clearTimeout(fallbackRecheckTimer); fallbackRecheckTimer = null; }
+
   const fromOverview = (document.referrer || '').includes('overview.html');
   let hadRedirectFlag = false;
   try {
@@ -669,7 +694,17 @@ window.addEventListener('pageshow', (e) => {
   } catch {}
 
   if (fromOverview || hadRedirectFlag) {
-    // 6~8초 정도 폴백 막기 (툴바 애니메이션/주소창 재계산 대기)
-    suppressFallbackUntil = Date.now() + 8000;
+    suppressFallbackUntil = Date.now() + 8000; // 8초 억제
+    // ★ 억제 종료 후 자동 재검사
+    fallbackRecheckTimer = setTimeout(() => {
+      fallbackRecheckTimer = null;
+      // 레이아웃 안정 후 다시 판단
+      document.fonts?.ready?.then?.(() => {
+        setTimeout(() => {
+          autoFitRows();             // 행수 보정 1차
+          checkAndMaybeFallback(currentTab); // 클리핑 재검사
+        }, 0);
+      }) || checkAndMaybeFallback(currentTab);
+    }, 8100);
   }
 });
