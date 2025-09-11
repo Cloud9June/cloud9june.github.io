@@ -13,6 +13,7 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 
 let isFallback = false;
 let fallbackTimer = null;
+let suppressFallbackUntil = 0; // 이 시각 전까지 폴백 금지
 
 // 사용자가 튜토리얼을 본 적이 없다면 오버레이 표시
 if (!hasSeenTutorial && isTouchDevice) {
@@ -56,6 +57,9 @@ function shouldOverflow(cards, slack = 2) {
 
 // 안전한 자동 전환(2프레임 연속 오버플로우 확인)
 function checkAndMaybeFallback(tabKey) {
+  // ★ 돌아온 직후에는 폴백 금지
+  if (Date.now() < suppressFallbackUntil) return;
+
   const page  = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
   if (!cards) return;
@@ -146,6 +150,11 @@ function showFallbackAndRedirect(tabKey, delayMs = 2200) {
     ov.classList.remove('hidden');
     ov.setAttribute('aria-hidden', 'false');
   }
+
+  // ★ 돌아왔는지 판단용 힌트 남김
+  try {
+    sessionStorage.setItem('sio_fallback_redirect', JSON.stringify({ tab: tabKey, ts: Date.now() }));
+  } catch {}
 
   // 지연 후 '한 번에 보기'로 이동
   fallbackTimer = setTimeout(() => {
@@ -308,6 +317,9 @@ function measureRowHeight(){
 
 /* 실제 영역 기준으로 행수 자동 보정(넘치면 줄이고, 남으면 1행까지 늘림) */
 function autoFitRows() {
+  // ★ 돌아온 직후에는 폴백 금지
+  if (Date.now() < suppressFallbackUntil) return;
+
   const page = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
   if (!cards) return;
@@ -635,4 +647,29 @@ startAuto();
 /* ========== 13) 한 번에 보기 (동일 탭) ========== */
 document.getElementById('openOverview').addEventListener('click', () => {
   location.href = `overview.html?tab=${encodeURIComponent(currentTab)}`;
+});
+
+// “뒤로 오면” 폴백 일시 정지 + 오버레이/타이머 정리
+window.addEventListener('pageshow', (e) => {
+  // bfcache 복원/뒤로오기 모두 포함
+  // 1) 오버레이/타이머 정리
+  const ov = document.getElementById('fallbackOverlay');
+  if (ov) { ov.classList.add('hidden'); ov.setAttribute('aria-hidden', 'true'); }
+  isFallback = false;
+  if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+
+  // 2) overview에서 돌아온 경우 감지 → 폴백 잠시 금지
+  const fromOverview = (document.referrer || '').includes('overview.html');
+  let hadRedirectFlag = false;
+  try {
+    if (sessionStorage.getItem('sio_fallback_redirect')) {
+      hadRedirectFlag = true;
+      sessionStorage.removeItem('sio_fallback_redirect');
+    }
+  } catch {}
+
+  if (fromOverview || hadRedirectFlag) {
+    // 6~8초 정도 폴백 막기 (툴바 애니메이션/주소창 재계산 대기)
+    suppressFallbackUntil = Date.now() + 8000;
+  }
 });
