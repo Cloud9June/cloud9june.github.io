@@ -11,6 +11,9 @@ const closeBtn = document.querySelector('.close-btn');
 const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
+let isFallback = false;
+let fallbackTimer = null;
+
 // 사용자가 튜토리얼을 본 적이 없다면 오버레이 표시
 if (!hasSeenTutorial && isTouchDevice) {
   tutorialOverlay.style.display = 'flex';
@@ -19,16 +22,34 @@ if (!hasSeenTutorial && isTouchDevice) {
 // 닫기 버튼 또는 오버레이 클릭 시
 closeBtn.addEventListener('click', () => {
   tutorialOverlay.style.display = 'none';
-  // 테스트용으로 아래 주석처리함. 정식 사용시 주석 해제해야 함.
-  // localStorage.setItem('hasSeenTutorial', 'false'); 
+  // 테스트용으로 true로 설정합니다.
+  localStorage.setItem('hasSeenTutorial', 'false'); 
 });
 
 tutorialOverlay.addEventListener('click', (e) => {
   if (e.target.id === 'tutorial-overlay') {
     tutorialOverlay.style.display = 'none';
-    // localStorage.setItem('hasSeenTutorial', 'false');
+    localStorage.setItem('hasSeenTutorial', 'false');
   }
 });
+
+function showFallbackAndRedirect(tabKey, delayMs = 2200) {
+  if (isFallback) return;
+  isFallback = true;
+
+  stopAuto(); // 자동 전환 정지
+
+  const ov = document.getElementById('fallbackOverlay');
+  if (ov) {
+    ov.classList.remove('hidden');
+    ov.setAttribute('aria-hidden', 'false');
+  }
+
+  // 지연 후 '한 번에 보기'로 이동
+  fallbackTimer = setTimeout(() => {
+    location.href = `overview.html?tab=${encodeURIComponent(tabKey)}`;
+  }, delayMs);
+}
 
 /* ========== 0) iOS 판별 + --vh 설정 ========== */
 function isIOSLike() {
@@ -221,6 +242,14 @@ function autoFitRows() {
           render(false); // 재귀 호출
       }
   }
+
+  const lastPage = document.querySelector('.page.active');
+  const lastCards = lastPage?.querySelector('.cards');
+  if (lastCards && PAGE_SIZE <= 3 && lastCards.scrollHeight > lastCards.clientHeight) {
+    // 최소 3행으로도 수용 불가 → 오버레이 & 이동
+    showFallbackAndRedirect(currentTab);
+    return;
+  }
 }
 
 /* ========== 6) 메인 렌더 ========== */
@@ -247,6 +276,12 @@ function render(autoFit = true){
   // 1차 추정 PAGE_SIZE
   const rect = viewport.getBoundingClientRect();
   PAGE_SIZE = computePageSizeByHeight(rect.height);
+
+  // ★ 이론상 최소 3행도 불가(혹은 극단적인 환경) → 바로 오버레이 & 이동
+  if (PAGE_SIZE < 3) {
+    showFallbackAndRedirect(currentTab);
+    return;
+  }
 
   // DOM 구성
   viewport.innerHTML = "";
