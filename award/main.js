@@ -22,6 +22,7 @@ if (!hasSeenTutorial && isTouchDevice) {
 // 닫기 버튼 또는 오버레이 클릭 시
 closeBtn.addEventListener('click', () => {
   tutorialOverlay.style.display = 'none';
+  // 테스트용으로 true로 설정합니다.
   localStorage.setItem('hasSeenTutorial', 'false'); 
 });
 
@@ -32,26 +33,28 @@ tutorialOverlay.addEventListener('click', (e) => {
   }
 });
 
-// 최상단 유틸 근처에 추가
-function shouldOverflow(cards, slack = 2) {
-  // 1) 고전적 오버플로우
-  if ((cards.scrollHeight - cards.clientHeight) > slack) return true;
+function shouldOverflow(cards, slackPx = 4) {
+  // 1) 고전적 스크롤 오버플로우
+  if ((cards.scrollHeight - cards.clientHeight) > slackPx) return true;
 
-  // 2) "시각적" 겹침 감지: 마지막 실카드 vs 도트/컨테이너 하단
+  // 2) 시각적 잘림(마지막 실카드 기준) 계산
   const realCards = cards.querySelectorAll('.card:not(.placeholder)');
   if (!realCards.length) return false;
 
-  const lastRect   = realCards[realCards.length - 1].getBoundingClientRect();
-  const cardsRect  = cards.getBoundingClientRect();
-  const dotsEl     = document.getElementById('dots');
-  const dotsRect   = dotsEl ? dotsEl.getBoundingClientRect() : null;
+  const lastRect  = realCards[realCards.length - 1].getBoundingClientRect();
+  const cardsRect = cards.getBoundingClientRect();
 
-  // 도트 위 살짝 여백(6px)까지 안전영역으로 본다
-  const overlapWithDots      = dotsRect ? (lastRect.bottom > (dotsRect.top - 6)) : false;
-  // 컨테이너 자체 하단과의 겹침(2px 여유)
-  const clippedByContainer   = lastRect.bottom > (cardsRect.bottom - 2);
+  const dotsEl   = document.getElementById('dots');
+  const dotsRect = dotsEl ? dotsEl.getBoundingClientRect() : null;
 
-  return overlapWithDots || clippedByContainer;
+  // 도트와 카드컨테이너 중 더 위쪽을 하단 안전선으로
+  const safeBottom = Math.min(
+    cardsRect.bottom - 2,
+    dotsRect ? (dotsRect.top - 6) : Infinity
+  );
+
+  const overlap = lastRect.bottom - safeBottom; // (+)면 실제로 잘린 것
+  return overlap > slackPx; // 4px 이상 넘어설 때만 "오버플로우"
 }
 
 // 안전한 자동 전환(2프레임 연속 오버플로우 확인)
@@ -60,36 +63,17 @@ function checkAndMaybeFallback(tabKey) {
   const cards = page?.querySelector('.cards');
   if (!cards) return;
 
+  // 1프레임 후 다시 측정 (레이아웃/폰트 적용 대기)
   requestAnimationFrame(() => {
-    const first = isClippingAtRow(cards, 3, 4); // 3행이 잘리는지
+    const first = shouldOverflow(cards, 2);
+    // 2프레임 후 한 번 더 확인
     requestAnimationFrame(() => {
-      const second = isClippingAtRow(cards, 3, 4); // 2프레임 연속 확인
-      if (second) {
+      const second = shouldOverflow(cards, 2);
+      if (second && PAGE_SIZE === 3) {
         showFallbackAndRedirect(tabKey);
       }
     });
   });
-}
-
-// N번째(기본 3번째) "실카드"가 안전 하단선을 넘는지 감지
-function isClippingAtRow(cards, rowIndex = 3, slackPx = 4) {
-  const realCards = cards.querySelectorAll('.card:not(.placeholder)');
-  if (realCards.length < rowIndex) return false;
-
-  const target = realCards[rowIndex - 1]; // 3행 = index 2
-  const tRect   = target.getBoundingClientRect();
-  const cardsRect = cards.getBoundingClientRect();
-
-  const dotsEl   = document.getElementById('dots');
-  const dotsRect = dotsEl ? dotsEl.getBoundingClientRect() : null;
-
-  // 도트가 있으면 그 윗부분, 없으면 카드컨테이너 하단을 안전 하단선으로 사용
-  const safeBottom = Math.min(
-    cardsRect.bottom - 2,
-    dotsRect ? (dotsRect.top - 6) : Infinity
-  );
-
-  return (tRect.bottom - safeBottom) > slackPx; // 4px 초과 시 '진짜 잘림'
 }
 
 // 렌더 완료 직후 한 번 호출
@@ -347,8 +331,8 @@ function autoFitRows() {
 
   const lastPage  = document.querySelector('.page.active');
   const lastCards = lastPage?.querySelector('.cards');
-  if (lastCards && isClippingAtRow(lastCards, 3, 4)) {
-    // 3행이 정상적으로 못 들어가면 → 오버레이 & 이동
+  if (lastCards && PAGE_SIZE === 3 && shouldOverflow(lastCards, 4)) {
+    // 최소 3행으로도 수용 불가 → 오버레이 & 이동
     showFallbackAndRedirect(currentTab);
     return;
   }
