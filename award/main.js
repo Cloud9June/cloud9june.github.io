@@ -63,7 +63,7 @@ function checkAndMaybeFallback(tabKey) {
   if (!cards) return;
 
   requestAnimationFrame(() => {
-    const first = isClippingAtRow(cards, 3, 4); // 3행이 잘리는지
+    const first = isClippingAtRow(cards, 3, 4); // 3번째 행이 잘리는지
     requestAnimationFrame(() => {
       const second = isClippingAtRow(cards, 3, 4); // 2프레임 연속 확인
       if (second) {
@@ -97,42 +97,42 @@ function isClippingAtRow(cards, rowIndex = 3, slackPx = 4) {
 
 // 렌더 완료 직후 한 번 호출
 function setupAutoFallbackObservers(tabKey) {
-  // 기존 옵저버 있으면 해제
-  if (window.__fallbackObs) { window.__fallbackObs.disconnect(); window.__fallbackObs = null; }
+  if (window.__fallbackObs) {
+    window.__fallbackObs.disconnect();
+    window.__fallbackObs = null;
+  }
 
   const page  = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
   if (!cards) return;
 
-  // 카드 영역 크기 변동 감시
   const ro = new ResizeObserver(() => {
-    checkAndMaybeFallback(tabKey);
+    if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
   });
   ro.observe(cards);
   window.__fallbackObs = ro;
 
-  // iOS 주소창/안드 내비바 변화 대응
   if (window.visualViewport) {
-    const vvHandler = () => { checkAndMaybeFallback(tabKey); };
+    const vvHandler = () => {
+      if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
+    };
     window.visualViewport.addEventListener('resize', vvHandler);
     window.visualViewport.addEventListener('scroll', vvHandler);
-    // 한번만 등록되도록 저장
     if (!window.__vvBound) window.__vvBound = true;
   }
 
-  // 회전, 페이지 표시(백/포그라운드) 시 재검사
-  const late = () => { checkAndMaybeFallback(tabKey); };
+  const late = () => {
+    if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
+  };
   window.addEventListener('orientationchange', late, { passive: true });
   window.addEventListener('pageshow', late, { passive: true });
 
-  // 폰트 적용 이후에도 한 번 더 (구형 iOS는 타임아웃으로 보강)
   if (document.fonts?.ready) {
     document.fonts.ready.then(() => setTimeout(late, 0));
   } else {
     setTimeout(late, 300);
   }
 
-  // 초기 1회 확인
   late();
 }
 
@@ -150,7 +150,6 @@ function showFallbackAndRedirect(tabKey, delayMs = 2200) {
     ov.setAttribute('aria-hidden', 'false');
   }
 
-  // 지연 후 '한 번에 보기'로 이동
   fallbackTimer = setTimeout(() => {
     location.href = `overview.html?tab=${encodeURIComponent(tabKey)}`;
   }, delayMs);
