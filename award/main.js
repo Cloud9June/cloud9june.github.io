@@ -57,15 +57,32 @@ function checkAndMaybeFallback(tabKey) {
   if (!cards) return;
 
   requestAnimationFrame(() => {
-    const first = shouldOverflow(cards, 1);
+    const first = isClippingAtRow(cards, 3, 12); 
     requestAnimationFrame(() => {
-      const second = shouldOverflow(cards, 1);
+      const second = isClippingAtRow(cards, 3, 12);
       if (second) {
         showFallbackAndRedirect(tabKey);
       }
     });
   });
 }
+
+// N번째(기본 3번째) "실카드"가 컨테이너 하단을 넘는지 감지
+function isClippingAtRow(cards, rowIndex = 3, slackPx = 30) {
+  const realCards = cards.querySelectorAll('.card:not(.placeholder)');
+  if (realCards.length < rowIndex) return false;
+
+  const target = realCards[rowIndex - 1];
+  const tRect   = target.getBoundingClientRect();
+  const cardsRect = cards.getBoundingClientRect();
+  const safeBottom = cardsRect.bottom - 2;
+
+  const overlap = tRect.bottom - safeBottom;
+  console.log("check row", rowIndex, "cardBottom:", tRect.bottom, "safeBottom:", safeBottom, "overlap:", overlap);
+
+  return (PAGE_SIZE <= 3) && (overlap > slackPx);
+}
+
 
 // 렌더 완료 직후 한 번 호출
 function setupAutoFallbackObservers(tabKey) {
@@ -296,7 +313,12 @@ function autoFitRows() {
 
   const lastPage  = document.querySelector('.page.active');
   const lastCards = lastPage?.querySelector('.cards');
-  if (lastCards && shouldOverflow(lastCards, 1)) {
+
+  // 기존: 마지막 카드 기준 → 무조건 true 나옴
+  // if (lastCards && shouldOverflow(lastCards, 1)) {
+
+  // 수정: 3번째 카드 기준 + PAGE_SIZE<=3 조건
+  if (lastCards && isClippingAtRow(lastCards, 3, 30)) {
     showFallbackAndRedirect(currentTab);
     return;
   }
