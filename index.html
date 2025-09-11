@@ -74,11 +74,6 @@
             font-variant-numeric: tabular-nums; /* 숫자 폭 일정 */
         }
 
-        /* 모바일에서 줄바꿈되면 오른쪽 정렬 유지 */
-        @media (max-width:560px) {
-            header { flex-wrap: wrap; }
-            .now { width:100%; align-items:flex-end; }
-        }
         /* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
         @media (max-width:560px) {
             .now { 
@@ -545,7 +540,9 @@
             }
 
             .today-meal .meal-text {
-                width: 100%;
+                white-space: normal;   /* 줄바꿈 허용 */
+                overflow: visible;
+                text-overflow: unset;
             }
         }
     </style>
@@ -594,7 +591,7 @@
         <div class="toolbar">
             <div class="search" role="search">
                 <span aria-hidden="true">🔍</span>
-                <input id="q" type="search" placeholder="검색: 급식, 공개수업, 평가계획, 생활지도, 취업…" autocomplete="off" />
+                <input id="q" type="search" placeholder="검색: 수업, 업무, 급식, 도서…" autocomplete="off" />
             </div>
             <button class="pill" data-filter="all">전체</button>
             <button class="pill" data-filter="service">내부업무</button>
@@ -837,7 +834,7 @@
         const $ = (id) => document.getElementById(id);
         const on = (el, evt, handler, opts) => {
             if (el) el.addEventListener(evt, handler, opts);
-            else console.warn(`[bind skipped] ${evt} on`, el);
+            // else console.warn(`[bind skipped] ${evt} on`, el);
         };
         // 연도
         document.getElementById('yy').textContent = new Date().getFullYear();
@@ -1030,19 +1027,19 @@
                 return r.json();
             }
 
-            function corsA(u) {
-                return `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
-            }
+            // function corsA(u) {
+            //     return `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+            // }
 
-            function corsB(u) {
-                return `https://cors.isomorphic-git.org/${u}`;
-            }
+            // function corsB(u) {
+            //     return `https://cors.isomorphic-git.org/${u}`;
+            // }
 
             async function loadMeal() {
                 const ymd = todayYMD();
                 const base =
                     `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${encodeURIComponent(key)}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${ymd}&MLSV_TO_YMD=${ymd}`;
-                const urls = [base, corsA(base), corsB(base)];
+                const urls = [base];
                 let data = null,
                     ok = false;
                 for (const u of urls) {
