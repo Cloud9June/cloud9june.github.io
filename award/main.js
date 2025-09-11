@@ -24,7 +24,6 @@ closeBtn.addEventListener('click', () => {
   tutorialOverlay.style.display = 'none';
   localStorage.setItem('hasSeenTutorial', 'true'); 
 });
-
 tutorialOverlay.addEventListener('click', (e) => {
   if (e.target.id === 'tutorial-overlay') {
     tutorialOverlay.style.display = 'none';
@@ -32,11 +31,8 @@ tutorialOverlay.addEventListener('click', (e) => {
   }
 });
 
-function shouldOverflow(cards, slackPx = 4) {
-  // 1) 고전적 스크롤 오버플로우
-  if ((cards.scrollHeight - cards.clientHeight) > slackPx) return true;
-
-  // 2) 시각적 잘림(마지막 실카드 기준) 계산
+// 마지막 카드 잘림 감지
+function shouldOverflow(cards, slackPx = 1) {
   const realCards = cards.querySelectorAll('.card:not(.placeholder)');
   if (!realCards.length) return false;
 
@@ -46,54 +42,30 @@ function shouldOverflow(cards, slackPx = 4) {
   const dotsEl   = document.getElementById('dots');
   const dotsRect = dotsEl ? dotsEl.getBoundingClientRect() : null;
 
-  // 도트와 카드컨테이너 중 더 위쪽을 하단 안전선으로
   const safeBottom = Math.min(
     cardsRect.bottom - 2,
     dotsRect ? (dotsRect.top - 6) : Infinity
   );
 
-  const overlap = lastRect.bottom - safeBottom; // (+)면 실제로 잘린 것
-  return overlap > slackPx; // 4px 이상 넘어설 때만 "오버플로우"
+  return (lastRect.bottom - safeBottom) > slackPx;
 }
 
-// 안전한 자동 전환(2프레임 연속 오버플로우 확인)
+// 안전한 자동 전환 (2프레임 연속 오버플로우 확인)
 function checkAndMaybeFallback(tabKey) {
   const page  = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
   if (!cards) return;
 
   requestAnimationFrame(() => {
-    const first = isClippingAtRow(cards, 3, 4); // 3번째 행이 잘리는지
+    const first = shouldOverflow(cards, 1);
     requestAnimationFrame(() => {
-      const second = isClippingAtRow(cards, 3, 4); // 2프레임 연속 확인
+      const second = shouldOverflow(cards, 1);
       if (second) {
         showFallbackAndRedirect(tabKey);
       }
     });
   });
 }
-
-// N번째(기본 3번째) "실카드"가 안전 하단선을 넘는지 감지
-function isClippingAtRow(cards, rowIndex = 3, slackPx = 4) {
-  const realCards = cards.querySelectorAll('.card:not(.placeholder)');
-  if (realCards.length < rowIndex) return false;
-
-  const target = realCards[rowIndex - 1]; // 3행 = index 2
-  const tRect   = target.getBoundingClientRect();
-  const cardsRect = cards.getBoundingClientRect();
-
-  const dotsEl   = document.getElementById('dots');
-  const dotsRect = dotsEl ? dotsEl.getBoundingClientRect() : null;
-
-  // 도트가 있으면 그 윗부분, 없으면 카드컨테이너 하단을 안전 하단선으로 사용
-  const safeBottom = Math.min(
-    cardsRect.bottom - 2,
-    dotsRect ? (dotsRect.top - 6) : Infinity
-  );
-
-  return (tRect.bottom - safeBottom) > slackPx; // 4px 초과 시 '진짜 잘림'
-}
-
 
 // 렌더 완료 직후 한 번 호출
 function setupAutoFallbackObservers(tabKey) {
@@ -107,23 +79,19 @@ function setupAutoFallbackObservers(tabKey) {
   if (!cards) return;
 
   const ro = new ResizeObserver(() => {
-    if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
+    checkAndMaybeFallback(tabKey); // 조건 제거
   });
   ro.observe(cards);
   window.__fallbackObs = ro;
 
   if (window.visualViewport) {
-    const vvHandler = () => {
-      if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
-    };
+    const vvHandler = () => { checkAndMaybeFallback(tabKey); };
     window.visualViewport.addEventListener('resize', vvHandler);
     window.visualViewport.addEventListener('scroll', vvHandler);
     if (!window.__vvBound) window.__vvBound = true;
   }
 
-  const late = () => {
-    if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
-  };
+  const late = () => { checkAndMaybeFallback(tabKey); };
   window.addEventListener('orientationchange', late, { passive: true });
   window.addEventListener('pageshow', late, { passive: true });
 
@@ -136,13 +104,11 @@ function setupAutoFallbackObservers(tabKey) {
   late();
 }
 
-
-
 function showFallbackAndRedirect(tabKey, delayMs = 2200) {
   if (isFallback) return;
   isFallback = true;
 
-  stopAuto(); // 자동 전환 정지
+  stopAuto();
 
   const ov = document.getElementById('fallbackOverlay');
   if (ov) {
@@ -162,20 +128,11 @@ function isIOSLike() {
 }
 if (isIOSLike()) document.documentElement.classList.add('is-ios');
 
-/* ========== 0) 모든 기기에서 뷰포트 높이 보정 ========== */
 function setVH() {
-  // window.innerHeight와 visualViewport.height 중 더 작은 값을 선택하여
-  // 주소창이나 툴바가 가리는 영역을 고려한 실제 가시 높이를 계산합니다.
   const height = Math.min(window.innerHeight, (window.visualViewport?.height ?? window.innerHeight));
-  
-  // --vh 변수 설정
   document.documentElement.style.setProperty('--vh', `${height * 0.01}px`);
 }
-
-// 초기 로드 시 실행
 setVH();
-
-// 리사이즈, 스크롤 등 뷰포트 관련 이벤트에 리스너 추가
 window.addEventListener('resize', setVH, { passive: true });
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', setVH, { passive: true });
@@ -283,7 +240,7 @@ const chunk = (arr,size)=>arr.reduce((acc,_,i)=>(i%size?acc:acc.concat([arr.slic
 
 /* ========== 5) “몇 행 보여줄지” 1차 추정치 ========== */
 function computePageSizeByHeight(availHeightPx){
-  const perRowGuess = (window.innerWidth <= 480) ? 85 : 110; // 대략치
+  const perRowGuess = (window.innerWidth <= 480) ? 85 : 110;
   const raw = Math.floor(availHeightPx / perRowGuess);
   const clamped = Math.max(3, Math.min(12, raw));
   const candidates=[12,10,9,8,7,6,5,4,3];
@@ -295,7 +252,6 @@ function computePageSizeByHeight(availHeightPx){
   return best;
 }
 
-/* 실제 1행 높이 측정(카드+gap) */
 function measureRowHeight(){
   const page = document.querySelector('.page.active');
   if(!page) return null;
@@ -308,27 +264,20 @@ function measureRowHeight(){
   return h + gap + 1;
 }
 
-/* 실제 영역 기준으로 행수 자동 보정(넘치면 줄이고, 남으면 1행까지 늘림) */
 function autoFitRows() {
   const page = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
   if (!cards) return;
 
-  // 1) 넘치면 한 행씩 줄이기
   while (cards.scrollHeight > cards.clientHeight && PAGE_SIZE > 3) {
     PAGE_SIZE--;
-    // 변경된 PAGE_SIZE로 다시 렌더링 (플레이스홀더 개수만 변경)
     cards.style.setProperty("--rows", PAGE_SIZE);
     
-    // 플레이스홀더를 다시 계산하여 적용
     const totalCards = page.querySelectorAll('.card:not(.placeholder)').length;
     let placeholderCount = PAGE_SIZE - (totalCards % PAGE_SIZE);
     if(placeholderCount === PAGE_SIZE) placeholderCount = 0;
     
-    // 기존 플레이스홀더 삭제
     page.querySelectorAll('.placeholder').forEach(p => p.remove());
-
-    // 새로운 플레이스홀더 생성
     for(let i=0; i<placeholderCount; i++) {
         const p = document.createElement("div");
         p.className = "card placeholder";
@@ -336,21 +285,18 @@ function autoFitRows() {
     }
   }
 
-  // 2) 남으면 한 행씩 늘려보기
   const perRow = measureRowHeight();
   if (perRow && PAGE_SIZE < 12) {
       const spare = cards.clientHeight - cards.scrollHeight;
-      // 여유 공간이 1.5행 높이 이상이면 한 행 추가
       if (spare > perRow * 1.5) {
           PAGE_SIZE++;
-          render(false); // 재귀 호출
+          render(false);
       }
   }
 
   const lastPage  = document.querySelector('.page.active');
   const lastCards = lastPage?.querySelector('.cards');
-  if (lastCards && isClippingAtRow(lastCards, 3, 4)) {
-    // 3행이 정상적으로 못 들어가면 → 오버레이 & 이동
+  if (lastCards && shouldOverflow(lastCards, 1)) {
     showFallbackAndRedirect(currentTab);
     return;
   }
@@ -377,17 +323,14 @@ function render(autoFit = true){
                                 jobs.length;
   countTotal.textContent=totalCount;
 
-  // 1차 추정 PAGE_SIZE
   const rect = viewport.getBoundingClientRect();
   PAGE_SIZE = computePageSizeByHeight(rect.height);
 
-  // ★ 이론상 최소 3행도 불가(혹은 극단적인 환경) → 바로 오버레이 & 이동
   if (PAGE_SIZE < 3) {
     showFallbackAndRedirect(currentTab);
     return;
   }
 
-  // DOM 구성
   viewport.innerHTML = "";
   dots.innerHTML = "";
   pages = [];
@@ -432,7 +375,7 @@ function render(autoFit = true){
 
         badge.textContent=item.prize||"";
         badge.className+=" "+(item.prize?prizeClass(item.prize):"");
-        if (item.isPremier) card.classList.add("elite-award"); // 전국/국제 등 강조
+        if (item.isPremier) card.classList.add("elite-award");
 
       }else if(currentTab==="jobs"){
         avatar.textContent=item.emoji||"🏢";
@@ -504,12 +447,10 @@ function render(autoFit = true){
 
   setupAutoFallbackObservers(currentTab);
 
-  // 렌더 후 레이아웃이 실제로 그려진 프레임에서 한 번 더 체크
   requestAnimationFrame(() => {
     requestAnimationFrame(() => checkAndMaybeFallback(currentTab));
   });
 
-  // 렌더 직후 다단계 자동 보정 (툴바/폰트 지연 흡수)
   if (autoFit) {
     autoFitRows();
     setTimeout(autoFitRows, 60);
@@ -542,34 +483,17 @@ function renderTicker(tabKey){
   ticker.innerHTML = once + once;
 }
 
-// /* ========== 9) 터치: 일시정지 + 스와이프(상/하) ========== */
-// let touchStartY=null;
-// viewport.addEventListener("touchstart", e=>{
-//   touchStartY=e.touches[0].clientY;
-//   stopAuto();
-//   extraInfo.textContent="일시정지(터치)";
-// }, {passive:true});
-// viewport.addEventListener("touchend", e=>{
-//   if(touchStartY==null) return;
-//   const dy=e.changedTouches[0].clientY - touchStartY;
-//   if(Math.abs(dy)>40){ dy<0 ? nextPage() : goToPage((pageIndex-1+pages.length)%pages.length); }
-//   touchStartY=null;
-//   if(!isPaused){ startAuto(); extraInfo.textContent="자동 전환 중…"; }
-// }, {passive:true});
-
 /* ========== 9) 터치: 일시정지 + 스와이프(좌/우) ========== */
-let touchStartX = null; // y 대신 x로 변경
+let touchStartX = null;
 viewport.addEventListener("touchstart", e => {
-    touchStartX = e.touches[0].clientX; // clientY 대신 clientX 사용
+    touchStartX = e.touches[0].clientX;
     stopAuto();
     extraInfo.textContent = "일시정지(터치)";
 }, { passive: true });
 viewport.addEventListener("touchend", e => {
     if (touchStartX == null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX; // dy 대신 dx 사용
-    if (Math.abs(dx) > 40) { // 임계값
-        // 오른쪽으로 스와이프 (dx > 0) -> 이전 페이지
-        // 왼쪽으로 스와이프 (dx < 0) -> 다음 페이지
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) {
         dx > 0 ? goToPage((pageIndex - 1 + pages.length) % pages.length) : nextPage();
     }
     touchStartX = null;
@@ -609,7 +533,6 @@ function setActiveTab(key){
     if(!isPaused) startAuto();
     viewport.classList.remove("fadeout");
   }, 350);
-
 }
 
 const btnTheme = document.getElementById("btnTheme");
