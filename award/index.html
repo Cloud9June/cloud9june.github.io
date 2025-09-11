@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -7,6 +8,7 @@
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div class="app" id="app">
     <!-- 헤더 -->
@@ -59,6 +61,18 @@
       <div class="controls" id="dots"></div>
     </div>
 
+    <!-- 해상도 부족 안내 오버레이 -->
+    <div id="fallbackOverlay" class="fallback hidden" aria-hidden="true">
+      <div class="fallback-box">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="msg">
+          이 기기 해상도에서는 카드가 잘 보여지지 않아<br>
+          <b>‘한 번에 보기’</b> 화면으로 이동합니다…
+        </div>
+        <div class="sub">잠시만 기다려 주세요</div>
+      </div>
+    </div>
+
     <!-- 푸터 -->
     <footer>
       <div class="ticker" id="ticker">
@@ -90,7 +104,7 @@
 
   <!-- 실제 보이는 viewport 높이 계산 -->
   <script>
-    function setVH(){
+    function setVH() {
       const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
       document.documentElement.style.setProperty('--vh', `${h}px`);
     }
@@ -103,4 +117,5 @@
   <script src="main.js" defer></script>
 
 </body>
+
 </html>
