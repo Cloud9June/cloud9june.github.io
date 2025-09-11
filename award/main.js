@@ -33,6 +33,74 @@ tutorialOverlay.addEventListener('click', (e) => {
   }
 });
 
+// 최상단 유틸 근처에 추가
+function shouldOverflow(cards, slack = 2) {
+  // slack(px) 만큼 여유를 두고 오버플로우 판단
+  return (cards.scrollHeight - cards.clientHeight) > slack;
+}
+
+// 안전한 자동 전환(2프레임 연속 오버플로우 확인)
+function checkAndMaybeFallback(tabKey) {
+  const page  = document.querySelector('.page.active');
+  const cards = page?.querySelector('.cards');
+  if (!cards) return;
+
+  // 1프레임 후 다시 측정 (레이아웃/폰트 적용 대기)
+  requestAnimationFrame(() => {
+    const first = shouldOverflow(cards, 2);
+    // 2프레임 후 한 번 더 확인
+    requestAnimationFrame(() => {
+      const second = shouldOverflow(cards, 2);
+      if (second && PAGE_SIZE <= 3) {
+        showFallbackAndRedirect(tabKey);
+      }
+    });
+  });
+}
+
+// 렌더 완료 직후 한 번 호출
+function setupAutoFallbackObservers(tabKey) {
+  // 기존 옵저버 있으면 해제
+  if (window.__fallbackObs) { window.__fallbackObs.disconnect(); window.__fallbackObs = null; }
+
+  const page  = document.querySelector('.page.active');
+  const cards = page?.querySelector('.cards');
+  if (!cards) return;
+
+  // 카드 영역 크기 변동 감시
+  const ro = new ResizeObserver(() => {
+    if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
+  });
+  ro.observe(cards);
+  window.__fallbackObs = ro;
+
+  // iOS 주소창/안드 내비바 변화 대응
+  if (window.visualViewport) {
+    const vvHandler = () => { if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey); };
+    window.visualViewport.addEventListener('resize', vvHandler);
+    window.visualViewport.addEventListener('scroll', vvHandler);
+    // 한번만 등록되도록 저장
+    if (!window.__vvBound) window.__vvBound = true;
+  }
+
+  // 회전, 페이지 표시(백/포그라운드) 시 재검사
+  const late = () => { if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey); };
+  window.addEventListener('orientationchange', late, { passive: true });
+  window.addEventListener('pageshow', late, { passive: true });
+
+  // 폰트 적용 이후에도 한 번 더 (구형 iOS는 타임아웃으로 보강)
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => setTimeout(late, 0));
+  } else {
+    setTimeout(late, 300);
+  }
+
+  // 초기 1회 확인
+  late();
+}
+
+
+
 function showFallbackAndRedirect(tabKey, delayMs = 2200) {
   if (isFallback) return;
   isFallback = true;
@@ -398,6 +466,8 @@ function render(autoFit = true){
   updatePageInfo();
   extraInfo.textContent = isPaused ? "일시정지됨" : "자동 전환 중…";
 
+  setupAutoFallbackObservers(currentTab);
+
   // 렌더 직후 다단계 자동 보정 (툴바/폰트 지연 흡수)
   if (autoFit) {
     autoFitRows();
@@ -494,9 +564,11 @@ function setActiveTab(key){
     document.getElementById("tab-admissions").classList.toggle("active", key==="admissions");
     render(true);
     renderTicker(key);
+    setupAutoFallbackObservers(key);
     if(!isPaused) startAuto();
     viewport.classList.remove("fadeout");
   }, 350);
+
 }
 
 const btnTheme = document.getElementById("btnTheme");
