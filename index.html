@@ -79,6 +79,12 @@
             header { flex-wrap: wrap; }
             .now { width:100%; align-items:flex-end; }
         }
+        /* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
+        @media (max-width:560px) {
+            .now { 
+                display: none !important; 
+            }
+        }
 
         .logo {
             width: 56px;
