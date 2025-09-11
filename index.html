@@ -579,6 +579,8 @@
                     <a class="btn"
                         href="https://docs.google.com/spreadsheets/d/1GsHg_z4wuqMyrl_7CA_Kc3CN-ox1dAK-dwKOZNGQpsc/edit?gid=1092647692#gid=1092647692"
                         target="_blank" rel="noopener">학사일정달력</a>
+                    <a class="btn"
+                        href="https://meet.google.com/gyf-jefx-dnn" target="_blank" rel="noopener">온라인교무실</a>
                 </div>
                 <div class="meta"><span class="badge">공식</span><span class="badge">공유</span></div>
             </article>
@@ -787,7 +789,11 @@
                 applyFilter();
             });
         });
-        pills[0].style.outline = '2px solid var(--accent)';
+
+        applyFilter();
+
+        // 기본 선택 표시 (배열 길이 보장용)
+        pills[0]?.style && (pills[0].style.outline = '2px solid var(--accent)');
 
         // ===== 전광판 =====
         const track = $('ledTrack');
@@ -878,6 +884,8 @@
                 localStorage.setItem(DEFAULT_KEY, engine);
                 defaultEngine = engine;
                 highlight();
+
+                input.value = "";
             }
 
             function smart() {
@@ -983,11 +991,6 @@
 
             loadMeal();
 
-            // 위젯 전체 클릭 시 /food
-            const wrap = $('todayMeal');
-            on(wrap, 'click', (e) => {
-                if (!(e.target instanceof HTMLAnchorElement)) window.open('/food', '_blank', 'noopener');
-            });
         })();
 
         // Accordion 동작
