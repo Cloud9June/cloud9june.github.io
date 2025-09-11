@@ -694,7 +694,7 @@ window.addEventListener('pageshow', (e) => {
   } catch {}
 
   if (fromOverview || hadRedirectFlag) {
-    suppressFallbackUntil = Date.now() + 8000; // 8초 억제
+    suppressFallbackUntil = Date.now() + 3000; // 8초 억제
     // ★ 억제 종료 후 자동 재검사
     fallbackRecheckTimer = setTimeout(() => {
       fallbackRecheckTimer = null;
