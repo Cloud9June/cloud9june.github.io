@@ -22,14 +22,13 @@ if (!hasSeenTutorial && isTouchDevice) {
 // 닫기 버튼 또는 오버레이 클릭 시
 closeBtn.addEventListener('click', () => {
   tutorialOverlay.style.display = 'none';
-  // 테스트용으로 true로 설정합니다.
-  localStorage.setItem('hasSeenTutorial', 'false'); 
+  localStorage.setItem('hasSeenTutorial', 'ture'); 
 });
 
 tutorialOverlay.addEventListener('click', (e) => {
   if (e.target.id === 'tutorial-overlay') {
     tutorialOverlay.style.display = 'none';
-    localStorage.setItem('hasSeenTutorial', 'false');
+    localStorage.setItem('hasSeenTutorial', 'true');
   }
 });
 
@@ -107,14 +106,14 @@ function setupAutoFallbackObservers(tabKey) {
 
   // 카드 영역 크기 변동 감시
   const ro = new ResizeObserver(() => {
-    if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey);
+    checkAndMaybeFallback(tabKey);
   });
   ro.observe(cards);
   window.__fallbackObs = ro;
 
   // iOS 주소창/안드 내비바 변화 대응
   if (window.visualViewport) {
-    const vvHandler = () => { if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey); };
+    const vvHandler = () => { checkAndMaybeFallback(tabKey); };
     window.visualViewport.addEventListener('resize', vvHandler);
     window.visualViewport.addEventListener('scroll', vvHandler);
     // 한번만 등록되도록 저장
@@ -122,7 +121,7 @@ function setupAutoFallbackObservers(tabKey) {
   }
 
   // 회전, 페이지 표시(백/포그라운드) 시 재검사
-  const late = () => { if (PAGE_SIZE <= 3) checkAndMaybeFallback(tabKey); };
+  const late = () => { checkAndMaybeFallback(tabKey); };
   window.addEventListener('orientationchange', late, { passive: true });
   window.addEventListener('pageshow', late, { passive: true });
 
@@ -512,6 +511,13 @@ function render(autoFit = true){
     setTimeout(autoFitRows, 60);
     setTimeout(autoFitRows, 300);
   }
+
+  // 렌더 후 레이아웃이 실제로 그려진 프레임에서 한 번 더 체크
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      checkAndMaybeFallback(currentTab);
+    });
+  });
 }
 
 /* ========== 7) 페이지/자동전환 ========== */
