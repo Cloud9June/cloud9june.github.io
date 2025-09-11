@@ -844,6 +844,8 @@
                 localStorage.setItem(DEFAULT_KEY, engine);
                 defaultEngine = engine;
                 highlightDefault();
+
+                input.value = "";
             }
 
             // 접두어: g/G/ㄱ → Google, n/N/ㄴ → Naver
@@ -908,3 +910,4 @@
 </body>
 
 </html>
+
