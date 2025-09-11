@@ -68,12 +68,12 @@ function checkAndMaybeFallback(tabKey) {
 }
 
 // N번째(기본 3번째) "실카드"가 컨테이너 하단을 넘는지 감지
-function isClippingAtRow(cards, rowIndex = 3, slackPx = 40) {
+function isClippingAtRow(cards, rowIndex = 3) {
   const realCards = cards.querySelectorAll('.card:not(.placeholder)');
   if (realCards.length < rowIndex) return false;
 
   const target = realCards[rowIndex - 1];
-  const tRect   = target.getBoundingClientRect();
+  const tRect = target.getBoundingClientRect();
 
   const cardsRect = cards.getBoundingClientRect();
   const viewportHeight = window.visualViewport
@@ -86,10 +86,11 @@ function isClippingAtRow(cards, rowIndex = 3, slackPx = 40) {
   console.log("check row", rowIndex,
               "cardBottom:", tRect.bottom,
               "safeBottom:", safeBottom,
-              "overlap:", overlap);
+              "overlap:", overlap,
+              "PAGE_SIZE:", PAGE_SIZE);
 
-  // slackPx = 40px → 세 번째 카드가 40px 이상 잘릴 때만 true
-  return (PAGE_SIZE <= 3) && (overlap > slackPx);
+  // ★ 핵심: 카드가 3개일 때 && 3번째 카드가 1px이라도 잘리면 true
+  return (PAGE_SIZE === 3) && (overlap > 0);
 }
 
 
