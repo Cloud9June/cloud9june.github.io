@@ -13,8 +13,6 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 
 let isFallback = false;
 let fallbackTimer = null;
-let suppressFallbackUntil = 0; // 이 시각 전까지 폴백 금지
-let fallbackRecheckTimer = null;
 
 // 사용자가 튜토리얼을 본 적이 없다면 오버레이 표시
 if (!hasSeenTutorial && isTouchDevice) {
@@ -58,22 +56,6 @@ function shouldOverflow(cards, slack = 2) {
 
 // 안전한 자동 전환(2프레임 연속 오버플로우 확인)
 function checkAndMaybeFallback(tabKey) {
-  // ★ 억제 중이면 한 번만 재검사 예약
-  if (Date.now() < suppressFallbackUntil) {
-    const remain = suppressFallbackUntil - Date.now();
-    if (!fallbackRecheckTimer) {
-      fallbackRecheckTimer = setTimeout(() => {
-        fallbackRecheckTimer = null;
-        // 폰트/툴바 안정화 후 2프레임 연속으로 다시 확인
-        requestAnimationFrame(() => {
-          isClippingAtRow(document.querySelector('.page.active')?.querySelector('.cards'), 3, 4);
-          requestAnimationFrame(() => checkAndMaybeFallback(tabKey));
-        });
-      }, Math.max(0, remain + 100)); // 살짝 여유
-    }
-    return;
-  }
-
   const page  = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
   if (!cards) return;
@@ -164,11 +146,6 @@ function showFallbackAndRedirect(tabKey, delayMs = 2200) {
     ov.classList.remove('hidden');
     ov.setAttribute('aria-hidden', 'false');
   }
-
-  // ★ 돌아왔는지 판단용 힌트 남김
-  try {
-    sessionStorage.setItem('sio_fallback_redirect', JSON.stringify({ tab: tabKey, ts: Date.now() }));
-  } catch {}
 
   // 지연 후 '한 번에 보기'로 이동
   fallbackTimer = setTimeout(() => {
@@ -331,19 +308,6 @@ function measureRowHeight(){
 
 /* 실제 영역 기준으로 행수 자동 보정(넘치면 줄이고, 남으면 1행까지 늘림) */
 function autoFitRows() {
-  // ★ 억제 중이면 재검사만 예약하고 빠짐
-  if (Date.now() < suppressFallbackUntil) {
-    const remain = suppressFallbackUntil - Date.now();
-    if (!fallbackRecheckTimer) {
-      fallbackRecheckTimer = setTimeout(() => {
-        fallbackRecheckTimer = null;
-        autoFitRows();
-        checkAndMaybeFallback(currentTab);
-      }, Math.max(0, remain + 100));
-    }
-    return;
-  }
-
   const page = document.querySelector('.page.active');
   const cards = page?.querySelector('.cards');
   if (!cards) return;
@@ -671,40 +635,4 @@ startAuto();
 /* ========== 13) 한 번에 보기 (동일 탭) ========== */
 document.getElementById('openOverview').addEventListener('click', () => {
   location.href = `overview.html?tab=${encodeURIComponent(currentTab)}`;
-});
-
-// “뒤로 오면” 폴백 일시 정지 + 오버레이/타이머 정리
-window.addEventListener('pageshow', (e) => {
-  // 오버레이/타이머 정리 (기존 그대로)
-  const ov = document.getElementById('fallbackOverlay');
-  if (ov) { ov.classList.add('hidden'); ov.setAttribute('aria-hidden', 'true'); }
-  isFallback = false;
-  if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
-
-  // 이전 예약도 정리
-  if (fallbackRecheckTimer) { clearTimeout(fallbackRecheckTimer); fallbackRecheckTimer = null; }
-
-  const fromOverview = (document.referrer || '').includes('overview.html');
-  let hadRedirectFlag = false;
-  try {
-    if (sessionStorage.getItem('sio_fallback_redirect')) {
-      hadRedirectFlag = true;
-      sessionStorage.removeItem('sio_fallback_redirect');
-    }
-  } catch {}
-
-  if (fromOverview || hadRedirectFlag) {
-    suppressFallbackUntil = Date.now() + 3000; // 8초 억제
-    // ★ 억제 종료 후 자동 재검사
-    fallbackRecheckTimer = setTimeout(() => {
-      fallbackRecheckTimer = null;
-      // 레이아웃 안정 후 다시 판단
-      document.fonts?.ready?.then?.(() => {
-        setTimeout(() => {
-          autoFitRows();             // 행수 보정 1차
-          checkAndMaybeFallback(currentTab); // 클리핑 재검사
-        }, 0);
-      }) || checkAndMaybeFallback(currentTab);
-    }, 8100);
-  }
 });
