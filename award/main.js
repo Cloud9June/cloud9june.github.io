@@ -22,7 +22,7 @@ if (!hasSeenTutorial && isTouchDevice) {
 // 닫기 버튼 또는 오버레이 클릭 시
 closeBtn.addEventListener('click', () => {
   tutorialOverlay.style.display = 'none';
-  localStorage.setItem('hasSeenTutorial', 'ture'); 
+  localStorage.setItem('hasSeenTutorial', 'true'); 
 });
 
 tutorialOverlay.addEventListener('click', (e) => {
@@ -505,19 +505,17 @@ function render(autoFit = true){
 
   setupAutoFallbackObservers(currentTab);
 
+  // 렌더 후 레이아웃이 실제로 그려진 프레임에서 한 번 더 체크
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => checkAndMaybeFallback(currentTab));
+  });
+
   // 렌더 직후 다단계 자동 보정 (툴바/폰트 지연 흡수)
   if (autoFit) {
     autoFitRows();
     setTimeout(autoFitRows, 60);
     setTimeout(autoFitRows, 300);
   }
-
-  // 렌더 후 레이아웃이 실제로 그려진 프레임에서 한 번 더 체크
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      checkAndMaybeFallback(currentTab);
-    });
-  });
 }
 
 /* ========== 7) 페이지/자동전환 ========== */
