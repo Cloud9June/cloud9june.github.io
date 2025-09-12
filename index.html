@@ -966,6 +966,18 @@
 
                 input.value = "";
             }
+            // 검색창 전체 클릭 → input 포커스
+            const qsWrap = document.querySelector('.quick-search');
+            const qsInput = document.getElementById('qsInput');
+
+            if (qsWrap && qsInput) {
+            qsWrap.addEventListener('click', (e) => {
+                // 버튼 누른 건 무시
+                if (e.target.tagName.toLowerCase() !== 'button') {
+                qsInput.focus();
+                }
+            });
+            }
 
             function smart() {
                 if (!input) return;
