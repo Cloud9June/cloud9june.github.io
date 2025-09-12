@@ -989,10 +989,10 @@
                     input.focus();
                     return;
                 }
-                const m = val.match(/^([gnGNㄱㄴ])\s+(.*)$/);
+                const m = val.match(/^([gnGNㄱㄴㅎㅜ])\s+(.*)$/);
                 if (m) {
                     const k = m[1].toLowerCase();
-                    const eng = (k === 'g' || k === 'ㄱ') ? 'google' : (k === 'n' || k === 'ㄴ') ? 'naver' :
+                    const eng = (k === 'g' || k === 'ㄱ' || k === 'ㅎ') ? 'google' : (k === 'n' || k === 'ㄴ' || k === 'ㅜ') ? 'naver' :
                         defaultEngine;
                     openSearch(eng, m[2]);
                 } else openSearch(defaultEngine, val);
@@ -1153,6 +1153,7 @@
 </body>
 
 </html>
+
 
 
 
