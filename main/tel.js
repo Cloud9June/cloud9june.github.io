@@ -27,6 +27,46 @@ data.forEach(person => {
     }
 });
 
+// ===== 검색창 한글 입력 전용 =====
+const searchBox = document.getElementById('searchBox');
+const resultBody = document.getElementById('resultBody');
+const resultTable = document.getElementById('resultTable');
+
+// 안내 메시지를 표시할 전용 영역 추가
+let msgBox = document.createElement('div');
+msgBox.id = "noticeMsg";
+msgBox.style.color = "#ff6b6b";
+msgBox.style.textAlign = "center";
+msgBox.style.marginTop = "10px";
+msgBox.style.fontSize = "14px";
+msgBox.style.display = "none";
+resultTable.insertAdjacentElement("afterend", msgBox);
+
+let msgTimer = null;
+
+if (searchBox) {
+  searchBox.addEventListener('input', (e) => {
+    const before = e.target.value;
+    e.target.value = before.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ\s]/g, '');
+
+    // 영어/숫자 등이 입력되었다가 지워진 경우
+    if (before !== e.target.value) {
+      resultTable.style.display = "none"; // 테이블 숨김
+      resultBody.innerHTML = ""; // 기존 결과 제거
+
+      msgBox.textContent = "⚠️ 교직원 내선 검색은 한글로만 입력 가능합니다.";
+      msgBox.style.display = "block";
+      msgBox.style.textAlign = "left";
+
+      // 3초 후 메시지 자동 숨김
+      if (msgTimer) clearTimeout(msgTimer);
+      msgTimer = setTimeout(() => {
+        msgBox.style.display = "none";
+      }, 3000);
+    }
+  });
+}
+
 function searchStaff() {
     let input = document.getElementById('searchBox').value.trim();
     let resultBody = document.getElementById('resultBody');
