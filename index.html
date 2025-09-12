@@ -548,6 +548,49 @@
                 font-size: 12px;
             }
         }
+
+        /* 교직원 내선번호 검색 */
+        .searchT {
+            background: var(--panel);
+            border: 1px solid #223041;
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        /* 카드 크기를 가로 전체 사용 */
+        .card[data-tags*="교직원"] {
+            width: 100% !important;       /* 부모 grid에서 차지하는 폭 강제 */
+            max-width: none !important;   /* 기존 제한 해제 */
+        }
+
+        /* 테이블을 카드 내부 폭에 맞추기 */
+        #resultTable {
+            width: 100%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+
+        /* 테이블 셀 스타일 정리 */
+        #resultTable th, #resultTable td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: center;
+            word-break: keep-all; /* 텍스트 줄바꿈 제어 */
+        }
+
+        /* 헤더 스타일 */
+        #resultTable th {
+            background-color: var(--accent);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* hover 효과 */
+        #resultTable tbody tr:hover {
+            background-color: #2a2a2a;
+        }
     </style>
 </head>
 
@@ -569,7 +612,7 @@
 
         <!-- ===== 전광판 토글 ===== -->
         <div class="ticker-wrap">
-            <button class="ticker-toggle" id="tickerToggle" type="button">학교 알림 전광판</button>
+            <button class="ticker-toggle" id="tickerToggle" type="button">학교 알림 전광판 열기</button>
             <div class="led-ticker" id="ledTicker" role="region" aria-label="최근 성과 전광판" aria-hidden="true">
                 <div class="led-ticker-track" id="ledTrack"></div>
             </div>
@@ -825,6 +868,31 @@
                 </div>
                 <div class="meta"><span class="badge">도서관</span></div>
             </article>
+
+            <!-- 교직원 내선번호 검색 -->
+            <article class="card" data-tags="검색 교직원 내선번호" data-cat="service">
+                <div class="icon">📞</div>
+                <h3>교직원 내선번호 검색</h3>
+
+                <input type="text" id="searchBox" class="searchT" placeholder="이름/부서 입력" onkeyup="searchStaff()">
+                <button id="resetButton" class="qs-btn" onclick="resetSearch()">초기화</button>
+
+                <table id="resultTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>부서</th>
+                            <th>이름</th>
+                            <th>내선번호</th>
+                            <!-- <th>위치</th> -->
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody"></tbody>
+                </table>
+            </article>
+
+            <!-- 데이터 먼저 불러오고, 검색 로직 실행 -->
+            <script src="tel-data.js"></script>
+            <script src="tel.js"></script>
 
         </div>
 
@@ -1152,12 +1220,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
