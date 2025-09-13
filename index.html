@@ -27,7 +27,7 @@
         html,
         body {
             margin: 0;
-            height: 100%;
+            min-height: 100%;
         }
 
         body {
@@ -892,8 +892,8 @@
             </article>
 
             <!-- 데이터 먼저 불러오고, 검색 로직 실행 -->
-            <script src="./main/data.js"></script>
-            <script src="./main/tel.js"></script>
+            <script src="tel-data.js"></script>
+            <script src="tel.js"></script>
 
         </div>
 
@@ -1127,10 +1127,16 @@
             // 1) 캐시 먼저 확인
             const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
             if (cache.date === today && cache.text) {
-                textEl.textContent = cache.text; // 즉시 표시
-                return;
+                textEl.textContent = cache.text; // 캐시값 표시
             } else {
                 textEl.textContent = "🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중...";
+                const text = await fetchMeal();
+                if (text) {
+                    textEl.textContent = text;
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
+                } else {
+                 textEl.textContent = "🥳 급식 정보 없음";
+                }
             }
 
             // 2) 백그라운드에서 새로 요청
@@ -1221,4 +1227,3 @@
 </body>
 
 </html>
-
