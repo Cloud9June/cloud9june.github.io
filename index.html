@@ -1127,25 +1127,18 @@
             // 1) 캐시 먼저 확인
             const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
             if (cache.date === today && cache.text) {
-                textEl.textContent = cache.text; // 캐시값 표시
+                textEl.textContent = cache.text; // 캐시값 즉시 표시
             } else {
                 textEl.textContent = "🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중...";
-                const text = await fetchMeal();
-                if (text) {
-                    textEl.textContent = text;
-                    localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
-                } else {
-                 textEl.textContent = "🥳 급식 정보 없음";
-                }
             }
 
             // 2) 백그라운드에서 새로 요청
             const text = await fetchMeal();
             if (text) {
-            textEl.textContent = text;
-            localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
-            } else if (!cache.text) {
-            textEl.textContent = "🥳 급식이 없다는 건… 곧 자유라는 뜻!";
+                textEl.textContent = text;
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
+            } else {
+                textEl.textContent = "🥳 급식이 없다는 건… 곧 자유라는 뜻!";
             }
             }
 
