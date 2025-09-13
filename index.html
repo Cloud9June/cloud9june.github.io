@@ -38,6 +38,8 @@
                 var(--bg);
             color: var(--text);
             line-height: 1.6;
+            padding-top: constant(safe-area-inset-top); /* 구형 iOS용 */
+            padding-top: env(safe-area-inset-top);      /* 최신 iOS용 */
         }
 
         .wrap {
@@ -1220,3 +1222,4 @@
 </body>
 
 </html>
+
