@@ -20,7 +20,6 @@ const data = [
     { title: "교무기획부", name: "김명진", ext: "326" },
     { title: "교무기획부", name: "정창곤", ext: "305" },
     { title: "교무기획부", name: "양나영", ext: "304" },
-    { title: "교무기획부", name: "박성환", ext: "307" },
     { title: "도제교육부", name: "박원준", ext: "344" },
     { title: "도제교육부", name: "서종필", ext: "347" },
     { title: "학생생활안전부", name: "김백길", ext: "359" },
