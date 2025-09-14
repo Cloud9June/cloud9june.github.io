@@ -364,8 +364,10 @@
       await generateCalendar(month);
 
       // 2) 내 기존 신청 불러와서 체크
-      const docId = `${currentUser.uid}_${currentYear}_${selectedMonth}`;
-      const snap = await getDoc(doc(db, "mealRequests", docId));
+      const ym = `${currentYear}-${String(selectedMonth).padStart(2, "0")}`;
+      const safeName = (currentUser.displayName || currentUser.email.split("@")[0]).replace(/\s+/g, "");
+      const docId = `${safeName}_${currentUser.uid}`;
+      const snap = await getDoc(doc(db, "mealRequests", ym, "users", docId));
 
       if (snap.exists()) {
         const d = snap.data() || {};
@@ -409,13 +411,16 @@
 
     window.saveData = async () => {
       const checkboxes = Array.from(document.querySelectorAll("#calendar input[type='checkbox']"));
-      const days = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value, 10)).sort((a,b)=>a-b);
+      const days = checkboxes
+        .filter(cb => cb.checked)
+        .map(cb => parseInt(cb.value, 10))
+        .sort((a, b) => a - b);
 
       // 수정 모드일 때 변경 없으면 안내
       const same =
         isEditMode &&
         days.length === existingDays.length &&
-        days.every((v, i) => v === existingDays.sort((a,b)=>a-b)[i]);
+        days.every((v, i) => v === existingDays.sort((a, b) => a - b)[i]);
 
       if (same) {
         alert("변경된 내용이 없습니다.");
@@ -424,28 +429,33 @@
 
       // 0개 선택(미신청) 확인
       if (days.length === 0) {
-        const ok = confirm(isEditMode
-          ? "기존 신청 내역을 모두 취소합니다. 진행할까요?"
-          : "급식을 신청하지 않습니다. 맞습니까?");
+        const ok = confirm(
+          isEditMode
+            ? "기존 신청 내역을 모두 취소합니다. 진행할까요?"
+            : "급식을 신청하지 않습니다. 맞습니까?"
+        );
         if (!ok) return;
       }
 
-      const docId = `${currentUser.uid}_${currentYear}_${selectedMonth}`;
+      // 🔹 4단 구조: year-month → users → uid
+      const ym = `${currentYear}-${String(selectedMonth).padStart(2, "0")}`;
+      const safeName = (currentUser.displayName || currentUser.email.split("@")[0]).replace(/\s+/g, "");
+      const docId = `${safeName}_${currentUser.uid}`;
+      const ref = doc(db, "mealRequests", ym, "users", docId);
+
       const data = {
         uid: currentUser.uid,
         name: currentUser.displayName || currentUser.email.split("@")[0],
         email: currentUser.email,
-        year: currentYear,
-        month: selectedMonth,
         days,
         timestamp: new Date()
       };
 
-      await setDoc(doc(db, "mealRequests", docId), data);
+      await setDoc(ref, data, { merge: true });
 
       showToast(isEditMode ? "변경사항이 저장되었습니다 ✅" : "신청이 완료되었습니다 🎉");
-      
-      // 최신 상태로 다시 그려주고 배너 유지
+
+      // 최신 상태 다시 반영
       await selectMonth(selectedMonth, document.querySelector("#monthButtons .active"));
     };
   </script>
