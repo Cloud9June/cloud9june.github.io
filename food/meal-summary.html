@@ -1,28 +1,79 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <title>급식 신청 인원 확인</title>
   <style>
-    body { width: 100%; max-width: 900px; margin: 50px auto; font-family: sans-serif; }
-    h2 { margin-top: 50px; }
-    .filters { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-    .filters label { font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background-color: #1976d2; color: white; }
-    td:nth-child(3) { text-align: left; }
-    td label { display: inline-block; margin: 2px 15px; white-space: nowrap; width: 40px; }
-    .summary { font-weight: bold; margin-top: 10px; text-align: right; }
+    body {
+      width: 100%;
+      max-width: 900px;
+      margin: 50px auto;
+      font-family: sans-serif;
+    }
+
+    h2 {
+      margin-top: 50px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filters label {
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #1976d2;
+      color: white;
+    }
+
+    td:nth-child(3) {
+      text-align: left;
+    }
+
+    td label {
+      display: inline-block;
+      margin: 2px 15px;
+      white-space: nowrap;
+      width: 40px;
+    }
+
+    .summary {
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: right;
+    }
   </style>
 </head>
+
 <body>
   <h2>1. 급식 신청 인원 확인</h2>
   <p>연도, 월, 날짜, 이름으로 급식 신청 정보를 필터링할 수 있습니다.</p>
   <div class="filters">
     <label>연도: <select id="yearSelect"></select></label>
     <label>월: <select id="monthSelect"></select></label>
-    <label>날짜: <select id="daySelect"><option value="">전체</option></select></label>
+    <label>날짜: <select id="daySelect">
+        <option value="">전체</option>
+      </select></label>
     <label>이름 검색: <input type="text" id="nameSearch" placeholder="이름 입력"></label>
     <button id="searchBtn">검색</button>
   </div>
@@ -35,7 +86,11 @@
       <col style="width: 50%;">
     </colgroup>
     <thead>
-      <tr><th>이름</th><th>이메일</th><th>신청 날짜</th></tr>
+      <tr>
+        <th>이름</th>
+        <th>이메일</th>
+        <th>신청 날짜</th>
+      </tr>
     </thead>
     <tbody id="dataTable"></tbody>
   </table>
@@ -49,7 +104,10 @@
       <col style="width: 70%;">
     </colgroup>
     <thead>
-      <tr><th>이름</th><th>이메일</th></tr>
+      <tr>
+        <th>이름</th>
+        <th>이메일</th>
+      </tr>
     </thead>
     <tbody id="nonAppliedTable"></tbody>
   </table>
@@ -57,12 +115,12 @@
   <h2>3. 급식 추가 신청</h2>
   <p>교사 이름과 날짜를 선택하여 급식 신청을 추가할 수 있습니다.</p>
   <div class="filters">
-    <label>교사 선택: 
+    <label>교사 선택:
       <select id="teacherSelect">
         <option value="">선택하세요</option>
       </select>
     </label>
-    <label>날짜 선택: 
+    <label>날짜 선택:
       <input type="date" id="addDate">
     </label>
     <button id="addBtn">신청</button>
@@ -119,129 +177,161 @@
       }
     }
 
-    async function loadData() {
-      const year = parseInt(yearSelect.value);
-      const month = parseInt(monthSelect.value);
-      const day = parseInt(daySelect.value);
-      const name = nameSearch.value.trim();
+// ---------- 데이터 불러오기 ----------
+async function loadData() {
+  const year = parseInt(yearSelect.value);
+  const month = parseInt(monthSelect.value);
+  const day = parseInt(daySelect.value);
+  const name = nameSearch.value.trim();
 
-      const q = query(collection(db, "mealRequests"),
-        where("year", "==", year),
-        where("month", "==", month)
-      );
-      const snapshot = await getDocs(q);
+  const ym = `${year}-${String(month).padStart(2, "0")}`; // "2025-08"
+  const snapshot = await getDocs(collection(db, "mealRequests", ym, "users"));
 
-      let appliedCount = 0;
-      let nonAppliedCount = 0;
-      dataTable.innerHTML = "";
-      nonAppliedTable.innerHTML = "";
+  let appliedCount = 0;
+  let nonAppliedCount = 0;
+  dataTable.innerHTML = "";
+  nonAppliedTable.innerHTML = "";
 
-      for (const docSnap of snapshot.docs) {
-        const data = docSnap.data();
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
 
-        // 미신청자 표
-        if (!Array.isArray(data.days) || data.days.length === 0) {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${data.name}</td><td>${data.email}</td>`;
-          nonAppliedTable.appendChild(row);
-          nonAppliedCount++;
-          continue;
-        }
+    // 미신청자
+    if (!Array.isArray(data.days) || data.days.length === 0) {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${data.name}</td><td>${data.email}</td>`;
+      nonAppliedTable.appendChild(row);
+      nonAppliedCount++;
+      continue;
+    }
 
-        // 필터
-        if (name && !String(data.name || "").includes(name)) continue;
-        if (day && !data.days.includes(day)) continue;
+    // 필터
+    if (name && !String(data.name || "").includes(name)) continue;
+    if (day && !data.days.includes(day)) continue;
 
-        // 신청자 표
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${data.name}</td><td>${data.email}</td>`;
+    // 신청자
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${data.name}</td><td>${data.email}</td>`;
 
-        const dateCell = document.createElement("td");
-        [...data.days].sort((a, b) => a - b).forEach(d => {
-          const label = document.createElement("label");
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
+    const dateCell = document.createElement("td");
+    [...data.days].sort((a, b) => a - b).forEach(d => {
+      const label = document.createElement("label");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = true;
+      checkbox.dataset.uid = docSnap.id;
+      checkbox.dataset.day = d;
+
+      checkbox.onchange = async () => {
+        if (!checkbox.checked && confirm(`${month}월 ${d}일 급식을 취소하시겠습니까?`)) {
+          const ref = doc(db, "mealRequests", ym, "users", docSnap.id);
+          const fresh = await getDoc(ref);
+          if (fresh.exists()) {
+            const updatedDays = (fresh.data().days || []).filter(x => x !== d);
+            await setDoc(ref, { ...fresh.data(), days: updatedDays }, { merge: true });
+            alert(`${month}월 ${d}일 신청이 취소되었습니다.`);
+            loadData();
+          }
+        } else {
           checkbox.checked = true;
-          checkbox.dataset.id = docSnap.id;
-          checkbox.dataset.day = d;
-
-          checkbox.onchange = async () => {
-            // 관리자가 취소 (rules에서 admin 쓰기 허용 필요! 아래 B 참고)
-            if (!checkbox.checked && confirm(`${month}월 ${d}일 급식을 정말 취소하시겠습니까?`)) {
-              const ref = doc(db, "mealRequests", docSnap.id);
-              const fresh = await getDoc(ref);
-              if (fresh.exists()) {
-                const updatedDays = (fresh.data().days || []).filter(x => x !== d);
-                await setDoc(ref, { ...fresh.data(), days: updatedDays });
-                alert(`${month}월 ${d}일 신청이 취소되었습니다.`);
-                loadData();
-              }
-            } else {
-              checkbox.checked = true;
-            }
-          };
-
-          label.appendChild(checkbox);
-          label.append(` ${d}일`);
-          dateCell.appendChild(label);
-        });
-
-        row.appendChild(dateCell);
-        dataTable.appendChild(row);
-        appliedCount++;
-      }
-
-      summaryText.textContent = `신청 인원: ${appliedCount}명`;
-      nonSummaryText.textContent = `미신청 인원: ${nonAppliedCount}명`;
-    }
-
-    async function loadTeachers() {
-      teacherSelect.innerHTML = `<option value="">선택하세요</option>`;
-      const snapshot = await getDocs(collection(db, "mealRequests"));
-      const seen = new Set();
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const key = (data.email || "").toLowerCase();
-        if (key && !seen.has(key)) {
-          teacherSelect.appendChild(new Option(`${data.name} (${data.email})`, data.email));
-          seen.add(key);
         }
-      });
+      };
+
+      label.appendChild(checkbox);
+      label.append(` ${d}일`);
+      dateCell.appendChild(label);
+    });
+
+    row.appendChild(dateCell);
+    dataTable.appendChild(row);
+    appliedCount++;
+  }
+
+  summaryText.textContent = `신청 인원: ${appliedCount}명`;
+  nonSummaryText.textContent = `미신청 인원: ${nonAppliedCount}명`;
+}
+
+// ---------- 교사 목록 불러오기 ----------
+async function loadTeachers(year, month) {
+  teacherSelect.innerHTML = `<option value="">선택하세요</option>`;
+  const ym = `${year}-${String(month).padStart(2, "0")}`;
+  console.log("교사 목록 불러오기:", ym);
+
+  const snapshot = await getDocs(collection(db, "mealRequests", ym, "users"));
+
+  if (snapshot.empty) {
+    console.log("해당 월에 급식 신청한 교사가 없음");
+    return;
+  }
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    console.log("교사 데이터:", docSnap.id, data);
+
+    if (!data.name || !data.email) {
+      console.warn("⚠️ name/email 누락:", docSnap.id, data);
     }
 
-    async function addMealForTeacher() {
-      const email = teacherSelect.value;
-      const dateStr = addDate.value;
-      if (!email || !dateStr) { alert("교사와 날짜를 선택하세요."); return; }
+    teacherSelect.appendChild(
+      new Option(`${data.name} (${data.email})`, docSnap.id)
+    );
+  });
+}
 
-      const date = new Date(dateStr);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
 
-      const q = query(collection(db, "mealRequests"),
-        where("email", "==", email),
-        where("year", "==", year),
-        where("month", "==", month)
-      );
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) { alert("해당 교사의 급식 신청 데이터가 없습니다."); return; }
+// ---------- 급식 추가 신청 ----------
+async function addMealForTeacher() {
+  const docId = teacherSelect.value; // "이름_uid"
+  const dateStr = addDate.value;
+  if (!docId || !dateStr) {
+    alert("교사와 날짜를 선택하세요.");
+    return;
+  }
 
-      const docSnap = snapshot.docs[0];
-      const ref = doc(db, "mealRequests", docSnap.id);
-      const data = docSnap.data();
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const ym = `${year}-${String(month).padStart(2, "0")}`;
 
-      if (Array.isArray(data.days) && data.days.includes(day)) {
-        alert(`${month}월 ${day}일은 이미 신청되어 있습니다.`);
-        return;
-      }
-      if (confirm(`${data.name} 선생님 ${month}월 ${day}일 급식을 추가 신청할까요?`)) {
-        const newDays = Array.from(new Set([...data.days, addedDay])).sort((a,b)=>a-b);
-        await setDoc(ref, { ...data, days: newDays });
-        alert("신청이 완료되었습니다.");
-        loadData();
-      }
+  // 🔹 주말 체크
+  const dayOfWeek = date.getDay(); // 0=일, 6=토
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    alert(`${month}월 ${day}일은 주말이므로 신청할 수 없습니다.`);
+    return;
+  }
+
+  // 🔹 blockedDays 확인
+  const blockedRef = doc(db, "blockedDays", ym);
+  const blockedSnap = await getDoc(blockedRef);
+  if (blockedSnap.exists()) {
+    const blockedDays = blockedSnap.data().days || [];
+    if (blockedDays.includes(day)) {
+      alert(`${month}월 ${day}일은 급식 미실시일로 추가 신청이 불가능합니다.`);
+      return;
     }
+  }
+
+  // 🔹 교사 데이터 불러오기
+  const ref = doc(db, "mealRequests", ym, "users", docId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    alert("해당 교사의 급식 신청 데이터가 없습니다.");
+    return;
+  }
+
+  const data = snap.data();
+  if (Array.isArray(data.days) && data.days.includes(day)) {
+    alert(`${month}월 ${day}일은 이미 신청되어 있습니다.`);
+    return;
+  }
+
+  if (confirm(`${data.name} 선생님 ${month}월 ${day}일 급식을 추가 신청할까요?`)) {
+    const newDays = Array.from(new Set([...(data.days || []), day])).sort((a, b) => a - b);
+    await setDoc(ref, { ...data, days: newDays }, { merge: true });
+    alert("신청이 완료되었습니다.");
+    loadData(); // 목록 새로고침
+  }
+}
 
     // ---------- 게이트: 로그인 → 도메인(@sungil-i.kr) → roles(admin) ----------
     onAuthStateChanged(auth, async (user) => {
@@ -264,12 +354,13 @@
       // ✅ 여기서부터 데이터 로딩/쓰기 허용
       populateOptions();
       await loadData();
-      await loadTeachers();
+      await loadTeachers(parseInt(yearSelect.value), parseInt(monthSelect.value));
 
-      searchBtn.onclick = loadData;
+      searchBtn.onclick = async () => { await loadData(); await loadTeachers(parseInt(yearSelect.value), parseInt(monthSelect.value));};
       addBtn.onclick = addMealForTeacher;
     });
   </script>
 
 </body>
+
 </html>
