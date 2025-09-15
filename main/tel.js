@@ -72,6 +72,7 @@ function searchStaff() {
     let resultBody = document.getElementById('resultBody');
     let resultTable = document.getElementById('resultTable');
     resultBody.innerHTML = "";
+    const frontNum = "0317201";
 
     if (input === "") {
         resultTable.style.display = "none";
@@ -104,7 +105,8 @@ function searchStaff() {
     if (foundList.length > 0) {
         resultTable.style.display = "table";
         foundList.forEach(person => {
-            let row = `<tr><td>${person.title}</td><td>${person.name}</td><td>${person.ext}</td></tr>`;
+            let fullNum = frontNum + person.ext;
+            let row = `<tr><td>${person.title}</td><td>${person.name}</td><td><a href="tel:${fullNum}">${person.ext}</a></td>
             resultBody.innerHTML += row;
         });
     } else {
