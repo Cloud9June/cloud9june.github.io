@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>교육정보부 • 링크 허브</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
-    <link rel="icon" href="main/eduinfo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="./eduinfo.png" type="image/png">
     <style>
         :root {
             --bg: #0b0d10;
@@ -22,11 +23,10 @@
         }
 
         * {
-            box-sizing: border-box
+            box-sizing: border-box;
         }
-
         html { scrollbar-gutter: stable; }
-        
+
         html,
         body {
             margin: 0;
@@ -46,7 +46,7 @@
         .wrap {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 28px 18px 80px;
+            padding: 28px 18px 80px
         }
 
         header {
@@ -58,10 +58,31 @@
 
         .now {
             display:flex;
-            flex-direction:column;
-            align-items:flex-end;
-            gap:4px;
-            min-width: 170px;
+            align-items:center;
+            gap:10px;
+            justify-content: flex-end;
+        }
+        .now-weather {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        #todayWeather {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            color: #e8edf3;
+        }
+        #tomorrowWeather {
+            font-size:12px;
+            color:var(--muted);
+        }
+        .now-datetime {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
         }
         .now-date {
             color: var(--muted);
@@ -78,7 +99,7 @@
         }
 
         /* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
-        @media (max-width:560px) {
+        @media (max-width:680px) {
             .now { 
                 display: none !important; 
             }
@@ -609,8 +630,16 @@
 
             <div class="spacer"></div>
             <div class="now" id="now">
-                <div class="now-date" id="nowDate">--.--.-- (--)</div>
-                <div class="now-time" id="nowTime">--:--:--</div>
+                <div class="now-weather">
+                    <div id="todayWeather">
+                        <i class="fa-solid fa-temperature-half"></i> 21.9℃ · 82%
+                    </div>
+                    <div id="tomorrowWeather">내일 --℃ / --℃</div>
+                </div>
+                <div class="now-datetime">
+                    <div class="now-date" id="nowDate">2025.09.15 (월)</div>
+                    <div class="now-time" id="nowTime">21:56:09</div>
+                </div>
             </div>
         </header>
 
@@ -895,8 +924,8 @@
             </article>
 
             <!-- 데이터 먼저 불러오고, 검색 로직 실행 -->
-            <script src="./main/data.js"></script>
-            <script src="./main/tel.js"></script>
+            <script src="tel-data.js"></script>
+            <script src="tel.js"></script>
 
         </div>
 
@@ -938,7 +967,7 @@
                 c.style.display = (inCat && hit) ? '' : 'none';
             });
         }
-
+        
         q.addEventListener('input', applyFilter);
         pills.forEach(p => {
             p.addEventListener('click', () => {
@@ -1136,7 +1165,8 @@
             // 1) 캐시 먼저 확인
             const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
             if (cache.date === today && cache.text) {
-                textEl.textContent = cache.text; // 캐시값 즉시 표시
+                textEl.textContent = cache.text; // 즉시 표시
+                return;
             } else {
                 textEl.textContent = "🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중...";
             }
@@ -1144,10 +1174,10 @@
             // 2) 백그라운드에서 새로 요청
             const text = await fetchMeal();
             if (text) {
-                textEl.textContent = text;
-                localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
-            } else {
-                textEl.textContent = "🥳 급식이 없다는 건… 곧 자유라는 뜻!";
+            textEl.textContent = text;
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
+            } else if (!cache.text) {
+            textEl.textContent = "🥳 급식이 없다는 건… 곧 자유라는 뜻!";
             }
             }
 
@@ -1167,7 +1197,7 @@
             });
         });
 
-        // ===== 헤더 우측 실시간 시계(KST) =====
+        // ===== 실시간 시계(KST) =====
         (function () {
             const $ = (id) => document.getElementById(id);
             const elDate = $('nowDate');
@@ -1205,6 +1235,150 @@
             }, firstDelay);
         })();
 
+        // ===== 실시간 날씨(기상청API) =====
+        async function fetchWeather() {
+            const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
+            const nx = 62;  // 위치 좌표 (예: 성남)
+            const ny = 124; // 위치 좌표 (예: 성남)
+
+            // 현재 시각 (KST)
+            const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+            let yyyy = kst.getFullYear();
+            let mm = String(kst.getMonth() + 1).padStart(2, "0");
+            let dd = String(kst.getDate()).padStart(2, "0");
+            let hh = kst.getHours();
+            let mn = kst.getMinutes();
+
+            // 기상청은 매시각 + 10분 이후부터 데이터 제공 → 보정
+            if (mn < 10) hh = hh - 1;
+            if (hh < 0) { // 자정 보정
+                hh = 23; dd = String(Number(dd) - 1).padStart(2, "0");
+            }
+            const base_date = `${yyyy}${mm}${dd}`;
+            const base_time = String(hh).padStart(2, "0") + "00";
+
+            const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${SERVICE_KEY}&numOfRows=100&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const items = data.response.body.items.item;
+
+                const temp = items.find(i => i.category === "T1H")?.obsrValue; // 기온
+                const humi = items.find(i => i.category === "REH")?.obsrValue; // 습도
+                const sky  = items.find(i => i.category === "SKY")?.obsrValue; // 하늘 상태
+                const pty  = items.find(i => i.category === "PTY")?.obsrValue; // 강수 형태
+
+                document.getElementById("todayWeather").innerHTML =
+                `${getWeatherIcon(sky, pty)} ${temp}℃ · ${humi}%`;
+            } catch (e) {
+                console.error("날씨 불러오기 실패", e);
+                document.getElementById("todayWeather").innerHTML =
+                `<i class="fa-solid fa-triangle-exclamation"></i> 날씨 불러오기 실패`;
+            }
+            }
+
+            // ===== 아이콘 매핑 =====
+            function getWeatherIcon(sky, pty) {
+                if (pty == 1) return '<i class="fa-solid fa-cloud-rain"></i>';          // 비
+                if (pty == 2) return '<i class="fa-solid fa-cloud-showers-heavy"></i>'; // 비/눈
+                if (pty == 3) return '<i class="fa-solid fa-snowflake"></i>';           // 눈
+                if (pty == 4) return '<i class="fa-solid fa-cloud-sun-rain"></i>';      // 소나기
+
+                if (sky == 1) return '<i class="fa-solid fa-sun"></i>';                 // 맑음
+                if (sky == 3) return '<i class="fa-solid fa-cloud-sun"></i>';           // 구름많음
+                if (sky == 4) return '<i class="fa-solid fa-cloud"></i>';               // 흐림
+
+                return '<i class="fa-solid fa-temperature-half"></i>'; // 기본값
+            }
+
+            // ===== 시계 & 날짜 =====
+            (function () {
+                const elDate = document.getElementById("nowDate");
+                const elTime = document.getElementById("nowTime");
+
+                const DOW = ['일','월','화','수','목','금','토'];
+                const two = (n) => String(n).padStart(2, '0');
+
+                function nowKST() {
+                    return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+                }
+
+                function render() {
+                    const d = nowKST();
+                    const y = d.getFullYear();
+                    const m = two(d.getMonth() + 1);
+                    const day = two(d.getDate());
+                    const w = DOW[d.getDay()];
+                    const hh = two(d.getHours());
+                    const mm = two(d.getMinutes());
+                    const ss = two(d.getSeconds());
+
+                    elDate.textContent = `${y}.${m}.${day} (${w})`;
+                    elTime.textContent = `${hh}:${mm}:${ss}`;
+                }
+
+                render();
+                const firstDelay = 1000 - (nowKST().getMilliseconds());
+                setTimeout(() => {
+                    render();
+                    setInterval(render, 1000);
+                }, firstDelay);
+            })();
+
+            // ===== 내일 날씨(단기예보 최저/최고) =====
+            async function fetchTomorrowWeather() {
+                const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
+                const nx = 62, ny = 124; // 성남 좌표
+
+                // 오늘 날짜 (base_date, 단기예보는 02시 기준 제공)
+                const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+                const yyyy = kst.getFullYear();
+                const mm = String(kst.getMonth() + 1).padStart(2, "0");
+                const dd = String(kst.getDate()).padStart(2, "0");
+                const base_date = `${yyyy}${mm}${dd}`;
+
+                // 내일 날짜
+                const tomorrow = new Date(kst);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tyyyy = tomorrow.getFullYear();
+                const tmm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+                const tdd = String(tomorrow.getDate()).padStart(2, "0");
+                const target_date = `${tyyyy}${tmm}${tdd}`;
+
+                const urlFcst =
+                `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?` +
+                `serviceKey=${SERVICE_KEY}&numOfRows=500&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=0200&nx=${nx}&ny=${ny}`;
+
+                try {
+                    const res = await fetch(urlFcst);
+                    const data = await res.json();
+                    const items = data.response.body.items.item;
+
+                    // 내일 TMP (3시간 단위 기온) 값들을 모아 최저/최고 계산
+                    const temps = items
+                    .filter(i => i.fcstDate === target_date && i.category === "TMP")
+                    .map(i => Number(i.fcstValue));
+
+                    if (temps.length > 0) {
+                        const min = Math.min(...temps);
+                        const max = Math.max(...temps);
+                        document.getElementById("tomorrowWeather").textContent =
+                        `내일 ${min}℃ / ${max}℃`;
+                    } else {
+                        document.getElementById("tomorrowWeather").textContent = "내일 정보 없음";
+                    }
+                } catch (e) {
+                    console.error("내일 날씨 불러오기 실패", e);
+                    document.getElementById("tomorrowWeather").textContent = "내일 정보 없음";
+                }
+            }
+
+            // ===== 실행 =====
+            fetchWeather();
+            fetchTomorrowWeather();
+            setInterval(fetchWeather, 10 * 60 * 1000); // 10분마다 새로고침
+            setInterval(fetchTomorrowWeather, 60 * 60 * 1000);  // 1시간마다 새로고침
 
 
         // 필요 시 실시간 갱신 예시:
@@ -1229,13 +1403,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
