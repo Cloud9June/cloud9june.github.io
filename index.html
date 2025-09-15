@@ -1579,7 +1579,9 @@
             animation: 200,
             ghostClass: "ghost",
             chosenClass: "chosen",
-            onEnd: saveOrder
+            delay: 150,
+            delayOnTouchOnly: true,
+            onEnd: saveOrder;
         });
 
         // 도움말 모달 열기/닫기
@@ -1604,3 +1606,4 @@
 </body>
 
 </html>
+
