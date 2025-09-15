@@ -126,12 +126,13 @@
 
     // utils/refs
     const pad2 = (n) => String(n).padStart(2, "0");
+    const ymId = (y, m) => `${y}-${pad2(m)}`;
     const monthId = (y,m) => `${y}-${pad2(m)}`;
     const studentsDailyRef          = (y,m) => doc(db, "studentsDaily", monthId(y,m));
     const studentsDailyEffectiveRef = (y,m) => doc(db, "studentsDailyEffective", monthId(y,m));
     const blockedDaysRef            = (y,m) => doc(db, "blockedDays" , monthId(y,m));
     const totalsRef                 = (y,m) => doc(db, "totals"      , monthId(y,m));
-    const mealRequestsCol           = collection(db, "mealRequests");
+    const mealRequestsCol = (y, m) => collection(db, "mealRequests", `${y}-${pad2(m)}`, "users");
     const studentAbsencesRef        = (y,m) => doc(db, "studentAbsences", monthId(y,m));
 
     function toInt(value) {
@@ -168,35 +169,26 @@
 
     // 교사: 날짜별 합계
     async function countTeachersPerDay(year, month) {
-      try {
-        const qy = query(mealRequestsCol, where("year","==",year), where("month","==",month));
-        const snap = await getDocs(qy);
-        return aggregateTeacherDays(snap);
-      } catch (e) {
-        // (혹시 인덱스 문제 시 우회)
-        const qYear = query(mealRequestsCol, where("year","==",year));
-        const snap = await getDocs(qYear);
-        const filtered = { forEach: (fn)=> snap.forEach(ds => { const d=ds.data()||{}; if (d.month===month) fn(ds); }) };
-        return aggregateTeacherDays(filtered);
-      }
-      function aggregateTeacherDays(snapLike){
-        const perDay = {};
-        snapLike.forEach(ds => {
-          const raw = Array.isArray((ds.data()||{}).days) ? (ds.data().days) : [];
-          const uniqueDays = [...new Set(raw.map(Number).filter(Number.isInteger))];
-          uniqueDays.forEach(d => {
-            const key=String(d);
-            perDay[key]=(perDay[key]||0)+1;
-          });
+      const colRef = collection(db, "mealRequests", ymId(year, month), "users");
+      const snap = await getDocs(colRef);
+
+      const perDay = {};
+      snap.forEach(ds => {
+        const raw = Array.isArray((ds.data()||{}).days) ? ds.data().days : [];
+        const uniqueDays = [...new Set(raw.map(Number).filter(Number.isInteger))];
+        uniqueDays.forEach(d => {
+          const key = String(d);
+          perDay[key] = (perDay[key] || 0) + 1;
         });
-        return perDay;
-      }
+      });
+      return perDay;
     }
 
     // 교사 미신청자 명단
     async function getTeacherNoMealNames(year, month) {
-      const qy  = query(mealRequestsCol, where("year","==",year), where("month","==",month));
-      const snap = await getDocs(qy);
+      const colRef = collection(db, "mealRequests", ymId(year, month), "users");
+      const snap = await getDocs(colRef);
+
       const names = [];
       snap.forEach(ds => {
         const d = ds.data() || {};
@@ -216,24 +208,29 @@
       const lastDate  = endDate.getDate();
       const blockedSet = new Set(blocked);
 
+      // 평일 + 차단되지 않은 날짜만 schoolDays 로
       const schoolDays = [];
-      for (let d=1; d<=lastDate; d++){
+      for (let d = 1; d <= lastDate; d++) {
         const dow = (firstDayIndex + d - 1) % 7;
-        const isWeekend = (dow===0 || dow===6);
+        const isWeekend = (dow === 0 || dow === 6);
         if (!isWeekend && !blockedSet.has(d)) schoolDays.push(d);
       }
 
-      const qy  = query(mealRequestsCol, where("year","==",year), where("month","==",month));
-      const snap = await getDocs(qy);
+      const colRef = collection(db, "mealRequests", ymId(year, month), "users");
+      const snap = await getDocs(colRef);
 
       const notes = [];
       snap.forEach(ds => {
         const d = ds.data() || {};
-        const days = Array.isArray(d.days) ? [...new Set(d.days.map(Number).filter(Number.isInteger))] : [];
+        const days = Array.isArray(d.days)
+          ? [...new Set(d.days.map(Number).filter(Number.isInteger))]
+          : [];
         if (days.length === 0) return;
+
         const name = d.name || d.teacherName || d.displayName || d.email || ds.id || "교사";
         const daySet = new Set(days);
         const missing = schoolDays.filter(x => !daySet.has(x));
+
         if (missing.length > 0) {
           const maxShow = 10;
           const shownDays = missing.slice(0, maxShow).map(n => `${n}일`).join(", ");
