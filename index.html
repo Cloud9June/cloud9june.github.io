@@ -650,7 +650,7 @@
         <!-- ===== 링크 카드들 ===== -->
         <div class="grid" id="grid">
             <!-- 학교 공식/공유 자료 -->
-            <article class="card" data-tags="학교 홈페이지 업무공유 외부 공식 external" data-cat="external">
+            <article class="card" data-tags="학교 홈페이지 업무공유 외부 공식 external" data-cat="external service">
                 <div class="icon">🏫</div>
                 <h3>학교 공식/공유 자료</h3>
                 <p>학교 홈페이지 및 2025 업무공유 시트.</p>
@@ -922,14 +922,20 @@
 
         function applyFilter() {
             const keyword = (q.value || '').trim().toLowerCase();
+
             cards.forEach(c => {
                 const tags = (c.dataset.tags || '').toLowerCase();
-                const inCat = activeCat === 'all' ? true : (c.dataset.cat === activeCat);
-                const hit = !keyword || tags.includes(keyword) || c.querySelector('h3').textContent
-                    .toLowerCase().includes(keyword);
+                const cats = (c.dataset.cat || '').toLowerCase().split(/\s+/); // 여러 카테고리 지원
+                const inCat = activeCat === 'all' ? true : cats.includes(activeCat);
+
+                const hit = !keyword ||
+                    tags.includes(keyword) ||
+                    c.querySelector('h3').textContent.toLowerCase().includes(keyword);
+
                 c.style.display = (inCat && hit) ? '' : 'none';
             });
         }
+
         q.addEventListener('input', applyFilter);
         pills.forEach(p => {
             p.addEventListener('click', () => {
@@ -1220,6 +1226,7 @@
 </body>
 
 </html>
+
 
 
 
