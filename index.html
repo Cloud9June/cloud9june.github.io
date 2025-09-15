@@ -7,6 +7,7 @@
     <title>교육정보부 • 링크 허브</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="icon" href="./eduinfo.png" type="image/png">
     <style>
         :root {
@@ -18,6 +19,7 @@
             --accent: #4cc9f0;
             --accent-2: #80ed99;
             --ring: #233042;
+            --warning: #ff6b6b;
             --shadow: 0 10px 25px rgba(0, 0, 0, .35);
             --radius: 20px;
         }
@@ -258,6 +260,12 @@
         .btn:hover {
             border-color: #3a5271;
             transform: translateY(-1px)
+        }
+
+        #addLinkBtn, #manageLinkBtn {
+            padding: 6px 8px;   /* 조금 작게 */
+            margin-top: 5px;
+            font-size: 10px;
         }
 
         .badge {
@@ -616,6 +624,86 @@
         #resultTable tbody tr:hover {
             background-color: #2a2a2a;
         }
+
+        /* 드래그 중 빈 자리 */
+        .ghost {
+            opacity: 0.4;
+            border: 2px dashed var(--accent);
+        }
+
+        /* 선택된 카드 */
+        .chosen {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease;
+        }
+
+        /* 도움말 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-content {
+            background: var(--panel);
+            color: var(--text);
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #223041;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid #2a3a4f;
+            padding-bottom: 8px;
+        }
+
+        .modal-content ul {
+            padding-left: 18px;
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .desc {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        .close {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--muted);
+        }
+        .close:hover {
+            color: var(--accent);
+        }
+
+        /* 도움말 버튼 스타일 */
+        .ticker-help {
+            margin-left: 8px;
+            padding: 4px 6px;
+            border-radius: 10px;
+            border: 1px solid #223041;
+            background: var(--panel);
+            color: var(--text);
+            cursor: pointer;
+            transition: all .2s ease;
+            font-size: 13px;
+        }
+        .ticker-help:hover {
+            border-color: #2e425b;
+        }
     </style>
 </head>
 
@@ -646,10 +734,43 @@
         <!-- ===== 전광판 토글 ===== -->
         <div class="ticker-wrap">
             <button class="ticker-toggle" id="tickerToggle" type="button">학교 알림 전광판 열기</button>
+            <button class="ticker-help" id="helpBtn" type="button">❓ 도움말</button>
             <div class="led-ticker" id="ledTicker" role="region" aria-label="최근 성과 전광판" aria-hidden="true">
                 <div class="led-ticker-track" id="ledTrack"></div>
             </div>
         </div>
+
+        <!-- ===== 도움말 모달 ===== -->
+        <div id="helpModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeHelp">&times;</span>
+                <h2>사용 가이드</h2>
+                <ul>
+                        <li>
+                            ⭐ <b>개인화 즐겨찾기 카드</b>
+                            <div class="desc">원하는 URL을 직접 추가/삭제하여 본인만의 카드로 활용할 수 있습니다.</div>
+                        </li><br>
+                        <li>
+                            🖱️ <b>카드 순서 변경</b>
+                            <div class="desc">마우스로 드래그하여 카드 순서를 원하는 대로 재배치할 수 있습니다.</div>
+                        </li><br>
+                        <li>
+                            🔍 <b>검색 접두어</b>
+                            <div class="desc">검색창에 <code>g</code> 또는 <code>ㅎ</code> 입력 후 띄어쓰기 → 구글 검색 / <br> <code>n</code> 또는 <code>ㅜ</code> 입력 후 띄어쓰기 → 네이버 검색</div>
+                        </li><br>
+                        <li>
+                            📑 <b>카드 필터링</b>
+                            <div class="desc">상단 필터 버튼을 눌러 업무·수업·외부 자료 등 원하는 카드만 볼 수 있습니다.</div>
+                        </li><br>
+                        <li>
+                            📱 <b>스마트폰 사용</b>
+                            <div class="desc">모바일에서도 동작하지만, PC 환경에 최적화되어 있습니다.</div>
+                        </li>
+                </ul>
+                <p style="font-size:13px; color:var(--warning);">※ 개인화된 설정은 서버에 저장되지 않고, 이 기기 브라우저에서만 유지됩니다.</p>
+            </div>
+        </div>
+
         <!-- ===== 상단 빠른 검색바 ===== -->
         <div class="quick-search" role="search">
             <input id="qsInput" type="search" placeholder="(g,ㅎ,ㄱ) + 띄어쓰기 + 검색어 → 구글 / (n,ㅜ,ㄴ) + 띄어쓰기 + 검색어 → 네이버" />
@@ -681,8 +802,21 @@
 
         <!-- ===== 링크 카드들 ===== -->
         <div class="grid" id="grid">
+            <!-- 개인화 즐겨찾기 카드 -->
+            <article class="card card1" data-key="card1" id="personalCard" data-tags="개인 즐겨찾기 맞춤" data-cat="service">
+                <div class="icon">⭐</div>
+                <h3>내 즐겨찾기</h3>
+                <p>원하는 사이트를 추가하세요. (본인 기기에서만 저장됨)</p>
+                <div class="actions" id="personalLinks"></div>
+                <div class="actions">
+                    <button class="btn" id="addLinkBtn" type="button">➕ 추가</button>
+                    <button class="btn" id="manageLinkBtn" type="button">🗑 삭제</button>
+                </div>
+                <div id="deleteMode" style="display:none; margin-top:10px;"></div>
+                <div class="meta"><span class="badge">개인화</span></div>
+            </article>
             <!-- 학교 공식/공유 자료 -->
-            <article class="card" data-tags="학교 홈페이지 업무공유 외부 공식 external" data-cat="external service">
+            <article class="card card2" data-key="card2" data-tags="학교 홈페이지 업무공유 외부 공식 external" data-cat="external service">
                 <div class="icon">🏫</div>
                 <h3>학교 공식/공유 자료</h3>
                 <p>학교 홈페이지 및 2025 업무공유 시트.</p>
@@ -705,7 +839,7 @@
             </article>
 
             <!-- 업무·행정 통합 서비스 -->
-            <article class="card" id="card-work-portal" data-tags="업무포털 에듀파인 나이스 NEIS K-에듀파인 통합 외부" data-cat="external">
+            <article class="card card3" data-key="card3" id="card-work-portal" data-tags="업무포털 에듀파인 나이스 NEIS K-에듀파인 통합 외부" data-cat="external">
                 <div class="icon">🧑‍💼</div>
                 <h3>업무·행정 통합 서비스</h3>
                 <p>업무포털, 공직자메일 등 교직원 필수 행정 서비스 모음.<br>접속이 원활하지 않을 경우 개별 주소를 이용하세요.</p>
@@ -728,7 +862,7 @@
             </article>
             
             <!-- 에듀테크 사이트 -->
-            <article class="card" data-tags="에듀테크 AI 퀴즈 수업지원" data-cat="class">
+            <article class="card card4" data-key="card4" data-tags="에듀테크 AI 퀴즈 수업지원" data-cat="class">
                 <div class="icon">💡</div>
                 <h3>디지털 수업 도구</h3>
                 <p>수업과 학습에 활용할 수 있는 주요 에듀테크 플랫폼 모음</p>
@@ -743,7 +877,8 @@
                 <div class="meta"><span class="badge">에듀테크</span><span class="badge">디지털도구</span></div>
             </article>
 
-            <article class="card" data-tags="구글 클래스룸 시트 슬라이드 독스 킵 캘린더" data-cat="class">
+            <!-- 구글 도구 사이트 -->
+            <article class="card card5" data-key="card5" data-tags="구글 클래스룸 시트 슬라이드 독스 킵 캘린더" data-cat="class">
                 <div class="icon">🗂️</div>
                 <h3>구글 수업 툴킷</h3>
                 <p>수업과 협업에 활용할 수 있는 구글 도구 모음</p>
@@ -761,7 +896,7 @@
             </article>
 
             <!-- 수업교환 -->
-            <article class="card" data-tags="수업교환" data-cat="class">
+            <article class="card card6" data-key="card6" data-tags="수업교환" data-cat="class">
                 <div class="icon">🔄</div>
                 <h3>수업교환</h3>
                 <p>수업교환 신청</p>
@@ -777,7 +912,7 @@
             </article>
 
             <!-- 교육정보부 서비스 안내 (Accordion) -->
-            <article class="card" id="card-eduinfo-service" data-tags="교육정보부 서비스 안내 신청 확인 계정 홈페이지 태블릿 소프트웨어"
+            <article class="card card7" data-key="card7" id="card-eduinfo-service" data-tags="교육정보부 서비스 안내 신청 확인 계정 홈페이지 태블릿 소프트웨어"
                 data-cat="service">
                 <div class="icon">📮</div>
                 <h3>교육정보부 서비스 안내</h3>
@@ -835,7 +970,7 @@
             </article>
 
             <!-- 시설/환경 수리 신청 -->
-            <article class="card" data-tags="시설 환경 수리 신청" data-cat="service">
+            <article class="card card8" data-key="card8" data-tags="시설 환경 수리 신청" data-cat="service">
                 <div class="icon">🛠️</div>
                 <h3>시설·환경 수리 신청</h3>
                 <p>시설/환경 수리 요청 입력 시트.</p>
@@ -848,7 +983,7 @@
             </article>
 
             <!-- 일일 근무현황 -->
-            <article class="card" data-tags="일일 근무 현황 주번 교통 급식 야자 메뉴얼" data-cat="service">
+            <article class="card card9" data-key="card9" data-tags="일일 근무 현황 주번 교통 급식 야자 메뉴얼" data-cat="service">
                 <div class="icon">📋</div>
                 <h3>일일 근무현황</h3>
                 <p>주번/교통/급식/야자 근무 현황 및 매뉴얼.</p>
@@ -861,7 +996,7 @@
             </article>
 
             <!-- 성과/홍보 -->
-            <article class="card" data-tags="성과 수상 홍보 키오스크 award" data-cat="promo">
+            <article class="card card10" data-key="card10" data-tags="성과 수상 홍보 키오스크 award" data-cat="promo">
                 <div class="icon">🏆</div>
                 <h3>성과(수상) 허브</h3>
                 <p>신관 1층 키오스크 및 온라인 성과 게시.</p>
@@ -875,7 +1010,7 @@
             </article>
 
             <!-- 급식 시스템 -->
-            <article class="card" data-tags="급식 신청 식단 서비스 service" data-cat="service">
+            <article class="card card11" data-key="card11" data-tags="급식 신청 식단 서비스 service" data-cat="service">
                 <div class="icon">🍱</div>
                 <h3>급식 정보/신청</h3>
                 <p>주간 식단 확인과 신청/집계(교사/학생용 구성).</p>
@@ -886,7 +1021,7 @@
             </article>
 
             <!-- 도서관(마중물) -->
-            <article class="card" data-tags="도서관 마중물 소장자료 희망도서 알라딘" data-cat="external">
+            <article class="card card12" data-key="card12" data-tags="도서관 마중물 소장자료 희망도서 알라딘" data-cat="external">
                 <div class="icon">📚</div>
                 <h3>도서관(마중물)</h3>
                 <p>소장자료 검색, 희망도서 신청, 도서정보 확인.</p>
@@ -903,7 +1038,7 @@
             </article>
 
             <!-- 교직원 내선번호 검색 -->
-            <article class="card" data-tags="검색 교직원 내선번호" data-cat="service">
+            <article class="card card13" data-key="card13" data-tags="검색 교직원 내선번호" data-cat="service">
                 <div class="icon">📞</div>
                 <h3>교직원 내선번호 검색</h3>
                 <p>초성검색 가능(ㄱㅎㅈ), 부서명 검색 가능</p>
@@ -1238,167 +1373,233 @@
         // ===== 실시간 날씨(기상청API) =====
         async function fetchWeather() {
             const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
-            const nx = 62;  // 위치 좌표 (예: 성남)
-            const ny = 124; // 위치 좌표 (예: 성남)
+            const nx = 62, ny = 124; // 성남 좌표
 
-            // 현재 시각 (KST)
+            // 현재 한국 시각
             const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-            let yyyy = kst.getFullYear();
-            let mm = String(kst.getMonth() + 1).padStart(2, "0");
-            let dd = String(kst.getDate()).padStart(2, "0");
-            let hh = kst.getHours();
-            let mn = kst.getMinutes();
-
-            // 기상청은 매시각 + 10분 이후부터 데이터 제공 → 보정
-            if (mn < 10) hh = hh - 1;
-            if (hh < 0) { // 자정 보정
-                hh = 23; dd = String(Number(dd) - 1).padStart(2, "0");
-            }
+            const yyyy = kst.getFullYear();
+            const mm = String(kst.getMonth() + 1).padStart(2, "0");
+            const dd = String(kst.getDate()).padStart(2, "0");
             const base_date = `${yyyy}${mm}${dd}`;
-            const base_time = String(hh).padStart(2, "0") + "00";
 
-            const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${SERVICE_KEY}&numOfRows=100&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+            // 내일 날짜
+            const tomorrow = new Date(kst);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tyyyy = tomorrow.getFullYear();
+            const tmm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+            const tdd = String(tomorrow.getDate()).padStart(2, "0");
+            const tomorrow_date = `${tyyyy}${tmm}${tdd}`;
+
+            // 단기예보는 02:00, 05:00, 08:00 ... 제공 → 가장 최근 시각 선택
+            const baseTimes = ["0200","0500","0800","1100","1400","1700","2000","2300"];
+            const hh = kst.getHours() * 100;
+            let base_time = baseTimes[0];
+            for (let t of baseTimes) {
+                if (hh >= parseInt(t)) base_time = t;
+            }
+
+            const url =
+            `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst` +
+            `?serviceKey=${SERVICE_KEY}&numOfRows=1000&pageNo=1&dataType=JSON` +
+            `&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
                 const items = data.response.body.items.item;
 
-                const temp = items.find(i => i.category === "T1H")?.obsrValue; // 기온
-                const humi = items.find(i => i.category === "REH")?.obsrValue; // 습도
-                const sky  = items.find(i => i.category === "SKY")?.obsrValue; // 하늘 상태
-                const pty  = items.find(i => i.category === "PTY")?.obsrValue; // 강수 형태
+                // ===== 오늘 (현재시각 이후 가장 가까운 예보) =====
+                const hhNow = String(kst.getHours()).padStart(2,"0") + "00";
+                const todayList = items.filter(i => i.fcstDate === base_date && i.fcstTime >= hhNow);
+
+                const sky = todayList.find(i => i.category === "SKY")?.fcstValue;
+                const pty = todayList.find(i => i.category === "PTY")?.fcstValue;
+                const tmp = todayList.find(i => i.category === "TMP")?.fcstValue;
+                const reh = todayList.find(i => i.category === "REH")?.fcstValue;
 
                 document.getElementById("todayWeather").innerHTML =
-                `${getWeatherIcon(sky, pty)} ${temp}℃ · ${humi}%`;
+                    `${getWeatherIcon(sky, pty)} ${tmp}℃ · ${reh}%`;
+
+                // ===== 내일 (최저/최고 TMP) =====
+                const tomorrowTemps = items
+                    .filter(i => i.fcstDate === tomorrow_date && i.category === "TMP")
+                    .map(i => Number(i.fcstValue));
+
+                if (tomorrowTemps.length > 0) {
+                    const tmin = Math.min(...tomorrowTemps);
+                    const tmax = Math.max(...tomorrowTemps);
+                    document.getElementById("tomorrowWeather").textContent =
+                        `내일 ${tmin}℃ / ${tmax}℃`;
+                } else {
+                    document.getElementById("tomorrowWeather").textContent = "내일 정보 없음";
+                }
+
             } catch (e) {
                 console.error("날씨 불러오기 실패", e);
                 document.getElementById("todayWeather").innerHTML =
-                `<i class="fa-solid fa-triangle-exclamation"></i> 날씨 불러오기 실패`;
+                    `<i class="fa-solid fa-triangle-exclamation"></i> 오류`;
+                document.getElementById("tomorrowWeather").textContent = "정보 없음";
             }
+        }
+
+        // 아이콘 매핑
+        function getWeatherIcon(sky, pty) {
+            if (pty == 1) return '<i class="fa-solid fa-cloud-rain"></i>';          // 비
+            if (pty == 2) return '<i class="fa-solid fa-cloud-showers-heavy"></i>'; // 비/눈
+            if (pty == 3) return '<i class="fa-solid fa-snowflake"></i>';           // 눈
+            if (pty == 4) return '<i class="fa-solid fa-cloud-sun-rain"></i>';      // 소나기
+
+            if (sky == 1) return '<i class="fa-solid fa-sun"></i>';                 // 맑음
+            if (sky == 3) return '<i class="fa-solid fa-cloud-sun"></i>';           // 구름많음
+            if (sky == 4) return '<i class="fa-solid fa-cloud"></i>';               // 흐림
+
+            return '<i class="fa-solid fa-temperature-half"></i>'; // 기본값
+        }
+
+        // 실행
+        fetchWeather();
+        setInterval(fetchWeather, 30 * 60 * 1000); // 30분마다 갱신
+
+
+
+        // ===== 개인화 카드 =====
+        (function(){
+            const STORAGE_KEY = "eduinfo.personalLinks";
+            const container = document.getElementById("personalLinks");
+            const addBtn = document.getElementById("addLinkBtn");
+            const manageBtn = document.getElementById("manageLinkBtn");
+            const deleteMode = document.getElementById("deleteMode");
+
+            function getLinks() {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            }
+            function saveLinks(links) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
             }
 
-            // ===== 아이콘 매핑 =====
-            function getWeatherIcon(sky, pty) {
-                if (pty == 1) return '<i class="fa-solid fa-cloud-rain"></i>';          // 비
-                if (pty == 2) return '<i class="fa-solid fa-cloud-showers-heavy"></i>'; // 비/눈
-                if (pty == 3) return '<i class="fa-solid fa-snowflake"></i>';           // 눈
-                if (pty == 4) return '<i class="fa-solid fa-cloud-sun-rain"></i>';      // 소나기
-
-                if (sky == 1) return '<i class="fa-solid fa-sun"></i>';                 // 맑음
-                if (sky == 3) return '<i class="fa-solid fa-cloud-sun"></i>';           // 구름많음
-                if (sky == 4) return '<i class="fa-solid fa-cloud"></i>';               // 흐림
-
-                return '<i class="fa-solid fa-temperature-half"></i>'; // 기본값
-            }
-
-            // ===== 시계 & 날짜 =====
-            (function () {
-                const elDate = document.getElementById("nowDate");
-                const elTime = document.getElementById("nowTime");
-
-                const DOW = ['일','월','화','수','목','금','토'];
-                const two = (n) => String(n).padStart(2, '0');
-
-                function nowKST() {
-                    return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+            function renderLinks() {
+                container.innerHTML = "";
+                const links = getLinks();
+                if (links.length === 0) {
+                const emptyMsg = document.createElement("p");
+                emptyMsg.textContent = "아직 추가한 링크가 없습니다.";
+                emptyMsg.style.color = "var(--muted)";
+                emptyMsg.style.fontSize = "13px";
+                container.appendChild(emptyMsg);
+                return;
                 }
+                links.forEach(link => {
+                const a = document.createElement("a");
+                a.className = "btn";
+                a.href = link.url;
+                a.target = "_blank";
+                a.rel = "noopener";
+                a.textContent = link.name;
+                container.appendChild(a);
+                });
+            }
 
-                function render() {
-                    const d = nowKST();
-                    const y = d.getFullYear();
-                    const m = two(d.getMonth() + 1);
-                    const day = two(d.getDate());
-                    const w = DOW[d.getDay()];
-                    const hh = two(d.getHours());
-                    const mm = two(d.getMinutes());
-                    const ss = two(d.getSeconds());
+            function addLink() {
+                const name = prompt("링크 이름을 입력하세요:");
+                if (!name) return;
+                const url = prompt("URL을 입력하세요 (http:// 또는 https:// 포함):");
+                if (!url) return;
+                const links = getLinks();
+                links.push({ name, url });
+                saveLinks(links);
+                renderLinks();
+            }
 
-                    elDate.textContent = `${y}.${m}.${day} (${w})`;
-                    elTime.textContent = `${hh}:${mm}:${ss}`;
-                }
+            function toggleDeleteMode() {
+                if (deleteMode.style.display === "none") {
+                // 삭제 모드 열기
+                deleteMode.style.display = "block";
+                deleteMode.innerHTML = "<p style='font-size:13px;color:var(--muted)'>삭제할 링크를 선택하세요:</p>";
+                const links = getLinks();
+                links.forEach((link, i) => {
+                    const row = document.createElement("div");
+                    row.style.display = "flex";
+                    row.style.alignItems = "center";
+                    row.style.gap = "6px";
+                    row.style.marginBottom = "6px";
 
-                render();
-                const firstDelay = 1000 - (nowKST().getMilliseconds());
-                setTimeout(() => {
-                    render();
-                    setInterval(render, 1000);
-                }, firstDelay);
-            })();
+                    const label = document.createElement("span");
+                    label.textContent = link.name;
+                    label.style.flex = "1";
 
-            // ===== 내일 날씨(단기예보 최저/최고) =====
-            async function fetchTomorrowWeather() {
-                const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
-                const nx = 62, ny = 124; // 성남 좌표
+                    const delBtn = document.createElement("button");
+                    delBtn.className = "btn";
+                    delBtn.style.background = "#2a3a4f";
+                    delBtn.textContent = "❌ 삭제";
+                    delBtn.onclick = () => {
+                    links.splice(i, 1);
+                    saveLinks(links);
+                    renderLinks();
+                    toggleDeleteMode(); // 리스트 다시 갱신
+                    };
 
-                // 오늘 날짜 (base_date, 단기예보는 02시 기준 제공)
-                const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-                const yyyy = kst.getFullYear();
-                const mm = String(kst.getMonth() + 1).padStart(2, "0");
-                const dd = String(kst.getDate()).padStart(2, "0");
-                const base_date = `${yyyy}${mm}${dd}`;
-
-                // 내일 날짜
-                const tomorrow = new Date(kst);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tyyyy = tomorrow.getFullYear();
-                const tmm = String(tomorrow.getMonth() + 1).padStart(2, "0");
-                const tdd = String(tomorrow.getDate()).padStart(2, "0");
-                const target_date = `${tyyyy}${tmm}${tdd}`;
-
-                const urlFcst =
-                `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?` +
-                `serviceKey=${SERVICE_KEY}&numOfRows=500&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=0200&nx=${nx}&ny=${ny}`;
-
-                try {
-                    const res = await fetch(urlFcst);
-                    const data = await res.json();
-                    const items = data.response.body.items.item;
-
-                    // 내일 TMP (3시간 단위 기온) 값들을 모아 최저/최고 계산
-                    const temps = items
-                    .filter(i => i.fcstDate === target_date && i.category === "TMP")
-                    .map(i => Number(i.fcstValue));
-
-                    if (temps.length > 0) {
-                        const min = Math.min(...temps);
-                        const max = Math.max(...temps);
-                        document.getElementById("tomorrowWeather").textContent =
-                        `내일 ${min}℃ / ${max}℃`;
-                    } else {
-                        document.getElementById("tomorrowWeather").textContent = "내일 정보 없음";
-                    }
-                } catch (e) {
-                    console.error("내일 날씨 불러오기 실패", e);
-                    document.getElementById("tomorrowWeather").textContent = "내일 정보 없음";
+                    row.appendChild(label);
+                    row.appendChild(delBtn);
+                    deleteMode.appendChild(row);
+                });
+                } else {
+                // 삭제 모드 닫기
+                deleteMode.style.display = "none";
+                deleteMode.innerHTML = "";
                 }
             }
 
-            // ===== 실행 =====
-            fetchWeather();
-            fetchTomorrowWeather();
-            setInterval(fetchWeather, 10 * 60 * 1000); // 10분마다 새로고침
-            setInterval(fetchTomorrowWeather, 60 * 60 * 1000);  // 1시간마다 새로고침
+            addBtn.addEventListener("click", addLink);
+            manageBtn.addEventListener("click", toggleDeleteMode);
 
+            renderLinks();
+        })();
 
-        // 필요 시 실시간 갱신 예시:
-        // achievements.unshift("🆕 새 소식 추가!");
-        // renderTicker();
+        // ===== 개인화 순서 =====
+        // 저장
+        function saveOrder() {
+            const keys = [...document.querySelectorAll("#grid .card")]
+                .map(c => c.dataset.key);
+            localStorage.setItem("eduinfo.cardOrder", JSON.stringify(keys));
+        }
 
-        // /*
-        //   ----- 카드 추가 가이드 -----
-        //   <article class="card" data-tags="키워드 공백구분" data-cat="service|survey|schedule|eval|student|promo|external">
-        //     <div class="icon">🎯</div>
-        //     <h3>제목</h3>
-        //     <p>짧은 설명</p>
-        //     <div class="actions">
-        //       <a class="btn" href="URL1" target="_blank" rel="noopener">버튼명1</a>
-        //       <a class="btn" href="URL2" target="_blank" rel="noopener">버튼명2</a>
-        //       <!-- 필요한 만큼 버튼 추가 -->
-        //     </div>
-        //     <div class="meta"><span class="badge">태그</span></div>
-        //   </article>
-        // */
+        function loadOrder() {
+            const order = JSON.parse(localStorage.getItem("eduinfo.cardOrder") || "[]");
+            const grid = document.getElementById("grid");
+            order.forEach(key => {
+                const el = document.querySelector(`#grid .card[data-key="${key}"]`);
+                if (el) grid.appendChild(el);
+            });
+        }
+        // 초기 실행
+        loadOrder();
+
+        // Sortable 활성화
+        new Sortable(document.getElementById("grid"), {
+            animation: 200,
+            ghostClass: "ghost",
+            chosenClass: "chosen",
+            onEnd: saveOrder
+        });
+
+        // 도움말 모달 열기/닫기
+        const helpBtn = document.getElementById("helpBtn");
+        const helpModal = document.getElementById("helpModal");
+        const closeHelp = document.getElementById("closeHelp");
+
+        helpBtn.addEventListener("click", () => {
+            helpModal.style.display = "block";
+        });
+
+        closeHelp.addEventListener("click", () => {
+            helpModal.style.display = "none";
+        });
+
+        window.addEventListener("click", (e) => {
+            if (e.target === helpModal) {
+                helpModal.style.display = "none";
+            }
+        });
     </script>
 </body>
 
