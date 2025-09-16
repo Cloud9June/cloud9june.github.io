@@ -94,15 +94,12 @@ function checkAndMaybeFallback(tabKey) {
   const cards = page?.querySelector('.cards');
   if (!cards) return;
 
-  requestAnimationFrame(() => {
-    const firstCheck = isClippingAtRow(cards, 3, 12); 
-    requestAnimationFrame(() => {
-      const secondCheck = isClippingAtRow(cards, 3, 12);
-      if (firstCheck && secondCheck) {
-        showFallbackAndRedirect(tabKey);
-      }
-    });
-  });
+  const realCards = cards.querySelectorAll('.card:not(.placeholder)');
+
+  // 카드 개수가 3 이하일 경우 바로 전환
+  if (realCards.length <= 3) {
+    showFallbackAndRedirect(tabKey);
+  }
 }
 
 // 렌더 완료 직후 한 번 호출
