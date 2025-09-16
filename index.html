@@ -575,9 +575,6 @@
                 white-space: normal;   /* 줄바꿈 허용 */
                 overflow: visible;
                 text-overflow: unset;
-            }
-
-            .meal-text {
                 font-size: 12px;
             }
         }
@@ -638,7 +635,23 @@
             transition: transform 0.2s ease;
         }
 
-        /* 도움말 모달 */
+        /* 도움말 버튼 스타일 */
+        .toolbar-btn, .ticker-help {
+            margin-left: 8px;
+            padding: 4px 6px;
+            border-radius: 10px;
+            border: 1px solid #223041;
+            background: var(--panel);
+            color: var(--text);
+            cursor: pointer;
+            transition: all .2s ease;
+            font-size: 13px;
+        }
+        .toolbar-btn:hover, .ticker-help:hover {
+            border-color: #2e425b;
+        }
+
+        /* 모달 공통 */
         .modal {
             display: none;
             position: fixed;
@@ -647,18 +660,23 @@
             width: 100%; height: 100%;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(2px);
+            align-items: flex-start;  /* 위쪽에서 시작 */
+            justify-content: center;
         }
 
         .modal-content {
             background: var(--panel);
             color: var(--text);
-            margin: 10% auto;
-            padding: 20px;
+            margin: 8% auto;
+            padding: 20px 24px;
             border: 1px solid #223041;
-            border-radius: 12px;
+            border-radius: 14px;
             width: 500px;
             max-width: 90%;
             box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
         }
 
         .modal-content h2 {
@@ -680,7 +698,7 @@
             margin-top: 4px;
         }
         .close {
-            float: right;
+            margin-left: auto;
             font-size: 20px;
             cursor: pointer;
             color: var(--muted);
@@ -689,21 +707,82 @@
             color: var(--accent);
         }
 
-        /* 도움말 버튼 스타일 */
-        .ticker-help {
-            margin-left: 8px;
-            padding: 4px 6px;
-            border-radius: 10px;
-            border: 1px solid #223041;
-            background: var(--panel);
-            color: var(--text);
-            cursor: pointer;
-            transition: all .2s ease;
+        #modal-date {
             font-size: 13px;
+            color: var(--warning);
+            margin-left: 10px;
         }
-        .ticker-help:hover {
-            border-color: #2e425b;
+
+        /* duty 테이블 스타일 */
+        .duty-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
         }
+
+        .duty-table th,
+        .duty-table td {
+            padding: 10px 12px;
+        }
+
+        .duty-table th {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .duty-table tr:first-child th {
+            color: var(--muted);
+        }
+   
+        .duty-table td:first-child {
+            font-weight: 500;
+            color: var(--muted);
+            text-align: right;
+            padding-left: 10px;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--ring);
+            padding-top: 10px;
+        }
+        .modal-footer button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #closeDutyBtn {
+            background: #2c3a4a;
+            color: #ccc;
+        }
+        #closeDutyBtn:hover {
+            background: #3b4d61;
+        }
+        .modal-footer a {
+            padding: 3px 7px;
+            border-radius: 8px;
+            background: #4cc9f0;
+            color: #000;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .modal-footer a:hover {
+            background: #3bb2d6;
+        }
+
+        /* 모달 애니메이션 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
     </style>
 </head>
 
@@ -731,13 +810,28 @@
             </div>
         </header>
 
-        <!-- ===== 전광판 토글 ===== -->
+        <!-- ===== 전광판 토글, 일일근무, 도움말 버튼 ===== -->
         <div class="ticker-wrap">
             <button class="ticker-toggle" id="tickerToggle" type="button">학교 알림 전광판 열기</button>
+            <button class="toolbar-btn" id="dutyBtn" type="button">📋 일일근무</button>
             <button class="ticker-help" id="helpBtn" type="button">❓ 도움말</button>
             <div class="led-ticker" id="ledTicker" role="region" aria-label="최근 성과 전광판" aria-hidden="true">
                 <div class="led-ticker-track" id="ledTrack"></div>
             </div>
+        </div>
+
+        <!-- 근무자 모달 -->
+        <div id="dutyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeDuty">&times;</span>
+            <h2>오늘·내일 근무 안내<span id="modal-date">든든한 선생님 라인업 완성 🌟</span></h2>
+            <div id="modal-duty"></div>
+            <div class="modal-footer">
+            <button id="closeDutyBtn">닫기</button>
+            <a href="https://docs.google.com/spreadsheets/d/1fooMUmUyiABOSiesvtd9FoD2Fs8jRq1VB_T9nYSkOCo/edit?gid=0#gid=0" 
+                target="_blank" rel="noopener">현황 시트</a>
+            </div>
+        </div>
         </div>
 
         <!-- ===== 도움말 모달 ===== -->
@@ -982,19 +1076,6 @@
                 <div class="meta"><span class="badge">업무</span></div>
             </article>
 
-            <!-- 일일 근무현황 -->
-            <article class="card card9" data-key="card9" data-tags="일일 근무 현황 주번 교통 급식 야자 메뉴얼" data-cat="service">
-                <div class="icon">📋</div>
-                <h3>일일 근무현황</h3>
-                <p>주번/교통/급식/야자 근무 현황 및 매뉴얼.</p>
-                <div class="actions">
-                    <a class="btn"
-                        href="https://docs.google.com/spreadsheets/d/1fooMUmUyiABOSiesvtd9FoD2Fs8jRq1VB_T9nYSkOCo/edit?gid=0#gid=0"
-                        target="_blank" rel="noopener">현황 시트</a>
-                </div>
-                <div class="meta"><span class="badge">업무</span></div>
-            </article>
-
             <!-- 성과/홍보 -->
             <article class="card card10" data-key="card10" data-tags="성과 수상 홍보 키오스크 award" data-cat="promo">
                 <div class="icon">🏆</div>
@@ -1167,7 +1248,7 @@
             track.style.animation = 'none';
         }
         on(toggleBtn, 'click', () => ticker.classList.contains('is-open') ? closeTicker() : openTicker());
-        on(track, 'focus', () => track.style.animationPlayState = 'paused');
+        // on(track, 'focus', () => track.style.animationPlayState = 'paused');
         on(track, 'blur', () => track.style.animationPlayState = 'running');
         on(ticker, 'mouseenter', () => track && (track.style.animationPlayState = 'paused'));
         on(ticker, 'mouseleave', () => track && (track.style.animationPlayState = 'running'));
@@ -1334,7 +1415,7 @@
 
         // ===== 실시간 시계(KST) =====
         (function () {
-            const $ = (id) => document.getElementById(id);
+            // const $ = (id) => document.getElementById(id);
             const elDate = $('nowDate');
             const elTime = $('nowTime');
             if (!elDate || !elTime) return;
@@ -1579,8 +1660,8 @@
             animation: 200,
             ghostClass: "ghost",
             chosenClass: "chosen",
-            delay: 150,
-            delayOnTouchOnly: true,
+            delay: 150,             // 150ms 이상 눌러야 드래그 시작
+            delayOnTouchOnly: true, // 모바일 터치에서만 지연 적용
             onEnd: saveOrder
         });
 
@@ -1588,6 +1669,22 @@
         const helpBtn = document.getElementById("helpBtn");
         const helpModal = document.getElementById("helpModal");
         const closeHelp = document.getElementById("closeHelp");
+
+        const dutyBtn = document.getElementById("dutyBtn");
+        const dutyModal = document.getElementById("dutyModal");
+        const closeDutyBtn = document.getElementById("closeDutyBtn");
+
+
+        dutyBtn.addEventListener("click", () => {
+            dutyModal.style.display = "flex";
+        });
+
+        closeDutyBtn.addEventListener("click", () => {
+            dutyModal.style.display = "none";
+        });
+        closeDuty.addEventListener("click", () => {
+            dutyModal.style.display = "none";
+        })
 
         helpBtn.addEventListener("click", () => {
             helpModal.style.display = "block";
@@ -1598,14 +1695,75 @@
         });
 
         window.addEventListener("click", (e) => {
-            if (e.target === helpModal) {
+            if (e.target === helpModal || e.target === dutyModal) {
                 helpModal.style.display = "none";
+                dutyModal.style.display = "none";
             }
         });
+
+        async function loadDuty() {
+            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3jc-6ORNFCO2KGxiAJdvZ87JLAyTDgOxEEd2atN4q38jWjGAdBbT4q1LaIMnz2q68-8K9i1JR0yNs/pub?gid=0&single=true&output=csv";
+            const res = await fetch(url);
+            const text = await res.text();
+            const rows = text.trim().split("\n").map(r => r.split(","));
+
+            // 오늘 데이터 ------------------
+            let today = rows[0][0];
+            let jubun = rows[3][0];
+            let gyotong = rows[7][0];
+            let jubunGyotong = (jubun === gyotong) ? jubun : `${jubun}, ${gyotong}`;
+            let gupsikA = [rows[3][3], rows[4][3]].filter(v => v).join(", ");
+            let gupsikB = [rows[7][3], rows[8][3]].filter(v => v).join(", ");
+            let yaja = [rows[3][6], rows[4][6]].filter(v => v).join(", ");
+
+            // 내일 데이터 ------------------
+            let tomorrow = rows[11][0];
+            let jubun2 = rows[14][0];
+            let gyotong2 = rows[18][0];
+            let jubunGyotong2 = (jubun2 === gyotong2) ? jubun2 : `${jubun2}, ${gyotong2}`;
+            let gupsikA2 = [rows[14][3], rows[15][3]].filter(v => v).join(", ");
+            let gupsikB2 = [rows[18][3], rows[19][3]].filter(v => v).join(", ");
+            let yaja2 = [rows[14][6], rows[15][6]].filter(v => v).join(", ");
+
+            // ✅ 표 구조로 HTML 생성
+            let html = `
+            <table class="duty-table">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>${today}</th>
+                    <th>${tomorrow}</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>주번/교통</td>
+                    <td>${jubunGyotong}</td>
+                    <td>${jubunGyotong2}</td>
+                </tr>
+                <tr>
+                    <td>급식A</td>
+                    <td>${gupsikA}</td>
+                    <td>${gupsikA2}</td>
+                </tr>
+                <tr>
+                    <td>급식B</td>
+                    <td>${gupsikB}</td>
+                    <td>${gupsikB2}</td>
+                </tr>
+                <tr>
+                    <td>야자[당직]</td>
+                    <td>${yaja}</td>
+                    <td>${yaja2}</td>
+                </tr>
+                </tbody>
+            </table>
+            `;
+
+            document.getElementById("modal-duty").innerHTML = html;
+        }
+        loadDuty();
     </script>
 </body>
 
 </html>
-
-
-
