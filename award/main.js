@@ -5,6 +5,15 @@
    - 터치기기만 튜토리얼 생성
    - 한번에보기 버튼 클릭때와 강제로 전환됐을 때 구분
    ========================================================= */
+// 전환 조건 충족 여부 확인
+function needsImmediateFallback() {
+  const page  = document.querySelector('.page.active');
+  const cards = page?.querySelector('.cards');
+  if (!cards) return false;
+
+  const realCards = cards.querySelectorAll('.card:not(.placeholder)');
+  return realCards.length <= 3; // 3개 이하라면 전환 필요
+}
 
 // 튜토리얼 관련
 const tutorialOverlay = document.getElementById('tutorial-overlay');
