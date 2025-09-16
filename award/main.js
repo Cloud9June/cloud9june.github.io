@@ -3,6 +3,7 @@
    - 기능/디자인 변경 없음 / 뷰포트·행수 자동보정만 강화
    - 튜토리얼 오버레이 추가
    - 터치기기만 튜토리얼 생성
+   - 한번에보기 버튼 클릭때와 강제로 전환됐을 때 구분
    ========================================================= */
 
 // 튜토리얼 관련
@@ -154,7 +155,7 @@ function showFallbackAndRedirect(tabKey, delayMs = 2200) {
   }
 
   fallbackTimer = setTimeout(() => {
-    location.href = `overview.html?tab=${encodeURIComponent(tabKey)}`;
+    location.href = `overview2.html?tab=${encodeURIComponent(tabKey)}`;
   }, delayMs);
 }
 
@@ -601,5 +602,5 @@ startAuto();
 
 /* ========== 13) 한 번에 보기 (동일 탭) ========== */
 document.getElementById('openOverview').addEventListener('click', () => {
-  location.href = `overview.html?tab=${encodeURIComponent(currentTab)}`;
+  location.href = `overview2.html?tab=${encodeURIComponent(currentTab)}&from=card`;
 });
