@@ -101,13 +101,6 @@ header {
     /* 숫자 폭 일정 */
 }
 
-/* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
-@media (max-width:680px) {
-    .now {
-        display: none !important;
-    }
-}
-
 .logo {
     width: 56px;
     height: 56px;
@@ -828,7 +821,7 @@ footer {
     background: #3b4d61;
 }
 
-.modal-footer a {
+.modal-footer > a {
     padding: 3px 7px;
     border-radius: 8px;
     background: #4cc9f0;
@@ -836,6 +829,7 @@ footer {
     text-decoration: none;
     font-size: 13px;
     font-weight: 600;
+    line-height: 1.8;
 }
 
 .modal-footer a:hover {
@@ -912,4 +906,21 @@ footer {
     font-size: 12px;
     color: var(--muted);
     padding-left: 10px;
+}
+
+/* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
+@media (max-width:680px) {
+    .now {
+        display: none !important;
+    }
+    .ticker-left {
+        margin: 0 auto;
+    }
+    .ticker-right {
+        width: 100%;        /* 한 줄 전체 차지 */
+        margin-top: 6px;    /* 위쪽 버튼들과 간격 */
+        display: block;
+        text-align: center;
+        margin-top: 5px;
+    }
 }
