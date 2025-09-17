@@ -259,7 +259,8 @@ header {
 }
 
 #addLinkBtn,
-#manageLinkBtn {
+#manageLinkBtn,
+#addMemoBtn {
     padding: 6px 8px;
     /* 조금 작게 */
     margin-top: 5px;
@@ -821,6 +822,13 @@ footer {
     background: #3b4d61;
 }
 
+#saveMemoBtn {
+    background: var(--muted);
+}
+#deleteMemoBtn {
+    background: var(--warning);
+}
+
 .modal-footer > a {
     padding: 3px 7px;
     border-radius: 8px;
@@ -865,6 +873,45 @@ footer {
     border-color: var(--accent);
     background: #111821;
 }
+.memo-list {
+    display: flex;
+    flex-direction: wrap;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.memo-btn {
+    border: 1px solid #223041;
+    background: var(--panel);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.memo-btn:hover {
+    background: var(--ring);
+}
+
+#memoTitle {
+    background: var(--panel);
+    color: var(--text);
+    margin-bottom: 20px;
+    border: none;
+    border: 1px solid var(--muted);
+    padding: 10px;
+}
+#memoContent {
+    background: var(--panel);
+    color: var(--text);
+    min-height: 300px;
+    border: none;
+    border: 1px solid var(--muted);
+    padding: 10px;
+}
 
 /* 카드 숨김 관련 스타일 */
 .hide-btn {
@@ -907,6 +954,8 @@ footer {
     color: var(--muted);
     padding-left: 10px;
 }
+
+
 
 /* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
 @media (max-width:680px) {
