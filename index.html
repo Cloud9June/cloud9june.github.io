@@ -38,14 +38,22 @@
 
         <!-- ===== 전광판 토글, 일일근무, 도움말 버튼 ===== -->
         <div class="ticker-wrap">
-            <button class="ticker-toggle" id="tickerToggle" type="button">학교 알림 전광판 열기</button>
-            <button class="toolbar-btn" id="dutyBtn" type="button">📋 일일근무</button>
-            <button class="ticker-help" id="helpBtn" type="button">❓ 도움말</button>
-            <button id="lockBtn" onclick="toggleLock()">🔓 해제</button>
+            <div class="ticker-left">
+                <button class="ticker-toggle" id="tickerToggle" type="button">📢 학교 알림 전광판 열기</button>
+                <button class="toolbar-btn" id="dutyBtn" type="button">📋 일일근무</button>
+                <button class="ticker-help" id="helpBtn" type="button">❓ 도움말</button>
+            </div>
+
+            <div class="ticker-right">
+                <button id="lockBtn" onclick="toggleLock()">🔓 해제</button>
+            </div>
+
             <div class="led-ticker" id="ledTicker" role="region" aria-label="최근 성과 전광판" aria-hidden="true">
                 <div class="led-ticker-track" id="ledTrack"></div>
             </div>
         </div>
+
+        
 
         <!-- 근무자 모달 -->
         <div id="dutyModal" class="modal">
