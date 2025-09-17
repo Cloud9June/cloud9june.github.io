@@ -664,7 +664,8 @@ footer {
 
 /* 도움말 버튼 스타일 */
 .toolbar-btn,
-.ticker-help {
+.ticker-help,
+#lockBtn {
     margin-left: 8px;
     padding: 4px 6px;
     border-radius: 10px;
@@ -676,22 +677,9 @@ footer {
     font-size: 13px;
 }
 
-.toolbar-btn:hover,
-.ticker-help:hover {
-    border-color: #2e425b;
-}
-
 /* 카드잠금 및 해제 버튼 */
 #lockBtn {
     margin-left: auto;
-    padding: 4px 6px;
-    border-radius: 10px;
-    border: 1px solid #223041;
-    background: var(--panel);
-    color: var(--text);
-    cursor: pointer;
-    transition: all .2s ease;
-    font-size: 13px;
 }
 
 .toolbar-btn:hover,
