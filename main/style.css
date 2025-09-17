@@ -309,11 +309,12 @@ footer {
 
 /* ===== Retro LED Ticker ===== */
 .led-ticker {
+    flex: 1 1 100%;
     position: relative;
     overflow: hidden;
     border-radius: 12px;
     border: 1px solid #223041;
-    margin: 8px 0 18px;
+    margin: 8px 0 0;
     height: 48px;
     background:
         radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 1.5px),
@@ -391,9 +392,23 @@ footer {
 
 /* ===== 전광판 토글 ===== */
 .ticker-wrap {
-    margin: 6px 0 18px;
+    margin-top: 8px;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+}
+
+/* 왼쪽 버튼들 */
+.ticker-left {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+/* 오른쪽 버튼 */
+.ticker-right {
+    margin-left: auto; /* 오른쪽 끝으로 밀기 */
+    flex-shrink: 0;
 }
 
 .ticker-toggle {
