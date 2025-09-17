@@ -81,7 +81,7 @@ function openTicker() {
     if (!ticker || !toggleBtn) return;
     ticker.classList.add('is-open');
     ticker.setAttribute('aria-hidden', 'false');
-    toggleBtn.textContent = '학교 알림 전광판 닫기';
+    toggleBtn.textContent = '📢 학교 알림 전광판 닫기';
     renderTicker();
 }
 
@@ -89,7 +89,7 @@ function closeTicker() {
     if (!ticker || !toggleBtn || !track) return;
     ticker.classList.remove('is-open');
     ticker.setAttribute('aria-hidden', 'true');
-    toggleBtn.textContent = '학교 알림 전광판 열기';
+    toggleBtn.textContent = '📢 학교 알림 전광판 열기';
     track.style.animation = 'none';
 }
 on(toggleBtn, 'click', () => ticker.classList.contains('is-open') ? closeTicker() : openTicker());
