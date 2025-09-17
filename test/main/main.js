@@ -636,47 +636,60 @@ memoArea.addEventListener("input", () => {
 });
 
 // 카드 숨김 및 복원 기능
-// 숨김 카드 저장
+// 카드 key → 제목 매핑
+function buildCardMap() {
+  const map = {};
+  document.querySelectorAll("#grid .card").forEach(c => {
+    const key = c.dataset.key;
+    const title = c.querySelector("h3")?.textContent.trim() || "제목 없음";
+    map[key] = title;
+  });
+  return map;
+}
+
+let hiddenCards = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
+
 function hideCard(key) {
-  const el = document.querySelector(`.card[data-key="${key}"]`);
-  if (el) {
-    el.style.display = "none";
+  const card = document.querySelector(`#grid .card[data-key="${key}"]`);
+  if (!card) return;
+  card.style.display = "none";
 
-    // localStorage에 저장
-    let hidden = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
-    if (!hidden.includes(key)) hidden.push(key);
-    localStorage.setItem("eduinfo.hiddenCards", JSON.stringify(hidden));
-
-    renderHiddenList();
+  if (!hiddenCards.includes(key)) {
+    hiddenCards.push(key);
+    localStorage.setItem("eduinfo.hiddenCards", JSON.stringify(hiddenCards));
   }
+  renderHiddenList();
 }
 
-// 숨김 카드 복원
-function restoreCard(key) {
-  const el = document.querySelector(`.card[data-key="${key}"]`);
-  if (el) {
-    el.style.display = "";
-    let hidden = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
-    hidden = hidden.filter(k => k !== key);
-    localStorage.setItem("eduinfo.hiddenCards", JSON.stringify(hidden));
+function showCard(key) {
+  const card = document.querySelector(`#grid .card[data-key="${key}"]`);
+  if (!card) return;
+  card.style.display = "";
 
-    renderHiddenList();
-  }
+  hiddenCards = hiddenCards.filter(k => k !== key);
+  localStorage.setItem("eduinfo.hiddenCards", JSON.stringify(hiddenCards));
+  renderHiddenList();
 }
 
-// 숨김 카드 목록 표시
 function renderHiddenList() {
-  const hiddenList = document.getElementById("hiddenList");
-  const hidden = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
+  const container = document.getElementById("hiddenList");
+  container.innerHTML = "";
 
-  if (hidden.length === 0) {
-    hiddenList.innerHTML = "<p>숨김 카드 없음</p>";
-  } else {
-    hiddenList.innerHTML = hidden.map(
-      key => `<button onclick="restoreCard('${key}')">복원: ${key}</button>`
-    ).join("");
+  const cardMap = buildCardMap();
+
+  if (hiddenCards.length === 0) {
+    container.textContent = "숨긴 카드 없음";
+    return;
   }
+
+  hiddenCards.forEach(key => {
+    const btn = document.createElement("button");
+    btn.textContent = `복원: ${cardMap[key] || key}`;
+    btn.onclick = () => showCard(key);
+    container.appendChild(btn);
+  });
 }
+
 
 // 숨김 카드 목록 토글
 document.getElementById("hiddenListBtn").addEventListener("click", () => {
