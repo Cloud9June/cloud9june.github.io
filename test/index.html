@@ -380,12 +380,36 @@
             </article>
 
             <!-- 빠른 메모 -->
-            <article class="card card13 memo-card" data-key="card13">
+            <!-- <article class="card card13 memo-card" data-key="card13">
                 <button class="hide-btn" onclick="hideCard('card13')">✖</button>
                 <div class="icon">📝</div>
                 <h3>메모장</h3>
                 <textarea id="memoArea" placeholder="메모를 입력하세요..."></textarea>
+            </article> -->
+
+            <!-- 메모 카드 -->
+            <article class="card card13 memo-card" data-key="card13">
+                <div class="icon">📝</div>
+                <h3>메모장</h3>
+                <p>빠르게 메모하세요. (초기화 될 수 있으니 중요한건 백업)</p>
+                <div id="memoList" class="memo-list"></div>
+                <button class="btn" id="addMemoBtn">➕ 메모 추가</button>
+                <div class="meta"><span class="badge">개인화</span></div>
             </article>
+
+            <!-- 메모 모달 -->
+            <div id="memoModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" id="closeMemoModal">&times;</span>
+                    <h2>메모</h2>
+                    <input type="text" id="memoTitle" placeholder="제목" />
+                    <textarea id="memoContent" placeholder="내용"></textarea>
+                    <div class="modal-footer">
+                    <button id="saveMemoBtn">저장</button>
+                    <button id="deleteMemoBtn" style="display:none;">삭제</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 교직원 내선번호 검색 -->
             <article class="card card14" data-key="card14" data-tags="검색 교직원 내선번호" data-cat="service">
