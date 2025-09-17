@@ -501,7 +501,7 @@ function loadOrder() {
 loadOrder();
 
 // Sortable 활성화
-new Sortable(document.getElementById("grid"), {
+let sortable = new Sortable(document.getElementById("grid"), {
     animation: 200,
     ghostClass: "ghost",
     chosenClass: "chosen",
@@ -509,6 +509,21 @@ new Sortable(document.getElementById("grid"), {
     delayOnTouchOnly: true, // 모바일 터치에서만 지연 적용
     onEnd: saveOrder
 });
+
+function toggleLock() {
+    let isLocked = localStorage.getItem("eduinfo.locked") === "true"; // 저장된 값 불러오기
+    isLocked = !isLocked; // 반전
+    sortable.option("disabled", isLocked); // 잠금/해제 적용
+    localStorage.setItem("eduinfo.locked", isLocked); // 상태 저장
+    document.getElementById("lockBtn").textContent = isLocked ? "🔒 카드 고정" : "🔓 카드 해제";
+}
+
+// 초기 상태 로드
+(function () {
+    let isLocked = localStorage.getItem("eduinfo.locked") === "true";
+    sortable.option("disabled", isLocked);
+    document.getElementById("lockBtn").textContent = isLocked ? "🔒 카드 고정" : "🔓 카드 해제";
+})();
 
 // 도움말 모달 열기/닫기
 const helpBtn = document.getElementById("helpBtn");
