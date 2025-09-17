@@ -628,16 +628,6 @@ async function loadDuty() {
 }
 loadDuty();
 
-// // 메모 카드
-// const memoArea = document.getElementById("memoArea");
-
-// // 저장된 메모 불러오기
-// memoArea.value = localStorage.getItem("eduinfo.memo") || "";
-
-// // 입력할 때마다 저장
-// memoArea.addEventListener("input", () => {
-//     localStorage.setItem("eduinfo.memo", memoArea.value);
-// });
 
 const MEMO_KEY = "eduinfo.memoCard";
 let memos = JSON.parse(localStorage.getItem(MEMO_KEY) || "[]");
