@@ -11,21 +11,21 @@ document.getElementById('yy').textContent = new Date().getFullYear();
 const q = document.getElementById('q');
 const cards = [...document.querySelectorAll('.card')];
 const pills = [...document.querySelectorAll('.pill')];
+let hiddenCards = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
 let activeCat = 'all';
 
 function applyFilter() {
     const keyword = (q.value || '').trim().toLowerCase();
-
     cards.forEach(c => {
+        const key = c.dataset.key; // ✅ 여기서 key 정의
         const tags = (c.dataset.tags || '').toLowerCase();
-        const cats = (c.dataset.cat || '').toLowerCase().split(/\s+/); // 여러 카테고리 지원
-        const inCat = activeCat === 'all' ? true : cats.includes(activeCat);
+        const inCat = activeCat === 'all' ? true : (c.dataset.cat === activeCat);
+        const hit = !keyword || tags.includes(keyword) || c.querySelector('h3').textContent.toLowerCase().includes(keyword);
 
-        const hit = !keyword ||
-            tags.includes(keyword) ||
-            c.querySelector('h3').textContent.toLowerCase().includes(keyword);
+        // 🚨 숨김 카드 처리 추가
+        const isHidden = hiddenCards.includes(key);
 
-        c.style.display = (inCat && hit) ? '' : 'none';
+        c.style.display = (!isHidden && inCat && hit) ? '' : 'none';
     });
 }
 
@@ -40,6 +40,7 @@ pills.forEach(p => {
 });
 
 applyFilter();
+
 
 // 기본 선택 표시 (배열 길이 보장용)
 pills[0]?.style && (pills[0].style.outline = '2px solid var(--accent)');
@@ -534,6 +535,8 @@ const dutyBtn = document.getElementById("dutyBtn");
 const dutyModal = document.getElementById("dutyModal");
 const closeDutyBtn = document.getElementById("closeDutyBtn");
 
+const memoModal = document.getElementById("memoModal");
+
 
 dutyBtn.addEventListener("click", () => {
     dutyModal.style.display = "flex";
@@ -555,9 +558,10 @@ closeHelp.addEventListener("click", () => {
 });
 
 window.addEventListener("click", (e) => {
-    if (e.target === helpModal || e.target === dutyModal) {
+    if (e.target === helpModal || e.target === dutyModal || e.target === memoModal) {
         helpModal.style.display = "none";
         dutyModal.style.display = "none";
+        memoModal.style.display = "none";
     }
 });
 
@@ -624,16 +628,125 @@ async function loadDuty() {
 }
 loadDuty();
 
-// 메모 카드
-const memoArea = document.getElementById("memoArea");
+// // 메모 카드
+// const memoArea = document.getElementById("memoArea");
 
-// 저장된 메모 불러오기
-memoArea.value = localStorage.getItem("eduinfo.memo") || "";
+// // 저장된 메모 불러오기
+// memoArea.value = localStorage.getItem("eduinfo.memo") || "";
 
-// 입력할 때마다 저장
-memoArea.addEventListener("input", () => {
-    localStorage.setItem("eduinfo.memo", memoArea.value);
-});
+// // 입력할 때마다 저장
+// memoArea.addEventListener("input", () => {
+//     localStorage.setItem("eduinfo.memo", memoArea.value);
+// });
+
+const MEMO_KEY = "eduinfo.memoCard";
+let memos = JSON.parse(localStorage.getItem(MEMO_KEY) || "[]");
+let editingIndex = null; // 현재 수정 중인 메모 인덱스
+
+const memoListEl = document.getElementById("memoList");
+const addMemoBtn = document.getElementById("addMemoBtn");
+
+const modal = document.getElementById("memoModal");
+const closeModal = document.getElementById("closeMemoModal");
+const saveMemoBtn = document.getElementById("saveMemoBtn");
+const memoTitleInput = document.getElementById("memoTitle");
+const memoContentInput = document.getElementById("memoContent");
+
+// 렌더링
+function renderMemos() {
+  memoListEl.innerHTML = "";
+  memos.forEach((memo, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = memo.title;
+    btn.onclick = () => openModal(idx); // 클릭하면 수정 모드
+    memoListEl.appendChild(btn);
+  });
+}
+renderMemos();
+
+// 모달 열기 (새 메모 or 수정)
+function openModal(index = null) {
+  editingIndex = index;
+  if (index === null) {
+    // 새 메모
+    memoTitleInput.value = "";
+    memoContentInput.value = "";
+  } else {
+    // 기존 메모 수정
+    memoTitleInput.value = memos[index].title;
+    memoContentInput.value = memos[index].content;
+  }
+  modal.style.display = "flex";
+}
+
+// 모달 닫기
+closeModal.onclick = () => {
+  modal.style.display = "none";
+  editingIndex = null;
+};
+
+// 저장
+saveMemoBtn.onclick = () => {
+  const title = memoTitleInput.value.trim();
+  const content = memoContentInput.value.trim();
+  if (!title || !content) {
+    alert("제목과 내용을 입력하세요.");
+    return;
+  }
+
+  if (editingIndex === null) {
+    if (memos.length >= 5) {
+      alert("메모는 최대 5개까지만 저장할 수 있습니다.");
+      return;
+    }
+    memos.push({ title, content });
+  } else {
+    memos[editingIndex] = { title, content };
+  }
+
+  localStorage.setItem(MEMO_KEY, JSON.stringify(memos));
+  renderMemos();
+  modal.style.display = "none";
+  editingIndex = null;
+};
+
+// 추가 버튼
+addMemoBtn.onclick = () => openModal(null);
+
+const deleteMemoBtn = document.getElementById("deleteMemoBtn");
+
+// 모달 열기 (새 메모 or 수정)
+function openModal(index = null) {
+  editingIndex = index;
+  if (index === null) {
+    // 새 메모
+    memoTitleInput.value = "";
+    memoContentInput.value = "";
+    deleteMemoBtn.style.display = "none"; // 새 메모일 땐 삭제 숨김
+  } else {
+    // 기존 메모 수정
+    memoTitleInput.value = memos[index].title;
+    memoContentInput.value = memos[index].content;
+    saveMemoBtn.textContent = "수정"; 
+    deleteMemoBtn.style.display = "inline-block"; // 수정 모드일 땐 삭제 보이기
+  }
+  modal.style.display = "flex";
+}
+
+// 삭제 버튼 클릭
+deleteMemoBtn.onclick = () => {
+  if (editingIndex !== null) {
+    if (confirm("이 메모를 삭제하시겠습니까?")) {
+      memos.splice(editingIndex, 1); // 해당 인덱스 삭제
+      localStorage.setItem(MEMO_KEY, JSON.stringify(memos));
+      renderMemos();
+      modal.style.display = "none";
+      editingIndex = null;
+    }
+  }
+};
+
 
 // 카드 숨김 및 복원 기능
 // 카드 key → 제목 매핑
@@ -647,7 +760,7 @@ function buildCardMap() {
   return map;
 }
 
-let hiddenCards = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
+// let hiddenCards = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
 
 function hideCard(key) {
   const card = document.querySelector(`#grid .card[data-key="${key}"]`);
