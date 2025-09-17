@@ -205,7 +205,9 @@ header {
     box-shadow: var(--shadow);
     padding: 16px;
     overflow: hidden;
-    transition: transform .15s ease, border-color .2s ease, box-shadow .2s ease
+    transition: transform .15s ease, border-color .2s ease, box-shadow .2s ease;
+    /* user-select: none;       텍스트 드래그/선택 방지 */
+    /* -webkit-user-drag: none; 이미지 드래그 방지 (크롬/사파리) */
 }
 
 .card:hover {
@@ -390,6 +392,8 @@ footer {
 /* ===== 전광판 토글 ===== */
 .ticker-wrap {
     margin: 6px 0 18px;
+    display: flex;
+    align-items: center;
 }
 
 .ticker-toggle {
@@ -661,6 +665,29 @@ footer {
 .ticker-help:hover {
     border-color: #2e425b;
 }
+
+/* 카드잠금 및 해제 버튼 */
+#lockBtn {
+    margin-left: auto;
+    padding: 4px 6px;
+    border-radius: 10px;
+    border: 1px solid #223041;
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    transition: all .2s ease;
+    font-size: 13px;
+}
+
+.toolbar-btn:hover,
+.ticker-help:hover,
+#lockBtn:hover {
+    border-color: #2e425b;
+    background-color: var(--ring);
+    /* background: var(--accent);
+    color: #fff;
+    transform: scale(1.05); */
+}  
 
 /* 모달 공통 */
 .modal {
