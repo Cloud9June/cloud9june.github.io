@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>교육정보부 • 링크 허브</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="icon" href="main/eduinfo.png" type="image/png">
+    <link rel="stylesheet" href="main/style.css?ver=1">
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <div class="logo" aria-hidden="true"><span>🔗</span></div>
+            <div class="tit">
+                <h1>교육정보부 링크 허브</h1>
+                <p>업무·홍보·설문·신청 링크를 한 곳에서 빠르게 찾아 이동하세요.</p>
+            </div>
+
+            <div class="spacer"></div>
+            <div class="now" id="now">
+                <div class="now-weather">
+                    <div id="todayWeather">
+                        <i class="fa-solid fa-temperature-half"></i> 21.9℃ · 82%
+                    </div>
+                    <div id="tomorrowWeather">내일 --℃ / --℃</div>
+                </div>
+                <div class="now-datetime">
+                    <div class="now-date" id="nowDate">2025.09.15 (월)</div>
+                    <div class="now-time" id="nowTime">21:56:09</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===== 전광판 토글, 일일근무, 도움말 버튼 ===== -->
+        <div class="ticker-wrap">
+            <div class="ticker-left">
+                <button class="ticker-toggle" id="tickerToggle" type="button">📢 학교 알림 전광판 열기</button>
+                <button class="toolbar-btn" id="dutyBtn" type="button">📋 일일근무</button>
+                <button class="ticker-help" id="helpBtn" type="button">❓ 도움말</button>
+            </div>
+
+            <div class="ticker-right">
+                <button id="hiddenListBtn">🙈 숨김 카드 목록</button>
+                <button id="lockBtn" onclick="toggleLock()">🔓 해제</button>
+            </div>
+
+            <div class="led-ticker" id="ledTicker" role="region" aria-label="최근 성과 전광판" aria-hidden="true">
+                <div class="led-ticker-track" id="ledTrack"></div>
+            </div>
+        </div>
+
+        
+        <div id="hiddenList" class="hidden-list"></div>
+
+        <!-- 근무자 모달 -->
+        <div id="dutyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeDuty">&times;</span>
+            <h2>오늘·내일 근무 안내<span id="modal-date">든든한 선생님 라인업 완성 🌟</span></h2>
+            <div id="modal-duty"></div>
+            <div class="modal-footer">
+            <button id="closeDutyBtn">닫기</button>
+            <a href="https://docs.google.com/spreadsheets/d/1fooMUmUyiABOSiesvtd9FoD2Fs8jRq1VB_T9nYSkOCo/edit?gid=0#gid=0" 
+                target="_blank" rel="noopener">현황 시트</a>
+            </div>
+        </div>
+        </div>
+
+        <!-- ===== 도움말 모달 ===== -->
+        <div id="helpModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeHelp">&times;</span>
+                <h2>사용 가이드</h2>
+                <ul>
+                        <li>
+                            ⭐ <b>개인화 즐겨찾기 카드</b>
+                            <div class="desc">원하는 URL을 직접 추가/삭제하여 본인만의 카드로 활용할 수 있습니다.</div>
+                        </li><br>
+                        <li>
+                            🖱️ <b>카드 순서 변경</b>
+                            <div class="desc">마우스로 드래그하여 카드 순서를 원하는 대로 재배치할 수 있습니다.</div>
+                        </li><br>
+                            <li>
+                            🔒 <b>카드 고정/해제</b>
+                            <div class="desc">카드 고정 → 순서 변경 불가 / 카드 해제 → 순서 변경 가능</div>
+                        </li><br>
+                            <li>
+                            🙈 <b>카드 숨김</b>
+                            <div class="desc">각 카드 우측 상단의 ✖ 버튼을 눌러 카드를 숨길 수 있습니다.<br>
+                            숨긴 카드는 상단의 ‘숨김 카드 목록’에서 다시 복원할 수 있습니다.</div>
+                        </li><br>
+                        <li>
+                            📝 <b>메모장 카드</b>
+                            <div class="desc">빈 메모장 카드를 활용해 간단한 메모를 기록할 수 있습니다.<br>
+                            입력한 메모는 자동 저장되어 새로고침 후에도 유지됩니다.</div>
+                        </li><br>
+                        <li>
+                            🔍 <b>검색 접두어</b>
+                            <div class="desc">검색창에 <code>g</code> 또는 <code>ㅎ</code> 또는 <code>ㄱ</code> 입력 후 띄어쓰기 → 구글 검색 / <br> <code>n</code> 또는 <code>ㅜ</code> 또는 <code>ㄴ</code> 입력 후 띄어쓰기 → 네이버 검색</div>
+                        </li><br>
+                        <li>
+                            📑 <b>카드 필터링</b>
+                            <div class="desc">상단 필터 버튼을 눌러 업무·수업·외부 자료 등 원하는 카드만 볼 수 있습니다.</div>
+                        </li><br>
+                        <li>
+                            📱 <b>스마트폰 사용</b>
+                            <div class="desc">모바일에서도 동작하지만, PC 환경에 최적화되어 있습니다.</div>
+                        </li>
+                </ul>
+                <p style="font-size:13px; color:var(--warning);">※ 개인화된 설정은 서버에 저장되지 않고, 이 기기 브라우저에서만 유지됩니다.</p>
+            </div>
+        </div>
+
+        <!-- ===== 상단 빠른 검색바 ===== -->
+        <div class="quick-search" role="search">
+            <input id="qsInput" type="search" placeholder="검색어 입력 (Google/Naver 전환 가능)" />
+            <div class="qs-buttons">
+                <button class="qs-btn" id="qsGoogle" type="button">Google</button>
+                <button class="qs-btn" id="qsNaver" type="button">Naver</button>
+            </div>
+        </div>
+
+        <!-- ===== 오늘 급식 (상단 미니 위젯) ===== -->
+        <div class="today-meal" id="todayMeal" role="status" aria-live="polite" title="자세히 보기">
+            <span class="meal-icon">🍱</span>
+            <span class="meal-title">오늘 급식</span>
+            <span class="meal-text" id="todayMealText">불러오는 중…</span>
+        </div>
+
+        <!-- ===== 카드 검색 툴바 ===== -->
+        <div class="toolbar">
+            <div class="search" role="search">
+                <span aria-hidden="true">🔍</span>
+                <input id="q" type="search" placeholder="카드검색: 수업, 업무, 급식, 도서…" autocomplete="off" />
+            </div>
+            <button class="pill" data-filter="all">전체</button>
+            <button class="pill" data-filter="service">내부업무</button>
+            <button class="pill" data-filter="class">수업</button>
+            <button class="pill" data-filter="promo">성과/홍보</button>
+            <button class="pill" data-filter="external">외부/공식</button>
+        </div>
+
+        <!-- ===== 링크 카드들 ===== -->
+        <div class="grid" id="grid">
+            <!-- 개인화 즐겨찾기 카드 -->
+            <article class="card card1" data-key="card1" id="personalCard" data-tags="개인 즐겨찾기 맞춤" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card1')">✖</button>
+                <div class="icon">⭐</div>
+                <h3>내 즐겨찾기</h3>
+                <p>원하는 사이트를 추가하세요. (본인 기기에서만 저장됨)</p>
+                <div class="actions" id="personalLinks"></div>
+                <div class="actions">
+                    <button class="btn" id="addLinkBtn" type="button">➕ 추가</button>
+                    <button class="btn" id="manageLinkBtn" type="button">➖ 삭제</button>
+                </div>
+                <div id="deleteMode" style="display:none; margin-top:10px;"></div>
+                <div class="meta"><span class="badge">개인화</span></div>
+            </article>
+            <!-- 학교 공식/공유 자료 -->
+            <article class="card card2" data-key="card2" data-tags="학교 홈페이지 업무공유 외부 공식 external" data-cat="external service">
+                <button class="hide-btn" onclick="hideCard('card2')">✖</button>
+                <div class="icon">🏫</div>
+                <h3>학교 공식/공유 자료</h3>
+                <p>학교 홈페이지 및 2025 업무공유 시트.</p>
+                <div class="actions">
+                    <a class="btn" href="https://sungili-h.goesn.kr/sungili-h/main.do" target="_blank" rel="noopener">학교
+                        홈페이지</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1L5w5XQi1daMOXLadC0kAxFjP5nA8vPX1jYgssdDTFRM/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">업무공유시트</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1GsHg_z4wuqMyrl_7CA_Kc3CN-ox1dAK-dwKOZNGQpsc/edit?gid=1092647692#gid=1092647692"
+                        target="_blank" rel="noopener">학사일정달력</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1V-2yqslTObYJFBBvNBUkkKkCGg1eEmXBthpSiw9dpyQ/edit?gid=1545665429#gid=1545665429"
+                        target="_blank" rel="noopener">홍보일정달력</a>
+                    <a class="btn"
+                        href="https://meet.google.com/gyf-jefx-dnn" target="_blank" rel="noopener">온라인교무실</a>
+                </div>
+                <div class="meta"><span class="badge">공식</span><span class="badge">공유</span></div>
+            </article>
+
+            <!-- 업무·행정 통합 서비스 -->
+            <article class="card card3" data-key="card3" id="card-work-portal" data-tags="업무포털 에듀파인 나이스 NEIS K-에듀파인 통합 외부" data-cat="external">
+                <button class="hide-btn" onclick="hideCard('card3')">✖</button>
+                <div class="icon">🧑‍💼</div>
+                <h3>업무·행정 통합 서비스</h3>
+                <p>업무포털, 공직자메일 등 교직원 필수 행정 서비스 모음.<br>접속이 원활하지 않을 경우 개별 주소를 이용하세요.</p>
+                <div class="actions" style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <a class="btn" href="https://goe.eduptl.kr/bpm_lgn_lg00_001.do" target="_blank"
+                            rel="noopener">업무포털</a>
+                        <a class="btn" href="https://evpn.goe.go.kr/custom/index.html" target="_blank"
+                            rel="noopener">evpn</a>
+                        <a class="btn" href="https://mail.korea.kr/" target="_blank"
+                            rel="noopener">공직자통합메일</a>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <a class="btn" href="https://klef.goe.go.kr/keris_ui/login.do" target="_blank"
+                            rel="noopener">K-에듀파인 (개별 접속)</a>
+                        <a class="btn" href="http://goe.neis.go.kr/" target="_blank" rel="noopener">나이스 (개별 접속)</a>
+                    </div>
+                </div>
+                <div class="meta"><span class="badge">공식</span><span class="badge">외부</span></div>
+            </article>
+            
+            <!-- 에듀테크 사이트 -->
+            <article class="card card4" data-key="card4" data-tags="에듀테크 AI 퀴즈 수업지원" data-cat="class">
+                <button class="hide-btn" onclick="hideCard('card4')">✖</button>
+                <div class="icon">💡</div>
+                <h3>디지털 수업 도구</h3>
+                <p>수업과 학습에 활용할 수 있는 주요 에듀테크 플랫폼 모음</p>
+                <div class="actions">
+                    <a class="btn" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
+                    <a class="btn" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+                    <a class="btn" href="https://www.notion.com/ko/product" target="_blank" rel="noopener">Notion</a>
+                    <a class="btn" href="https://github.com/" target="_blank" rel="noopener">github</a>
+                    <a class="btn" href="https://quizn.show/" target="_blank" rel="noopener">퀴즈앤</a>
+                    <a class="btn" href="https://www.tkbell.co.kr/" target="_blank" rel="noopener">팅커벨</a>
+                </div>
+                <div class="meta"><span class="badge">에듀테크</span><span class="badge">디지털도구</span></div>
+            </article>
+
+            <!-- 구글 도구 사이트 -->
+            <article class="card card5" data-key="card5" data-tags="구글 클래스룸 시트 슬라이드 독스 킵 캘린더" data-cat="class">
+                <button class="hide-btn" onclick="hideCard('card5')">✖</button>
+                <div class="icon">🗂️</div>
+                <h3>구글 수업 툴킷</h3>
+                <p>수업과 협업에 활용할 수 있는 구글 도구 모음</p>
+                <div class="actions">
+                    <a class="btn" href="https://classroom.google.com/" target="_blank" rel="noopener">클래스룸</a>
+                    <a class="btn" href="https://sheets.google.com/" target="_blank" rel="noopener">시트</a>
+                    <a class="btn" href="https://drive.google.com/" target="_blank" rel="noopener">드라이브</a>
+                    <a class="btn" href="https://keep.google.com/" target="_blank" rel="noopener">킵</a>
+                    <a class="btn" href="https://mail.google.com/" target="_blank" rel="noopener">메일</a>
+                    <a class="btn" href="https://slides.google.com/" target="_blank" rel="noopener">슬라이드</a>
+                    <a class="btn" href="https://docs.google.com/" target="_blank" rel="noopener">독스</a>                    
+                    <a class="btn" href="https://calendar.google.com/" target="_blank" rel="noopener">캘린더</a>
+                </div>
+                <div class="meta"><span class="badge">구글</span></div>
+            </article>
+
+            <!-- 수업교환 -->
+            <article class="card card6" data-key="card6" data-tags="수업교환" data-cat="class">
+                <button class="hide-btn" onclick="hideCard('card6')">✖</button>
+                <div class="icon">🔄</div>
+                <h3>수업교환</h3>
+                <p>수업교환 신청</p>
+                <div class="actions">
+                    <a class="btn"
+                        href="https://docs.google.com/forms/d/e/1FAIpQLSdD7SJuvnBQTe2CL7mW_BJqmY--vrY5skViCX6UfZfJNwc6NQ/viewform"
+                        target="_blank" rel="noopener">수업교환 신청</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/1L5w5XQi1daMOXLadC0kAxFjP5nA8vPX1jYgssdDTFRM/edit?gid=1700399829#gid=1700399829"
+                        target="_blank" rel="noopener">수업교환 일지(확인)</a>    
+                </div>
+                <div class="meta"><span class="badge">수업</span></div>
+            </article>
+
+            <!-- 교육정보부 서비스 안내 (Accordion) -->
+            <article class="card card7" data-key="card7" id="card-eduinfo-service" data-tags="교육정보부 서비스 안내 신청 확인 계정 홈페이지 태블릿 소프트웨어"
+                data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card7')">✖</button>
+                <div class="icon">📮</div>
+                <h3>교육정보부 서비스 안내</h3>
+                <p>업무 신청(모든 교사)과 신청 현황 확인(교육정보부 전용)을 접어서 관리합니다.</p>
+
+                <div class="accordion">
+                    <button class="accordion-toggle">📌 신청 (모든 교사)</button>
+                    <div class="accordion-content">
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSd-YPb34M7GtwhEonIlDXG7JUuERg4oh22HwcA3_kG3x0EP_Q/viewform"
+                            target="_blank" rel="noopener">A/S 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSdo2kQ7L4Zz0smxum2UWMAX0zUI6MyLsqXwsvNxqt6M8tSyqw/viewform"
+                            target="_blank" rel="noopener">계정 초기화 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSejklgRxtk5yyUXd6MHuMcCfkEms6cZCeveTid7AxKaHEkMug/viewform"
+                            target="_blank" rel="noopener">홈페이지 관리 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/forms/d/e/1FAIpQLSfCELmwTI1nDHrIoix6PYPT2JZBbPgOx3yqE-rMMD3PeW1UFQ/viewform?usp=header"
+                            target="_blank" rel="noopener">태블릿 앱 설치 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">태블릿 반납/신청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1qb6zSTBWCatj9M_dfgRNm60hSjzop0Py38tWpmgDTtI/edit?usp=sharing"
+                            target="_blank" rel="noopener">재학생 구글 계정</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">소프트웨어 요청</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">기타 문의</a>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <button class="accordion-toggle">🔎 확인 (교육정보부)</button>
+                    <div class="accordion-content">
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1dEG3y7OlfOY1g6lVLKsrOjPw9mb7FKzp9S1yTHyjhfw/edit?resourcekey=&gid=355206611#gid=355206611"
+                            target="_blank" rel="noopener">A/S 확인</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1bT_gxw3tsnloKXZXJn1JaRkWeovGUkQcHStm0kkuN7Y/edit?resourcekey=&gid=2009402439#gid=2009402439"
+                            target="_blank" rel="noopener">계정 확인</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1KRquuKc7fk2vYmc001lyeFeGBk821xPlI5ILCGQeVEY/edit?resourcekey=&gid=1581065081#gid=1581065081"
+                            target="_blank" rel="noopener">홈페이지 확인</a>
+                        <a class="btn"
+                            href="https://docs.google.com/spreadsheets/d/1bdlCe0XeRnAwQcXqjBsbSnnlpBw94IJIv_P-VFKwTf8/edit?usp=sharing"
+                            target="_blank" rel="noopener">태블릿 앱 설치 확인</a>
+                    </div>
+                </div>
+
+                <div class="meta"><span class="badge">서비스</span></div>
+            </article>
+
+            <!-- 시설/환경 수리 신청 -->
+            <article class="card card8" data-key="card8" data-tags="시설 환경 수리 신청" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card8')">✖</button>
+                <div class="icon">🛠️</div>
+                <h3>시설·환경 수리 신청</h3>
+                <p>시설/환경 수리 요청 입력 시트.</p>
+                <div class="actions">
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/15UvLkwg2xT_J31qIecDhl6v4df6dR8cTWxL_QKHqW2k/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">수리 신청</a>
+                </div>
+                <div class="meta"><span class="badge">업무</span></div>
+            </article>
+
+            <!-- 성과/홍보 -->
+            <article class="card card10" data-key="card10" data-tags="성과 수상 홍보 키오스크 award" data-cat="promo">
+                <button class="hide-btn" onclick="hideCard('card10')">✖</button>
+                <div class="icon">🏆</div>
+                <h3>성과(수상) 허브</h3>
+                <p>신관 1층 키오스크 및 온라인 성과 게시.</p>
+                <div class="actions">
+                    <a class="btn" href="/award" target="_blank" rel="noopener">성과 보기</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/12T8NvLL8AOve2t4fZfZedyYtknL4tIp-tOfQaTulQ7Q/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">성과 입력</a>
+                </div>
+                <div class="meta"><span class="badge">/award</span></div>
+            </article>
+
+            <!-- 급식 시스템 -->
+            <article class="card card11" data-key="card11" data-tags="급식 신청 식단 서비스 service" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card11')">✖</button>
+                <div class="icon">🍱</div>
+                <h3>급식 정보/신청</h3>
+                <p>주간 식단 확인과 신청/집계(교사/학생용 구성).</p>
+                <div class="actions">
+                    <a class="btn" href="/food" target="_blank" rel="noopener">급식 시스템 바로가기</a>
+                </div>
+                <div class="meta"><span class="badge">/food</span><span class="badge">Firebase</span></div>
+            </article>
+
+            <!-- 도서관(마중물) -->
+            <article class="card card12" data-key="card12" data-tags="도서관 마중물 소장자료 희망도서 알라딘" data-cat="external">
+                <button class="hide-btn" onclick="hideCard('card12')">✖</button>
+                <div class="icon">📚</div>
+                <h3>도서관(마중물)</h3>
+                <p>소장자료 검색, 희망도서 신청, 도서정보 확인.</p>
+                <div class="actions">
+                    <a class="btn"
+                        href="https://read365.edunet.net/PureScreen/SchoolSearch?schoolName=%EC%84%B1%EC%9D%BC%EC%A0%95%EB%B3%B4%EA%B3%A0%EB%93%B1%ED%95%99%EA%B5%90&provCode=J10&neisCode=J100000624"
+                        target="_blank" rel="noopener">소장자료 검색</a>
+                    <a class="btn"
+                        href="https://docs.google.com/spreadsheets/d/108QMoAkDu3peFlJKVJOOWx0nqHZCy_O0WN_1UeSgtwA/edit?gid=0#gid=0"
+                        target="_blank" rel="noopener">희망도서 신청</a>
+                    <a class="btn" href="https://www.aladin.co.kr/" target="_blank" rel="noopener">도서정보(알라딘)</a>
+                </div>
+                <div class="meta"><span class="badge">도서관</span></div>
+            </article>
+
+            <!-- 빠른 메모 -->
+            <article class="card memo-card" data-key="card13">
+                <button class="hide-btn" onclick="hideCard('card13')">✖</button>
+                <div class="icon">📝</div>
+                <h3>메모장</h3>
+                <textarea id="memoArea" placeholder="메모를 입력하세요..."></textarea>
+            </article>
+
+            <!-- 교직원 내선번호 검색 -->
+            <article class="card card13" data-key="card14" data-tags="검색 교직원 내선번호" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card14')">✖</button>
+                <div class="icon">📞</div>
+                <h3>교직원 내선번호 검색</h3>
+                <p>초성검색 가능(ㄱㅎㅈ), 부서명 검색 가능</p>
+                <input type="text" id="searchBox" class="searchT" placeholder="이름/부서 입력" onkeyup="searchStaff()">
+                <button id="resetButton" class="qs-btn" onclick="resetSearch()">초기화</button>
+
+                <table id="resultTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>부서</th>
+                            <th>이름</th>
+                            <th>내선번호</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody"></tbody>
+                </table>
+                <div class="meta"><span class="badge">교직원</span><span class="badge">내선번호</span></div>
+            </article>
+
+            <!-- 데이터 먼저 불러오고, 검색 로직 실행 -->
+            <script src="main/data.js"></script>
+            <script src="main/tel.js"></script>
+
+        </div>
+
+
+        <p class="hint">※ 카드 추가/수정은 교육정보부장 김형준에게 문의해 주세요.</p>
+        <footer>
+            © <span id="yy"></span> 성일정보고등학교 교육정보부
+        </footer>
+    </div>
+    <script src="main/main.js"></script>
+</body>
+</html>
