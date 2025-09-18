@@ -681,10 +681,19 @@ function openModal(index = null) {
 }
 
 // 모달 닫기
-closeModal.onclick = () => {
-  modal.style.display = "none";
-  editingIndex = null;
-};
+// closeModal.onclick = () => {
+//   modal.style.display = "none";
+//   editingIndex = null;
+// };
+
+window.addEventListener("click", (e) => {
+    if (e.target === closeModal) {
+        modal.style.display = "none";
+        editingIndex = null;
+    }
+});
+
+
 
 // 저장
 saveMemoBtn.onclick = () => {
