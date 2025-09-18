@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성일정보고 학생 앱</title>
+    <style>
+        :root {
+            --bg: #0b0d10;
+            --card: #1c1f26;
+            --text: #e8edf3;
+            --muted: #9fb0c0;
+            --pastel-pink: #ffd6e0;
+            --pastel-yellow: #ffe66d;
+            --pastel-mint: #a8e6cf;
+            --pastel-blue: #a0c4ff;
+            --accent-blue: #4cc9f0;
+            --accent-red: #f72585;
+        }
+
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ===== 인트로 ===== */
+        #videoWrapper {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #videoWrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #loginOverlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+        }
+
+        #welcomeText {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-shadow:
+                2px 2px 8px rgba(255, 182, 193, 0.6),
+                -2px -2px 8px rgba(173, 216, 230, 0.6),
+                0 0 12px rgba(255, 255, 224, 0.5);
+        }
+
+        #loginBtn {
+            background: var(--pastel-pink);
+            opacity: 0.8;
+            /* 기본 반투명 */
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.15s, opacity 0.15s;
+        }
+
+        #loginBtn:active {
+            opacity: 1;
+            /* 터치하면 선명 */
+            transform: scale(0.96);
+            /* 살짝 눌린 느낌 */
+        }
+
+        /* ===== 헤더 (파스텔톤) ===== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: calc(100% - 1rem);
+            margin: 0.5rem;
+            padding: 0.8rem 1.2rem;
+            z-index: 100;
+            background: #1c1f26;
+            border-radius: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-top {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--pastel-yellow);
+        }
+
+        .header-top span {
+            background: var(--pastel-pink);
+            color: #000;
+            border-radius: 10px;
+            padding: 3px 8px;
+            font-size: 0.85rem;
+            margin-left: 8px;
+        }
+
+        /* ===== 탭 ===== */
+        .tabs {
+            display: flex;
+            justify-content: flex-start;
+            gap: 0;
+            /* 버튼 사이 간격 제거 */
+            margin-top: 5rem;
+            /* 헤더와 안 겹치게 */
+            margin-left: 12px;
+            /* 전체 버튼 오른쪽으로 살짝 밀기 */
+        }
+
+        .tabs button {
+            padding: 0.4rem 1rem;
+            background: var(--card);
+            color: var(--muted);
+            border: 1px solid #333;
+            cursor: pointer;
+            font-size: 0.8rem;
+            border-radius: 10px 10px 0 0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .tabs button.active {
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* 기존에 있던 margin-left 제거 */
+        .tabs button:last-child {
+            margin-left: 0;
+        }
+
+        .tabs button:first-child.active {
+            background: var(--pastel-blue);
+        }
+
+        .tabs button:last-child.active {
+            background: var(--pastel-pink);
+        }
+
+        /* ===== 메인 ===== */
+        main {
+            position: relative;
+            margin-top: -4px;
+            padding: 1rem;
+            overflow-y: auto;
+            transition: border 0.3s ease;
+        }
+
+        main.blue-border {
+            border-top: 3px solid var(--pastel-blue);
+            border-radius: 12px;
+        }
+
+        main.red-border {
+            border-top: 3px solid var(--pastel-pink);
+            border-radius: 12px;
+        }
+
+        /* ===== 피드 ===== */
+        .feed-item {
+            background: var(--card);
+            padding: 1rem;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .feed-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--muted);
+            padding-bottom: 0.3rem;
+            color: var(--pastel-yellow);
+        }
+
+        .feed-content {
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .feed-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            color: #000;
+        }
+
+        .tag.grade {
+            background: var(--pastel-blue);
+        }
+
+        .tag.all {
+            background: var(--pastel-yellow);
+        }
+
+        .tag.deptA {
+            background: var(--pastel-mint);
+        }
+
+        .tag.deptB {
+            background: var(--pastel-pink);
+        }
+
+        .tag.deptC {
+            background: #bdb2ff;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== 인트로 화면 ===== -->
+    <div id="videoWrapper">
+        <video autoplay muted loop playsinline>
+            <source src="video/nike.mp4" type="video/mp4">
+            지원하지 않는 브라우저입니다.
+        </video>
+        <div id="loginOverlay">
+            <p id="welcomeText">🌟✨💫🌟<br>성일정보고<br>로그인하고,<br>오늘 하루<br>반짝 시작!<br>✨💫☀️✨</p>
+            <button id="loginBtn">로그인</button>
+        </div>
+    </div>
+
+    <!-- ===== 메인 화면 ===== -->
+    <header id="appHeader" style="display:none;">
+        <div class="header-top">
+            🏫 성일정보고등학교
+            <span id="userInfo">1학년 1반 홍길동</span>
+        </div>
+    </header>
+
+    <div class="tabs" id="tabs" style="display:none;">
+        <button data-tab="all" class="active">전체</button>
+        <button data-tab="class">우리반</button>
+    </div>
+
+    <main id="mainContent" class="blue-border" style="display:none;">
+        <section id="allFeed"></section>
+        <section id="classFeed" style="display:none;"></section>
+    </main>
+
+    <script>
+        // ===== 더미 로그인 사용자 =====
+        const user = {
+            name: "홍길동",
+            grade: 1,
+            class: 1,
+            role: "student"
+        };
+
+        // ===== 더미 피드 데이터 =====
+        const allFeedData = [{
+            title: "7교시 수업 취소 안내",
+            content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.",
+            tags: ["전학년", "1학년", "A과"]
+        }];
+        const classFeedData = [{
+            title: "조별 발표 준비",
+            content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.",
+            tags: ["1학년", "B과"]
+        }];
+
+        // ===== 피드 렌더링 =====
+        function renderFeed(feedEl, data) {
+            feedEl.innerHTML = "";
+            data.forEach(item => {
+                const div = document.createElement("div");
+                div.className = "feed-item";
+                div.innerHTML = `
+          <div class="feed-title">${item.title}</div>
+          <div class="feed-content">${item.content}</div>
+          <div class="feed-tags">
+            ${item.tags.map(tag => `<span class="tag ${tagClass(tag)}">${tag}</span>`).join("")}
+          </div>
+        `;
+                feedEl.appendChild(div);
+            });
+        }
+
+        function tagClass(tag) {
+            if (tag === "전학년") return "all";
+            if (tag.includes("학년")) return "grade";
+            if (tag.includes("A과")) return "deptA";
+            if (tag.includes("B과")) return "deptB";
+            if (tag.includes("C과")) return "deptC";
+            return "";
+        }
+
+        const loginBtn = document.getElementById("loginBtn");
+        const videoWrapper = document.getElementById("videoWrapper");
+        const appHeader = document.getElementById("appHeader");
+        const tabs = document.getElementById("tabs");
+        const mainContent = document.getElementById("mainContent");
+
+        loginBtn.addEventListener("click", () => {
+            videoWrapper.style.display = "none";
+            appHeader.style.display = "block";
+            tabs.style.display = "flex";
+            mainContent.style.display = "block";
+
+            document.getElementById("userInfo").textContent =
+                user.grade && user.class ?
+                ` ${user.grade}학년 ${user.class}반 ${user.name}` :
+                ` ${user.name}`;
+
+            renderFeed(document.getElementById("allFeed"), allFeedData);
+            renderFeed(document.getElementById("classFeed"), classFeedData);
+        });
+
+        const tabButtons = document.querySelectorAll(".tabs button");
+        const allFeed = document.getElementById("allFeed");
+        const classFeed = document.getElementById("classFeed");
+
+        tabButtons.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabButtons.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                if (tab.dataset.tab === "all") {
+                    allFeed.style.display = "block";
+                    classFeed.style.display = "none";
+                    mainContent.classList.add("blue-border");
+                    mainContent.classList.remove("red-border");
+                } else {
+                    allFeed.style.display = "none";
+                    classFeed.style.display = "block";
+                    mainContent.classList.add("red-border");
+                    mainContent.classList.remove("blue-border");
+                }
+            });
+        });
+
+        if (!user.grade || !user.class) {
+            document.querySelector('[data-tab="class"]').style.display = "none";
+        }
+    </script>
+</body>
+
+</html>
