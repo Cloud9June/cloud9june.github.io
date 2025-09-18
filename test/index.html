@@ -115,6 +115,20 @@
             </div>
         </div>
 
+        <!-- 메모 모달 -->
+        <div id="memoModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeMemoModal">&times;</span>
+                <h2>메모</h2>
+                <input type="text" id="memoTitle" placeholder="제목" />
+                <textarea id="memoContent" placeholder="내용"></textarea>
+                <div class="modal-footer">
+                <button id="saveMemoBtn">저장</button>
+                <button id="deleteMemoBtn" style="display:none;">삭제</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== 상단 빠른 검색바 ===== -->
         <div class="quick-search" role="search">
             <input id="qsInput" type="search" placeholder="검색어 입력 (Google/Naver 전환 가능)" />
@@ -398,20 +412,6 @@
                 <div class="meta"><span class="badge">개인화</span></div>
             </article>
 
-            <!-- 메모 모달 -->
-            <div id="memoModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" id="closeMemoModal">&times;</span>
-                    <h2>메모</h2>
-                    <input type="text" id="memoTitle" placeholder="제목" />
-                    <textarea id="memoContent" placeholder="내용"></textarea>
-                    <div class="modal-footer">
-                    <button id="saveMemoBtn">저장</button>
-                    <button id="deleteMemoBtn" style="display:none;">삭제</button>
-                    </div>
-                </div>
-            </div>
-
             <!-- 교직원 내선번호 검색 -->
             <article class="card card14" data-key="card14" data-tags="검색 교직원 내선번호" data-cat="service">
                 <button class="hide-btn" onclick="hideCard('card14')">✖</button>
@@ -446,6 +446,6 @@
             © <span id="yy"></span> 성일정보고등학교 교육정보부
         </footer>
     </div>
-    <script src="main/main.js?ver=1"></script>
+    <script src="main/main.js"></script>
 </body>
 </html>
