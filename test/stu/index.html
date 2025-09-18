@@ -65,7 +65,6 @@
         #loginBtn {
             background: var(--pastel-pink);
             opacity: 0.8;
-            /* 기본 반투명 */
             color: #000;
             font-weight: bold;
             border: none;
@@ -79,12 +78,10 @@
 
         #loginBtn:active {
             opacity: 1;
-            /* 터치하면 선명 */
             transform: scale(0.96);
-            /* 살짝 눌린 느낌 */
         }
 
-        /* ===== 헤더 (파스텔톤) ===== */
+        /* ===== 헤더 ===== */
         header {
             position: fixed;
             top: 0;
@@ -100,9 +97,7 @@
 
         header.scrolled {
             opacity: 0.85;
-            /* 스크롤 시 투명도 적용 */
             background: rgba(23, 28, 34, 0.85);
-            /* card 색상을 투명하게 */
         }
 
         .header-top {
@@ -120,14 +115,11 @@
             margin-left: 8px;
         }
 
-
         /* 로그아웃 버튼 */
         #logoutBtn {
             margin-left: 10px;
             background: #f28b82;
-            /* 파스텔 레드 */
             color: #fff;
-            /* 흰 글씨 → 가독성 강화 */
             font-weight: 700;
             border: none;
             border-radius: 10px;
@@ -139,7 +131,6 @@
 
         #logoutBtn:active {
             background: #ff6b6b;
-            /* 버튼 누를 때 더 진한 파스텔 레드 */
             transform: scale(0.96);
         }
 
@@ -148,11 +139,8 @@
             display: flex;
             justify-content: flex-start;
             gap: 0;
-            /* 버튼 사이 간격 제거 */
             margin-top: 5rem;
-            /* 헤더와 안 겹치게 */
             margin-left: 12px;
-            /* 전체 버튼 오른쪽으로 살짝 밀기 */
         }
 
         .tabs button {
@@ -169,11 +157,6 @@
         .tabs button.active {
             font-weight: bold;
             color: #000;
-        }
-
-        /* 기존에 있던 margin-left 제거 */
-        .tabs button:last-child {
-            margin-left: 0;
         }
 
         .tabs button:first-child.active {
@@ -261,6 +244,7 @@
             color: #000;
         }
 
+        /* 탑 버튼 */
         #backToTop {
             position: fixed;
             bottom: 20px;
@@ -328,7 +312,7 @@
 
     <script>
         // ===== 더미 로그인 사용자 =====
-        const user = {
+        const dummyUser = {
             name: "홍길동",
             grade: 1,
             class: 1,
@@ -336,49 +320,18 @@
         };
 
         // ===== 더미 피드 데이터 =====
-        const allFeedData = [{
-                title: "7교시 수업 취소 안내",
-                content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.",
-                tags: ["전학년", "1학년", "A과"]
-            },
-            {
-                title: "급식 변경 안내",
-                content: "오늘 점심은 돈까스 → 치킨가라아게로 변경되었습니다.",
-                tags: ["전학년"]
-            },
-            {
-                title: "체육대회 준비",
-                content: "다음 주 금요일 체육대회를 위해 종목 신청서를 제출하세요.",
-                tags: ["전학년", "체육부"]
-            },
-            {
-                title: "학생회 회의",
-                content: "오늘 7시 도서관에서 학생회 임원 회의가 있습니다.",
-                tags: ["전학년", "학생회"]
-            },
-            {
-                title: "IT과 프로젝트 안내",
-                content: "2학년 IT과 학생들은 프로젝트 중간 점검을 이번 주에 진행합니다.",
-                tags: ["2학년", "IT과"]
-            },
-            {
-                title: "봉사활동 신청",
-                content: "주말에 진행되는 지역 봉사활동에 참여할 학생은 오늘까지 신청하세요.",
-                tags: ["전학년", "봉사"]
-            }
+        const allFeedData = [
+            { title: "7교시 수업 취소 안내", content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.", tags: ["전학년", "1학년", "A과"] },
+            { title: "급식 변경 안내", content: "오늘 점심은 돈까스 → 치킨가라아게로 변경되었습니다.", tags: ["전학년"] },
+            { title: "체육대회 준비", content: "다음 주 금요일 체육대회를 위해 종목 신청서를 제출하세요.", tags: ["전학년", "체육부"] },
+            { title: "학생회 회의", content: "오늘 7시 도서관에서 학생회 임원 회의가 있습니다.", tags: ["전학년", "학생회"] },
+            { title: "IT과 프로젝트 안내", content: "2학년 IT과 학생들은 프로젝트 중간 점검을 이번 주에 진행합니다.", tags: ["2학년", "IT과"] },
+            { title: "봉사활동 신청", content: "주말에 진행되는 지역 봉사활동에 참여할 학생은 오늘까지 신청하세요.", tags: ["전학년", "봉사"] }
         ];
 
-        // ===== 더미 피드 데이터 (우리반) =====
-        const classFeedData = [{
-                title: "조별 발표 준비",
-                content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.",
-                tags: ["1학년", "B과"]
-            },
-            {
-                title: "청소 구역 변경",
-                content: "오늘부터 1반 청소 구역은 특별실에서 복도로 변경됩니다.",
-                tags: ["1학년", "1반"]
-            }
+        const classFeedData = [
+            { title: "조별 발표 준비", content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.", tags: ["1학년", "B과"] },
+            { title: "청소 구역 변경", content: "오늘부터 1반 청소 구역은 특별실에서 복도로 변경됩니다.", tags: ["1학년", "1반"] }
         ];
 
         // ===== 피드 렌더링 =====
@@ -388,12 +341,12 @@
                 const div = document.createElement("div");
                 div.className = "feed-item";
                 div.innerHTML = `
-          <div class="feed-title">${item.title}</div>
-          <div class="feed-content">${item.content}</div>
-          <div class="feed-tags">
-            ${item.tags.map(tag => `<span class="tag ${tagClass(tag)}">${tag}</span>`).join("")}
-          </div>
-        `;
+                    <div class="feed-title">${item.title}</div>
+                    <div class="feed-content">${item.content}</div>
+                    <div class="feed-tags">
+                        ${item.tags.map(tag => `<span class="tag ${tagClass(tag)}">${tag}</span>`).join("")}
+                    </div>
+                `;
                 feedEl.appendChild(div);
             });
         }
@@ -407,27 +360,55 @@
             return "";
         }
 
-        const loginBtn = document.getElementById("loginBtn");
         const videoWrapper = document.getElementById("videoWrapper");
         const appHeader = document.getElementById("appHeader");
         const tabs = document.getElementById("tabs");
         const mainContent = document.getElementById("mainContent");
+        const loginBtn = document.getElementById("loginBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
 
-        loginBtn.addEventListener("click", () => {
+        function showMainScreen(user) {
             videoWrapper.style.display = "none";
             appHeader.style.display = "block";
             tabs.style.display = "flex";
             mainContent.style.display = "block";
 
             document.getElementById("userInfo").textContent =
-                user.grade && user.class ?
-                ` ${user.grade}학년 ${user.class}반 ${user.name}` :
-                ` ${user.name}`;
+                user.grade && user.class
+                    ? `${user.grade}학년 ${user.class}반 ${user.name}`
+                    : user.name;
 
             renderFeed(document.getElementById("allFeed"), allFeedData);
             renderFeed(document.getElementById("classFeed"), classFeedData);
+
+            if (!user.grade || !user.class) {
+                document.querySelector('[data-tab="class"]').style.display = "none";
+            }
+        }
+
+        // 로그인 버튼
+        loginBtn.addEventListener("click", () => {
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("userInfo", JSON.stringify(dummyUser));
+            showMainScreen(dummyUser);
         });
 
+        // 로그아웃 버튼
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userInfo");
+            location.reload();
+        });
+
+        // 새로고침 시 로그인 유지
+        window.addEventListener("load", () => {
+            if (localStorage.getItem("isLoggedIn") === "true") {
+                const savedUser = JSON.parse(localStorage.getItem("userInfo"));
+                if (savedUser) showMainScreen(savedUser);
+            }
+        });
+
+        // 탭 전환
         const tabButtons = document.querySelectorAll(".tabs button");
         const allFeed = document.getElementById("allFeed");
         const classFeed = document.getElementById("classFeed");
@@ -451,47 +432,21 @@
             });
         });
 
-        if (!user.grade || !user.class) {
-            document.querySelector('[data-tab="class"]').style.display = "none";
-        }
-
-        // 스크롤 이벤트 감지
+        // 스크롤 시 헤더 투명도 변화
         window.addEventListener("scroll", () => {
             const header = document.getElementById("appHeader");
-            if (window.scrollY > 10) {
-                header.classList.add("scrolled");
-            } else {
-                header.classList.remove("scrolled");
-            }
+            if (window.scrollY > 10) header.classList.add("scrolled");
+            else header.classList.remove("scrolled");
         });
 
+        // 탑 버튼
         const backToTop = document.getElementById("backToTop");
-
         window.addEventListener("scroll", () => {
-            if (window.scrollY > 200) { // 200px 이상 스크롤 시 버튼 표시
-                backToTop.classList.add("show");
-            } else {
-                backToTop.classList.remove("show");
-            }
+            if (window.scrollY > 200) backToTop.classList.add("show");
+            else backToTop.classList.remove("show");
         });
-
         backToTop.addEventListener("click", () => {
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        });
-
-
-        const logoutBtn = document.getElementById("logoutBtn");
-
-        logoutBtn.addEventListener("click", () => {
-            // 로그인 상태 제거
-            localStorage.removeItem("isLoggedIn");
-            localStorage.removeItem("userInfo");
-
-            // 화면 초기화
-            location.reload();
+            window.scrollTo({ top: 0, behavior: "smooth" });
         });
     </script>
 </body>
