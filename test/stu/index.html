@@ -98,6 +98,13 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
 
+        header.scrolled {
+            opacity: 0.85;
+            /* 스크롤 시 투명도 적용 */
+            background: rgba(23, 28, 34, 0.85);
+            /* card 색상을 투명하게 */
+        }
+
         .header-top {
             font-size: 1.1rem;
             font-weight: bold;
@@ -276,15 +283,49 @@
 
         // ===== 더미 피드 데이터 =====
         const allFeedData = [{
-            title: "7교시 수업 취소 안내",
-            content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.",
-            tags: ["전학년", "1학년", "A과"]
-        }];
+                title: "7교시 수업 취소 안내",
+                content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.",
+                tags: ["전학년", "1학년", "A과"]
+            },
+            {
+                title: "급식 변경 안내",
+                content: "오늘 점심은 돈까스 → 치킨가라아게로 변경되었습니다.",
+                tags: ["전학년"]
+            },
+            {
+                title: "체육대회 준비",
+                content: "다음 주 금요일 체육대회를 위해 종목 신청서를 제출하세요.",
+                tags: ["전학년", "체육부"]
+            },
+            {
+                title: "학생회 회의",
+                content: "오늘 7시 도서관에서 학생회 임원 회의가 있습니다.",
+                tags: ["전학년", "학생회"]
+            },
+            {
+                title: "IT과 프로젝트 안내",
+                content: "2학년 IT과 학생들은 프로젝트 중간 점검을 이번 주에 진행합니다.",
+                tags: ["2학년", "IT과"]
+            },
+            {
+                title: "봉사활동 신청",
+                content: "주말에 진행되는 지역 봉사활동에 참여할 학생은 오늘까지 신청하세요.",
+                tags: ["전학년", "봉사"]
+            }
+        ];
+
+        // ===== 더미 피드 데이터 (우리반) =====
         const classFeedData = [{
-            title: "조별 발표 준비",
-            content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.",
-            tags: ["1학년", "B과"]
-        }];
+                title: "조별 발표 준비",
+                content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.",
+                tags: ["1학년", "B과"]
+            },
+            {
+                title: "청소 구역 변경",
+                content: "오늘부터 1반 청소 구역은 특별실에서 복도로 변경됩니다.",
+                tags: ["1학년", "1반"]
+            }
+        ];
 
         // ===== 피드 렌더링 =====
         function renderFeed(feedEl, data) {
@@ -359,6 +400,16 @@
         if (!user.grade || !user.class) {
             document.querySelector('[data-tab="class"]').style.display = "none";
         }
+
+        // 스크롤 이벤트 감지
+        window.addEventListener("scroll", () => {
+            const header = document.getElementById("appHeader");
+            if (window.scrollY > 10) {
+                header.classList.add("scrolled");
+            } else {
+                header.classList.remove("scrolled");
+            }
+        });
     </script>
 </body>
 
