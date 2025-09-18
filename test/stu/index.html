@@ -4,11 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>성일정보고 학생 앱</title>
-
-    <!-- iOS / Safari 라이트·다크 모드 무시하고 다크모드만 -->
     <meta name="color-scheme" content="only dark">
-
+    <title>성일정보고 학생 앱</title>
     <style>
         :root {
             --bg: #0b0d10;
@@ -30,29 +27,6 @@
             font-family: 'Noto Sans KR', sans-serif;
             background: var(--bg);
             color: var(--text);
-        }
-
-        /* ===== iOS 라이트/다크 모드 강제 고정 ===== */
-        @media (prefers-color-scheme: light) {
-            body {
-                background: var(--bg) !important;
-                color: var(--text) !important;
-            }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: var(--bg) !important;
-                color: var(--text) !important;
-            }
-        }
-
-        input,
-        textarea,
-        select,
-        button {
-            background-color: var(--card) !important;
-            color: var(--text) !important;
         }
 
         /* ===== 인트로 ===== */
@@ -142,6 +116,7 @@
             margin-left: 8px;
         }
 
+        /* 로그아웃 버튼 */
         #logoutBtn {
             margin-left: 10px;
             background: #f28b82;
@@ -224,14 +199,16 @@
         .feed-title {
             font-weight: bold;
             font-size: 1rem;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--muted);
+            padding-bottom: 0.3rem;
             color: var(--pastel-yellow);
         }
 
         .feed-meta {
             font-size: 0.7rem;
             color: var(--muted);
-            margin-bottom: 0.5rem;
+            margin-top: 2px;
         }
 
         .feed-content {
@@ -271,8 +248,10 @@
 
         .tag.deptC {
             background: #bdb2ff;
+            color: #000;
         }
 
+        /* 탑 버튼 */
         #backToTop {
             position: fixed;
             bottom: 20px;
@@ -305,10 +284,10 @@
 
 <body>
 
-    <!-- ===== 인트로 ===== -->
+    <!-- ===== 인트로 화면 ===== -->
     <div id="videoWrapper">
         <video autoplay muted loop playsinline>
-            <source src="video/nike.mp4" type="video/mp4">
+            <source src="video/intro2.mp4" type="video/mp4">
             지원하지 않는 브라우저입니다.
         </video>
         <div id="loginOverlay">
@@ -317,7 +296,7 @@
         </div>
     </div>
 
-    <!-- ===== 메인 ===== -->
+    <!-- ===== 메인 화면 ===== -->
     <header id="appHeader" style="display:none;">
         <div class="header-top">
             🏫 성일정보고등학교
@@ -339,11 +318,107 @@
     <button id="backToTop">🔝</button>
 
     <script>
-        // ===== 날짜 포맷 =====
+        // ===== 더미 로그인 사용자 =====
+        const dummyUser = {
+            name: "홍길동",
+            grade: 1,
+            class: 1,
+            role: "student"
+        };
+
+        // ===== 더미 피드 데이터 =====
+        const allFeedData = [{
+                title: "7교시 수업 취소 안내",
+                content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.",
+                tags: ["전학년", "1학년", "A과"],
+                createdAt: "2025-09-18T14:30:00"
+            },
+            {
+                title: "급식 변경 안내",
+                content: "오늘 점심은 돈까스 → 치킨가라아게로 변경되었습니다.",
+                tags: ["전학년"],
+                createdAt: "2025-09-18T09:10:00"
+            },
+            {
+                title: "체육대회 준비",
+                content: "다음 주 금요일 체육대회를 위해 종목 신청서를 제출하세요.",
+                tags: ["전학년", "체육부"],
+                createdAt: "2025-09-17T16:45:00"
+            },
+            {
+                title: "학생회 회의",
+                content: "오늘 저녁 7시 도서관에서 학생회 임원 회의가 있습니다.",
+                tags: ["전학년", "학생회"],
+                createdAt: "2025-09-17T11:20:00"
+            },
+            {
+                title: "IT과 프로젝트 안내",
+                content: "2학년 IT과 학생들은 프로젝트 중간 점검을 이번 주에 진행합니다.",
+                tags: ["2학년", "IT과"],
+                createdAt: "2025-09-16T13:15:00"
+            },
+            {
+                title: "봉사활동 신청",
+                content: "주말에 진행되는 지역 봉사활동에 참여할 학생은 오늘까지 신청하세요.",
+                tags: ["전학년", "봉사"],
+                createdAt: "2025-09-15T10:00:00"
+            },
+            {
+                title: "도서관 이용 안내",
+                content: "시험 기간 동안 도서관은 저녁 9시까지 연장 운영됩니다.",
+                tags: ["전학년", "도서부"],
+                createdAt: "2025-09-14T17:50:00"
+            },
+            {
+                title: "교복 단속 주간",
+                content: "이번 주는 교복 단속 주간이니 복장 단정에 신경 써주세요.",
+                tags: ["전학년", "생활지도부"],
+                createdAt: "2025-09-13T08:40:00"
+            },
+            {
+                title: "영어 말하기 대회",
+                content: "영어 말하기 대회 참가 신청은 이번 주 금요일까지입니다.",
+                tags: ["전학년", "영어과"],
+                createdAt: "2025-09-12T15:05:00"
+            }
+        ];
+
+        const classFeedData = [{
+                title: "조별 발표 준비",
+                content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.",
+                tags: ["1학년", "B과"],
+                createdAt: "2025-09-18T12:00:00"
+            },
+            {
+                title: "청소 구역 변경",
+                content: "오늘부터 1반 청소 구역은 특별실에서 복도로 변경됩니다.",
+                tags: ["1학년", "1반"],
+                createdAt: "2025-09-17T16:20:00"
+            },
+            {
+                title: "담임 상담 신청",
+                content: "이번 주 상담이 필요한 학생은 오늘 중으로 담임 선생님께 신청하세요.",
+                tags: ["1학년", "1반"],
+                createdAt: "2025-09-16T09:30:00"
+            },
+            {
+                title: "교실 비품 점검",
+                content: "교실 비품 점검이 오늘 6교시에 진행됩니다. 해당 시간에는 자리에 있어주세요.",
+                tags: ["1학년", "1반"],
+                createdAt: "2025-09-15T14:50:00"
+            }
+        ];
+
         function formatDate(date) {
             const days = ["일", "월", "화", "수", "목", "금", "토"];
             const d = new Date(date);
-            return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} (${days[d.getDay()]}) ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            const weekday = days[d.getDay()];
+            const hours = String(d.getHours()).padStart(2, "0");
+            const minutes = String(d.getMinutes()).padStart(2, "0");
+            return `${year}.${month}.${day} (${weekday}) ${hours}:${minutes}`;
         }
 
         // ===== 피드 렌더링 =====
@@ -354,13 +429,15 @@
                 div.className = "feed-item";
                 const createdAt = item.createdAt ? formatDate(item.createdAt) : formatDate(new Date());
                 div.innerHTML = `
-          <div class="feed-title">${item.title}</div>
-          <div class="feed-meta">${createdAt}</div>
-          <div class="feed-content">${item.content}</div>
-          <div class="feed-tags">
-            ${item.tags.map(tag => `<span class="tag ${tagClass(tag)}">${tag}</span>`).join("")}
-          </div>
-        `;
+                <div class="feed-title">
+                    ${item.title}
+                    <div class="feed-meta">${createdAt}</div>
+                </div>
+                <div class="feed-content">${item.content}</div>
+                <div class="feed-tags">
+                    ${item.tags.map(tag => `<span class="tag ${tagClass(tag)}">${tag}</span>`).join("")}
+                </div>
+                `;
                 feedEl.appendChild(div);
             });
         }
@@ -373,6 +450,98 @@
             if (tag.includes("C과")) return "deptC";
             return "";
         }
+
+        const videoWrapper = document.getElementById("videoWrapper");
+        const appHeader = document.getElementById("appHeader");
+        const tabs = document.getElementById("tabs");
+        const mainContent = document.getElementById("mainContent");
+        const loginBtn = document.getElementById("loginBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        function showMainScreen(user) {
+            videoWrapper.style.display = "none";
+            appHeader.style.display = "block";
+            tabs.style.display = "flex";
+            mainContent.style.display = "block";
+
+            document.getElementById("userInfo").textContent =
+                user.grade && user.class ?
+                `${user.grade}학년 ${user.class}반 ${user.name}` :
+                user.name;
+
+            renderFeed(document.getElementById("allFeed"), allFeedData);
+            renderFeed(document.getElementById("classFeed"), classFeedData);
+
+            if (!user.grade || !user.class) {
+                document.querySelector('[data-tab="class"]').style.display = "none";
+            }
+        }
+
+        // 로그인 버튼
+        loginBtn.addEventListener("click", () => {
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("userInfo", JSON.stringify(dummyUser));
+            showMainScreen(dummyUser);
+        });
+
+        // 로그아웃 버튼
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("userInfo");
+            location.reload();
+        });
+
+        // 새로고침 시 로그인 유지
+        window.addEventListener("load", () => {
+            if (localStorage.getItem("isLoggedIn") === "true") {
+                const savedUser = JSON.parse(localStorage.getItem("userInfo"));
+                if (savedUser) showMainScreen(savedUser);
+            }
+        });
+
+        // 탭 전환
+        const tabButtons = document.querySelectorAll(".tabs button");
+        const allFeed = document.getElementById("allFeed");
+        const classFeed = document.getElementById("classFeed");
+
+        tabButtons.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabButtons.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                if (tab.dataset.tab === "all") {
+                    allFeed.style.display = "block";
+                    classFeed.style.display = "none";
+                    mainContent.classList.add("blue-border");
+                    mainContent.classList.remove("red-border");
+                } else {
+                    allFeed.style.display = "none";
+                    classFeed.style.display = "block";
+                    mainContent.classList.add("red-border");
+                    mainContent.classList.remove("blue-border");
+                }
+            });
+        });
+
+        // 스크롤 시 헤더 투명도 변화
+        window.addEventListener("scroll", () => {
+            const header = document.getElementById("appHeader");
+            if (window.scrollY > 10) header.classList.add("scrolled");
+            else header.classList.remove("scrolled");
+        });
+
+        // 탑 버튼
+        const backToTop = document.getElementById("backToTop");
+        window.addEventListener("scroll", () => {
+            if (window.scrollY > 200) backToTop.classList.add("show");
+            else backToTop.classList.remove("show");
+        });
+        backToTop.addEventListener("click", () => {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        });
     </script>
 </body>
 
