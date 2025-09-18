@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="icon" href="main/eduinfo.png" type="image/png">
-    <link rel="stylesheet" href="main/style.css?ver=2">
+    <link rel="stylesheet" href="main/style.css?ver=1">
 </head>
 
 <body>
@@ -389,6 +389,7 @@
 
             <!-- 메모 카드 -->
             <article class="card card13 memo-card" data-key="card13">
+                <button class="hide-btn" onclick="hideCard('card13')">✖</button>
                 <div class="icon">📝</div>
                 <h3>메모장</h3>
                 <p>빠르게 메모하세요. (초기화 될 수 있으니 중요한건 백업)</p>
@@ -434,8 +435,8 @@
             </article>
 
             <!-- 데이터 먼저 불러오고, 검색 로직 실행 -->
-            <script src="main/data.js?ver=2"></script>
-            <script src="main/tel.js?ver=2"></script>
+            <script src="main/data.js"></script>
+            <script src="main/tel.js"></script>
 
         </div>
 
@@ -445,6 +446,6 @@
             © <span id="yy"></span> 성일정보고등학교 교육정보부
         </footer>
     </div>
-    <script src="main/main.js?ver=2"></script>
+    <script src="main/main.js"></script>
 </body>
 </html>
