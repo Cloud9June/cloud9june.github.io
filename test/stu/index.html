@@ -4,20 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="only dark">
     <title>성일정보고 학생 앱</title>
     <style>
         :root {
-            --bg: #0b0d10;
-            --card: #1c1f26;
-            --text: #e8edf3;
-            --muted: #9fb0c0;
+            --bg: #fdfdfd;
+            --card: #ffffff;
+            --text: #333333;
+            --muted: #777777;
             --pastel-pink: #ffd6e0;
-            --pastel-yellow: #ffe66d;
-            --pastel-mint: #a8e6cf;
+            --pastel-yellow: #fff3b0;
+            --pastel-mint: #caffbf;
             --pastel-blue: #a0c4ff;
-            --accent-blue: #4cc9f0;
-            --accent-red: #f72585;
+            --pastel-purple: #bdb2ff;
+            --pastel-skyblue: #caf0f8;
+
         }
 
         body,
@@ -41,6 +41,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            filter: brightness(0.9); /* 밝은 톤 유지 */
         }
 
         #loginOverlay {
@@ -49,23 +50,22 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            color: #fff;
+            color: #333;
         }
 
         #welcomeText {
             font-size: 1.2rem;
             font-weight: bold;
             margin-bottom: 1rem;
-            color: #fff;
+            color: #444;
             text-shadow:
-                2px 2px 8px rgba(255, 182, 193, 0.6),
-                -2px -2px 8px rgba(173, 216, 230, 0.6),
-                0 0 12px rgba(255, 255, 224, 0.5);
+                1px 1px 6px rgba(255, 214, 224, 0.6),
+                -1px -1px 6px rgba(160, 196, 255, 0.5);
         }
 
         #loginBtn {
             background: var(--pastel-pink);
-            opacity: 0.8;
+            opacity: 0.9;
             color: #000;
             font-weight: bold;
             border: none;
@@ -73,7 +73,7 @@
             padding: 0.6rem 1.2rem;
             font-size: 1rem;
             cursor: pointer;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
             transition: transform 0.15s, opacity 0.15s;
         }
 
@@ -91,20 +91,20 @@
             margin: 0.5rem;
             padding: 0.8rem 1.2rem;
             z-index: 100;
-            background: #1c1f26;
+            background: #cde4ff;
             border-radius: 14px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         header.scrolled {
-            opacity: 0.85;
-            background: rgba(23, 28, 34, 0.85);
+            opacity: 0.95;
+            background: #ffffffcc;
         }
 
         .header-top {
             font-size: 1.1rem;
             font-weight: bold;
-            color: var(--pastel-yellow);
+            color: var(--pastel-blue);
         }
 
         .header-top span {
@@ -116,7 +116,6 @@
             margin-left: 8px;
         }
 
-        /* 로그아웃 버튼 */
         #logoutBtn {
             margin-left: 10px;
             background: #f28b82;
@@ -148,7 +147,7 @@
             padding: 0.4rem 1rem;
             background: var(--card);
             color: var(--muted);
-            border: 1px solid #333;
+            border: 1px solid #ddd;
             cursor: pointer;
             font-size: 0.8rem;
             border-radius: 10px 10px 0 0;
@@ -178,37 +177,41 @@
         }
 
         main.blue-border {
-            border-top: 3px solid var(--pastel-blue);
+            border: 5px solid var(--pastel-blue);
             border-radius: 12px;
         }
 
         main.red-border {
-            border-top: 3px solid var(--pastel-pink);
+            border: 5px solid var(--pastel-pink);
             border-radius: 12px;
         }
 
         /* ===== 피드 ===== */
-        .feed-item {
-            background: var(--card);
-            padding: 1rem;
-            border-radius: 14px;
-            margin-bottom: 12px;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-        }
+.feed-item {
+    background: #f0fcff;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid var(--pastel-blue); /* 기본 구분선 */
+}
 
+.feed-item:nth-child(5n+1) { border-left: 5px solid #a8e6cf; }  /* 민트 */
+.feed-item:nth-child(5n+2) { border-left: 5px solid #ffe66d; }  /* 옐로우 */
+.feed-item:nth-child(5n+3) { border-left: 5px solid #bdb2ff; }  /* 라벤더 */
+.feed-item:nth-child(5n+4) { border-left: 5px solid #ffd6a5; }  /* 피치 */
+.feed-item:nth-child(5n+5) { border-left: 5px solid #caf0f8; }  /* 스카이블루 */
         .feed-title {
             font-weight: bold;
             font-size: 1rem;
-            margin-bottom: 0.5rem;
-            border-bottom: 1px solid var(--muted);
-            padding-bottom: 0.3rem;
-            color: var(--pastel-yellow);
+            margin-bottom: 0.2rem;
+            color: var(--pastel-blue);
         }
 
         .feed-meta {
             font-size: 0.7rem;
             color: var(--muted);
-            margin-top: 2px;
+            margin-bottom: 0.5rem;
         }
 
         .feed-content {
@@ -247,16 +250,14 @@
         }
 
         .tag.deptC {
-            background: #bdb2ff;
-            color: #000;
+            background: var(--pastel-purple);
         }
 
-        /* 탑 버튼 */
         #backToTop {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: var(--pastel-pink);
+            background: var(--pastel-blue);
             color: #fff;
             border: none;
             border-radius: 50%;
@@ -264,7 +265,7 @@
             height: 48px;
             font-size: 1.2rem;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
