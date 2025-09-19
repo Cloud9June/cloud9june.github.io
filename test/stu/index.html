@@ -98,24 +98,37 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
+        header.blue-header {
+            background: #cde4ff;
+        }
+
+        header.pink-header {
+            background: #ffe0eb;
+        }
+
         header.scrolled {
             opacity: 0.95;
             background: #ffffffcc;
         }
 
-        .header-top {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--pastel-blue);
+        #appTitle {
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #1e3a8a;
+            letter-spacing: 0.5px;
+            /* 약간 간격 주면 모던해짐 */
         }
 
-        .header-top span {
-            background: var(--pastel-pink);
-            color: #000;
-            border-radius: 10px;
-            padding: 3px 8px;
+        #userInfo {
+            font-weight: 600;
+            color: #2f4f4f;
             font-size: 0.85rem;
             margin-left: 8px;
+        }
+
+        #userInfo::before {
+            content: "🆔 ";
         }
 
         #logoutBtn {
@@ -156,6 +169,10 @@
             transition: background 0.3s, color 0.3s;
         }
 
+        .tabs button:last-child {
+            margin-left: -6px;
+        }
+
         .tabs button.active {
             font-weight: bold;
             color: #000;
@@ -163,10 +180,12 @@
 
         .tabs button:first-child.active {
             background: var(--pastel-blue);
+            z-index: 10;
         }
 
         .tabs button:last-child.active {
             background: var(--pastel-pink);
+            z-index: 10;
         }
 
         /* ===== 메인 ===== */
@@ -177,6 +196,7 @@
             padding: 1rem;
             overflow-y: auto;
             transition: border 0.3s ease;
+            z-index: 11;
         }
 
         main.blue-border {
@@ -345,7 +365,7 @@
     <!-- ===== 메인 화면 ===== -->
     <header id="appHeader" style="display:none;">
         <div class="header-top">
-            🏫 성일정보고등학교
+            <span id="appTitle">S:NOW</span>
             <span id="userInfo">1학년 1반 홍길동</span>
             <button id="logoutBtn">⏻</button>
         </div>
@@ -549,6 +569,7 @@
         const tabButtons = document.querySelectorAll(".tabs button");
         const allFeed = document.getElementById("allFeed");
         const classFeed = document.getElementById("classFeed");
+        const header = document.getElementById("appHeader");
 
         tabButtons.forEach(tab => {
             tab.addEventListener("click", () => {
@@ -560,11 +581,17 @@
                     classFeed.style.display = "none";
                     mainContent.classList.add("blue-border");
                     mainContent.classList.remove("red-border");
+
+                    header.classList.add("blue-header");
+                    header.classList.remove("pink-header");
                 } else {
                     allFeed.style.display = "none";
                     classFeed.style.display = "block";
                     mainContent.classList.add("red-border");
                     mainContent.classList.remove("blue-border");
+
+                    header.classList.add("pink-header");
+                    header.classList.remove("blue-header");
                 }
             });
         });
