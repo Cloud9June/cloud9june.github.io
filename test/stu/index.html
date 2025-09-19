@@ -170,6 +170,7 @@
         /* ===== 메인 ===== */
         main {
             position: relative;
+            margin: 0 10px;
             margin-top: -4px;
             padding: 1rem;
             overflow-y: auto;
@@ -177,23 +178,39 @@
         }
 
         main.blue-border {
-            border: 5px solid var(--pastel-blue);
-            border-radius: 12px;
+            border-top: 5px solid var(--pastel-blue);
         }
 
         main.red-border {
-            border: 5px solid var(--pastel-pink);
-            border-radius: 12px;
+            border-top: 5px solid var(--pastel-pink);
         }
 
         /* ===== 피드 ===== */
 .feed-item {
-    background: #f0fcff;
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 14px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    border-left: 5px solid var(--pastel-blue); /* 기본 구분선 */
+  position: relative;
+  border-left: 3px solid #cde4ff; /* 파스텔 블루 라인 */
+  margin-left: 20px;
+  padding-left: 15px;
+  margin-bottom: 20px;
+}
+.feed-item::before {
+  content: "●";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  font-size: 0.6rem;
+  color: #cde4ff;
+}
+
+.feed-item.left {
+  align-self: flex-start;
+  background: #f3d1f4; /* 파스텔 보라 */
+  border-radius: 12px 12px 12px 0;
+}
+.feed-item.right {
+  align-self: flex-end;
+  background: #a0c4ff; /* 파스텔 블루 */
+  border-radius: 12px 12px 0 12px;
 }
 
 .feed-item:nth-child(5n+1) { border-left: 5px solid #a8e6cf; }  /* 민트 */
@@ -201,6 +218,7 @@
 .feed-item:nth-child(5n+3) { border-left: 5px solid #bdb2ff; }  /* 라벤더 */
 .feed-item:nth-child(5n+4) { border-left: 5px solid #ffd6a5; }  /* 피치 */
 .feed-item:nth-child(5n+5) { border-left: 5px solid #caf0f8; }  /* 스카이블루 */
+
         .feed-title {
             font-weight: bold;
             font-size: 1rem;
