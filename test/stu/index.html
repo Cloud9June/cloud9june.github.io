@@ -2,499 +2,590 @@
 <html lang="ko">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light">
-    <title>성일정보고 학생 앱</title>
-    <style>
-        :root {
-            --bg: #fdfdfd;
-            --card: #ffffff;
-            --text: #333333;
-            --muted: #777777;
-            --pastel-pink: #ffd6e0;
-            --pastel-yellow: #fff3b0;
-            --pastel-mint: #caffbf;
-            --pastel-blue: #a0c4ff;
-            --pastel-purple: #bdb2ff;
-            --pastel-skyblue: #caf0f8;
-            color-scheme: light;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>성일정보고 학생 앱</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #fdfdfd;
+      --card: #ffffff;
+      --text: #333333;
+      --muted: #777777;
+      --pastel-pink: #ffd6e0;
+      --pastel-yellow: #fff3b0;
+      --pastel-mint: #caffbf;
+      --pastel-blue: #a0c4ff;
+      --pastel-purple: #bdb2ff;
+      --pastel-skyblue: #caf0f8;
+      color-scheme: light;
+    }
 
-        body,
-        html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Noto Sans KR', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
+    body,
+    html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-        /* ===== 인트로 ===== */
-        #videoWrapper {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-        }
+    /* ===== 인트로 ===== */
+    #videoWrapper {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-        #videoWrapper video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: brightness(0.9);
-            /* 밝은 톤 유지 */
-        }
+    #videoWrapper video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.9);
+      /* 밝은 톤 유지 */
+    }
 
-        #loginOverlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: #333;
-        }
+    #loginOverlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #333;
+    }
 
-        #welcomeText {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            color: #444;
-            text-shadow:
-                1px 1px 6px rgba(255, 214, 224, 0.6),
-                -1px -1px 6px rgba(160, 196, 255, 0.5);
-        }
+    #welcomeText {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #444;
+      text-shadow:
+        1px 1px 6px rgba(255, 214, 224, 0.6),
+        -1px -1px 6px rgba(160, 196, 255, 0.5);
+    }
 
-        #loginBtn {
-            background: var(--pastel-pink);
-            opacity: 0.9;
-            color: #000;
-            font-weight: bold;
-            border: none;
-            border-radius: 12px;
-            padding: 0.6rem 1.2rem;
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-            transition: transform 0.15s, opacity 0.15s;
-        }
+    #loginBtn {
+      background: var(--pastel-pink);
+      opacity: 0.9;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, opacity 0.15s;
+    }
 
-        #loginBtn:active {
-            opacity: 1;
-            transform: scale(0.96);
-        }
+    #loginBtn:active {
+      opacity: 1;
+      transform: scale(0.96);
+    }
 
-        /* ===== 헤더 ===== */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: calc(100% - 1rem);
-            margin: 0.5rem;
-            padding: 0.8rem 1.2rem;
-            z-index: 100;
-            background: #cde4ff;
-            border-radius: 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+    /* ===== 헤더 ===== */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: calc(100% - 1rem);
+      margin: 0.5rem;
+      padding: 0.8rem 1.2rem;
+      z-index: 100;
+      background: #cde4ff;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-        header.blue-header {
-            background: #cde4ff;
-        }
+    header.blue-header {
+      background: #cde4ff;
+    }
 
-        header.pink-header {
-            background: #ffe0eb;
-        }
+    header.pink-header {
+      background: #ffe0eb;
+    }
 
-        header.scrolled {
-            opacity: 0.95;
-            background: #ffffffcc;
-        }
+    header.scrolled {
+      opacity: 0.95;
+      background: #ffffffcc;
+    }
 
-        #appTitle {
-            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: #1e3a8a;
-            letter-spacing: 0.5px;
-            /* 약간 간격 주면 모던해짐 */
-        }
+    #appTitle {
+      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: #1e3a8a;
+      letter-spacing: 0.5px;
+      /* 약간 간격 주면 모던해짐 */
+    }
 
-        #userInfo {
-            font-weight: 600;
-            color: #2f4f4f;
-            font-size: 0.85rem;
-            margin-left: 8px;
-        }
+    #userInfo {
+      font-weight: 600;
+      color: #2f4f4f;
+      font-size: 0.85rem;
+      margin-left: 8px;
+    }
 
-        #userInfo::before {
-            content: "🆔 ";
-        }
+    #userInfo::before {
+      content: "🆔 ";
+    }
 
-        #logoutBtn {
-            margin-left: 10px;
-            background: #f28b82;
-            color: #fff;
-            font-weight: 700;
-            border: none;
-            border-radius: 10px;
-            padding: 3px 8px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
+    #logoutBtn {
+      margin-left: 10px;
+      background: #f28b82;
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      padding: 3px 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
 
-        #logoutBtn:active {
-            background: #ff6b6b;
-            transform: scale(0.96);
-        }
+    #logoutBtn:active {
+      background: #ff6b6b;
+      transform: scale(0.96);
+    }
 
-        /* ===== 탭 ===== */
-        .tabs {
-            display: flex;
-            justify-content: flex-start;
-            gap: 0;
-            margin-top: 5rem;
-            margin-left: 12px;
-        }
+    /* ===== 탭 ===== */
+    .tabs {
+      display: flex;
+      justify-content: flex-start;
+      gap: 0;
+      margin-top: 5rem;
+      margin-left: 12px;
+    }
 
-        .tabs button {
-            padding: 0.4rem 1rem;
-            background: var(--card);
-            color: var(--muted);
-            border: 1px solid #ddd;
-            cursor: pointer;
-            font-size: 0.8rem;
-            border-radius: 10px 10px 0 0;
-            transition: background 0.3s, color 0.3s;
-        }
+    .tabs button {
+      padding: 0.4rem 1rem;
+      background: var(--card);
+      color: var(--muted);
+      border: 1px solid #ddd;
+      cursor: pointer;
+      font-size: 0.8rem;
+      border-radius: 10px 10px 0 0;
+      transition: background 0.3s, color 0.3s;
+    }
 
-        .tabs button:last-child {
-            margin-left: -6px;
-        }
+    .tabs button:last-child {
+      margin-left: -6px;
+    }
 
-        .tabs button.active {
-            font-weight: bold;
-            color: #000;
-        }
+    .tabs button.active {
+      font-weight: bold;
+      color: #000;
+    }
 
-        .tabs button:first-child.active {
-            background: var(--pastel-blue);
-            z-index: 10;
-        }
+    .tabs button:first-child.active {
+      background: var(--pastel-blue);
+      z-index: 10;
+    }
 
-        .tabs button:last-child.active {
-            background: var(--pastel-pink);
-            z-index: 10;
-        }
+    .tabs button:last-child.active {
+      background: var(--pastel-pink);
+      z-index: 10;
+    }
 
-        /* ===== 메인 ===== */
-        main {
-            position: relative;
-            margin: 0 10px;
-            margin-top: -4px;
-            padding: 1rem;
-            overflow-y: auto;
-            transition: border 0.3s ease;
-            z-index: 11;
-        }
+    /* ===== 메인 ===== */
+    main {
+      position: relative;
+      margin: 0 10px;
+      margin-top: -4px;
+      padding: 1rem;
+      overflow-y: auto;
+      transition: border 0.3s ease;
+      z-index: 11;
+    }
 
-        main.blue-border {
-            border-top: 5px solid var(--pastel-blue);
-        }
+    main.blue-border {
+      border-top: 5px solid var(--pastel-blue);
+    }
 
-        main.red-border {
-            border-top: 5px solid var(--pastel-pink);
-        }
+    main.red-border {
+      border-top: 5px solid var(--pastel-pink);
+    }
 
-        /* ===== 피드 ===== */
-        .feed-item {
-            position: relative;
-            border-left: 3px solid #cde4ff;
-            /* 파스텔 블루 라인 */
-            margin-left: 20px;
-            padding-left: 15px;
-            margin-bottom: 20px;
-        }
+    /* ===== 피드 ===== */
+    .feed-item {
+      position: relative;
+      border-left: 3px solid #cde4ff;
+      /* 파스텔 블루 라인 */
+      margin-left: 20px;
+      padding-left: 15px;
+      margin-bottom: 20px;
+    }
 
-        .feed-item::before {
-            content: "●";
-            position: absolute;
-            left: 3px;
-            top: 3px;
-            font-size: 0.6rem;
-            color: #cde4ff;
-        }
+    .feed-item::before {
+      content: "●";
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      font-size: 0.6rem;
+      color: #cde4ff;
+    }
 
-        .feed-item.left {
-            align-self: flex-start;
-            background: #f3d1f4;
-            /* 파스텔 보라 */
-            border-radius: 12px 12px 12px 0;
-        }
+    .feed-item.left {
+      align-self: flex-start;
+      background: #f3d1f4;
+      /* 파스텔 보라 */
+      border-radius: 12px 12px 12px 0;
+    }
 
-        .feed-item.right {
-            align-self: flex-end;
-            background: #a0c4ff;
-            /* 파스텔 블루 */
-            border-radius: 12px 12px 0 12px;
-        }
+    .feed-item.right {
+      align-self: flex-end;
+      background: #a0c4ff;
+      /* 파스텔 블루 */
+      border-radius: 12px 12px 0 12px;
+    }
 
-        .feed-item:nth-child(5n+1) {
-            border-left: 5px solid #a8e6cf;
-        }
+    .feed-item:nth-child(5n+1) {
+      border-left: 5px solid #a8e6cf;
+    }
 
-        /* 민트 */
-        .feed-item:nth-child(5n+2) {
-            border-left: 5px solid #ffe66d;
-        }
+    /* 민트 */
+    .feed-item:nth-child(5n+2) {
+      border-left: 5px solid #ffe66d;
+    }
 
-        /* 옐로우 */
-        .feed-item:nth-child(5n+3) {
-            border-left: 5px solid #bdb2ff;
-        }
+    /* 옐로우 */
+    .feed-item:nth-child(5n+3) {
+      border-left: 5px solid #bdb2ff;
+    }
 
-        /* 라벤더 */
-        .feed-item:nth-child(5n+4) {
-            border-left: 5px solid #ffd6a5;
-        }
+    /* 라벤더 */
+    .feed-item:nth-child(5n+4) {
+      border-left: 5px solid #ffd6a5;
+    }
 
-        /* 피치 */
-        .feed-item:nth-child(5n+5) {
-            border-left: 5px solid #caf0f8;
-        }
+    /* 피치 */
+    .feed-item:nth-child(5n+5) {
+      border-left: 5px solid #caf0f8;
+    }
 
-        /* 스카이블루 */
+    /* 스카이블루 */
 
-        .feed-title {
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 0.2rem;
-            color: var(--pastel-blue);
-        }
+    .feed-title {
+      font-weight: bold;
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+      color: var(--pastel-blue);
+    }
 
-        .feed-meta {
-            font-size: 0.7rem;
-            color: var(--muted);
-            margin-bottom: 0.5rem;
-        }
+    .feed-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
 
-        .feed-content {
-            margin-bottom: 0.6rem;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
+    .feed-content {
+      margin-bottom: 0.6rem;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
 
-        .feed-tags {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+    .feed-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
 
-        .tag {
-            font-size: 0.75rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 8px;
-            color: #000;
-        }
+    .tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 8px;
+      color: #000;
+    }
 
-        .tag.grade {
-            background: var(--pastel-blue);
-        }
+    .tag.grade {
+      background: var(--pastel-blue);
+    }
 
-        .tag.all {
-            background: var(--pastel-yellow);
-        }
+    .tag.all {
+      background: var(--pastel-yellow);
+    }
 
-        .tag.deptA {
-            background: var(--pastel-mint);
-        }
+    .tag.deptA {
+      background: var(--pastel-mint);
+    }
 
-        .tag.deptB {
-            background: var(--pastel-pink);
-        }
+    .tag.deptB {
+      background: var(--pastel-pink);
+    }
 
-        .tag.deptC {
-            background: var(--pastel-purple);
-        }
+    .tag.deptC {
+      background: var(--pastel-purple);
+    }
 
-        #backToTop {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--pastel-blue);
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 200;
-        }
+    #backToTop {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--pastel-blue);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 200;
+    }
 
-        #backToTop.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
+    #backToTop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
-        #backToTop:active {
-            transform: scale(0.9);
-        }
-    </style>
+    #backToTop:active {
+      transform: scale(0.9);
+    }
+
+    #themeToggle {
+      margin-left: 4px;
+      /* 로그아웃 버튼과 간격 */
+      background: #f3f4f6;
+      /* 라이트 모드 배경 */
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #333;
+      transition: transform 0.15s, opacity 0.2s;
+    }
+
+    #themeToggle:active {
+      transform: scale(0.95);
+      /* 누를 때 살짝 줄어듦 */
+      opacity: 0.85;
+    }
+
+
+
+    /* ===== 다크모드 (그린·퍼플 버전) ===== */
+    :root[data-theme="dark"] {
+      --bg: #0b0d10;
+      --card: #171c22;
+      --text: #e8edf3;
+      --muted: #9fb0c0;
+
+      --pastel-pink: #b5179e;
+      /* 네온 퍼플 */
+      --pastel-yellow: #ffee32;
+      /* 사이버 옐로 */
+      --pastel-mint: #80ed99;
+      /* 네온 그린 */
+      --pastel-blue: #4895ef;
+      /* 사이버 블루 */
+      --pastel-purple: #9d4edd;
+      /* 보라 포인트 */
+      --pastel-skyblue: #3a86ff;
+      /* 사이버 스카이블루 */
+    }
+
+    :root[data-theme="dark"] body {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    :root[data-theme="dark"] header {
+      background: rgba(23, 28, 34, 0.9);
+      border: 1px solid var(--pastel-mint);
+      box-shadow: 0 0 12px rgba(128, 237, 153, 0.5);
+    }
+
+    :root[data-theme="dark"] #appTitle {
+      color: var(--pastel-pink);
+      /* 네온 퍼플 */
+      text-shadow: 0 0 8px rgba(181, 23, 158, 0.7);
+    }
+
+    :root[data-theme="dark"] .feed-item {
+      background: #12161b;
+      border-left-color: var(--pastel-mint);
+      box-shadow: 0 0 6px rgba(128, 237, 153, 0.3);
+    }
+
+    :root[data-theme="dark"] .feed-title {
+      color: var(--pastel-mint);
+      /* 네온 그린 */
+    }
+
+    :root[data-theme="dark"] #backToTop {
+      background: var(--pastel-pink);
+      /* 네온 퍼플 */
+      box-shadow: 0 0 10px rgba(181, 23, 158, 0.6);
+    }
+
+    :root[data-theme="dark"] #themeToggle {
+      background: #1f2937;
+      /* 다크 모드 배경 */
+      border: 1px solid #374151;
+      color: #e8edf3;
+    }
+
+    :root[data-theme="dark"] #themeToggle:active {
+      opacity: 0.9;
+    }
+  </style>
 </head>
 
 <body>
 
-    <!-- ===== 인트로 화면 ===== -->
-    <div id="videoWrapper">
-        <video autoplay muted loop playsinline>
-            <source src="video/intro2.mp4" type="video/mp4">
-            지원하지 않는 브라우저입니다.
-        </video>
-        <div id="loginOverlay">
-            <p id="welcomeText">🌟✨💫🌟<br>성일정보고<br>로그인하고,<br>오늘 하루<br>반짝 시작!<br>✨💫☀️✨</p>
-            <button id="loginBtn">로그인</button>
-        </div>
+  <!-- ===== 인트로 화면 ===== -->
+  <div id="videoWrapper">
+    <video autoplay muted loop playsinline>
+      <source src="video/intro2.mp4" type="video/mp4">
+      지원하지 않는 브라우저입니다.
+    </video>
+    <div id="loginOverlay">
+      <p id="welcomeText">🌟✨💫🌟<br>성일정보고<br>로그인하고,<br>오늘 하루<br>반짝 시작!<br>✨💫☀️✨</p>
+      <button id="loginBtn">로그인</button>
     </div>
+  </div>
 
-    <!-- ===== 메인 화면 ===== -->
-    <header id="appHeader" style="display:none;">
-        <div class="header-top">
-            <span id="appTitle">S:NOW</span>
-            <span id="userInfo">1학년 1반 홍길동</span>
-            <button id="logoutBtn">⏻</button>
-        </div>
-    </header>
-
-    <div class="tabs" id="tabs" style="display:none;">
-        <button data-tab="all" class="active">전체</button>
-        <button data-tab="class">우리반</button>
+  <!-- ===== 메인 화면 ===== -->
+  <header id="appHeader" style="display:none;">
+    <div class="header-top">
+      <span id="appTitle">S:NOW</span>
+      <span id="userInfo">1학년 1반 홍길동</span>
+      <button id="logoutBtn">⏻</button>
+      <button id="themeToggle">Dark</button>
     </div>
+  </header>
 
-    <main id="mainContent" class="blue-border" style="display:none;">
-        <section id="allFeed"></section>
-        <section id="classFeed" style="display:none;"></section>
-    </main>
+  <div class="tabs" id="tabs" style="display:none;">
+    <button data-tab="all" class="active">전체</button>
+    <button data-tab="class">우리반</button>
+  </div>
 
-    <button id="backToTop">🔝</button>
+  <main id="mainContent" class="blue-border" style="display:none;">
+    <section id="allFeed"></section>
+    <section id="classFeed" style="display:none;"></section>
+  </main>
 
-    <script>
-        // ===== 더미 로그인 사용자 =====
-        const dummyUser = {
-            name: "홍길동",
-            grade: 1,
-            class: 1,
-            role: "student"
-        };
+  <button id="backToTop">🔝</button>
 
-        // ===== 더미 피드 데이터 =====
-        const allFeedData = [{
-                title: "7교시 수업 취소 안내",
-                content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.",
-                tags: ["전학년", "1학년", "A과"],
-                createdAt: "2025-09-18T14:30:00"
-            },
-            {
-                title: "급식 변경 안내",
-                content: "오늘 점심은 돈까스 → 치킨가라아게로 변경되었습니다.",
-                tags: ["전학년"],
-                createdAt: "2025-09-18T09:10:00"
-            },
-            {
-                title: "체육대회 준비",
-                content: "다음 주 금요일 체육대회를 위해 종목 신청서를 제출하세요.",
-                tags: ["전학년", "체육부"],
-                createdAt: "2025-09-17T16:45:00"
-            },
-            {
-                title: "학생회 회의",
-                content: "오늘 저녁 7시 도서관에서 학생회 임원 회의가 있습니다.",
-                tags: ["전학년", "학생회"],
-                createdAt: "2025-09-17T11:20:00"
-            },
-            {
-                title: "IT과 프로젝트 안내",
-                content: "2학년 IT과 학생들은 프로젝트 중간 점검을 이번 주에 진행합니다.",
-                tags: ["2학년", "IT과"],
-                createdAt: "2025-09-16T13:15:00"
-            },
-            {
-                title: "봉사활동 신청",
-                content: "주말에 진행되는 지역 봉사활동에 참여할 학생은 오늘까지 신청하세요.",
-                tags: ["전학년", "봉사"],
-                createdAt: "2025-09-15T10:00:00"
-            },
-            {
-                title: "도서관 이용 안내",
-                content: "시험 기간 동안 도서관은 저녁 9시까지 연장 운영됩니다.",
-                tags: ["전학년", "도서부"],
-                createdAt: "2025-09-14T17:50:00"
-            },
-            {
-                title: "교복 단속 주간",
-                content: "이번 주는 교복 단속 주간이니 복장 단정에 신경 써주세요.",
-                tags: ["전학년", "생활지도부"],
-                createdAt: "2025-09-13T08:40:00"
-            },
-            {
-                title: "영어 말하기 대회",
-                content: "영어 말하기 대회 참가 신청은 이번 주 금요일까지입니다.",
-                tags: ["전학년", "영어과"],
-                createdAt: "2025-09-12T15:05:00"
-            }
-        ];
+  <script>
+    // ===== 더미 로그인 사용자 =====
+    const dummyUser = {
+      name: "홍길동",
+      grade: 1,
+      class: 1,
+      role: "student"
+    };
 
-        const classFeedData = [{
-                title: "조별 발표 준비",
-                content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.",
-                tags: ["1학년", "B과"],
-                createdAt: "2025-09-18T12:00:00"
-            },
-            {
-                title: "청소 구역 변경",
-                content: "오늘부터 1반 청소 구역은 특별실에서 복도로 변경됩니다.",
-                tags: ["1학년", "1반"],
-                createdAt: "2025-09-17T16:20:00"
-            },
-            {
-                title: "담임 상담 신청",
-                content: "이번 주 상담이 필요한 학생은 오늘 중으로 담임 선생님께 신청하세요.",
-                tags: ["1학년", "1반"],
-                createdAt: "2025-09-16T09:30:00"
-            },
-            {
-                title: "교실 비품 점검",
-                content: "교실 비품 점검이 오늘 6교시에 진행됩니다. 해당 시간에는 자리에 있어주세요.",
-                tags: ["1학년", "1반"],
-                createdAt: "2025-09-15T14:50:00"
-            }
-        ];
+    // ===== 더미 피드 데이터 =====
+    const allFeedData = [{
+        title: "7교시 수업 취소 안내",
+        content: "오늘은 7교시 수업이 취소되며, 6교시 이후 바로 하교합니다.",
+        tags: ["전학년", "1학년", "A과"],
+        createdAt: "2025-09-18T14:30:00"
+      },
+      {
+        title: "급식 변경 안내",
+        content: "오늘 점심은 돈까스 → 치킨가라아게로 변경되었습니다.",
+        tags: ["전학년"],
+        createdAt: "2025-09-18T09:10:00"
+      },
+      {
+        title: "체육대회 준비",
+        content: "다음 주 금요일 체육대회를 위해 종목 신청서를 제출하세요.",
+        tags: ["전학년", "체육부"],
+        createdAt: "2025-09-17T16:45:00"
+      },
+      {
+        title: "학생회 회의",
+        content: "오늘 저녁 7시 도서관에서 학생회 임원 회의가 있습니다.",
+        tags: ["전학년", "학생회"],
+        createdAt: "2025-09-17T11:20:00"
+      },
+      {
+        title: "IT과 프로젝트 안내",
+        content: "2학년 IT과 학생들은 프로젝트 중간 점검을 이번 주에 진행합니다.",
+        tags: ["2학년", "IT과"],
+        createdAt: "2025-09-16T13:15:00"
+      },
+      {
+        title: "봉사활동 신청",
+        content: "주말에 진행되는 지역 봉사활동에 참여할 학생은 오늘까지 신청하세요.",
+        tags: ["전학년", "봉사"],
+        createdAt: "2025-09-15T10:00:00"
+      },
+      {
+        title: "도서관 이용 안내",
+        content: "시험 기간 동안 도서관은 저녁 9시까지 연장 운영됩니다.",
+        tags: ["전학년", "도서부"],
+        createdAt: "2025-09-14T17:50:00"
+      },
+      {
+        title: "교복 단속 주간",
+        content: "이번 주는 교복 단속 주간이니 복장 단정에 신경 써주세요.",
+        tags: ["전학년", "생활지도부"],
+        createdAt: "2025-09-13T08:40:00"
+      },
+      {
+        title: "영어 말하기 대회",
+        content: "영어 말하기 대회 참가 신청은 이번 주 금요일까지입니다.",
+        tags: ["전학년", "영어과"],
+        createdAt: "2025-09-12T15:05:00"
+      }
+    ];
 
-        function formatDate(date) {
-            const days = ["일", "월", "화", "수", "목", "금", "토"];
-            const d = new Date(date);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, "0");
-            const day = String(d.getDate()).padStart(2, "0");
-            const weekday = days[d.getDay()];
-            const hours = String(d.getHours()).padStart(2, "0");
-            const minutes = String(d.getMinutes()).padStart(2, "0");
-            return `${year}.${month}.${day} (${weekday}) ${hours}:${minutes}`;
-        }
+    const classFeedData = [{
+        title: "조별 발표 준비",
+        content: "내일 있을 조별 발표를 위해 오늘 쉬는 시간마다 모여서 준비하세요.",
+        tags: ["1학년", "B과"],
+        createdAt: "2025-09-18T12:00:00"
+      },
+      {
+        title: "청소 구역 변경",
+        content: "오늘부터 1반 청소 구역은 특별실에서 복도로 변경됩니다.",
+        tags: ["1학년", "1반"],
+        createdAt: "2025-09-17T16:20:00"
+      },
+      {
+        title: "담임 상담 신청",
+        content: "이번 주 상담이 필요한 학생은 오늘 중으로 담임 선생님께 신청하세요.",
+        tags: ["1학년", "1반"],
+        createdAt: "2025-09-16T09:30:00"
+      },
+      {
+        title: "교실 비품 점검",
+        content: "교실 비품 점검이 오늘 6교시에 진행됩니다. 해당 시간에는 자리에 있어주세요.",
+        tags: ["1학년", "1반"],
+        createdAt: "2025-09-15T14:50:00"
+      }
+    ];
 
-        // ===== 피드 렌더링 =====
-        function renderFeed(feedEl, data) {
-            feedEl.innerHTML = "";
-            data.forEach(item => {
-                const div = document.createElement("div");
-                div.className = "feed-item";
-                const createdAt = item.createdAt ? formatDate(item.createdAt) : formatDate(new Date());
-                div.innerHTML = `
+    function formatDate(date) {
+      const days = ["일", "월", "화", "수", "목", "금", "토"];
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const weekday = days[d.getDay()];
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${year}.${month}.${day} (${weekday}) ${hours}:${minutes}`;
+    }
+
+    // ===== 피드 렌더링 =====
+    function renderFeed(feedEl, data) {
+      feedEl.innerHTML = "";
+      data.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "feed-item";
+        const createdAt = item.createdAt ? formatDate(item.createdAt) : formatDate(new Date());
+        div.innerHTML = `
                 <div class="feed-title">
                     ${item.title}
                     <div class="feed-meta">${createdAt}</div>
@@ -504,118 +595,142 @@
                     ${item.tags.map(tag => `<span class="tag ${tagClass(tag)}">${tag}</span>`).join("")}
                 </div>
                 `;
-                feedEl.appendChild(div);
-            });
+        feedEl.appendChild(div);
+      });
+    }
+
+    function tagClass(tag) {
+      if (tag === "전학년") return "all";
+      if (tag.includes("학년")) return "grade";
+      if (tag.includes("A과")) return "deptA";
+      if (tag.includes("B과")) return "deptB";
+      if (tag.includes("C과")) return "deptC";
+      return "";
+    }
+
+    const videoWrapper = document.getElementById("videoWrapper");
+    const appHeader = document.getElementById("appHeader");
+    const tabs = document.getElementById("tabs");
+    const mainContent = document.getElementById("mainContent");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    function showMainScreen(user) {
+      videoWrapper.style.display = "none";
+      appHeader.style.display = "block";
+      tabs.style.display = "flex";
+      mainContent.style.display = "block";
+
+      document.getElementById("userInfo").textContent =
+        user.grade && user.class ?
+        `${user.grade}학년 ${user.class}반 ${user.name}` :
+        user.name;
+
+      renderFeed(document.getElementById("allFeed"), allFeedData);
+      renderFeed(document.getElementById("classFeed"), classFeedData);
+
+      if (!user.grade || !user.class) {
+        document.querySelector('[data-tab="class"]').style.display = "none";
+      }
+    }
+
+    // 로그인 버튼
+    loginBtn.addEventListener("click", () => {
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userInfo", JSON.stringify(dummyUser));
+      showMainScreen(dummyUser);
+    });
+
+    // 로그아웃 버튼
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userInfo");
+      location.reload();
+    });
+
+    // 새로고침 시 로그인 유지
+    window.addEventListener("load", () => {
+      if (localStorage.getItem("isLoggedIn") === "true") {
+        const savedUser = JSON.parse(localStorage.getItem("userInfo"));
+        if (savedUser) showMainScreen(savedUser);
+      }
+    });
+
+    // 탭 전환
+    const tabButtons = document.querySelectorAll(".tabs button");
+    const allFeed = document.getElementById("allFeed");
+    const classFeed = document.getElementById("classFeed");
+    const header = document.getElementById("appHeader");
+
+    tabButtons.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabButtons.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        if (tab.dataset.tab === "all") {
+          allFeed.style.display = "block";
+          classFeed.style.display = "none";
+          mainContent.classList.add("blue-border");
+          mainContent.classList.remove("red-border");
+
+          header.classList.add("blue-header");
+          header.classList.remove("pink-header");
+        } else {
+          allFeed.style.display = "none";
+          classFeed.style.display = "block";
+          mainContent.classList.add("red-border");
+          mainContent.classList.remove("blue-border");
+
+          header.classList.add("pink-header");
+          header.classList.remove("blue-header");
         }
+      });
+    });
 
-        function tagClass(tag) {
-            if (tag === "전학년") return "all";
-            if (tag.includes("학년")) return "grade";
-            if (tag.includes("A과")) return "deptA";
-            if (tag.includes("B과")) return "deptB";
-            if (tag.includes("C과")) return "deptC";
-            return "";
-        }
+    // 스크롤 시 헤더 투명도 변화
+    window.addEventListener("scroll", () => {
+      const header = document.getElementById("appHeader");
+      if (window.scrollY > 10) header.classList.add("scrolled");
+      else header.classList.remove("scrolled");
+    });
 
-        const videoWrapper = document.getElementById("videoWrapper");
-        const appHeader = document.getElementById("appHeader");
-        const tabs = document.getElementById("tabs");
-        const mainContent = document.getElementById("mainContent");
-        const loginBtn = document.getElementById("loginBtn");
-        const logoutBtn = document.getElementById("logoutBtn");
+    // 탑 버튼
+    const backToTop = document.getElementById("backToTop");
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 200) backToTop.classList.add("show");
+      else backToTop.classList.remove("show");
+    });
+    backToTop.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
 
-        function showMainScreen(user) {
-            videoWrapper.style.display = "none";
-            appHeader.style.display = "block";
-            tabs.style.display = "flex";
-            mainContent.style.display = "block";
+    const themeToggle = document.getElementById("themeToggle");
 
-            document.getElementById("userInfo").textContent =
-                user.grade && user.class ?
-                `${user.grade}학년 ${user.class}반 ${user.name}` :
-                user.name;
+    themeToggle.addEventListener("click", () => {
+      const root = document.documentElement;
+      const currentTheme = root.getAttribute("data-theme");
 
-            renderFeed(document.getElementById("allFeed"), allFeedData);
-            renderFeed(document.getElementById("classFeed"), classFeedData);
+      if (currentTheme === "dark") {
+        root.setAttribute("data-theme", "light");
+        localStorage.setItem("theme", "light");
+        themeToggle.textContent = "Dark"; // 전환 버튼에 표시되는 모드
+      } else {
+        root.setAttribute("data-theme", "dark");
+        localStorage.setItem("theme", "dark");
+        themeToggle.textContent = "Light";
+      }
+    });
 
-            if (!user.grade || !user.class) {
-                document.querySelector('[data-tab="class"]').style.display = "none";
-            }
-        }
-
-        // 로그인 버튼
-        loginBtn.addEventListener("click", () => {
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("userInfo", JSON.stringify(dummyUser));
-            showMainScreen(dummyUser);
-        });
-
-        // 로그아웃 버튼
-        logoutBtn.addEventListener("click", () => {
-            localStorage.removeItem("isLoggedIn");
-            localStorage.removeItem("userInfo");
-            location.reload();
-        });
-
-        // 새로고침 시 로그인 유지
-        window.addEventListener("load", () => {
-            if (localStorage.getItem("isLoggedIn") === "true") {
-                const savedUser = JSON.parse(localStorage.getItem("userInfo"));
-                if (savedUser) showMainScreen(savedUser);
-            }
-        });
-
-        // 탭 전환
-        const tabButtons = document.querySelectorAll(".tabs button");
-        const allFeed = document.getElementById("allFeed");
-        const classFeed = document.getElementById("classFeed");
-        const header = document.getElementById("appHeader");
-
-        tabButtons.forEach(tab => {
-            tab.addEventListener("click", () => {
-                tabButtons.forEach(t => t.classList.remove("active"));
-                tab.classList.add("active");
-
-                if (tab.dataset.tab === "all") {
-                    allFeed.style.display = "block";
-                    classFeed.style.display = "none";
-                    mainContent.classList.add("blue-border");
-                    mainContent.classList.remove("red-border");
-
-                    header.classList.add("blue-header");
-                    header.classList.remove("pink-header");
-                } else {
-                    allFeed.style.display = "none";
-                    classFeed.style.display = "block";
-                    mainContent.classList.add("red-border");
-                    mainContent.classList.remove("blue-border");
-
-                    header.classList.add("pink-header");
-                    header.classList.remove("blue-header");
-                }
-            });
-        });
-
-        // 스크롤 시 헤더 투명도 변화
-        window.addEventListener("scroll", () => {
-            const header = document.getElementById("appHeader");
-            if (window.scrollY > 10) header.classList.add("scrolled");
-            else header.classList.remove("scrolled");
-        });
-
-        // 탑 버튼
-        const backToTop = document.getElementById("backToTop");
-        window.addEventListener("scroll", () => {
-            if (window.scrollY > 200) backToTop.classList.add("show");
-            else backToTop.classList.remove("show");
-        });
-        backToTop.addEventListener("click", () => {
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        });
-    </script>
+    // 새로고침 시 반영
+    window.addEventListener("load", () => {
+      const savedTheme = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      themeToggle.textContent = savedTheme === "dark" ? "Light" : "Dark";
+    });
+  </script>
 </body>
 
 </html>
