@@ -1,3 +1,18 @@
+/*
+==========================================
+ 성일정보고 링크 허브 스크립트
+------------------------------------------
+ ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
+ ⦿ 최초 작성 : 2025-09-15
+ ⦿ 수정 내역 : 
+    - 2025-09-22 카드 숨김/복원 기능 추가
+    - 2025-09-22 메모장 모달 CRUD 기능 구현
+------------------------------------------
+ 본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
+ 무단 사용 및 외부 배포를 금합니다.
+==========================================
+*/
+
 // 안전 selector & 바인딩 헬퍼
 const $ = (id) => document.getElementById(id);
 const on = (el, evt, handler, opts) => {
@@ -11,21 +26,21 @@ document.getElementById('yy').textContent = new Date().getFullYear();
 const q = document.getElementById('q');
 const cards = [...document.querySelectorAll('.card')];
 const pills = [...document.querySelectorAll('.pill')];
+let hiddenCards = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
 let activeCat = 'all';
 
 function applyFilter() {
     const keyword = (q.value || '').trim().toLowerCase();
-
     cards.forEach(c => {
+        const key = c.dataset.key; // ✅ 여기서 key 정의
         const tags = (c.dataset.tags || '').toLowerCase();
-        const cats = (c.dataset.cat || '').toLowerCase().split(/\s+/); // 여러 카테고리 지원
-        const inCat = activeCat === 'all' ? true : cats.includes(activeCat);
+        const inCat = activeCat === 'all' ? true : (c.dataset.cat === activeCat);
+        const hit = !keyword || tags.includes(keyword) || c.querySelector('h3').textContent.toLowerCase().includes(keyword);
 
-        const hit = !keyword ||
-            tags.includes(keyword) ||
-            c.querySelector('h3').textContent.toLowerCase().includes(keyword);
+        // 🚨 숨김 카드 처리 추가
+        const isHidden = hiddenCards.includes(key);
 
-        c.style.display = (inCat && hit) ? '' : 'none';
+        c.style.display = (!isHidden && inCat && hit) ? '' : 'none';
     });
 }
 
@@ -40,6 +55,7 @@ pills.forEach(p => {
 });
 
 applyFilter();
+
 
 // 기본 선택 표시 (배열 길이 보장용)
 pills[0]?.style && (pills[0].style.outline = '2px solid var(--accent)');
@@ -534,6 +550,8 @@ const dutyBtn = document.getElementById("dutyBtn");
 const dutyModal = document.getElementById("dutyModal");
 const closeDutyBtn = document.getElementById("closeDutyBtn");
 
+const memoModal = document.getElementById("memoModal");
+
 
 dutyBtn.addEventListener("click", () => {
     dutyModal.style.display = "flex";
@@ -555,9 +573,10 @@ closeHelp.addEventListener("click", () => {
 });
 
 window.addEventListener("click", (e) => {
-    if (e.target === helpModal || e.target === dutyModal) {
+    if (e.target === helpModal || e.target === dutyModal || e.target === memoModal) {
         helpModal.style.display = "none";
         dutyModal.style.display = "none";
+        memoModal.style.display = "none";
     }
 });
 
@@ -623,3 +642,204 @@ async function loadDuty() {
     document.getElementById("modal-duty").innerHTML = html;
 }
 loadDuty();
+
+// // 메모 카드
+// const memoArea = document.getElementById("memoArea");
+
+// // 저장된 메모 불러오기
+// memoArea.value = localStorage.getItem("eduinfo.memo") || "";
+
+// // 입력할 때마다 저장
+// memoArea.addEventListener("input", () => {
+//     localStorage.setItem("eduinfo.memo", memoArea.value);
+// });
+
+const MEMO_KEY = "eduinfo.memoCard";
+let memos = JSON.parse(localStorage.getItem(MEMO_KEY) || "[]");
+let editingIndex = null; // 현재 수정 중인 메모 인덱스
+
+const memoListEl = document.getElementById("memoList");
+const addMemoBtn = document.getElementById("addMemoBtn");
+
+const modal = document.getElementById("memoModal");
+const closeModal = document.getElementById("closeMemoModal");
+const saveMemoBtn = document.getElementById("saveMemoBtn");
+const memoTitleInput = document.getElementById("memoTitle");
+const memoContentInput = document.getElementById("memoContent");
+
+// 렌더링
+function renderMemos() {
+  memoListEl.innerHTML = "";
+  memos.forEach((memo, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = memo.title;
+    btn.onclick = () => openModal(idx); // 클릭하면 수정 모드
+    memoListEl.appendChild(btn);
+  });
+}
+renderMemos();
+
+// 모달 열기 (새 메모 or 수정)
+function openModal(index = null) {
+  editingIndex = index;
+  if (index === null) {
+    // 새 메모
+    memoTitleInput.value = "";
+    memoContentInput.value = "";
+  } else {
+    // 기존 메모 수정
+    memoTitleInput.value = memos[index].title;
+    memoContentInput.value = memos[index].content;
+  }
+  modal.style.display = "flex";
+}
+
+// 모달 닫기
+// closeModal.onclick = () => {
+//   modal.style.display = "none";
+//   editingIndex = null;
+// };
+
+window.addEventListener("click", (e) => {
+    if (e.target === closeModal) {
+        modal.style.display = "none";
+        editingIndex = null;
+    }
+});
+
+
+
+// 저장
+saveMemoBtn.onclick = () => {
+  const title = memoTitleInput.value.trim();
+  const content = memoContentInput.value.trim();
+  if (!title || !content) {
+    alert("제목과 내용을 입력하세요.");
+    return;
+  }
+
+  if (editingIndex === null) {
+    if (memos.length >= 5) {
+      alert("메모는 최대 5개까지만 저장할 수 있습니다.");
+      return;
+    }
+    memos.push({ title, content });
+  } else {
+    memos[editingIndex] = { title, content };
+  }
+
+  localStorage.setItem(MEMO_KEY, JSON.stringify(memos));
+  renderMemos();
+  modal.style.display = "none";
+  editingIndex = null;
+};
+
+// 추가 버튼
+addMemoBtn.onclick = () => openModal(null);
+
+const deleteMemoBtn = document.getElementById("deleteMemoBtn");
+
+// 모달 열기 (새 메모 or 수정)
+function openModal(index = null) {
+  editingIndex = index;
+  if (index === null) {
+    // 새 메모
+    memoTitleInput.value = "";
+    memoContentInput.value = "";
+    deleteMemoBtn.style.display = "none"; // 새 메모일 땐 삭제 숨김
+  } else {
+    // 기존 메모 수정
+    memoTitleInput.value = memos[index].title;
+    memoContentInput.value = memos[index].content;
+    saveMemoBtn.textContent = "수정"; 
+    deleteMemoBtn.style.display = "inline-block"; // 수정 모드일 땐 삭제 보이기
+  }
+  modal.style.display = "flex";
+}
+
+// 삭제 버튼 클릭
+deleteMemoBtn.onclick = () => {
+  if (editingIndex !== null) {
+    if (confirm("이 메모를 삭제하시겠습니까?")) {
+      memos.splice(editingIndex, 1); // 해당 인덱스 삭제
+      localStorage.setItem(MEMO_KEY, JSON.stringify(memos));
+      renderMemos();
+      modal.style.display = "none";
+      editingIndex = null;
+    }
+  }
+};
+
+
+// 카드 숨김 및 복원 기능
+// 카드 key → 제목 매핑
+function buildCardMap() {
+  const map = {};
+  document.querySelectorAll("#grid .card").forEach(c => {
+    const key = c.dataset.key;
+    const title = c.querySelector("h3")?.textContent.trim() || "제목 없음";
+    map[key] = title;
+  });
+  return map;
+}
+
+// let hiddenCards = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
+
+function hideCard(key) {
+  const card = document.querySelector(`#grid .card[data-key="${key}"]`);
+  if (!card) return;
+  card.style.display = "none";
+
+  if (!hiddenCards.includes(key)) {
+    hiddenCards.push(key);
+    localStorage.setItem("eduinfo.hiddenCards", JSON.stringify(hiddenCards));
+  }
+  renderHiddenList();
+}
+
+function showCard(key) {
+  const card = document.querySelector(`#grid .card[data-key="${key}"]`);
+  if (!card) return;
+  card.style.display = "";
+
+  hiddenCards = hiddenCards.filter(k => k !== key);
+  localStorage.setItem("eduinfo.hiddenCards", JSON.stringify(hiddenCards));
+  renderHiddenList();
+}
+
+function renderHiddenList() {
+  const container = document.getElementById("hiddenList");
+  container.innerHTML = "";
+
+  const cardMap = buildCardMap();
+
+  if (hiddenCards.length === 0) {
+    container.textContent = "숨긴 카드 없음";
+    return;
+  }
+
+  hiddenCards.forEach(key => {
+    const btn = document.createElement("button");
+    btn.textContent = `복원: ${cardMap[key] || key}`;
+    btn.onclick = () => showCard(key);
+    container.appendChild(btn);
+  });
+}
+
+
+// 숨김 카드 목록 토글
+document.getElementById("hiddenListBtn").addEventListener("click", () => {
+  const list = document.getElementById("hiddenList");
+  list.style.display = (list.style.display === "block") ? "none" : "block";
+});
+
+// 초기 로딩 시 숨김 적용
+window.addEventListener("DOMContentLoaded", () => {
+  const hidden = JSON.parse(localStorage.getItem("eduinfo.hiddenCards") || "[]");
+  hidden.forEach(key => {
+    const el = document.querySelector(`.card[data-key="${key}"]`);
+    if (el) el.style.display = "none";
+  });
+  renderHiddenList();
+});
