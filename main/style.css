@@ -1,3 +1,18 @@
+/*
+==========================================
+ 성일정보고 링크 허브 스타일シート
+------------------------------------------
+ ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
+ ⦿ 최초 작성 : 2025-09-15
+ ⦿ 수정 내역 : 
+    - 2025-09-22 메모장 관련 스타일 추가
+    - 2025-09-22 카드 숨김 관련 스타일 추가
+------------------------------------------
+ 본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
+ 무단 사용 및 외부 배포를 금합니다.
+==========================================
+*/
+
 :root {
     --bg: #0b0d10;
     --panel: #12161b;
@@ -99,13 +114,6 @@ header {
     border-radius: 10px;
     font-variant-numeric: tabular-nums;
     /* 숫자 폭 일정 */
-}
-
-/* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
-@media (max-width:680px) {
-    .now {
-        display: none !important;
-    }
 }
 
 .logo {
@@ -266,7 +274,8 @@ header {
 }
 
 #addLinkBtn,
-#manageLinkBtn {
+#manageLinkBtn,
+#addMemoBtn {
     padding: 6px 8px;
     /* 조금 작게 */
     margin-top: 5px;
@@ -664,8 +673,7 @@ footer {
 
 /* 도움말 버튼 스타일 */
 .toolbar-btn,
-.ticker-help,
-#lockBtn {
+.ticker-help {
     margin-left: 8px;
     padding: 4px 6px;
     border-radius: 10px;
@@ -677,9 +685,22 @@ footer {
     font-size: 13px;
 }
 
+.toolbar-btn:hover,
+.ticker-help:hover {
+    border-color: #2e425b;
+}
+
 /* 카드잠금 및 해제 버튼 */
-#lockBtn {
+#lockBtn, #hiddenListBtn {
     margin-left: auto;
+    padding: 4px 6px;
+    border-radius: 10px;
+    border: 1px solid #223041;
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    transition: all .2s ease;
+    font-size: 13px;
 }
 
 .toolbar-btn:hover,
@@ -816,7 +837,14 @@ footer {
     background: #3b4d61;
 }
 
-.modal-footer a {
+#saveMemoBtn {
+    background: var(--muted);
+}
+#deleteMemoBtn {
+    background: var(--warning);
+}
+
+.modal-footer > a {
     padding: 3px 7px;
     border-radius: 8px;
     background: #4cc9f0;
@@ -824,6 +852,7 @@ footer {
     text-decoration: none;
     font-size: 13px;
     font-weight: 600;
+    line-height: 1.8;
 }
 
 .modal-footer a:hover {
@@ -840,5 +869,122 @@ footer {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+.memo-card textarea {
+    width: 100%;
+    min-height: 120px;
+    background: transparent;
+    border: 1px solid #2a3a4f;
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    padding: 10px;
+    resize: vertical;   /* 크기 조절 가능 */
+    outline: none;
+}
+.memo-card textarea:focus {
+    border-color: var(--accent);
+    background: #111821;
+}
+.memo-list {
+    display: flex;
+    flex-direction: wrap;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.memo-btn {
+    border: 1px solid #223041;
+    background: var(--panel);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.memo-btn:hover {
+    background: var(--ring);
+}
+
+#memoTitle {
+    background: var(--panel);
+    color: var(--text);
+    margin-bottom: 20px;
+    border: none;
+    border: 1px solid var(--muted);
+    padding: 10px;
+}
+#memoContent {
+    background: var(--panel);
+    color: var(--text);
+    min-height: 300px;
+    border: none;
+    border: 1px solid var(--muted);
+    padding: 10px;
+}
+
+/* 카드 숨김 관련 스타일 */
+.hide-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.hide-btn:hover {
+    color: var(--warning);
+}
+
+.hidden-list {
+    display: none;
+    margin-top: 10px;
+    padding: 5px;
+    background: var(--panel);
+    border: 1px solid #223041;
+    border-radius: 10px;
+}
+
+.hidden-list button {
+    margin: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    border: 1px solid #2a3a4f;
+    border-radius: 8px;
+    background: #0f151c;
+    color: #cfe3f5;
+    cursor: pointer;
+}
+
+.hidden-list p {
+    font-size: 12px;
+    color: var(--muted);
+    padding-left: 10px;
+}
+
+
+
+/* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
+@media (max-width:680px) {
+    .now {
+        display: none !important;
+    }
+    .ticker-left {
+        margin: 0 auto;
+    }
+    .ticker-right {
+        width: 100%;        /* 한 줄 전체 차지 */
+        margin-top: 6px;    /* 위쪽 버튼들과 간격 */
+        display: block;
+        text-align: center;
+        margin-top: 5px;
     }
 }
