@@ -1,3 +1,17 @@
+<!--
+==========================================
+ 성일정보고 링크 허브
+------------------------------------------
+ ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
+ ⦿ 최초 작성 : 2025-09-20
+ ⦿ 수정 내역 : 
+    - 2025-09-22 카드 숨김 기능 추가
+    - 2025-09-22 메모장 모듈 추가
+------------------------------------------
+ 본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
+ 무단 사용 및 외부 배포를 금합니다.
+==========================================
+-->
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -45,6 +59,7 @@
             </div>
 
             <div class="ticker-right">
+                <button id="hiddenListBtn">🙈 숨김 카드 목록</button>
                 <button id="lockBtn" onclick="toggleLock()">🔓 해제</button>
             </div>
 
@@ -52,8 +67,8 @@
                 <div class="led-ticker-track" id="ledTrack"></div>
             </div>
         </div>
-
         
+        <div id="hiddenList" class="hidden-list"></div>
 
         <!-- 근무자 모달 -->
         <div id="dutyModal" class="modal">
@@ -87,6 +102,16 @@
                             🔒 <b>카드 고정/해제</b>
                             <div class="desc">카드 고정 → 순서 변경 불가 / 카드 해제 → 순서 변경 가능</div>
                         </li><br>
+                            <li>
+                            🙈 <b>카드 숨김</b>
+                            <div class="desc">각 카드 우측 상단의 ✖ 버튼을 눌러 카드를 숨길 수 있습니다.<br>
+                            숨긴 카드는 상단의 ‘숨김 카드 목록’에서 다시 복원할 수 있습니다.</div>
+                        </li><br>
+                        <li>
+                            📝 <b>메모장 카드</b>
+                            <div class="desc">빈 메모장 카드를 활용해 간단한 메모를 기록할 수 있습니다.<br>
+                            입력한 메모는 자동 저장되어 새로고침 후에도 유지됩니다.</div>
+                        </li><br>
                         <li>
                             🔍 <b>검색 접두어</b>
                             <div class="desc">검색창에 <code>g</code> 또는 <code>ㅎ</code> 또는 <code>ㄱ</code> 입력 후 띄어쓰기 → 구글 검색 / <br> <code>n</code> 또는 <code>ㅜ</code> 또는 <code>ㄴ</code> 입력 후 띄어쓰기 → 네이버 검색</div>
@@ -101,6 +126,20 @@
                         </li>
                 </ul>
                 <p style="font-size:13px; color:var(--warning);">※ 개인화된 설정은 서버에 저장되지 않고, 이 기기 브라우저에서만 유지됩니다.</p>
+            </div>
+        </div>
+
+        <!-- 메모 모달 -->
+        <div id="memoModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeMemoModal">&times;</span>
+                <h2>메모</h2>
+                <input type="text" id="memoTitle" placeholder="제목" />
+                <textarea id="memoContent" placeholder="내용"></textarea>
+                <div class="modal-footer">
+                <button id="saveMemoBtn">저장</button>
+                <button id="deleteMemoBtn" style="display:none;">삭제</button>
+                </div>
             </div>
         </div>
 
@@ -137,6 +176,7 @@
         <div class="grid" id="grid">
             <!-- 개인화 즐겨찾기 카드 -->
             <article class="card card1" data-key="card1" id="personalCard" data-tags="개인 즐겨찾기 맞춤" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card1')">✖</button>
                 <div class="icon">⭐</div>
                 <h3>내 즐겨찾기</h3>
                 <p>원하는 사이트를 추가하세요. (본인 기기에서만 저장됨)</p>
@@ -150,6 +190,7 @@
             </article>
             <!-- 학교 공식/공유 자료 -->
             <article class="card card2" data-key="card2" data-tags="학교 홈페이지 업무공유 외부 공식 external" data-cat="external service">
+                <button class="hide-btn" onclick="hideCard('card2')">✖</button>
                 <div class="icon">🏫</div>
                 <h3>학교 공식/공유 자료</h3>
                 <p>학교 홈페이지 및 2025 업무공유 시트.</p>
@@ -173,6 +214,7 @@
 
             <!-- 업무·행정 통합 서비스 -->
             <article class="card card3" data-key="card3" id="card-work-portal" data-tags="업무포털 에듀파인 나이스 NEIS K-에듀파인 통합 외부" data-cat="external">
+                <button class="hide-btn" onclick="hideCard('card3')">✖</button>
                 <div class="icon">🧑‍💼</div>
                 <h3>업무·행정 통합 서비스</h3>
                 <p>업무포털, 공직자메일 등 교직원 필수 행정 서비스 모음.<br>접속이 원활하지 않을 경우 개별 주소를 이용하세요.</p>
@@ -196,6 +238,7 @@
             
             <!-- 에듀테크 사이트 -->
             <article class="card card4" data-key="card4" data-tags="에듀테크 AI 퀴즈 수업지원" data-cat="class">
+                <button class="hide-btn" onclick="hideCard('card4')">✖</button>
                 <div class="icon">💡</div>
                 <h3>디지털 수업 도구</h3>
                 <p>수업과 학습에 활용할 수 있는 주요 에듀테크 플랫폼 모음</p>
@@ -212,6 +255,7 @@
 
             <!-- 구글 도구 사이트 -->
             <article class="card card5" data-key="card5" data-tags="구글 클래스룸 시트 슬라이드 독스 킵 캘린더" data-cat="class">
+                <button class="hide-btn" onclick="hideCard('card5')">✖</button>
                 <div class="icon">🗂️</div>
                 <h3>구글 수업 툴킷</h3>
                 <p>수업과 협업에 활용할 수 있는 구글 도구 모음</p>
@@ -230,6 +274,7 @@
 
             <!-- 수업교환 -->
             <article class="card card6" data-key="card6" data-tags="수업교환" data-cat="class">
+                <button class="hide-btn" onclick="hideCard('card6')">✖</button>
                 <div class="icon">🔄</div>
                 <h3>수업교환</h3>
                 <p>수업교환 신청</p>
@@ -247,6 +292,7 @@
             <!-- 교육정보부 서비스 안내 (Accordion) -->
             <article class="card card7" data-key="card7" id="card-eduinfo-service" data-tags="교육정보부 서비스 안내 신청 확인 계정 홈페이지 태블릿 소프트웨어"
                 data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card7')">✖</button>
                 <div class="icon">📮</div>
                 <h3>교육정보부 서비스 안내</h3>
                 <p>업무 신청(모든 교사)과 신청 현황 확인(교육정보부 전용)을 접어서 관리합니다.</p>
@@ -304,6 +350,7 @@
 
             <!-- 시설/환경 수리 신청 -->
             <article class="card card8" data-key="card8" data-tags="시설 환경 수리 신청" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card8')">✖</button>
                 <div class="icon">🛠️</div>
                 <h3>시설·환경 수리 신청</h3>
                 <p>시설/환경 수리 요청 입력 시트.</p>
@@ -317,6 +364,7 @@
 
             <!-- 성과/홍보 -->
             <article class="card card10" data-key="card10" data-tags="성과 수상 홍보 키오스크 award" data-cat="promo">
+                <button class="hide-btn" onclick="hideCard('card10')">✖</button>
                 <div class="icon">🏆</div>
                 <h3>성과(수상) 허브</h3>
                 <p>신관 1층 키오스크 및 온라인 성과 게시.</p>
@@ -331,6 +379,7 @@
 
             <!-- 급식 시스템 -->
             <article class="card card11" data-key="card11" data-tags="급식 신청 식단 서비스 service" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card11')">✖</button>
                 <div class="icon">🍱</div>
                 <h3>급식 정보/신청</h3>
                 <p>주간 식단 확인과 신청/집계(교사/학생용 구성).</p>
@@ -342,6 +391,7 @@
 
             <!-- 도서관(마중물) -->
             <article class="card card12" data-key="card12" data-tags="도서관 마중물 소장자료 희망도서 알라딘" data-cat="external">
+                <button class="hide-btn" onclick="hideCard('card12')">✖</button>
                 <div class="icon">📚</div>
                 <h3>도서관(마중물)</h3>
                 <p>소장자료 검색, 희망도서 신청, 도서정보 확인.</p>
@@ -357,8 +407,28 @@
                 <div class="meta"><span class="badge">도서관</span></div>
             </article>
 
+            <!-- 빠른 메모 -->
+            <!-- <article class="card card13 memo-card" data-key="card13">
+                <button class="hide-btn" onclick="hideCard('card13')">✖</button>
+                <div class="icon">📝</div>
+                <h3>메모장</h3>
+                <textarea id="memoArea" placeholder="메모를 입력하세요..."></textarea>
+            </article> -->
+
+            <!-- 메모 카드 -->
+            <article class="card card13 memo-card" data-key="card13">
+                <button class="hide-btn" onclick="hideCard('card13')">✖</button>
+                <div class="icon">📝</div>
+                <h3>메모장</h3>
+                <p>빠르게 메모하세요. (초기화 될 수 있으니 중요한건 백업)</p>
+                <div id="memoList" class="memo-list"></div>
+                <button class="btn" id="addMemoBtn">➕ 메모 추가</button>
+                <div class="meta"><span class="badge">개인화</span></div>
+            </article>
+
             <!-- 교직원 내선번호 검색 -->
-            <article class="card card13" data-key="card13" data-tags="검색 교직원 내선번호" data-cat="service">
+            <article class="card card14" data-key="card14" data-tags="검색 교직원 내선번호" data-cat="service">
+                <button class="hide-btn" onclick="hideCard('card14')">✖</button>
                 <div class="icon">📞</div>
                 <h3>교직원 내선번호 검색</h3>
                 <p>초성검색 가능(ㄱㅎㅈ), 부서명 검색 가능</p>
@@ -390,7 +460,6 @@
             © <span id="yy"></span> 성일정보고등학교 교육정보부
         </footer>
     </div>
-    <script src="main/main.js?ver=1"></script>
+    <script src="main/main.js"></script>
 </body>
 </html>
-
