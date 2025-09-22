@@ -677,6 +677,7 @@
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
   const tabButtons = document.querySelectorAll(".tabs button");
+  const currentTab = document.querySelector(".tabs button.active").dataset.tab;
   const allFeed = document.getElementById("allFeed");
   const classFeed = document.getElementById("classFeed");
   const header = document.getElementById("appHeader");
@@ -700,9 +701,21 @@
   }
 
   // ===== 피드 저장 =====
-  async function saveFeed(title, content, user) {
+  async function saveFeed(title, content, user, tab) {
     const monthKey = getCurrentMonthKey();
-    const colRef = collection(db, "feeds", monthKey, "items");
+
+    let colRef;
+    if (tab === "all") {
+      colRef = collection(db, "feeds", monthKey, "items");
+    } else if (tab === "class") {
+      if (!user.grade || !user.class) {
+        alert("우리반 글쓰기를 위해 학년/반 정보가 필요합니다.");
+        return;
+      }
+      const classKey = `${user.grade}-${user.class}`;
+      colRef = collection(db, "classFeeds", classKey, `feeds_${monthKey}`);
+    }
+
     await addDoc(colRef, {
       title,
       content,
@@ -805,11 +818,63 @@
     }
   });
 
+  async function loadClassFeeds(user, initial = true) {
+  const monthKey = getCurrentMonthKey();
+  const classKey = `${user.grade}-${user.class}`;
+
+  const q = query(
+    collection(db, "classFeeds", classKey, `feeds_${monthKey}`),
+    orderBy("createdAt", "desc"),
+    limit(15)
+  );
+
+  const snap = await getDocs(q);
+
+  if (snap.empty && initial) {
+    clearClassFeed();
+    const feedEl = document.getElementById("classFeed");
+    const div = document.createElement("div");
+    div.className = "no-feed-message";
+    div.innerHTML = "📭 아직 작성된 피드가 없습니다.";
+    feedEl.appendChild(div);
+    return;
+  }
+
+  if (initial) clearClassFeed();
+
+  snap.forEach(doc => {
+    const item = doc.data();
+    renderClassFeedItem(doc.id, item);
+  });
+}
+
+  // 우리반 피드 렌더링
+  function renderClassFeedItem(id, item) {
+    const feedEl = document.getElementById("classFeed");
+    const createdAt = item.createdAt?.toDate
+      ? formatDate(item.createdAt.toDate())
+      : formatDate(new Date());
+
+    const div = document.createElement("div");
+    div.className = "feed-item";
+    div.setAttribute("data-id", id);
+    div.innerHTML = `
+      <div class="feed-title">
+        ${item.title}
+        <div class="feed-meta">${createdAt} · ${item.author}</div>
+      </div>
+      <div class="feed-content">${item.content}</div>
+    `;
+    feedEl.appendChild(div);
+  }
+
+
   // ===== 피드 저장 =====
   submitFeed.addEventListener("click", async () => {
     const title = document.getElementById("feedTitle").value.trim();
     const content = document.getElementById("feedContent").value.trim();
     const user = JSON.parse(localStorage.getItem("userInfo"));
+    const currentTab = document.querySelector(".tabs button.active").dataset.tab;
 
     if (!title || !content) {
       alert("제목과 내용을 모두 입력해주세요.");
@@ -817,18 +882,24 @@
     }
 
     try {
-      await saveFeed(title, content, user);   // ✅ Firestore에 저장
+      await saveFeed(title, content, user, currentTab); // ✅ 탭 반영
       alert("피드가 등록되었습니다!");
 
-      // 모달 닫고 입력창 비우기
+      // 모달 닫기
       document.getElementById("feedModal").style.display = "none";
       document.getElementById("feedTitle").value = "";
       document.getElementById("feedContent").value = "";
 
-      // 최신 피드 다시 불러오기
-      clearFeed();
-      lastDoc = null;
-      loadFeeds(true);
+      // 새로고침 없이 현재 탭에 맞게 다시 불러오기
+      if (currentTab === "all") {
+        clearFeed();
+        lastDoc = null;
+        loadFeeds(true);
+      } else {
+        clearClassFeed();
+        lastDoc = null;
+        loadClassFeeds(user); // ✅ 우리반 피드 로딩 함수 따로 만들어야 함
+      }
 
     } catch (err) {
       console.error("피드 저장 오류:", err);
@@ -876,26 +947,29 @@
     const privilege = user.privilege ?? "";   // ✅ undefined 방지
 
     if (tab === "all") return true; // 전체탭은 모두 볼 수 있음
+
     if (tab === "class") {
-      if (user.role === "교사") {
-        return privilege.startsWith("담임");  // ✅ 이제 undefined 안 뜸
-      } else if (user.role === "학생") {
-        return true;
-      }
+      if (user.role === "교사" && privilege === "담임") return true;  // 담임 교사
+      if (user.role === "학생") return true;                          // 학생은 자기 반 가능
     }
+
     return false;
   }
 
   function canWriteFeed(user, tab) {
-    const privilege = user.privilege ?? "";   // ✅ 방어 코드
+    const privilege = user.privilege ?? "";
 
-    if (privilege.includes("총관리자")) return true;
+    // ✅ 전체 관리자 권한
+    if (privilege === "총관리자") return true;
 
-    if (tab === "all" && privilege.includes("관리자")) return true;
+    // ✅ 전체 피드 - 관리자 가능
+    if (tab === "all" && privilege === "관리자") return true;
 
+    // ✅ 우리반 피드 - 담임 / 반장 / 부반장 가능
     if (tab === "class") {
-      if (privilege.startsWith("담임")) return true;
-      if (privilege === "반장" || privilege === "부반장") return true;
+      if (privilege === "담임" || privilege === "반장" || privilege === "부반장") {
+        return true;
+      }
     }
 
     return false;
@@ -909,9 +983,19 @@
 
     document.getElementById("userInfo").textContent = displayName;
 
-    clearFeed();
-    lastDoc = null;      // 페이지네이션 초기화
-    loadFeeds(true);     // 첫 15개 로드
+    // 현재 활성 탭 확인
+    const activeTab = document.querySelector(".tabs button.active");
+    const currentTab = activeTab ? activeTab.dataset.tab : "all";
+
+    lastDoc = null;
+
+    if (currentTab === "all") {
+      clearFeed();
+      loadFeeds(true);
+    } else {
+      clearClassFeed();
+      loadClassFeeds(userInfo, true);
+    }
 
     if (!userInfo.grade || !userInfo.class) {
       document.querySelector('[data-tab="class"]').style.display = "none";
@@ -919,11 +1003,11 @@
   }
 
 
-
   // 로그인 후 UI 업데이트
   function updateUI(user) {
     console.log("=== updateUI 실행 ===");
     console.log("Role:", user.role, "Privilege:", user.privilege);
+    JSON.parse(localStorage.getItem("userInfo"))
 
     const writeBtn = document.querySelector(".write-feed-btn");
     const currentTab = document.querySelector(".tabs button.active").dataset.tab;
@@ -991,7 +1075,9 @@
         ...userInfo,
         displayName,
         role: userInfo.role || "",
-        privilege: userInfo.privilege || ""
+        privilege: userInfo.privilege || "",
+        grade: userInfo.grade || "",
+        class: userInfo.class || ""
       }));
 
       showMainScreen(userInfo, displayName);
@@ -1024,6 +1110,7 @@
       const savedUser = JSON.parse(localStorage.getItem("userInfo"));
       if (savedUser) {
         showMainScreen(savedUser, savedUser.displayName);
+        updateUI(savedUser);
       }
     }
   });
@@ -1031,30 +1118,46 @@
   // ===== 탭 전환 =====
   tabButtons.forEach(tab => {
     tab.addEventListener("click", () => {
+      // 1) 모든 탭 active 제거 + 선택 탭 active
       tabButtons.forEach(t => t.classList.remove("active"));
       tab.classList.add("active");
 
+      // 2) 공통 초기화
+      clearFeed();
+      clearClassFeed();
+      lastDoc = null;
+
+      // 3) 분기 처리
       if (tab.dataset.tab === "all") {
         allFeed.style.display = "block";
         classFeed.style.display = "none";
+
         mainContent.classList.add("blue-border");
         mainContent.classList.remove("red-border");
         header.classList.add("blue-header");
         header.classList.remove("pink-header");
-      } else {
+
+        loadFeeds(true);
+
+      } else if (tab.dataset.tab === "class") {
         allFeed.style.display = "none";
         classFeed.style.display = "block";
+
         mainContent.classList.add("red-border");
         mainContent.classList.remove("blue-border");
         header.classList.add("pink-header");
         header.classList.remove("blue-header");
+
+        const savedUser = JSON.parse(localStorage.getItem("userInfo"));
+        if (savedUser) loadClassFeeds(savedUser, true);
       }
 
-      // ✅ 탭 전환 후 권한 다시 확인해서 글쓰기 버튼 갱신
+      // 4) 권한 다시 확인
       const savedUser = JSON.parse(localStorage.getItem("userInfo"));
       if (savedUser) updateUI(savedUser);
     });
   });
+
 
   // ===== 스크롤 =====
   window.addEventListener("scroll", () => {
