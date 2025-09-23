@@ -529,6 +529,36 @@
       font-size: 1rem;
     }
 
+    /* 피드 아이템 삭제 버튼 */
+    .delete-feed-btn {
+      position: absolute;
+      top: -10px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 50%;
+      background: #f28b82;     /* 빨강 계열 */
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 18px;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: background 0.2s, transform 0.15s, opacity 0.2s;
+      z-index: 10;
+    }
+
+    .delete-feed-btn:hover {
+      background: #e53935;
+      opacity: 1;
+    }
+
+    .delete-feed-btn:active {
+      transform: scale(0.9);
+    }
+
     /* ===== 다크모드 (그린·퍼플 버전) ===== */
     :root[data-theme="dark"] {
       --bg: #0b0d10;
@@ -742,16 +772,26 @@
   }
 
   // ===== 피드 렌더링 =====
-  function renderFeedItem(id, item) {
-    const feedEl = document.getElementById("allFeed");
+  function renderFeedItem(id, item, tab = "all") {
+    const feedEl = (tab === "all") ? document.getElementById("allFeed") : document.getElementById("classFeed");
     const createdAt = item.createdAt?.toDate
       ? formatDate(item.createdAt.toDate())
       : formatDate(new Date());
 
     const div = document.createElement("div");
     div.className = "feed-item";
-    div.setAttribute("data-id", id); // ✅ 중복 방지용 id 기록
+    div.setAttribute("data-id", id);
+    div.style.position = "relative"; // ✅ 삭제 버튼 절대 위치 가능하게
+
+    const user = JSON.parse(localStorage.getItem("userInfo"));
+
+    let deleteBtnHtml = "";
+    if (user && canDeleteFeed(user, tab)) {
+      deleteBtnHtml = `<button class="delete-feed-btn" data-id="${id}" data-tab="${tab}">×</button>`;
+    }
+
     div.innerHTML = `
+      ${deleteBtnHtml}
       <div class="feed-title">
         ${item.title}
         <div class="feed-meta">${createdAt} · ${item.author}</div>
@@ -976,6 +1016,50 @@
 
     return false;
   }
+
+  // ===== 삭제 권한 체크 확인 =====
+  function canDeleteFeed(user, tab) {
+    const privilege = user.privilege ?? "";
+
+    if (privilege === "총관리자") return true;
+    if (privilege === "관리자" && tab === "all") return true;
+    if ((privilege === "담임" || privilege === "반장" || privilege === "부반장") && tab === "class") return true;
+
+    return false;
+  }
+
+  // ===== 피드 삭제 기능 =====
+  import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // 이벤트 위임 방식 (feed 영역 클릭 감지)
+  document.body.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("delete-feed-btn")) {
+      const feedId = e.target.dataset.id;
+      const tab = e.target.dataset.tab;
+      const monthKey = getCurrentMonthKey();
+      const user = JSON.parse(localStorage.getItem("userInfo"));
+
+      if (!confirm("정말 이 피드를 삭제하시겠습니까?")) return;
+
+      try {
+        let docRef;
+        if (tab === "all") {
+          docRef = doc(db, "feeds", monthKey, "items", feedId);
+        } else {
+          const classKey = `${user.grade}-${user.class}`;
+          docRef = doc(db, "classFeeds", classKey, `feeds_${monthKey}`, feedId);
+        }
+        await deleteDoc(docRef);
+
+        alert("피드가 삭제되었습니다.");
+        e.target.closest(".feed-item").remove(); // 화면에서도 제거
+      } catch (err) {
+        console.error("삭제 오류:", err);
+        alert("삭제에 실패했습니다.");
+      }
+    }
+  });
+
   // ===== 화면 전환 (로그인 후) =====
   function showMainScreen(userInfo, displayName) {
     videoWrapper.style.display = "none";
