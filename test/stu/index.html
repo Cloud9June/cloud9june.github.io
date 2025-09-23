@@ -1183,10 +1183,12 @@
 
   // ===== 로그아웃 버튼 =====
   logoutBtn.addEventListener("click", async () => {
-    await signOut(auth);
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userInfo");
-    location.reload();
+    if (confirm("로그아웃 하시겠습니까?")) {
+      await signOut(auth);
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userInfo");
+      location.reload();
+    }
   });
 
   // ===== 새로고침 시 로그인 유지 =====
