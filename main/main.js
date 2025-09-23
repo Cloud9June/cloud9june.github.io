@@ -442,10 +442,20 @@ setInterval(fetchWeather, 30 * 60 * 1000); // 30분마다 갱신
     }
 
     function addLink() {
-        const name = prompt("링크 이름을 입력하세요:");
+        let name = prompt("링크 이름을 입력하세요 (최대 10자):");
         if (!name) return;
+
+        // 🔒 글자수 제한 적용
+        name = name.trim().slice(0, 10);
+
+        if (name.length === 0) {
+            alert("이름을 입력하세요.");
+            return;
+        }
+
         const url = prompt("URL을 입력하세요 (http:// 또는 https:// 포함):");
         if (!url) return;
+
         const links = getLinks();
         links.push({ name, url });
         saveLinks(links);
