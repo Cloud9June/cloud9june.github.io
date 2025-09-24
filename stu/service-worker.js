@@ -1,13 +1,13 @@
 const CACHE_NAME = "sungilnow-cache-v1";
 const urlsToCache = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png"
+  "/stu/",
+  "/stu/index.html",
+  "/stu/manifest.json",
+  "/stu/icons/icon-192.png",
+  "/stu/icons/icon-512.png"
 ];
 
-// 설치 단계 (앱 처음 실행 시 캐싱)
+// 설치 단계
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -16,11 +16,26 @@ self.addEventListener("install", event => {
   );
 });
 
-// 네트워크 요청 가로채기
+// 요청 가로채기
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request);
+    })
+  );
+});
+
+// 캐시 업데이트
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keyList => {
+      return Promise.all(
+        keyList.map(key => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
     })
   );
 });
