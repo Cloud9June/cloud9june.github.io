@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>관리자 피드 뷰어</title>
+  <style>
+    body {
+      font-family: Pretendard, "Noto Sans KR", sans-serif;
+      margin: 0; padding: 0;
+      background: #f9fafb;
+      color: #333;
+    }
+    header {
+      background: #4f46e5;
+      color: #fff;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    select {
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+    }
+    main {
+      padding: 1rem;
+    }
+    #currentView {
+      margin-bottom: 1rem;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .feed {
+      border: 1px solid #ddd;
+      background: #fff;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .feed h3 {
+      margin: 0 0 6px 0;
+      color: #1d4ed8;
+    }
+    .feed p {
+      margin: 0 0 8px 0;
+      white-space: pre-line;
+      font-size: 0.9rem;
+    }
+    .feed small {
+      color: #666;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📌 관리자 피드 뷰어</h1>
+    <select id="classSelect">
+      <option value="all">전체 피드</option>
+      <script>
+        for (let g = 1; g <= 3; g++) {
+          for (let c = 1; c <= 12; c++) {
+            document.write(`<option value="${g}-${c}">${g}학년 ${c}반</option>`);
+          }
+        }
+      </script>
+    </select>
+  </header>
+
+  <main>
+    <div id="currentView">전체 피드</div>
+    <div id="feedList"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getFirestore, collection, query, orderBy, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // ===== Firebase 설정 =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_ufzFnMFovKW0JhNyrXWYV2a_1cCt5Vs",
+      authDomain: "sungilnow.firebaseapp.com",
+      projectId: "sungilnow",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const feedList = document.getElementById("feedList");
+    const classSelect = document.getElementById("classSelect");
+    const titleBar = document.getElementById("currentView");
+
+    // ===== 날짜 키 =====
+    function getCurrentMonthKey() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    // ===== 피드 불러오기 =====
+    async function loadFeeds(path, label) {
+      feedList.innerHTML = "<p>⏳ 불러오는 중...</p>";
+      titleBar.textContent = label;
+
+      try {
+        const q = query(collection(db, path), orderBy("createdAt", "desc"));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          feedList.innerHTML = "<p>📭 피드 없음</p>";
+          return;
+        }
+
+        feedList.innerHTML = "";
+        snap.forEach(doc => {
+          const data = doc.data();
+          const createdAt = data.createdAt?.seconds
+            ? new Date(data.createdAt.seconds * 1000).toLocaleString()
+            : "시간 없음";
+
+          const item = document.createElement("div");
+          item.className = "feed";
+          item.innerHTML = `
+            <h3>${data.title}</h3>
+            <p>${data.content}</p>
+            <small>${data.author || "작성자 없음"} · ${createdAt}</small>
+          `;
+          feedList.appendChild(item);
+        });
+      } catch (err) {
+        console.error("피드 불러오기 오류:", err);
+        feedList.innerHTML = "<p>❌ 권한이 없거나 불러오기 실패</p>";
+      }
+    }
+
+    // ===== 관리자 페이지 시작 =====
+    function startAdminFeedViewer(user) {
+      if (!user.email.endsWith("@sungil-i.kr")) {
+        alert("학교 계정으로 로그인해야 합니다.");
+        return;
+      }
+
+      const monthKey = getCurrentMonthKey();
+      loadFeeds(`feeds/${monthKey}/items`, "전체 피드");
+
+      classSelect.addEventListener("change", () => {
+        const value = classSelect.value;
+        if (value === "all") {
+          loadFeeds(`feeds/${monthKey}/items`, "전체 피드");
+        } else {
+          loadFeeds(`classFeeds/${value}/feeds_${monthKey}`, `${value} 피드`);
+        }
+      });
+    }
+
+    // ===== 인증 상태 확인 =====
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          console.log("관리자 로그인:", result.user.email);
+          startAdminFeedViewer(result.user);
+        } catch (err) {
+          alert("로그인이 필요합니다.");
+          console.error(err);
+        }
+      } else {
+        console.log("이미 로그인:", user.email);
+        startAdminFeedViewer(user);
+      }
+    });
+  </script>
+</body>
+</html>
