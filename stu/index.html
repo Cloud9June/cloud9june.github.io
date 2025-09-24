@@ -911,7 +911,7 @@
 
         if (distance > 0) {
           e.preventDefault(); // bounce 방지
-          indicator.style.top = Math.min(distance - 40, 40) + "px";
+          indicator.style.top = Math.min(distance * 0.4 - 40, 40) + "px";
 
           if (distance > threshold) {
             indicator.innerText = "🔄 놓으면 새로고침";
