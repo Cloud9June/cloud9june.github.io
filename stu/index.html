@@ -1282,17 +1282,19 @@
       tabs.style.display = "flex";
       mainContent.style.display = "block";
       document.getElementById("userInfo").textContent = displayName;
+
+      // ✅ 항상 "전체" 탭을 기본으로 설정
+      tabButtons.forEach(t => t.classList.remove("active"));
+      document.querySelector('[data-tab="all"]').classList.add("active");
+
       lastDoc = null;
-      const currentTab = document.querySelector(".tabs button.active")?.dataset.tab || "all";
-      if (currentTab === "all") {
-        loadFeeds(true);
-      } else {
-        loadClassFeeds(userInfo, true);
-      }
+      loadFeeds(true);
+
       if (!userInfo.grade || !userInfo.class) {
         document.querySelector('[data-tab="class"]').style.display = "none";
       }
     }
+    
     function updateUI(user) {
       const writeBtn = document.querySelector(".write-feed-btn");
       const currentTab = document.querySelector(".tabs button.active").dataset.tab;
