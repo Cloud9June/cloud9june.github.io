@@ -640,6 +640,21 @@
       to { opacity: 1; }
     }
 
+    #ptrIndicator {
+      position: absolute;
+      top: -60px;
+      left: 0;
+      right: 0;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: bold;
+      color: #333;
+      transition: top 0.2s;
+    }
+
     /* ===== 다크모드 (네온 컨셉) ===== */
     :root[data-theme="dark"] {
       --bg: #0b0d10;
@@ -847,6 +862,8 @@
     <button data-tab="class">우리반</button>
   </div>
 
+  <div id="ptrIndicator">⬇️ 당겨서 새로고침</div>
+
   <main id="mainContent" class="blue-border" style="display:none;">
     <section id="allFeed"></section>
     <section id="classFeed" style="display:none;"></section>
@@ -879,28 +896,43 @@
 
     let startY = 0;
     let distance = 0;
-    const threshold = 120;
-    
+    const threshold = 160; // 새로고침 기준
+    const indicator = document.getElementById("ptrIndicator");
+
     document.addEventListener("touchstart", (e) => {
       if (window.scrollY <= 0) {
         startY = e.touches[0].pageY;
       }
     });
-    
+
     document.addEventListener("touchmove", (e) => {
       if (window.scrollY <= 0) {
         distance = e.touches[0].pageY - startY;
+
+        if (distance > 0) {
+          e.preventDefault(); // bounce 방지
+          indicator.style.top = Math.min(distance - 40, 40) + "px";
+
+          if (distance > threshold) {
+            indicator.innerText = "🔄 놓으면 새로고침";
+          } else {
+            indicator.innerText = "⬇️ 당겨서 새로고침";
+          }
+        }
       }
     });
-    
+
     document.addEventListener("touchend", () => {
-      if (window.scrollY <= 0 && distance > threshold) {
+      if (distance > threshold) {
+        indicator.innerText = "⏳ 새로고침 중...";
         if (typeof showLoading === "function") {
-          showLoading(); // ✅ 기존 로딩 스피너 사용
+          showLoading(); // ✅ 기존 스피너 실행
         }
         setTimeout(() => {
           window.location.href = window.location.href;
         }, 300);
+      } else {
+        indicator.style.top = "-50px"; // 다시 숨김
       }
       startY = 0;
       distance = 0;
