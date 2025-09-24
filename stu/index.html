@@ -832,6 +832,22 @@
     <p>✨ 곧 글들이 나올거예요<br>잠시만 기다려주세요~ ✨</p>
   </div>
 
+    <div id="ptrIndicator" style="
+      position: absolute;
+      top: -50px;
+      left: 0;
+      right: 0;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #555;
+      transition: top 0.2s;
+    ">
+    ⬇️ 당겨서 새로고침
+  </div>
+
   <!-- ===== 메인 화면 ===== -->
   <header id="appHeader" style="display:none;">
     <div class="header-top">
@@ -879,7 +895,8 @@
 
     let startY = 0;
     let distance = 0;
-    const threshold = 120;
+    const threshold = 120; // 새로고침 기준
+    const indicator = document.getElementById("ptrIndicator");
     
     document.addEventListener("touchstart", (e) => {
       if (window.scrollY <= 0) {
@@ -890,17 +907,31 @@
     document.addEventListener("touchmove", (e) => {
       if (window.scrollY <= 0) {
         distance = e.touches[0].pageY - startY;
+    
+        if (distance > 0) {
+          e.preventDefault(); // bounce 방지
+          indicator.style.top = Math.min(distance - 50, 10) + "px";
+    
+          if (distance > threshold) {
+            indicator.innerText = "🔄 놓으면 새로고침";
+          } else {
+            indicator.innerText = "⬇️ 당겨서 새로고침";
+          }
+        }
       }
     });
     
     document.addEventListener("touchend", () => {
-      if (window.scrollY <= 0 && distance > threshold) {
+      if (distance > threshold) {
+        indicator.innerText = "⏳ 새로고침 중...";
         if (typeof showLoading === "function") {
-          showLoading(); // ✅ 기존 로딩 스피너 사용
+          showLoading(); // ✅ 기존 스피너 실행
         }
         setTimeout(() => {
           window.location.href = window.location.href;
         }, 300);
+      } else {
+        indicator.style.top = "-50px"; // 다시 숨김
       }
       startY = 0;
       distance = 0;
