@@ -161,6 +161,10 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
+    #extra {
+      color: #0077cc;
+    }
+
     header.blue-header {
       background: #cde4ff;
     }
@@ -179,7 +183,7 @@
       font-weight: 800;
       font-size: 1.3rem;
       color: #1e3a8a;
-      letter-spacing: 0.5px; /* 약간 간격 주면 모던해짐 */
+      letter-spacing: 0.5px;
     }
 
     #userInfo {
@@ -642,7 +646,7 @@
 
     #ptrIndicator {
       position: absolute;
-      top: -60px;
+      top: -50px;
       left: 0;
       right: 0;
       height: 60px;
@@ -661,6 +665,7 @@
       --card: #171c22;
       --text: #e8edf3;
       --muted: #9fb0c0;
+      --accent: #7c3aed;
 
       --pastel-pink: #b5179e;
       --pastel-yellow: #ffee32;
@@ -685,6 +690,10 @@
     :root[data-theme="dark"] #appTitle {
       color: var(--pastel-pink);
       text-shadow: 0 0 8px rgba(181, 23, 158, 0.7);
+    }
+    :root[data-theme="dark"] #extra {
+      color: #ffb3c6; /* 연한 코랄핑크 */
+      text-shadow: 0 0 8px rgba(255, 107, 177, 0.6);
     }
     /* 다크모드에서 탭 전환 시 헤더 색상 */
     :root[data-theme="dark"] header.blue-header {
@@ -852,7 +861,7 @@
   <!-- ===== 메인 화면 ===== -->
   <header id="appHeader" style="display:none;">
     <div class="header-top">
-      <span id="appTitle">S:NOW</span>
+      <span id="appTitle">S<span id="extra">UNGIL </span>:NOW</span>
       <span id="userInfo">1학년 1반 홍길동</span>
       <button id="logoutBtn">⏻</button>
       <button id="themeToggle">Dark</button>
@@ -936,6 +945,47 @@
       startY = 0;
       distance = 0;
     });
+
+    const extraEl = document.getElementById("extra");
+    const extraText = "UNGIL ";
+    let isFull = false;
+
+    function typeExtra(callback) {
+      let i = 0;
+      extraEl.textContent = "";
+      const typing = setInterval(() => {
+        extraEl.textContent = extraText.slice(0, i++);
+        if (i > extraText.length) {
+          clearInterval(typing);
+          if (callback) setTimeout(callback, 1000); // 다 쓰고 1초 후 콜백
+        }
+      }, 150);
+    }
+
+    function deleteExtra(callback) {
+      let text = extraEl.textContent;
+      let i = text.length;
+      const deleting = setInterval(() => {
+        extraEl.textContent = text.slice(0, i--);
+        if (i < 0) {
+          clearInterval(deleting);
+          if (callback) setTimeout(callback, 500); // 다 지우고 0.5초 후 콜백
+        }
+      }, 100);
+    }
+
+    function toggleTitle() {
+      if (!isFull) {
+        typeExtra();
+        isFull = true;
+      } else {
+        deleteExtra();
+        isFull = false;
+      }
+    }
+
+    // ⏱️ 6초마다 반복
+    setInterval(toggleTitle, 6000);
   </script>
   
   <script type="module">
