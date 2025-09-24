@@ -876,6 +876,34 @@
         .then(reg => console.log("Service Worker registered:", reg))
         .catch(err => console.error("Service Worker failed:", err));
     }
+
+    let startY = 0;
+    let distance = 0;
+    const threshold = 80; // 이 이상 당겨야 새로고침 실행
+
+    document.addEventListener("touchstart", (e) => {
+      if (window.scrollY === 0) {
+        startY = e.touches[0].pageY;
+      }
+    });
+
+    document.addEventListener("touchmove", (e) => {
+      if (window.scrollY === 0) {
+        distance = e.touches[0].pageY - startY;
+        if (distance > threshold) {
+          document.body.style.transform = `translateY(${distance / 2}px)`;
+        }
+      }
+    });
+
+    document.addEventListener("touchend", () => {
+      if (distance > threshold) {
+        location.reload(); // ✅ 실제 새로고침
+      }
+      document.body.style.transform = "translateY(0px)";
+      startY = 0;
+      distance = 0;
+    });
   </script>
   
   <script type="module">
