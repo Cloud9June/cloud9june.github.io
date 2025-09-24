@@ -1,11 +1,11 @@
 {
-  "name": "성일정보고 학생 앱",
+  "name": "S:NOW",
   "short_name": "S:NOW",
-  "start_url": "/index.html",
+  "start_url": "index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#a0c4ff",
-  "orientation": "portrait",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "icons/icon-192.png",
