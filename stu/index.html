@@ -2,6 +2,15 @@
 <html lang="ko">
 
 <head>
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <!-- PWA 색상 -->
+  <meta name="theme-color" content="#a0c4ff">
+  <!-- iOS 지원용 (사파리용) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="S:NOW">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
@@ -861,6 +870,14 @@
 
   <button id="backToTop">🔝</button>
 
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log("Service Worker registered:", reg))
+        .catch(err => console.error("Service Worker failed:", err));
+    }
+  </script>
+  
   <script type="module">
     // ===== Firebase SDK =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
