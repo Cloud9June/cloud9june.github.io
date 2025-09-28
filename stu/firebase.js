@@ -261,6 +261,16 @@ submitFeed.addEventListener("click", async () => {
     if (mode === "create") {
       await saveFeed(title, content, user, currentTab);
       alert("피드가 등록되었습니다!");
+
+      if (currentTab === "all") {
+        clearFeed();
+        lastDocAll = null;
+        await loadFeeds(true);
+      } else if (currentTab === "class") {
+        clearClassFeed();
+        lastDocClass = null;
+        await loadClassFeeds(user, true);
+      }
     } else if (mode === "edit") {
       const monthKey = getCurrentMonthKey();
       let docRef;
