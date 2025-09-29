@@ -142,9 +142,30 @@ header {
     margin: 0.5rem;
     padding: 0.8rem 1.2rem;
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     background: #cde4ff;
     border-radius: 14px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-title {
+    height: 100%;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-align: center;
+    margin-right: 1.8rem;
+}
+
+.header-controls {
+    display: flex;
+    gap: 7px;             /* 버튼 간격 */
+    align-items: center;
+    flex-wrap: wrap;       /* 화면이 좁으면 자동 줄바꿈 */
+    justify-content: center;
+    margin-right: 1.8rem;
 }
 
 #extra {
@@ -205,12 +226,16 @@ header.scrolled {
     transform: scale(0.96);
 }
 
+#logoutBtn .fa-power-off {
+    font-size: 13px;
+}
+
 /* ===== 탭 ===== */
 .tabs {
     display: flex;
     justify-content: flex-start;
     gap: 0;
-    margin-top: 5rem;
+    margin-top: 6rem;
     margin-left: 12px;
 }
 
