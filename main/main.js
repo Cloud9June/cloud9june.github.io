@@ -251,15 +251,16 @@ return s.replace(/<br\s*\/?>/gi, ' · ' ) .replace(/\([^)]*\)/g, '' ) .replace(/
     // 2) 백그라운드에서 새로 요청
     const text = await fetchMeal();
     if (text) {
-    textEl.textContent = text;
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
-    } else if (!cache.text) {
-    textEl.textContent = "🥳 급식이 없다는 건… 곧 자유라는 뜻!";
+        textEl.textContent = text;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
+    } else {
+        textEl.textContent = "🥳 급식은 없지만, 대신 더 많은 자유가 기다립니다!";
+        localStorage.removeItem(CACHE_KEY);
     }
     }
 
     loadMeal();
-    })();
+})();
 
 // Accordion 동작
 document.querySelectorAll('.accordion-toggle').forEach(btn => {
