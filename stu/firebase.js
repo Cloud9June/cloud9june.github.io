@@ -62,6 +62,15 @@ function formatDate(date) {
   const d = new Date(date);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} (${days[d.getDay()]}) ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
+function getMonthKeys(count = 2) {
+  const now = new Date();
+  const keys = [];
+  for (let i = 0; i < count; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return keys;
+}
 
 // ===== 권한 =====
 function canViewTab(user, tab) {
@@ -138,39 +147,55 @@ let isLoadingClass = false;
 async function loadFeeds(initial = false) {
   if (isLoadingAll) return;
   isLoadingAll = true;
-  const monthKey = getCurrentMonthKey();
-  let q;
-  if (initial || !lastDocAll) {
-    q = query(
-      collection(db, "feeds", monthKey, "items"),
-      orderBy("createdAt", "desc"),
-      limit(PAGE_SIZE)
-    );
-  } else {
-    q = query(
-      collection(db, "feeds", monthKey, "items"),
-      orderBy("createdAt", "desc"),
-      startAfter(lastDocAll),
-      limit(PAGE_SIZE)
-    );
-  }
+  try {
+    const monthKeys = getMonthKeys(2); // 이번 달 + 지난달
 
-  const snap = await getDocs(q);
-  if (snap.empty && initial) {
-    clearFeed();
-    allFeed.innerHTML = `<div class="no-feed-message">📭 아직 작성된 피드가 없습니다.</div>`;
-    isLoadingAll = false;
-    return;
-  }
+    let snaps = [];
 
-  if (initial) clearFeed();
-  snap.forEach(doc => {
-    if (!document.querySelector(`[data-id="${doc.id}"]`)) {
-      renderFeedItem(doc.id, doc.data(), "all");
+    if (initial) {
+      // ✅ 초기 로딩: 이번 달 + 지난달 불러오기
+      const queries = monthKeys.map(key =>
+        query(
+          collection(db, "feeds", key, "items"),
+          orderBy("createdAt", "desc"),
+          limit(PAGE_SIZE)
+        )
+      );
+      snaps = await Promise.all(queries.map(q => getDocs(q)));
+    } else {
+      // ✅ 무한 스크롤: 이번 달만 추가 로딩
+      const q = query(
+        collection(db, "feeds", monthKeys[0], "items"),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDocAll),
+        limit(PAGE_SIZE)
+      );
+      const snap = await getDocs(q);
+      snaps = [snap]; // 배열 형태로 맞춰줌
     }
-  });
-  lastDocAll = snap.docs[snap.docs.length - 1] || null;
-  isLoadingAll = false;
+
+    if (initial) clearFeed();
+
+    snaps.forEach((snap, idx) => {
+      console.log(`로드된 문서 개수 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
+      snap.forEach(doc => {
+        // ✅ 중복 방지: 이미 렌더링된 ID는 스킵
+        if (!document.querySelector(`[data-id="${doc.id}"]`)) {
+          renderFeedItem(doc.id, doc.data(), "all");
+        }
+      });
+    });
+
+    // ✅ 페이지네이션 포인터는 이번 달만 갱신
+    const currentSnap = snaps[0];
+    if (!currentSnap.empty) {
+      lastDocAll = currentSnap.docs[currentSnap.docs.length - 1];
+    }
+  } catch (err) {
+    console.error("피드 로딩 오류:", err);
+  } finally {
+    isLoadingAll = false;
+  }
 }
 
 async function loadClassFeeds(user, initial = true) {
@@ -261,16 +286,7 @@ submitFeed.addEventListener("click", async () => {
     if (mode === "create") {
       await saveFeed(title, content, user, currentTab);
       alert("피드가 등록되었습니다!");
-
-      if (currentTab === "all") {
-        clearFeed();
-        lastDocAll = null;
-        await loadFeeds(true);
-      } else if (currentTab === "class") {
-        clearClassFeed();
-        lastDocClass = null;
-        await loadClassFeeds(user, true);
-      }
+      loadFeeds(true);
     } else if (mode === "edit") {
       const monthKey = getCurrentMonthKey();
       let docRef;
@@ -360,13 +376,15 @@ function showMainScreen(userInfo, displayName) {
   tabButtons.forEach(t => t.classList.remove("active"));
   document.querySelector('[data-tab="all"]').classList.add("active");
 
-  lastDoc = null;
+  lastDocAll = null;
+  lastDocClass = null;
   loadFeeds(true);
 
   if (!userInfo.grade || !userInfo.class) {
     document.querySelector('[data-tab="class"]').style.display = "none";
   }
 }
+
 function updateUI(user) {
   const writeBtn = document.querySelector(".write-feed-btn");
   const currentTab = document.querySelector(".tabs button.active").dataset.tab;
@@ -471,7 +489,7 @@ tabButtons.forEach(tab => {
       header.classList.remove("pink-header");
       header.classList.remove("purple-header");
       clearFeed();
-      lastDoc = null;
+      lastDocAll = null;
       loadFeeds(true);
     } else if (tab.dataset.tab === "class") {
       allFeed.style.display = "none";
@@ -485,7 +503,7 @@ tabButtons.forEach(tab => {
       header.classList.remove("blue-header");
       header.classList.remove("purple-header");
       clearClassFeed();
-      lastDoc = null;
+      lastDocClass = null;
       const savedUser = JSON.parse(localStorage.getItem("userInfo"));
       if (savedUser) loadClassFeeds(savedUser, true);
     } else if (tab.dataset.tab === "help") {
