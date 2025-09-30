@@ -201,40 +201,55 @@ async function loadFeeds(initial = false) {
 async function loadClassFeeds(user, initial = true) {
   if (isLoadingClass) return;
   isLoadingClass = true;
-  const monthKey = getCurrentMonthKey();
-  const classKey = `${user.grade}-${user.class}`;
-  let q;
-  if (initial || !lastDocClass) {
-    q = query(
-      collection(db, "classFeeds", classKey, `feeds_${monthKey}`),
-      orderBy("createdAt", "desc"),
-      limit(PAGE_SIZE)
-    );
-  } else {
-    q = query(
-      collection(db, "classFeeds", classKey, `feeds_${monthKey}`),
-      orderBy("createdAt", "desc"),
-      startAfter(lastDocClass),
-      limit(PAGE_SIZE)
-    );
-  }
+  try {
+    const classKey = `${user.grade}-${user.class}`;
+    const monthKeys = getMonthKeys(2); // ✅ 이번 달 + 지난달 (필요 시 getMonthKeys(3)로 확장)
 
-  const snap = await getDocs(q);
-  if (snap.empty && initial) {
-    clearClassFeed();
-    classFeed.innerHTML = `<div class="no-feed-message">📭 아직 작성된 피드가 없습니다.</div>`;
-    isLoadingClass = false;
-    return;
-  }
+    let snaps = [];
 
-  if (initial) clearClassFeed();
-  snap.forEach(doc => {
-    if (!document.querySelector(`[data-id="${doc.id}"]`)) {
-      renderFeedItem(doc.id, doc.data(), "class");
+    if (initial) {
+      // ✅ 초기 로딩: 여러 달 한꺼번에 불러오기
+      const queries = monthKeys.map(key =>
+        query(
+          collection(db, "classFeeds", classKey, `feeds_${key}`),
+          orderBy("createdAt", "desc"),
+          limit(PAGE_SIZE)
+        )
+      );
+      snaps = await Promise.all(queries.map(q => getDocs(q)));
+    } else {
+      // ✅ 무한 스크롤: 이번 달만 추가 로딩
+      const q = query(
+        collection(db, "classFeeds", classKey, `feeds_${monthKeys[0]}`),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDocClass),
+        limit(PAGE_SIZE)
+      );
+      const snap = await getDocs(q);
+      snaps = [snap];
     }
-  });
-  lastDocClass = snap.docs[snap.docs.length - 1] || null;
-  isLoadingClass = false;
+
+    if (initial) clearClassFeed();
+
+    snaps.forEach((snap, idx) => {
+      console.log(`우리반 로드 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
+      snap.forEach(doc => {
+        if (!document.querySelector(`[data-id="${doc.id}"]`)) {
+          renderFeedItem(doc.id, doc.data(), "class");
+        }
+      });
+    });
+
+    // ✅ 페이지네이션 포인터는 이번 달만 기준
+    const currentSnap = snaps[0];
+    if (!currentSnap.empty) {
+      lastDocClass = currentSnap.docs[currentSnap.docs.length - 1];
+    }
+  } catch (err) {
+    console.error("우리반 피드 로딩 오류:", err);
+  } finally {
+    isLoadingClass = false;
+  }
 }
 
 // ===== 무한 스크롤 =====
