@@ -359,7 +359,7 @@ submitFeed.addEventListener("click", async () => {
       await saveFeed(title, content, user, currentTab);
       alert("피드가 등록되었습니다!");
 
-      // ✅ 등록 후 즉시 반영
+      // ✅ 등록 후 즉시 반영 (새 글은 목록에 추가)
       if (currentTab === "all") {
         loadFeeds(true);
       } else if (currentTab === "class") {
@@ -369,6 +369,7 @@ submitFeed.addEventListener("click", async () => {
       }
 
     } else if (mode === "edit") {
+      // ✅ 수정 모드: DB 업데이트만 하고 DOM만 갱신
       const monthKey = getCurrentMonthKey();
       let docRef;
       if (currentTab === "all") {
@@ -377,11 +378,16 @@ submitFeed.addEventListener("click", async () => {
         const classKey = `${user.grade}-${user.class}`;
         docRef = doc(db, "classFeeds", classKey, `feeds_${monthKey}`, feedId);
       } else if (currentTab === "external") {
-        docRef = doc(db, "externalFeeds", feedId); // ✅ external 수정 처리
+        docRef = doc(db, "externalFeeds", feedId);
       }
 
-      await updateDoc(docRef, { title, content, updatedAt: serverTimestamp() });
+      await updateDoc(docRef, {
+        title,
+        content,
+        updatedAt: serverTimestamp()
+      });
 
+      // ✅ 현재 화면의 DOM 직접 업데이트 (reload 안 함)
       const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
       if (feedEl) {
         feedEl.querySelector(".feed-title").innerHTML = `
@@ -390,16 +396,8 @@ submitFeed.addEventListener("click", async () => {
         `;
         feedEl.querySelector(".feed-content").textContent = content;
       }
-      alert("피드가 수정되었습니다!");
 
-      // ✅ 수정 후 즉시 반영
-      if (currentTab === "all") {
-        loadFeeds(true);
-      } else if (currentTab === "class") {
-        loadClassFeeds(user, true);
-      } else if (currentTab === "external") {
-        loadExternalFeeds(true);
-      }
+      alert("피드가 수정되었습니다!");
     }
 
     // ✅ 모달 닫기 및 입력 초기화
@@ -411,6 +409,7 @@ submitFeed.addEventListener("click", async () => {
     alert("저장에 실패했습니다.");
   }
 });
+
 
 // ===== 피드 수정 모드 =====
 document.body.addEventListener("click", (e) => {
