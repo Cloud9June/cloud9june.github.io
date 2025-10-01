@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- 분리된 CSS -->
-  <link rel="stylesheet" href="style.css?ver=20251001">
+  <link rel="stylesheet" href="style.css?ver=20251002">
 </head>
 
 <body>
@@ -85,6 +85,12 @@
       <h2>새 피드 작성</h2>
       <input type="text" id="feedTitle" placeholder="제목을 입력하세요">
       <textarea id="feedContent" placeholder="내용을 입력하세요"></textarea>
+
+      <!-- 중요 체크박스 (기본은 숨김) -->
+      <label id="importantWrapper" style="display:none; margin-top:10px;">
+        <input type="checkbox" id="importantCheck"> 중요(필독)
+      </label>
+      
       <div class="modal-actions">
         <button id="cancelFeed">취소</button>
         <button id="submitFeed">등록</button>
@@ -97,6 +103,6 @@
   <!-- 일반 스크립트 -->
   <script src="main.js"></script>
   <!-- 모듈 스크립트 -->
-  <script type="module" src="firebase.js?ver=20251001_3"></script>
+  <script type="module" src="firebase.js?ver=20251002"></script>
 </body>
 </html>
