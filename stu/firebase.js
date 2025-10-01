@@ -72,6 +72,25 @@ function getMonthKeys(count = 2) {
   }
   return keys;
 }
+function applyTabStyle(tabName) {
+  mainContent.classList.remove("all-tab", "class-tab", "help-tab", "external-tab");
+  header.classList.remove("blue-header", "pink-header", "purple-header", "green-header");
+  mainContent.classList.remove("blue-border", "red-border", "purple-border", "green-border");
+
+  if (tabName === "all") {
+    mainContent.classList.add("all-tab", "blue-border");
+    header.classList.add("blue-header");
+  } else if (tabName === "class") {
+    mainContent.classList.add("class-tab", "red-border");
+    header.classList.add("pink-header");
+  } else if (tabName === "help") {
+    mainContent.classList.add("help-tab", "purple-border");
+    header.classList.add("purple-header");
+  } else if (tabName === "external") {
+    mainContent.classList.add("external-tab", "green-border");
+    header.classList.add("green-header");
+  }
+}
 
 // ===== 권한 =====
 function canViewTab(user, tab) {
@@ -148,6 +167,7 @@ function renderFeedItem(id, item, tab = "all") {
 // ===== 피드 불러오기 =====
 let lastDocAll = null;
 let lastDocClass = null;
+let lastDocExternal = null;
 let isLoadingAll = false;
 let isLoadingClass = false;
 let isLoadingExternal = false;
@@ -461,22 +481,54 @@ function showMainScreen(userInfo, displayName) {
   mainContent.style.display = "block";
   document.getElementById("userInfo").textContent = displayName;
 
+  const savedTab = localStorage.getItem("activeTab") || "all";
+
+  // ✅ 탭 버튼 active 적용
   tabButtons.forEach(t => t.classList.remove("active"));
-  document.querySelector('[data-tab="all"]').classList.add("active");
+  const activeBtn = document.querySelector(`[data-tab="${savedTab}"]`);
+  if (activeBtn) activeBtn.classList.add("active");
 
-  lastDocAll = null;
-  lastDocClass = null;
-  loadFeeds(true);
+  // ✅ 스크롤 맨 위로 이동
+  window.scrollTo({ top: 0, behavior: "instant" });
 
-  mainContent.classList.remove("class-tab", "external-tab", "help-tab");
-  mainContent.classList.add("all-tab", "blue-border");
-  header.classList.remove("pink-header", "external-header", "purple-header");
-  header.classList.add("blue-header");
+  // ✅ 피드 초기화
+  clearFeed();
+  clearClassFeed();
 
+  // ✅ 모든 피드 영역 숨기기
+  allFeed.style.display = "none";
+  classFeed.style.display = "none";
+  externalFeed.style.display = "none";
+  helpFeed.style.display = "none";
+
+  // ✅ 저장된 탭에 맞는 피드 보이기 & 로드
+  if (savedTab === "all") {
+    allFeed.style.display = "block";
+    lastDocAll = null;
+    loadFeeds(true);
+  } else if (savedTab === "class") {
+    classFeed.style.display = "block";
+    lastDocClass = null;
+    const savedUser = JSON.parse(localStorage.getItem("userInfo"));
+    if (savedUser) loadClassFeeds(savedUser, true);
+  } else if (savedTab === "help") {
+    helpFeed.style.display = "block";
+    renderHelpFeed();
+  } else if (savedTab === "external") {
+    externalFeed.style.display = "block";
+    lastDocExternal = null;
+    loadExternalFeeds(true);
+  }
+
+  // ✅ 헤더/보더 스타일 적용
+  applyTabStyle(savedTab);
+
+  // 학급 없는 사용자일 경우 "우리반" 숨김
   if (!userInfo.grade || !userInfo.class) {
     document.querySelector('[data-tab="class"]').style.display = "none";
   }
 }
+
 
 function updateUI(user) {
   const writeBtn = document.querySelector(".write-feed-btn");
@@ -502,11 +554,13 @@ loginBtn.addEventListener("click", async () => {
       return;
     }
 
+    localStorage.setItem("activeTab", "all");
+
     welcomeText.style.display = "none";
     loginBtn.style.display = "none";
     introLoading.style.display = "flex";
 
-    const response = await fetch(`https://script.google.com/macros/s/AKfycbxmqshTE7wvCRpCV-u7d6vF7mAqmi3bYoy6uOt_HaAfKca3gf3U61nosYvMH-zBTqga/exec?email=${email}`);
+    const response = await fetch(`https://script.google.com/macros/s/AKfycbziBbp36o1V4Mcxp-ncNKyq502dTJpxF73RGndeuDRoK5V_lmnME86UV3mHrsZkl1cchA/exec?email=${email}`);
     const data = await response.json();
     if (!data.success) {
       alert("시트에서 사용자를 찾을 수 없습니다.");
@@ -567,6 +621,9 @@ tabButtons.forEach(tab => {
   tab.addEventListener("click", () => {
     tabButtons.forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
+
+    const selectedTab = tab.dataset.tab;
+    localStorage.setItem("activeTab", tab.dataset.tab);
 
     isLoadingAll = false;
     isLoadingClass = false;
