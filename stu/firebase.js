@@ -36,6 +36,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 const tabButtons = document.querySelectorAll(".tabs button");
 const allFeed = document.getElementById("allFeed");
 const classFeed = document.getElementById("classFeed");
+const externalFeed = document.getElementById("externalFeed");
 const helpFeed = document.getElementById("helpFeed");
 const header = document.getElementById("appHeader");
 const backToTop = document.getElementById("backToTop");
@@ -86,6 +87,7 @@ function canWriteFeed(user, tab) {
   const privilege = user.privilege ?? "";
   if (privilege === "총관리자") return true;
   if (tab === "all" && privilege === "관리자") return true;
+  if (tab === "external" && privilege === "관리자") return true;
   if (tab === "class" && ["담임", "반장", "부반장"].includes(privilege)) return true;
   return false;
 }
@@ -93,6 +95,7 @@ function canDeleteFeed(user, tab) {
   const privilege = user.privilege ?? "";
   if (privilege === "총관리자") return true;
   if (privilege === "관리자" && tab === "all") return true;
+  if (privilege === "관리자" && tab === "external") return true;
   if (["담임", "반장", "부반장"].includes(privilege) && tab === "class") return true;
   return false;
 }
@@ -103,7 +106,11 @@ function clearClassFeed() { classFeed.innerHTML = ""; }
 
 // ===== 피드 렌더링 =====
 function renderFeedItem(id, item, tab = "all") {
-  const feedEl = (tab === "all") ? document.getElementById("allFeed") : document.getElementById("classFeed");
+  let feedEl;
+    if (tab === "all") feedEl = document.getElementById("allFeed");
+    else if (tab === "class") feedEl = document.getElementById("classFeed");
+    else if (tab === "external") feedEl = document.getElementById("externalFeed");
+  
   const createdAt = item.createdAt?.toDate
     ? formatDate(item.createdAt.toDate())
     : formatDate(new Date());
@@ -143,6 +150,7 @@ let lastDocAll = null;
 let lastDocClass = null;
 let isLoadingAll = false;
 let isLoadingClass = false;
+let isLoadingExternal = false;
 
 async function loadFeeds(initial = false) {
   if (isLoadingAll) return;
@@ -252,6 +260,32 @@ async function loadClassFeeds(user, initial = true) {
   }
 }
 
+async function loadExternalFeeds(initial = true) {
+  if (isLoadingAll) return;
+  isLoadingAll = true;
+  try {
+    const q = query(
+      collection(db, "externalFeeds"),
+      orderBy("createdAt", "desc"),
+      limit(PAGE_SIZE)
+    );
+
+    const snap = await getDocs(q);
+
+    if (initial) {
+      document.getElementById("externalFeed").innerHTML = "";
+    }
+
+    snap.forEach(doc => {
+      renderFeedItem(doc.id, doc.data(), "external");
+    });
+  } catch (err) {
+    console.error("대외 피드 로딩 오류:", err);
+  } finally {
+    isLoadingAll = false;
+  }
+}
+
 // ===== 무한 스크롤 =====
 window.addEventListener("scroll", () => {
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
@@ -270,10 +304,13 @@ async function saveFeed(title, content, user, tab) {
   let colRef;
   if (tab === "all") {
     colRef = collection(db, "feeds", monthKey, "items");
+  } else if (tab === "external") {
+    colRef = collection(db, "externalFeeds");
   } else {
     const classKey = `${user.grade}-${user.class}`;
     colRef = collection(db, "classFeeds", classKey, `feeds_${monthKey}`);
   }
+
   await addDoc(colRef, {
     title,
     content,
@@ -301,16 +338,28 @@ submitFeed.addEventListener("click", async () => {
     if (mode === "create") {
       await saveFeed(title, content, user, currentTab);
       alert("피드가 등록되었습니다!");
-      loadFeeds(true);
+
+      // ✅ 등록 후 즉시 반영
+      if (currentTab === "all") {
+        loadFeeds(true);
+      } else if (currentTab === "class") {
+        loadClassFeeds(user, true);
+      } else if (currentTab === "external") {
+        loadExternalFeeds(true);
+      }
+
     } else if (mode === "edit") {
       const monthKey = getCurrentMonthKey();
       let docRef;
       if (currentTab === "all") {
         docRef = doc(db, "feeds", monthKey, "items", feedId);
-      } else {
+      } else if (currentTab === "class") {
         const classKey = `${user.grade}-${user.class}`;
         docRef = doc(db, "classFeeds", classKey, `feeds_${monthKey}`, feedId);
+      } else if (currentTab === "external") {
+        docRef = doc(db, "externalFeeds", feedId); // ✅ external 수정 처리
       }
+
       await updateDoc(docRef, { title, content, updatedAt: serverTimestamp() });
 
       const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
@@ -322,8 +371,18 @@ submitFeed.addEventListener("click", async () => {
         feedEl.querySelector(".feed-content").textContent = content;
       }
       alert("피드가 수정되었습니다!");
+
+      // ✅ 수정 후 즉시 반영
+      if (currentTab === "all") {
+        loadFeeds(true);
+      } else if (currentTab === "class") {
+        loadClassFeeds(user, true);
+      } else if (currentTab === "external") {
+        loadExternalFeeds(true);
+      }
     }
 
+    // ✅ 모달 닫기 및 입력 초기화
     feedModal.style.display = "none";
     document.getElementById("feedTitle").value = "";
     document.getElementById("feedContent").value = "";
@@ -366,13 +425,27 @@ document.body.addEventListener("click", async (e) => {
       let docRef;
       if (tab === "all") {
         docRef = doc(db, "feeds", monthKey, "items", feedId);
-      } else {
+      } else if (tab === "class") {
         const classKey = `${user.grade}-${user.class}`;
         docRef = doc(db, "classFeeds", classKey, `feeds_${monthKey}`, feedId);
+      } else if (tab === "external") {
+        docRef = doc(db, "externalFeeds", feedId); // ✅ external 처리 추가
       }
+
       await deleteDoc(docRef);
+
+      // ✅ 화면에서도 제거
       e.target.closest(".feed-item").remove();
       alert("피드가 삭제되었습니다.");
+
+      // ✅ 삭제 직후 새로고침 (external은 특히 권장)
+      if (tab === "all") {
+        loadFeeds(true);
+      } else if (tab === "class") {
+        loadClassFeeds(user, true);
+      } else if (tab === "external") {
+        loadExternalFeeds(true);
+      }
     } catch (err) {
       console.error("삭제 오류:", err);
       alert("삭제에 실패했습니다.");
@@ -394,6 +467,11 @@ function showMainScreen(userInfo, displayName) {
   lastDocAll = null;
   lastDocClass = null;
   loadFeeds(true);
+
+  mainContent.classList.remove("class-tab", "external-tab", "help-tab");
+  mainContent.classList.add("all-tab", "blue-border");
+  header.classList.remove("pink-header", "external-header", "purple-header");
+  header.classList.add("blue-header");
 
   if (!userInfo.grade || !userInfo.class) {
     document.querySelector('[data-tab="class"]').style.display = "none";
@@ -490,46 +568,76 @@ tabButtons.forEach(tab => {
     tabButtons.forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
 
-    mainContent.classList.remove("all-tab", "class-tab", "help-tab");
+    isLoadingAll = false;
+    isLoadingClass = false;
+    isLoadingExternal = false;
+
+    mainContent.classList.remove("all-tab", "class-tab", "external-tab", "help-tab");
 
     if (tab.dataset.tab === "all") {
       allFeed.style.display = "block";
       classFeed.style.display = "none";
+      externalFeed.style.display = "none";
       helpFeed.style.display = "none";
       mainContent.classList.add("all-tab");
       mainContent.classList.add("blue-border");
       mainContent.classList.remove("red-border");
       mainContent.classList.remove("purple-border");
+      mainContent.classList.remove("green-border");
       header.classList.add("blue-header");
       header.classList.remove("pink-header");
+      header.classList.remove("green-header");
       header.classList.remove("purple-header");
       clearFeed();
       lastDocAll = null;
       loadFeeds(true);
     } else if (tab.dataset.tab === "class") {
       allFeed.style.display = "none";
+      externalFeed.style.display = "none";
       helpFeed.style.display = "none";
       classFeed.style.display = "block";
       mainContent.classList.add("class-tab");
       mainContent.classList.add("red-border");
       mainContent.classList.remove("blue-border");
+      mainContent.classList.remove("green-border");
       mainContent.classList.remove("purple-border");
       header.classList.add("pink-header");
       header.classList.remove("blue-header");
+      header.classList.remove("green-header");
       header.classList.remove("purple-header");
       clearClassFeed();
       lastDocClass = null;
       const savedUser = JSON.parse(localStorage.getItem("userInfo"));
       if (savedUser) loadClassFeeds(savedUser, true);
+    } else if (tab.dataset.tab === "external") {
+      allFeed.style.display = "none";
+      classFeed.style.display = "none";
+      helpFeed.style.display = "none";
+      externalFeed.style.display = "block";
+      mainContent.classList.add("external-tab");
+      mainContent.classList.add("green-border");
+      mainContent.classList.remove("blue-border");
+      mainContent.classList.remove("red-border");
+      mainContent.classList.remove("purple-border");
+      header.classList.add("green-header");
+      header.classList.remove("blue-header");
+      header.classList.remove("purple-header");
+      header.classList.remove("pink-header");
+      loadExternalFeeds(true);
     } else if (tab.dataset.tab === "help") {
       allFeed.style.display = "none";
       classFeed.style.display = "none";
+      externalFeed.style.display = "none";
       helpFeed.style.display = "block";
       mainContent.classList.add("help-tab");
       mainContent.classList.add("purple-border");
       mainContent.classList.remove("blue-border");
+      mainContent.classList.remove("red-border");
+      mainContent.classList.remove("green-border");
       header.classList.add("purple-header");
       header.classList.remove("blue-header");
+      header.classList.remove("green-header");
+      header.classList.remove("pink-header");
       clearFeed();
       clearClassFeed();
       renderHelpFeed();
