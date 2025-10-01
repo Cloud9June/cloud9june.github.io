@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- 분리된 CSS -->
-  <link rel="stylesheet" href="style.css?ver=20250930_3">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -54,17 +54,25 @@
       <button id="logoutBtn"><i class="fas fa-power-off"></i></button>
       <button id="themeToggle">Dark</button>
     </div>
+    <!-- <div class="header-top">
+      <span id="appTitle">S<span id="extra">UNGIL </span>:NOW</span>
+      <span id="userInfo">1학년 1반 홍길동</span>
+      <button id="logoutBtn"><i class="fas fa-power-off"></i></button>
+      <button id="themeToggle">Dark</button>
+    </div> -->
   </header>
 
   <div class="tabs" id="tabs" style="display:none;">
     <button data-tab="all" class="active">전체</button>
     <button data-tab="class">우리반</button>
+    <button data-tab="external">대외</button>
     <button data-tab="help">도움말</button>
   </div>
 
   <main id="mainContent" class="blue-border" style="display:none;">
     <section id="allFeed"></section>
     <section id="classFeed" style="display:none;"></section>
+    <section id="externalFeed" style="display:none"></section>
     <section id="helpFeed" style="display:none;"></section>
   </main>
 
@@ -89,6 +97,6 @@
   <!-- 일반 스크립트 -->
   <script src="main.js"></script>
   <!-- 모듈 스크립트 -->
-  <script type="module" src="firebase.js?ver=20251001_2"></script>
+  <script type="module" src="firebase.js?ver=20251001_3"></script>
 </body>
 </html>
