@@ -280,15 +280,28 @@ async function loadClassFeeds(user, initial = true) {
   }
 }
 
-async function loadExternalFeeds(initial = true) {
-  if (isLoadingAll) return;
-  isLoadingAll = true;
+async function loadExternalFeeds(initial = false) {
+  if (isLoadingExternal) return;
+  isLoadingExternal = true;
+
   try {
-    const q = query(
-      collection(db, "externalFeeds"),
-      orderBy("createdAt", "desc"),
-      limit(PAGE_SIZE)
-    );
+    let q;
+    if (initial || !lastDocExternal) {
+      // 첫 로딩
+      q = query(
+        collection(db, "externalFeeds"),
+        orderBy("createdAt", "desc"),
+        limit(PAGE_SIZE)
+      );
+    } else {
+      // 다음 페이지
+      q = query(
+        collection(db, "externalFeeds"),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDocExternal),
+        limit(PAGE_SIZE)
+      );
+    }
 
     const snap = await getDocs(q);
 
@@ -299,10 +312,15 @@ async function loadExternalFeeds(initial = true) {
     snap.forEach(doc => {
       renderFeedItem(doc.id, doc.data(), "external");
     });
+
+    // 마지막 문서 기억
+    if (!snap.empty) {
+      lastDocExternal = snap.docs[snap.docs.length - 1];
+    }
   } catch (err) {
     console.error("대외 피드 로딩 오류:", err);
   } finally {
-    isLoadingAll = false;
+    isLoadingExternal = false;
   }
 }
 
@@ -315,6 +333,7 @@ window.addEventListener("scroll", () => {
       const savedUser = JSON.parse(localStorage.getItem("userInfo"));
       if (savedUser) loadClassFeeds(savedUser, false);
     }
+    if (currentTab === "external") { loadExternalFeeds(false); }
   }
 });
 
