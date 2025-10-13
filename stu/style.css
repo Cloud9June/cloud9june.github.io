@@ -193,6 +193,18 @@ header.scrolled {
     background: #ffffffcc;
 }
 
+.beta-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #fff;
+  background: #ff4d4d; /* 눈에 잘 띄는 색 (빨강, 주황, 파랑 등 가능) */
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
 #appTitle {
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
     font-weight: 800;
@@ -572,6 +584,34 @@ main.purple-border {
     font-weight: bold;
     cursor: pointer;
 }
+
+/* ===== 글쓰기 모달 헤더 ===== */
+.modal-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* ===== 중요 체크박스 ===== */
+#importantWrapper {
+  display: none;
+  align-items: center;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #d00;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+#importantCheck {
+  transform: scale(1.2);
+  accent-color: #ff6b6b;
+  cursor: pointer;
+  margin-right: -8px;
+}
+
 
 #cancelFeed {
     background: #ddd;
