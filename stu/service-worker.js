@@ -1,4 +1,4 @@
-const CACHE_NAME = "sungilnow-cache-v10";
+const CACHE_NAME = "sungilnow-cache-v11";
 const urlsToCache = [
   "/stu/",
   "/stu/index.html",
