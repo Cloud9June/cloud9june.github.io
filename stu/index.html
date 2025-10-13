@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- 분리된 CSS -->
-  <link rel="stylesheet" href="style.css?ver=20251002">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -47,19 +47,13 @@
   <!-- ===== 메인 화면 ===== -->
   <header id="appHeader" style="display:none;">
     <div class="header-title">
-      <span id="appTitle">S<span id="extra">UNGIL </span>:NOW</span>
+      <span id="appTitle">S<span id="extra">UNGIL </span>:NOW</span><span class="beta-badge">BETA</span>
     </div>
     <div class="header-controls">
       <span id="userInfo">1학년 1반 홍길동</span>
       <button id="logoutBtn"><i class="fas fa-power-off"></i></button>
       <button id="themeToggle">Dark</button>
     </div>
-    <!-- <div class="header-top">
-      <span id="appTitle">S<span id="extra">UNGIL </span>:NOW</span>
-      <span id="userInfo">1학년 1반 홍길동</span>
-      <button id="logoutBtn"><i class="fas fa-power-off"></i></button>
-      <button id="themeToggle">Dark</button>
-    </div> -->
   </header>
 
   <div class="tabs" id="tabs" style="display:none;">
@@ -82,15 +76,15 @@
   <!-- 글쓰기 모달 -->
   <div id="feedModal" class="feed-modal">
     <div class="modal-content">
-      <h2>새 피드 작성</h2>
+      <div class="modal-header">
+        <h2>새 피드 작성</h2>
+        <label id="importantWrapper">
+          <input type="checkbox" id="importantCheck"> 중요
+        </label>
+      </div>
       <input type="text" id="feedTitle" placeholder="제목을 입력하세요">
       <textarea id="feedContent" placeholder="내용을 입력하세요"></textarea>
 
-      <!-- 중요 체크박스 (기본은 숨김) -->
-      <label id="importantWrapper" style="display:none; margin-top:10px;">
-        <input type="checkbox" id="importantCheck"> 중요(필독)
-      </label>
-      
       <div class="modal-actions">
         <button id="cancelFeed">취소</button>
         <button id="submitFeed">등록</button>
@@ -103,6 +97,6 @@
   <!-- 일반 스크립트 -->
   <script src="main.js"></script>
   <!-- 모듈 스크립트 -->
-  <script type="module" src="firebase.js?ver=20251002_3"></script>
+  <script type="module" src="firebase.js"></script>
 </body>
 </html>
