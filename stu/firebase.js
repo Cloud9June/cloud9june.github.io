@@ -94,28 +94,38 @@ function applyTabStyle(tabName) {
 
 // ===== 권한 =====
 function canViewTab(user, tab) {
-  const privilege = user.privilege ?? "";
+  const privileges = user.privilege ?? [];
+
   if (tab === "all") return true;
+  if (tab === "external") return true;
+  if (tab === "help") return true;
+
   if (tab === "class") {
-    if (user.role === "교사" && privilege === "담임") return true;
+    if (user.role === "교사" && privileges.includes("담임")) return true;
     if (user.role === "학생") return true;
   }
   return false;
 }
 function canWriteFeed(user, tab) {
-  const privilege = user.privilege ?? "";
-  if (privilege === "총관리자") return true;
-  if (tab === "all" && privilege === "관리자") return true;
-  if (tab === "external" && privilege === "관리자") return true;
-  if (tab === "class" && ["담임", "반장", "부반장"].includes(privilege)) return true;
+  const privileges = user.privilege ?? [];
+
+  if (privileges.includes("총관리자")) return true;
+  if (tab === "all" && privileges.includes("관리자")) return true;
+  if (tab === "external" && privileges.includes("관리자")) return true;
+  if (tab === "class" && (privileges.includes("담임") || privileges.includes("반장") || privileges.includes("부반장")))
+    return true;
+
   return false;
 }
 function canDeleteFeed(user, tab) {
-  const privilege = user.privilege ?? "";
-  if (privilege === "총관리자") return true;
-  if (privilege === "관리자" && tab === "all") return true;
-  if (privilege === "관리자" && tab === "external") return true;
-  if (["담임", "반장", "부반장"].includes(privilege) && tab === "class") return true;
+  const privileges = user.privilege ?? [];
+
+  if (privileges.includes("총관리자")) return true;
+  if (tab === "all" && privileges.includes("관리자")) return true;
+  if (tab === "external" && privileges.includes("관리자")) return true;
+  if (tab === "class" && (privileges.includes("담임") || privileges.includes("반장") || privileges.includes("부반장")))
+    return true;
+
   return false;
 }
 
@@ -338,9 +348,10 @@ window.addEventListener("scroll", () => {
 });
 
 // ===== 피드 저장 =====
-async function saveFeed(title, content, user, tab) {
+async function saveFeed(title, content, user, tab, isImportant = false) {
   const monthKey = getCurrentMonthKey();
   let colRef;
+
   if (tab === "all") {
     colRef = collection(db, "feeds", monthKey, "items");
   } else if (tab === "external") {
@@ -350,12 +361,31 @@ async function saveFeed(title, content, user, tab) {
     colRef = collection(db, "classFeeds", classKey, `feeds_${monthKey}`);
   }
 
+  // ✅ 중요 피드일 경우: 시트에서 해당 반 학생 번호 불러오기
+  let studentNumbers = [];
+  if (isImportant && ["담임", "반장", "부반장"].includes(user.privilege)) {
+    try {
+      const response = await fetch(
+        `https://script.google.com/macros/s/AKfycbwp-WP0s_G9ibtVBmXSZzTLqMIEMoQej7YBLjk7VX-J98_RvnwjnqGVYroEP_fHN8kXWA/exec?grade=${user.grade}&class=${user.class}`
+      );
+      const data = await response.json();
+      if (data.success && Array.isArray(data.students)) {
+        studentNumbers = data.students;
+      }
+    } catch (err) {
+      console.error("학생 목록 불러오기 실패:", err);
+    }
+  }
+
+  // ✅ Firestore에 저장
   await addDoc(colRef, {
     title,
     content,
     createdAt: serverTimestamp(),
     author: user.displayName,
-    authorEmail: user.email
+    authorEmail: user.email,
+    important: isImportant, // 중요 여부 저장
+    students: studentNumbers // 중요 피드면 반 학생 번호 목록 저장
   });
 }
 
@@ -365,6 +395,7 @@ submitFeed.addEventListener("click", async () => {
   const feedId = feedModal.dataset.id;
   const title = document.getElementById("feedTitle").value.trim();
   const content = document.getElementById("feedContent").value.trim();
+  const isImportant = document.getElementById("importantCheck").checked; // ✅ 중요 체크 여부
   const user = JSON.parse(localStorage.getItem("userInfo"));
   const currentTab = document.querySelector(".tabs button.active").dataset.tab;
 
@@ -375,10 +406,51 @@ submitFeed.addEventListener("click", async () => {
 
   try {
     if (mode === "create") {
-      await saveFeed(title, content, user, currentTab);
+      // ✅ 중요 피드일 경우 학생 번호 목록 가져오기
+      let studentNumbers = [];
+      if (
+        isImportant &&
+        Array.isArray(user.privilege) &&
+        user.privilege.some(p => ["담임", "반장", "부반장"].includes(p))
+      ) {
+        try {
+          const response = await fetch(
+            `https://script.google.com/macros/s/AKfycbwp-WP0s_G9ibtVBmXSZzTLqMIEMoQej7YBLjk7VX-J98_RvnwjnqGVYroEP_fHN8kXWA/exec?grade=${user.grade}&class=${user.class}`
+          );
+          const data = await response.json();
+          if (data.success && Array.isArray(data.students)) {
+            studentNumbers = data.students;
+          }
+        } catch (err) {
+          console.error("학생 번호 불러오기 오류:", err);
+        }
+      }
+
+      // ✅ Firestore에 저장
+      const monthKey = getCurrentMonthKey();
+      let colRef;
+      if (currentTab === "all") {
+        colRef = collection(db, "feeds", monthKey, "items");
+      } else if (currentTab === "external") {
+        colRef = collection(db, "externalFeeds");
+      } else {
+        const classKey = `${user.grade}-${user.class}`;
+        colRef = collection(db, "classFeeds", classKey, `feeds_${monthKey}`);
+      }
+
+      await addDoc(colRef, {
+        title,
+        content,
+        createdAt: serverTimestamp(),
+        author: user.displayName,
+        authorEmail: user.email,
+        important: isImportant,
+        students: studentNumbers
+      });
+
       alert("피드가 등록되었습니다!");
 
-      // ✅ 등록 후 즉시 반영 (새 글은 목록에 추가)
+      // ✅ 등록 후 즉시 반영
       if (currentTab === "all") {
         loadFeeds(true);
       } else if (currentTab === "class") {
@@ -388,7 +460,7 @@ submitFeed.addEventListener("click", async () => {
       }
 
     } else if (mode === "edit") {
-      // ✅ 수정 모드: DB 업데이트만 하고 DOM만 갱신
+      // ✅ 수정 모드
       const monthKey = getCurrentMonthKey();
       let docRef;
       if (currentTab === "all") {
@@ -406,7 +478,7 @@ submitFeed.addEventListener("click", async () => {
         updatedAt: serverTimestamp()
       });
 
-      // ✅ 현재 화면의 DOM 직접 업데이트 (reload 안 함)
+      // ✅ DOM 갱신
       const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
       if (feedEl) {
         feedEl.querySelector(".feed-title").innerHTML = `
@@ -419,10 +491,11 @@ submitFeed.addEventListener("click", async () => {
       alert("피드가 수정되었습니다!");
     }
 
-    // ✅ 모달 닫기 및 입력 초기화
+    // ✅ 모달 닫기 및 초기화
     feedModal.style.display = "none";
     document.getElementById("feedTitle").value = "";
     document.getElementById("feedContent").value = "";
+    document.getElementById("importantCheck").checked = false;
   } catch (err) {
     console.error("피드 저장 오류:", err);
     alert("저장에 실패했습니다.");
@@ -551,12 +624,18 @@ function showMainScreen(userInfo, displayName) {
 function updateUI(user) {
   const writeBtn = document.querySelector(".write-feed-btn");
   const currentTab = document.querySelector(".tabs button.active").dataset.tab;
+
   document.querySelector('[data-tab="all"]').style.display = "inline-block";
+
   if (canViewTab(user, "class")) {
     document.querySelector('[data-tab="class"]').style.display = "inline-block";
   } else {
     document.querySelector('[data-tab="class"]').style.display = "none";
   }
+
+  document.querySelector('[data-tab="external"]').style.display = "inline-block";
+  document.querySelector('[data-tab="help"]').style.display = "inline-block";
+
   writeBtn.style.display = canWriteFeed(user, currentTab) ? "flex" : "none";
 }
 
@@ -566,44 +645,76 @@ loginBtn.addEventListener("click", async () => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     const email = user.email;
+
+    // ✅ 학교 계정 검증
     if (!email.endsWith("@sungil-i.kr")) {
       alert("학교 계정(@sungil-i.kr)으로만 로그인 가능합니다.");
       await signOut(auth);
       return;
     }
 
+    // ✅ 로그인 시에는 항상 전체 탭부터 시작
     localStorage.setItem("activeTab", "all");
 
     welcomeText.style.display = "none";
     loginBtn.style.display = "none";
     introLoading.style.display = "flex";
 
-    const response = await fetch(`https://script.google.com/macros/s/AKfycbziBbp36o1V4Mcxp-ncNKyq502dTJpxF73RGndeuDRoK5V_lmnME86UV3mHrsZkl1cchA/exec?email=${email}`);
+    // ✅ Apps Script 호출 (URL은 새로 발급받은 Web App URL로 유지)
+    const response = await fetch(
+      `https://script.google.com/macros/s/AKfycbxfCkVJWMtxJ7H3SS_5FoPOpAGK1N1i_IX2BH4QizJA6pTVoKNsyEd66q37RAG8N6jqUw/exec?email=${email}`
+    );
     const data = await response.json();
+
     if (!data.success) {
       alert("시트에서 사용자를 찾을 수 없습니다.");
       await signOut(auth);
       return;
     }
+
     const userInfo = data.user;
-    const displayName = userInfo.role === "교사"
-      ? `${userInfo.name} 선생님`
-      : `${userInfo.grade}학년 ${userInfo.class}반 ${userInfo.name}`;
+
+    // ✅ 이름 표시
+    const displayName =
+      userInfo.role === "교사"
+        ? `${userInfo.name} 선생님`
+        : `${userInfo.grade}학년 ${userInfo.class}반 ${userInfo.name}`;
+
+    // ✅ privilege가 문자열일 수도 있으므로 배열로 변환
+    let privilegeArray = [];
+    if (Array.isArray(userInfo.privilege)) {
+      privilegeArray = userInfo.privilege;
+    } else if (typeof userInfo.privilege === "string" && userInfo.privilege.includes(",")) {
+      privilegeArray = userInfo.privilege.split(",").map(p => p.trim());
+    } else if (typeof userInfo.privilege === "string" && userInfo.privilege.trim() !== "") {
+      privilegeArray = [userInfo.privilege.trim()];
+    }
+
+    // ✅ 로컬스토리지 저장
     localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("userInfo", JSON.stringify({
-      ...userInfo,
-      displayName,
-      role: userInfo.role || "",
-      privilege: userInfo.privilege || "",
-      grade: userInfo.grade || "",
-      class: userInfo.class || ""
-    }));
+    localStorage.setItem(
+      "userInfo",
+      JSON.stringify({
+        ...userInfo,
+        displayName,
+        role: userInfo.role || "",
+        privilege: privilegeArray,
+        grade: userInfo.grade || "",
+        class: userInfo.class || "",
+        number: userInfo.number || "",
+      })
+    );
+
+    // ✅ 메인 화면 표시
     showMainScreen(userInfo, displayName);
-    updateUI(userInfo);
+    updateUI({
+      ...userInfo,
+      privilege: privilegeArray,
+    });
 
     // await requestAndSaveFCMToken(user.email);
   } catch (error) {
-    console.error(error);
+    console.error("로그인 오류:", error);
     alert("로그인 중 오류가 발생했습니다.");
   }
 });
@@ -642,6 +753,14 @@ tabButtons.forEach(tab => {
 
     const selectedTab = tab.dataset.tab;
     localStorage.setItem("activeTab", tab.dataset.tab);
+
+    const importantWrapper = document.getElementById("importantWrapper");
+    if (tab.dataset.tab === "class") {
+      importantWrapper.style.display = "block";
+    } else {
+      importantWrapper.style.display = "none";
+      document.getElementById("importantCheck").checked = false; // 탭 전환 시 체크 해제
+    }
 
     isLoadingAll = false;
     isLoadingClass = false;
@@ -729,6 +848,18 @@ writeFeedBtn.addEventListener("click", () => {
   document.getElementById("submitFeed").textContent = "등록";
   document.getElementById("feedTitle").value = "";
   document.getElementById("feedContent").value = "";
+
+  const currentTab = document.querySelector(".tabs button.active").dataset.tab;
+  const importantWrapper = document.getElementById("importantWrapper");
+
+  // ✅ “우리반” 탭일 때만 중요 체크박스 보이기
+  if (currentTab === "class") {
+    importantWrapper.style.display = "block";
+  } else {
+    importantWrapper.style.display = "none";
+    document.getElementById("importantCheck").checked = false;
+  }
+
   feedModal.style.display = "flex";
   feedModal.dataset.mode = "create";
 });
