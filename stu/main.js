@@ -139,4 +139,3 @@ window.addEventListener("load", () => {
   document.documentElement.setAttribute("data-theme", savedTheme);
   themeToggle.textContent = savedTheme === "dark" ? "Light" : "Dark";
 });
-
