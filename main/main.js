@@ -380,8 +380,10 @@ async function fetchWeather() {
     } catch (e) {
         console.error("날씨 불러오기 실패", e);
         document.getElementById("todayWeather").innerHTML =
-            `<i class="fa-solid fa-triangle-exclamation"></i> 오류`;
-        document.getElementById("tomorrowWeather").textContent = "정보 없음";
+            // `<i class="fa-solid fa-triangle-exclamation"></i> 오류`;
+            ``;
+        //document.getElementById("tomorrowWeather").textContent = "정보 없음";
+        document.getElementById("tomorrowWeather").textContent = "";
     }
 }
 
