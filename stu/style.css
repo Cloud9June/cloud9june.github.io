@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+
 :root {
     --bg: #fdfdfd;
     --card: #ffffff;
@@ -9,6 +11,10 @@
     --pastel-blue: #a0c4ff;
     --pastel-purple: #bdb2ff;
     --pastel-skyblue: #caf0f8;
+    --bg-color: #f7f7f7;
+    --text-color: #444;
+    --border-color: #eee;
+    --link-color: #007aff;
     color-scheme: light;
 }
 
@@ -78,6 +84,46 @@ html {
 #logoutBtn i {
   font-size: 1rem;
   color: var(--card);
+}
+
+/* ===== 게스트 ===== */
+#guestLink {
+  display: block;
+  margin-top: 40px;
+  font-size: 1.0rem;
+  color: #fff;
+  text-decoration: underline;
+  opacity: 0.9;
+  transition: opacity 0.15s, transform 0.15s;
+  user-select: none;
+}
+
+#guestLink:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+.notice-banner {
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  border: none;
+  color: var(--text-color);
+  background: none;
+  transition: background 0.3s, color 0.3s;
+  user-select: none;
+}
+
+/* 로그인 링크 스타일 */
+.notice-banner .login-link {
+  color: var(--link-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.notice-banner .login-link:active {
+  opacity: 0.8;
+  transform: scale(0.97);
 }
 
 /* ===== 로딩 오버레이 ===== */
@@ -206,9 +252,9 @@ header.scrolled {
 }
 
 #appTitle {
-    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    font-family: "Bungee", sans-serif;
     font-weight: 800;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     color: #1e3a8a;
     letter-spacing: 0.5px;
 }
@@ -956,4 +1002,14 @@ main.purple-border {
 }
 :root[data-theme="dark"] #themeToggle:active {
     opacity: 0.9;
+}
+
+:root[data-theme="dark"] .notice-banner {
+  background: none;
+  color: #ccc;
+  border: none;
+}
+
+:root[data-theme="dark"] .notice-banner .login-link {
+  color: #a0c4ff; /* 학교 앱톤 파스텔 블루 */
 }
