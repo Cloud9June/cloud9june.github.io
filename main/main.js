@@ -7,7 +7,7 @@
  ⦿ 수정 내역 : 
     - 2025-09-22 카드 숨김/복원 기능 추가
     - 2025-09-22 메모장 모달 CRUD 기능 구현
-    - 2025-10-15 오늘 학사일정 안내 버튼 추가
+    - 2025-10-15 오늘일정 기능 구현
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -410,7 +410,7 @@ async function fetchWeather(isRetry = false, manualDate = null, manualTime = nul
 
     } catch {
         // ❗ 완전 실패해도 오류 메시지 없이 조용히 표시 유지
-        document.getElementById("todayWeather").innerHTML = "";
+        document.getElementById("todayWeather").innerHTML = "-";
         document.getElementById("tomorrowWeather").textContent = "";
     }
 }
@@ -730,56 +730,72 @@ async function loadSchedule() {
     const res = await fetch(url);
     let text = await res.text();
 
-    // 🔹 앞뒤 따옴표 전체 제거 + 중복 따옴표 정리
-    text = text.trim().replace(/^"+|"+$/g, "").replace(/""+/g, '"');
+    // 🔹 CSV 전처리 (BOM, 따옴표, 불필요한 문자 제거)
+    text = text
+      .replace(/^\uFEFF/, "")      // BOM 제거
+      .replace(/^"+|"+$/g, "")     // 맨 앞/뒤 큰따옴표 제거
+      .replace(/""+/g, '"')        // 중복 따옴표 정리
+      .replace(/\r/g, "")          // 캐리지리턴 제거
+      .trim();
 
-    // CSV 파싱
-    const lines = text.trim().split(/\r?\n/);
+    // 🔹 줄 단위 분리
+    const lines = text.split("\n");
     const title = lines[0]?.trim() || "오늘의 일정";
-
-    // A2의 여러 줄 통합
-    const descLines = lines.slice(1).join("\n").trim();
+    const desc = lines.slice(1).join("\n").trim();
 
     // ✅ [부서] 단위로 구간 묶기
     const blocks = [];
     let currentDept = null;
     let currentContent = [];
 
-    const allLines = descLines.split(/\r?\n/);
-    for (const line of allLines) {
+    const allLines = desc.split("\n");
+    for (let line of allLines) {
+      // 🔸 첫 줄 특수문자/BOM/따옴표 제거
+      line = line.replace(/^[\uFEFF"']+/, "").trim();
+
       const deptMatch = line.match(/^\[([^\]]+)\]\s*(.*)/);
       if (deptMatch) {
         // 새로운 [부서] 등장 시 이전 블록 저장
         if (currentDept) {
-          blocks.push({ dept: currentDept, content: currentContent.join("<br>") });
+          blocks.push({
+            dept: currentDept,
+            content: currentContent.join("<br>")
+          });
         }
         currentDept = deptMatch[1];
-        currentContent = [deptMatch[2]]; // 첫 줄 내용
+        currentContent = [deptMatch[2]];
       } else if (currentDept) {
         // 부서 구간 내부의 추가 줄
         currentContent.push(line);
       }
     }
-    // 마지막 부서 블록 저장
+
+    // 마지막 블록 저장
     if (currentDept) {
-      blocks.push({ dept: currentDept, content: currentContent.join("<br>") });
+      blocks.push({
+        dept: currentDept,
+        content: currentContent.join("<br>")
+      });
     }
 
-    // ✅ HTML 변환
+    // ✅ HTML 변환 (CSS 기반)
     const formattedDesc = blocks
       .map(
         b => `
         <div class="schedule-item">
-          <strong>[${b.dept}]</strong><br>${b.content}
+          <strong class="schedule-dept">[${b.dept}]</strong><br>
+          <div class="schedule-content">${b.content}</div>
         </div>`
       )
       .join("");
 
-    // ✅ 최종 HTML 구성 (날짜/15일 제거)
+    // ✅ 모달 HTML 구성
     const html = `
       <table class="duty-table schedule-table">
         <tbody>
-          <tr><td style="text-align:left; padding-left:20px;">${formattedDesc}</td></tr>
+          <tr>
+            <td class="schedule-wrapper">${formattedDesc}</td>
+          </tr>
         </tbody>
       </table>
     `;
