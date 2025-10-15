@@ -39,8 +39,6 @@ const classFeed = document.getElementById("classFeed");
 const externalFeed = document.getElementById("externalFeed");
 const helpFeed = document.getElementById("helpFeed");
 const header = document.getElementById("appHeader");
-const backToTop = document.getElementById("backToTop");
-const themeToggle = document.getElementById("themeToggle");
 const submitFeed = document.getElementById("submitFeed");
 const writeFeedBtn = document.getElementById("writeFeedBtn");
 const feedModal = document.getElementById("feedModal");
@@ -639,6 +637,102 @@ function updateUI(user) {
   writeBtn.style.display = canWriteFeed(user, currentTab) ? "flex" : "none";
 }
 
+// ===== 게스트 입장 =====
+const guestLink = document.getElementById("guestLink");
+if (guestLink) {
+  guestLink.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // 🔹 게스트 모드 설정
+    localStorage.setItem("isLoggedIn", "guest");
+    localStorage.setItem("userInfo", JSON.stringify({
+      displayName: "게스트 모드",
+      role: "게스트",
+      privilege: [],
+      grade: "",
+      class: ""
+    }));
+
+    // 🔹 인트로 숨기기
+    videoWrapper.style.display = "none";
+
+    // 🔹 메인 화면 보이기
+    appHeader.style.display = "block";
+    tabs.style.display = "flex";
+    mainContent.style.display = "block";
+
+    // 🔹 상단 표시
+    document.getElementById("userInfo").textContent = "게스트 모드";
+
+    // 🔹 로그아웃 버튼 숨기기
+    document.getElementById("logoutBtn").style.display = "none";
+
+    // 🔹 피드쓰기 버튼 숨기기
+    writeFeedBtn.style.display = "none";
+
+    // 🔹 대외 탭만 표시
+    document.querySelectorAll('#tabs button').forEach(btn => {
+      if (btn.dataset.tab !== 'external') btn.style.display = 'none';
+      else btn.classList.add('active');
+    });
+
+    // 🔹 피드 영역 제어
+    allFeed.style.display = "none";
+    classFeed.style.display = "none";
+    helpFeed.style.display = "none";
+    externalFeed.style.display = "block";
+
+    // ✅ 안내 문구 (로그인에 a태그 추가)
+    const notice = document.createElement("div");
+    notice.id = "guestNotice";
+    notice.classList.add("notice-banner"); // ✅ 스타일은 CSS에서 관리
+    notice.innerHTML = `
+      🔒 <a id="goLogin" href="#" class="login-link">로그인</a> 후 이용 가능한 기능은 제한됩니다.
+    `;
+    mainContent.prepend(notice);
+
+    // ✅ "로그인" 클릭 시 로그인 화면 복귀
+    document.getElementById("goLogin").addEventListener("click", (ev) => {
+      ev.preventDefault();
+
+      // 현재 화면 모두 숨기고 인트로로 복귀
+      appHeader.style.display = "none";
+      tabs.style.display = "none";
+      mainContent.style.display = "none";
+
+      videoWrapper.style.display = "block";
+      loginBtn.style.display = "inline-block";
+      welcomeText.style.display = "block";
+      introLoading.style.display = "none";
+      guestLink.style.display = "none";
+
+      // 게스트 모드 초기화
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userInfo");
+
+      // 🔹 로그인 버튼 클릭 이벤트 실행
+      // (사용자가 직접 누른 것처럼 동작)
+      loginBtn.click();
+    });
+
+    // 🔹 헤더 스타일 적용
+    applyTabStyle("external");
+
+    // 🔹 첫 대외 피드 로드
+    loadExternalFeeds(true);
+
+    // ✅ 무한스크롤 활성화 (게스트 전용)
+    window.onscroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
+        !isLoadingExternal
+      ) {
+        loadExternalFeeds(false);
+      }
+    };
+  });
+}
+
 // ===== 로그인 =====
 loginBtn.addEventListener("click", async () => {
   try {
@@ -658,6 +752,7 @@ loginBtn.addEventListener("click", async () => {
 
     welcomeText.style.display = "none";
     loginBtn.style.display = "none";
+    guestLink.style.display = "none";
     introLoading.style.display = "flex";
 
     // ✅ Apps Script 호출 (URL은 새로 발급받은 Web App URL로 유지)
@@ -711,6 +806,11 @@ loginBtn.addEventListener("click", async () => {
       ...userInfo,
       privilege: privilegeArray,
     });
+
+    // ✅ 게스트 모드 흔적 정리
+    const guestNotice = document.querySelector("#mainContent div#guestNotice");
+    if (guestNotice) guestNotice.remove(); // 안내문 삭제
+    document.getElementById("logoutBtn").style.display = "inline-block"; // 로그아웃 버튼 복원
 
     // await requestAndSaveFCMToken(user.email);
   } catch (error) {
@@ -881,6 +981,7 @@ iOS: Safari → 공유(⬆️) → 홈 화면에 추가
     title: "화면 설명",
     content: `전체 피드: 모든 학년/반 공지
 우리반 피드: 로그인한 학년·반 전용
+대외 피드: 게스트를 포함해 누구나 볼 수 있는 학교 소식
 도움말: 이 안내문 보기`,
     author: "S:NOW 도움말"
   },
@@ -901,7 +1002,18 @@ iOS: Safari → 공유(⬆️) → 홈 화면에 추가
     title: "기타",
     content: `로그아웃: 상단 ⏻ 버튼
 테마 전환: Dark/Light 버튼
-문제 발생 시 교육정보부 김형준 선생님에게 문의`,
+피드가 보이지 않거나 화면이 멈출 때: 새로고침`,
+    author: "S:NOW 도움말"
+  },
+  {
+    title: "저작권 및 제작 정보",
+    content: `S:NOW는 성일정보고등학교 학생용 웹앱입니다.
+제작 및 운영: 성일정보고등학교 김형준 선생님
+버전: BETA 1.0
+최종 업데이트: 2025.10.15.
+저작권: © 2025 Sungil Information High School. All rights reserved.
+무단 복제 및 배포를 금합니다.
+문의: 교육정보부 김형준`,
     author: "S:NOW 도움말"
   }
 ];
