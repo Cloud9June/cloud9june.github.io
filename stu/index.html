@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- 분리된 CSS -->
-  <link rel="stylesheet" href="style.css?ver=20251015_1">
+  <link rel="stylesheet" href="style.css?20251016">
 </head>
 
 <body>
@@ -74,7 +74,7 @@
   <!-- 피드쓰기 버튼 -->
   <button id="writeFeedBtn" class="write-feed-btn">✏️</button>
 
-  <!-- 글쓰기 모달 -->
+  <!-- 기존 모달 -->
   <div id="feedModal" class="feed-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -83,8 +83,22 @@
           <input type="checkbox" id="importantCheck"> 중요
         </label>
       </div>
+
       <input type="text" id="feedTitle" placeholder="제목을 입력하세요">
       <textarea id="feedContent" placeholder="내용을 입력하세요"></textarea>
+
+      <!-- ✅ 태그 영역 -->
+      <div class="tag-area">
+        <label for="tagInput">태그 입력</label>
+        <div class="tag-input-wrapper">
+          <input 
+            type="text" 
+            id="tagInput" 
+            placeholder="#1학년만 #전교생공개 #오늘일찍끝난다"
+          >
+          <div id="tagSuggestions" class="tag-suggestions"></div>
+        </div>
+      </div>
 
       <div class="modal-actions">
         <button id="cancelFeed">취소</button>
@@ -96,8 +110,8 @@
   <button id="backToTop">🔝</button>
 
   <!-- 일반 스크립트 -->
-  <script src="main.js?ver=20251015"></script>
+  <script src="main.js"></script>
   <!-- 모듈 스크립트 -->
-  <script type="module" src="firebase.js?ver=20251015_1"></script>
+  <script type="module" src="firebase.js?20251016"></script>
 </body>
 </html>
