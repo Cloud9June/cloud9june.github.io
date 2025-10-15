@@ -1000,6 +1000,7 @@ footer {
   border-radius: 6px;
   line-height: 1.6;
   font-size: 14px;
+  text-align: left;
 }
 
 #scheduleModal .schedule-item strong {
