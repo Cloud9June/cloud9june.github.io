@@ -7,6 +7,7 @@
  ⦿ 수정 내역 : 
     - 2025-09-22 카드 숨김 기능 추가
     - 2025-09-22 메모장 모듈 추가
+    - 2025-10-15 오늘일정 버튼 및 모달 추가
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -55,6 +56,7 @@
             <div class="ticker-left">
                 <button class="ticker-toggle" id="tickerToggle" type="button">📢 학교 알림 전광판 열기</button>
                 <button class="toolbar-btn" id="dutyBtn" type="button">📋 일일근무</button>
+                <button class="toolbar-btn" id="scheduleBtn" type="button">🗓️ 오늘일정</button>
                 <button class="ticker-help" id="helpBtn" type="button">❓ 도움말</button>
             </div>
 
@@ -80,6 +82,20 @@
             <button id="closeDutyBtn">닫기</button>
             <a href="https://docs.google.com/spreadsheets/d/1fooMUmUyiABOSiesvtd9FoD2Fs8jRq1VB_T9nYSkOCo/edit?gid=0#gid=0" 
                 target="_blank" rel="noopener">현황 시트</a>
+            </div>
+        </div>
+        </div>
+
+        <!-- 오늘일정 모달 -->
+        <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeSchedule">&times;</span>
+            <h2>오늘 일정 <span id="schedule-date">📋</span></h2>
+            <div id="modal-schedule"></div>
+            <div class="modal-footer">
+            <button id="closeScheduleBtn">닫기</button>
+            <a href="https://docs.google.com/spreadsheets/d/1GsHg_z4wuqMyrl_7CA_Kc3CN-ox1dAK-dwKOZNGQpsc/edit?gid=748994973#gid=748994973"
+                target="_blank" rel="noopener">학사달력</a>
             </div>
         </div>
         </div>
@@ -455,13 +471,11 @@
         </div>
 
 
-        <p class="hint">※ 사용하다 불편한 점이나 카드 개선 아이디어가 있으면 교육정보부장 김형준에게 알려주세요.</p>
+        <p class="hint">※ 카드 추가/수정은 교육정보부장 김형준에게 문의해 주세요.</p>
         <footer>
-            &copy; <span id="yy"></span> 성일정보고등학교 교육정보부
+            © <span id="yy"></span> 성일정보고등학교 교육정보부
         </footer>
     </div>
-    <script src="main/main.js?ver=251015"></script>
+    <script src="main/main.js"></script>
 </body>
 </html>
-
-
