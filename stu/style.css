@@ -106,6 +106,8 @@ html {
 .notice-banner {
   text-align: center;
   padding: 8px 0;
+  margin-top: -15px;
+  margin-bottom: 5px;
   font-size: 0.9rem;
   border: none;
   color: var(--text-color);
