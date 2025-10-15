@@ -682,38 +682,33 @@ if (guestLink) {
     helpFeed.style.display = "none";
     externalFeed.style.display = "block";
 
-    // ✅ 안내 문구 (로그인에 a태그 추가)
-    const notice = document.createElement("div");
-    notice.id = "guestNotice";
-    notice.classList.add("notice-banner"); // ✅ 스타일은 CSS에서 관리
-    notice.innerHTML = `
-      🔒 <a id="goLogin" href="#" class="login-link">로그인</a> 후 이용 가능한 기능은 제한됩니다.
-    `;
-    mainContent.prepend(notice);
+    // ✅ 안내문 중복 방지
+    if (!document.getElementById("guestNotice")) {
+      const notice = document.createElement("div");
+      notice.id = "guestNotice";
+      notice.classList.add("notice-banner"); // ✅ 스타일은 CSS에서 관리
+      notice.innerHTML = `<a id="goLogin" href="#" class="login-link">로그인하러 돌아가기</a>`;
+      mainContent.prepend(notice);
 
-    // ✅ "로그인" 클릭 시 로그인 화면 복귀
-    document.getElementById("goLogin").addEventListener("click", (ev) => {
-      ev.preventDefault();
+      // ✅ "로그인" 클릭 시 로그인 화면 복귀
+      document.getElementById("goLogin").addEventListener("click", (e) => {
+        e.preventDefault();
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("userInfo");
 
-      // 현재 화면 모두 숨기고 인트로로 복귀
-      appHeader.style.display = "none";
-      tabs.style.display = "none";
-      mainContent.style.display = "none";
+        // 메인 숨기고 인트로로 전환
+        appHeader.style.display = "none";
+        tabs.style.display = "none";
+        mainContent.style.display = "none";
+        videoWrapper.style.display = "block";
+        loginBtn.style.display = "inline-block";
+        welcomeText.style.display = "block";
 
-      videoWrapper.style.display = "block";
-      loginBtn.style.display = "inline-block";
-      welcomeText.style.display = "block";
-      introLoading.style.display = "none";
-      guestLink.style.display = "none";
-
-      // 게스트 모드 초기화
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("userInfo");
-
-      // 🔹 로그인 버튼 클릭 이벤트 실행
-      // (사용자가 직접 누른 것처럼 동작)
-      loginBtn.click();
-    });
+        // ✅ 기존 안내문 제거
+        const existingNotice = document.getElementById("guestNotice");
+        if (existingNotice) existingNotice.remove();
+      });
+    }
 
     // 🔹 헤더 스타일 적용
     applyTabStyle("external");
