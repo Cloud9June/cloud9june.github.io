@@ -1,12 +1,13 @@
 /*
 ==========================================
- 성일정보고 링크 허브 스타일
+ 성일정보고 링크 허브 스타일シート
 ------------------------------------------
  ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
  ⦿ 최초 작성 : 2025-09-15
  ⦿ 수정 내역 : 
     - 2025-09-22 메모장 관련 스타일 추가
     - 2025-09-22 카드 숨김 관련 스타일 추가
+    - 2025-10-15 오늘일정 관련 스타일 추가
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -970,7 +971,43 @@ footer {
     padding-left: 10px;
 }
 
+/* 오늘일정 모달 가로 크기 확장 */
+#scheduleModal .modal-content {
+  width: 700px;
+  max-width: 95%;
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 
+#scheduleModal .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+#scheduleModal .modal-content::-webkit-scrollbar-thumb {
+  background: #2a3a4f;
+  border-radius: 10px;
+}
+#scheduleModal .modal-content::-webkit-scrollbar-thumb:hover {
+  background: #3b4d61;
+}
+
+/* 부서 블록 스타일 */
+#scheduleModal .schedule-item {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: rgba(76, 201, 240, 0.06);
+  border-radius: 6px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+#scheduleModal .schedule-item strong {
+  color: var(--accent);
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 4px;
+}
 
 /* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
 @media (max-width:680px) {
