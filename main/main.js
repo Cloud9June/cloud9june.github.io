@@ -7,6 +7,7 @@
  ⦿ 수정 내역 : 
     - 2025-09-22 카드 숨김/복원 기능 추가
     - 2025-09-22 메모장 모달 CRUD 기능 구현
+    - 2025-10-15 오늘 학사일정 안내 버튼 추가
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -314,16 +315,17 @@ document.querySelectorAll('.accordion-toggle').forEach(btn => {
 })();
 
 // ===== 실시간 날씨(기상청API) =====
-async function fetchWeather() {
+// ===== 실시간 날씨(기상청API) =====
+async function fetchWeather(isRetry = false, manualDate = null, manualTime = null) {
     const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
     const nx = 62, ny = 124; // 성남 좌표
 
     // 현재 한국 시각
-    const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-    const yyyy = kst.getFullYear();
-    const mm = String(kst.getMonth() + 1).padStart(2, "0");
-    const dd = String(kst.getDate()).padStart(2, "0");
-    const base_date = `${yyyy}${mm}${dd}`;
+    let kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+    let yyyy = kst.getFullYear();
+    let mm = String(kst.getMonth() + 1).padStart(2, "0");
+    let dd = String(kst.getDate()).padStart(2, "0");
+    let base_date = `${yyyy}${mm}${dd}`;
 
     // 내일 날짜
     const tomorrow = new Date(kst);
@@ -333,35 +335,65 @@ async function fetchWeather() {
     const tdd = String(tomorrow.getDate()).padStart(2, "0");
     const tomorrow_date = `${tyyyy}${tmm}${tdd}`;
 
-    // 단기예보는 02:00, 05:00, 08:00 ... 제공 → 가장 최근 시각 선택
+    // 단기예보는 02:00, 05:00, 08:00 ...
     const baseTimes = ["0200","0500","0800","1100","1400","1700","2000","2300"];
-    const hh = kst.getHours() * 100;
+    const hh = kst.getHours() * 100 + kst.getMinutes();
     let base_time = baseTimes[0];
     for (let t of baseTimes) {
         if (hh >= parseInt(t)) base_time = t;
     }
 
+    // 발표 40분 전후 시에는 이전 발표분으로 보정
+    if (kst.getMinutes() < 40 && !manualTime) {
+        const idx = baseTimes.indexOf(base_time);
+        if (idx > 0) {
+            base_time = baseTimes[idx - 1];
+        } else {
+            kst.setDate(kst.getDate() - 1);
+            yyyy = kst.getFullYear();
+            mm = String(kst.getMonth() + 1).padStart(2, "0");
+            dd = String(kst.getDate()).padStart(2, "0");
+            base_date = `${yyyy}${mm}${dd}`;
+            base_time = "2300";
+        }
+    }
+
+    // 수동 재시도 시
+    if (manualDate) base_date = manualDate;
+    if (manualTime) base_time = manualTime;
+
     const url =
-    `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst` +
-    `?serviceKey=${SERVICE_KEY}&numOfRows=1000&pageNo=1&dataType=JSON` +
-    `&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+        `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst` +
+        `?serviceKey=${SERVICE_KEY}&numOfRows=1000&pageNo=1&dataType=JSON` +
+        `&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
 
     try {
         const res = await fetch(url);
         const data = await res.json();
-        const items = data.response.body.items.item;
+        const items = data?.response?.body?.items?.item;
 
-        // ===== 오늘 (현재시각 이후 가장 가까운 예보) =====
+        if (!items?.length) {
+            // ⚠️ 데이터가 비어있을 경우: 한 번만 이전 발표시각으로 재시도
+            if (!isRetry) {
+                const prev = getPreviousBaseTime(base_date, base_time);
+                return await fetchWeather(true, prev.date, prev.time);
+            }
+            throw new Error("no_data");
+        }
+
+        // ===== 오늘 날씨 =====
         const hhNow = String(kst.getHours()).padStart(2,"0") + "00";
-        const todayList = items.filter(i => i.fcstDate === base_date && i.fcstTime >= hhNow);
+        const todayList = items.filter(i => i.fcstDate === base_date);
+        const nearest = todayList.find(i => i.fcstTime >= hhNow) || todayList[0];
 
-        const sky = todayList.find(i => i.category === "SKY")?.fcstValue;
+        const sky = nearest?.category === "SKY" ? nearest.fcstValue :
+                    todayList.find(i => i.category === "SKY")?.fcstValue;
         const pty = todayList.find(i => i.category === "PTY")?.fcstValue;
         const tmp = todayList.find(i => i.category === "TMP")?.fcstValue;
         const reh = todayList.find(i => i.category === "REH")?.fcstValue;
 
         document.getElementById("todayWeather").innerHTML =
-            `${getWeatherIcon(sky, pty)} ${tmp}℃ · ${reh}%`;
+            `${getWeatherIcon(sky, pty)} ${tmp ?? "-"}℃ · ${reh ?? "-"}%`;
 
         // ===== 내일 (최저/최고 TMP) =====
         const tomorrowTemps = items
@@ -374,18 +406,34 @@ async function fetchWeather() {
             document.getElementById("tomorrowWeather").textContent =
                 `내일 ${tmin}℃ / ${tmax}℃`;
         } else {
-            document.getElementById("tomorrowWeather").textContent = "내일 정보 없음";
+            document.getElementById("tomorrowWeather").textContent = "";
         }
 
-    } catch (e) {
-        console.error("날씨 불러오기 실패", e);
-        document.getElementById("todayWeather").innerHTML =
-            // `<i class="fa-solid fa-triangle-exclamation"></i> 오류`;
-            ``;
-        //document.getElementById("tomorrowWeather").textContent = "정보 없음";
+    } catch {
+        // ❗ 완전 실패해도 오류 메시지 없이 조용히 표시 유지
+        document.getElementById("todayWeather").innerHTML = "-";
         document.getElementById("tomorrowWeather").textContent = "";
     }
 }
+
+// 🔁 직전 발표시각 계산 보조 함수
+function getPreviousBaseTime(base_date, base_time) {
+    const baseTimes = ["0200","0500","0800","1100","1400","1700","2000","2300"];
+    const idx = baseTimes.indexOf(base_time);
+    let date = base_date;
+    let time = "2300";
+    if (idx > 0) {
+        time = baseTimes[idx - 1];
+    } else {
+        const d = new Date(
+            `${base_date.slice(0,4)}-${base_date.slice(4,6)}-${base_date.slice(6,8)}T00:00:00`
+        );
+        d.setDate(d.getDate() - 1);
+        date = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
+    }
+    return { date, time };
+}
+
 
 // 아이콘 매핑
 function getWeatherIcon(sky, pty) {
@@ -655,6 +703,108 @@ async function loadDuty() {
     document.getElementById("modal-duty").innerHTML = html;
 }
 loadDuty();
+
+const scheduleBtn = document.getElementById("scheduleBtn");
+const scheduleModal = document.getElementById("scheduleModal");
+const closeSchedule = document.getElementById("closeSchedule");
+const closeScheduleBtn = document.getElementById("closeScheduleBtn");
+
+// 오늘일정 버튼 클릭 → 모달 열기
+scheduleBtn.addEventListener("click", () => {
+  scheduleModal.style.display = "flex";
+  loadSchedule(); // 데이터 로드
+});
+
+// 닫기 버튼
+closeSchedule.addEventListener("click", () => {
+  scheduleModal.style.display = "none";
+});
+closeScheduleBtn.addEventListener("click", () => {
+  scheduleModal.style.display = "none";
+});
+
+async function loadSchedule() {
+  // ✅ 오늘일정 시트의 CSV 주소
+  const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVGElXniOyF3A9SaK2l_8Zm6omPzbialdK8pCdeI5QuEiRXcOMC8ylwNHFI8coP8rfvykhcVwC08pe/pub?gid=0&single=true&output=csv";
+
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+
+    // CSV 파싱
+    const lines = text.trim().split(/\r?\n/);
+    const title = lines[0]?.trim() || "오늘의 일정";
+
+    // A2의 여러 줄 통합
+    const descLines = lines.slice(1).join("\n").trim();
+
+    // ✅ [부서] 단위로 구간 묶기
+    const blocks = [];
+    let currentDept = null;
+    let currentContent = [];
+
+    const allLines = descLines.split(/\r?\n/);
+    for (const line of allLines) {
+      const deptMatch = line.match(/^\[([^\]]+)\]\s*(.*)/);
+      if (deptMatch) {
+        // 새로운 [부서] 등장 시 이전 블록 저장
+        if (currentDept) {
+          blocks.push({ dept: currentDept, content: currentContent.join("<br>") });
+        }
+        currentDept = deptMatch[1];
+        currentContent = [deptMatch[2]]; // 첫 줄 내용
+      } else if (currentDept) {
+        // 부서 구간 내부의 추가 줄
+        currentContent.push(line);
+      }
+    }
+    // 마지막 부서 블록 저장
+    if (currentDept) {
+      blocks.push({ dept: currentDept, content: currentContent.join("<br>") });
+    }
+
+    // ✅ HTML 변환
+    const formattedDesc = blocks
+      .map(
+        b => `
+        <div class="schedule-item">
+          <strong>[${b.dept}]</strong><br>${b.content}
+        </div>`
+      )
+      .join("");
+
+    // ✅ 최종 HTML 구성 (날짜/15일 제거)
+    const html = `
+      <table class="duty-table schedule-table">
+        <tbody>
+          <tr><td style="text-align:left; padding-left:20px;">${formattedDesc}</td></tr>
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById("modal-schedule").innerHTML = html;
+  } catch (e) {
+    console.error("오늘일정 불러오기 실패:", e);
+    document.getElementById("modal-schedule").innerHTML =
+      "<p style='color:var(--warning);text-align:center;'>불러오기에 실패했습니다.</p>";
+  }
+}
+
+scheduleBtn.addEventListener("click", () => {
+  scheduleModal.style.display = "flex";
+  loadSchedule(); // 클릭 시 최신 데이터 불러오기
+});
+
+closeScheduleBtn.addEventListener("click", () => {
+  scheduleModal.style.display = "none";
+});
+
+// 배경 클릭 시 닫기
+window.addEventListener("click", (e) => {
+  if (e.target === scheduleModal) {
+    scheduleModal.style.display = "none";
+  }
+});
 
 // // 메모 카드
 // const memoArea = document.getElementById("memoArea");
