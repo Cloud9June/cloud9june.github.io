@@ -603,7 +603,7 @@ main.purple-border {
 
 .modal-content input,
 .modal-content textarea {
-    width: 100%;
+    width: 95%;
     margin-bottom: 1rem;
     padding: 0.6rem;
     border: 1px solid #ddd;
@@ -1015,3 +1015,76 @@ main.purple-border {
 :root[data-theme="dark"] .notice-banner .login-link {
   color: #a0c4ff; /* 학교 앱톤 파스텔 블루 */
 }
+
+
+.tag-area {
+  margin-top: 12px;
+}
+
+.tag-area label {
+    font-size: 13px;
+    margin-left: 3px;
+    color: #999;
+}
+
+#tagInput {
+  width: 95%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.7em;
+}
+
+.tag-suggestions {
+  display: none;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  max-height: 160px;
+  overflow-y: auto;
+  position: absolute;
+  margin-top: -10px;
+  left: 70px;
+  width: 74%;
+  z-index: 20;
+}
+
+.tag-suggestions div {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.tag-suggestions div:hover {
+  background-color: #f0f0f0;
+}
+
+.feed-tags {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.feed-tags .tag {
+  font-size: 0.7em;
+  color: #aaa;
+  padding: 1px 3px;
+  line-height: 1.3;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* --- 공개대상별 색상 테마 --- */
+.tag[data-tag="#전교생공개"] { color:#1e6fd9; }
+.tag[data-tag="#1학년만"] { color:#298d45; }
+.tag[data-tag="#2학년만"] { color:#b68600; }
+.tag[data-tag="#3학년만"] { color:#8641d9; }
+.tag[data-tag="#뷰티디자인과"] { color:#d9368a; }
+.tag[data-tag="#부사관과"] { color:#5c6a1b; }
+.tag[data-tag="#금융경영과"] { color:#1a8a78; }
+.tag[data-tag="#회계정보과"] { color:#3c54c6; }
+.tag[data-tag="#창업마케팅과"] { color:#d36b00; }
+.tag[data-tag="#AI게임콘텐츠과"] { color:#7b2fd9; }
+.tag[data-tag="#스마트웹콘텐츠과"] { color:#0077b6; }
+.tag[data-tag="#소프트웨어개발과"] { color:#155ab6; }
