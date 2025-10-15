@@ -315,7 +315,6 @@ document.querySelectorAll('.accordion-toggle').forEach(btn => {
 })();
 
 // ===== 실시간 날씨(기상청API) =====
-// ===== 실시간 날씨(기상청API) =====
 async function fetchWeather(isRetry = false, manualDate = null, manualTime = null) {
     const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
     const nx = 62, ny = 124; // 성남 좌표
@@ -411,7 +410,7 @@ async function fetchWeather(isRetry = false, manualDate = null, manualTime = nul
 
     } catch {
         // ❗ 완전 실패해도 오류 메시지 없이 조용히 표시 유지
-        document.getElementById("todayWeather").innerHTML = "-";
+        document.getElementById("todayWeather").innerHTML = "";
         document.getElementById("tomorrowWeather").textContent = "";
     }
 }
