@@ -8,7 +8,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, serverTimestamp,
-  query, orderBy, limit, startAfter, getDocs,
+  query, orderBy, limit, startAfter, getDocs, getDoc,
   doc, deleteDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -161,6 +161,17 @@ function renderFeedItem(id, item, tab = "all") {
         data-content="${item.content}">✏️</button>`;
   }
 
+  // ✅ 태그 HTML 구성
+  let tagHTML = "";
+  if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
+    tagHTML = `
+      <div class="feed-tags">
+        ${item.tags.map(tag => `<span class="tag" data-tag="${tag}">${tag}</span>`).join(" ")}
+      </div>
+    `;
+  }
+
+  // ✅ 전체 HTML 구성
   div.innerHTML = `
     ${actionBtns}
     <div class="feed-title">
@@ -168,7 +179,9 @@ function renderFeedItem(id, item, tab = "all") {
       <div class="feed-meta">${createdAt} · ${item.author}</div>
     </div>
     <div class="feed-content">${item.content}</div>
+    ${tagHTML} <!-- ✅ 태그가 있으면 표시 -->
   `;
+
   feedEl.appendChild(div);
 }
 
@@ -213,7 +226,7 @@ async function loadFeeds(initial = false) {
     if (initial) clearFeed();
 
     snaps.forEach((snap, idx) => {
-      console.log(`로드된 문서 개수 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
+      // console.log(`로드된 문서 개수 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
       snap.forEach(doc => {
         // ✅ 중복 방지: 이미 렌더링된 ID는 스킵
         if (!document.querySelector(`[data-id="${doc.id}"]`)) {
@@ -268,7 +281,7 @@ async function loadClassFeeds(user, initial = true) {
     if (initial) clearClassFeed();
 
     snaps.forEach((snap, idx) => {
-      console.log(`우리반 로드 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
+      // console.log(`우리반 로드 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
       snap.forEach(doc => {
         if (!document.querySelector(`[data-id="${doc.id}"]`)) {
           renderFeedItem(doc.id, doc.data(), "class");
@@ -404,6 +417,12 @@ submitFeed.addEventListener("click", async () => {
 
   try {
     if (mode === "create") {
+      // ✅ 태그 입력값 처리
+      const tagInputValue = document.getElementById("tagInput")?.value.trim() || "";
+      const tags = tagInputValue
+        .split(" ")
+        .filter(tag => tag.startsWith("#") && tag.length > 1);
+
       // ✅ 중요 피드일 경우 학생 번호 목록 가져오기
       let studentNumbers = [];
       if (
@@ -439,6 +458,7 @@ submitFeed.addEventListener("click", async () => {
       await addDoc(colRef, {
         title,
         content,
+        tags,
         createdAt: serverTimestamp(),
         author: user.displayName,
         authorEmail: user.email,
@@ -458,9 +478,9 @@ submitFeed.addEventListener("click", async () => {
       }
 
     } else if (mode === "edit") {
-      // ✅ 수정 모드
       const monthKey = getCurrentMonthKey();
       let docRef;
+
       if (currentTab === "all") {
         docRef = doc(db, "feeds", monthKey, "items", feedId);
       } else if (currentTab === "class") {
@@ -470,20 +490,44 @@ submitFeed.addEventListener("click", async () => {
         docRef = doc(db, "externalFeeds", feedId);
       }
 
+      // ✅ 태그 입력값 처리
+      const tagInputValue = document.getElementById("tagInput")?.value.trim() || "";
+      const tags = tagInputValue
+        .split(" ")
+        .filter(tag => tag.startsWith("#") && tag.length > 1);
+
+      // ✅ Firestore 업데이트 (태그 포함)
       await updateDoc(docRef, {
         title,
         content,
+        tags, // 🔥 새 태그 반영
         updatedAt: serverTimestamp()
       });
 
-      // ✅ DOM 갱신
+      // ✅ 화면(DOM) 즉시 갱신
       const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
       if (feedEl) {
+        // 제목 및 메타 수정
         feedEl.querySelector(".feed-title").innerHTML = `
           ${title}
           <div class="feed-meta">${formatDate(new Date())} · ${user.displayName}</div>
         `;
         feedEl.querySelector(".feed-content").textContent = content;
+
+        // 태그 갱신
+        const tagHTML = tags.length
+          ? `<div class="feed-tags">
+              ${tags.map(t => `<span class="tag" data-tag="${t}">${t}</span>`).join(" ")}
+            </div>`
+          : "";
+
+        // 기존 태그 영역이 있으면 교체, 없으면 새로 추가
+        const existingTags = feedEl.querySelector(".feed-tags");
+        if (existingTags) {
+          existingTags.outerHTML = tagHTML;
+        } else if (tagHTML) {
+          feedEl.insertAdjacentHTML("beforeend", tagHTML);
+        }
       }
 
       alert("피드가 수정되었습니다!");
@@ -508,12 +552,42 @@ document.body.addEventListener("click", (e) => {
     const feedTitle = e.target.dataset.title || "";
     const feedContent = e.target.dataset.content || "";
     const tab = e.target.dataset.tab;
+    const tagArea = document.querySelector(".tag-area");
 
-    document.querySelector("#feedModal h2").textContent = "피드 수정";
-    document.getElementById("submitFeed").textContent = "수정 완료";
+    // ✅ 전체 탭일 때만 태그 입력창 보이기
+    if (tab === "all") {
+      tagArea.style.display = "block";
+    } else {
+      tagArea.style.display = "none";
+    }
 
-    document.getElementById("feedTitle").value = feedTitle;
-    document.getElementById("feedContent").value = feedContent;
+    // ✅ 새로 추가: Firestore에서 해당 피드 문서 불러오기
+    const monthKey = getCurrentMonthKey();
+    let docRef;
+    if (tab === "all") {
+      docRef = doc(db, "feeds", monthKey, "items", feedId);
+    } else if (tab === "class") {
+      const user = JSON.parse(localStorage.getItem("userInfo"));
+      const classKey = `${user.grade}-${user.class}`;
+      docRef = doc(db, "classFeeds", classKey, `feeds_${monthKey}`, feedId);
+    } else if (tab === "external") {
+      docRef = doc(db, "externalFeeds", feedId);
+    }
+
+    getDoc(docRef).then((snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        // ✅ 제목, 내용, 태그 모두 입력창에 표시
+        document.querySelector("#feedModal h2").textContent = "피드 수정";
+        document.getElementById("submitFeed").textContent = "수정 완료";
+
+        document.getElementById("feedTitle").value = data.title || "";
+        document.getElementById("feedContent").value = data.content || "";
+
+        const tagInput = document.getElementById("tagInput");
+        tagInput.value = (data.tags || []).join(" ");
+      }
+    });
 
     feedModal.style.display = "flex";
     feedModal.dataset.mode = "edit";
@@ -521,6 +595,7 @@ document.body.addEventListener("click", (e) => {
     feedModal.dataset.tab = tab;
   }
 });
+
 
 // ===== 피드 삭제 =====
 document.body.addEventListener("click", async (e) => {
@@ -946,6 +1021,16 @@ writeFeedBtn.addEventListener("click", () => {
 
   const currentTab = document.querySelector(".tabs button.active").dataset.tab;
   const importantWrapper = document.getElementById("importantWrapper");
+  const tagArea = document.querySelector(".tag-area"); // ✅ 추가된 태그 영역
+
+  // ✅ tagArea가 없을 수도 있으니 안전하게 처리
+  if (tagArea) {
+    if (currentTab === "all") {
+      tagArea.style.display = "block";
+    } else {
+      tagArea.style.display = "none";
+    }
+  }
 
   // ✅ “우리반” 탭일 때만 중요 체크박스 보이기
   if (currentTab === "class") {
@@ -958,11 +1043,77 @@ writeFeedBtn.addEventListener("click", () => {
   feedModal.style.display = "flex";
   feedModal.dataset.mode = "create";
 });
+
 cancelFeed.addEventListener("click", () => {
   feedModal.style.display = "none";
   document.getElementById("feedTitle").value = "";
   document.getElementById("feedContent").value = "";
 });
+
+
+
+const tagInput = document.getElementById("tagInput");
+const tagSuggestions = document.getElementById("tagSuggestions");
+
+// 기존 공개대상 태그 후보
+const presetTags = [
+  "#전교생공개",
+  "#1학년만",
+  "#2학년만",
+  "#3학년만",
+  "#뷰티디자인과",
+  "#부사관과",
+  "#금융경영과",
+  "#회계정보과",
+  "#창업마케팅과",
+  "#AI게임콘텐츠과",
+  "#스마트웹콘텐츠과",
+  "#소프트웨어개발과"
+];
+
+// # 입력 시 추천창 표시
+tagInput.addEventListener("input", (e) => {
+  const value = e.target.value;
+  const lastChar = value.slice(-1);
+
+  if (lastChar === "#") {
+    showSuggestions();
+  } else {
+    // 자동완성 단어를 입력 중일 때 (예: "#2" → "#2학년만")
+    const currentWord = value.split(" ").pop();
+    if (currentWord.startsWith("#")) {
+      const filtered = presetTags.filter(tag => tag.includes(currentWord));
+      if (filtered.length > 0) showSuggestions(filtered);
+      else hideSuggestions();
+    } else {
+      hideSuggestions();
+    }
+  }
+});
+
+function showSuggestions(list = presetTags) {
+  tagSuggestions.innerHTML = "";
+  list.forEach(tag => {
+    const div = document.createElement("div");
+    div.textContent = tag;
+    div.addEventListener("click", () => selectTag(tag));
+    tagSuggestions.appendChild(div);
+  });
+  tagSuggestions.style.display = "block";
+}
+
+function hideSuggestions() {
+  tagSuggestions.style.display = "none";
+}
+
+function selectTag(tag) {
+  const currentValue = tagInput.value.trim();
+  const parts = currentValue.split(" ");
+  parts[parts.length - 1] = tag; // 마지막 단어(#...)를 선택된 태그로 대체
+  tagInput.value = parts.join(" ") + " ";
+  hideSuggestions();
+}
+
 
 const helpData = [{
     title: "설치 방법 (홈 화면 추가)",
