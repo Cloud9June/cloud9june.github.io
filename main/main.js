@@ -729,7 +729,10 @@ async function loadSchedule() {
 
   try {
     const res = await fetch(url);
-    const text = await res.text();
+    let text = await res.text();
+
+    // 🔹 앞뒤 따옴표 전체 제거 + 중복 따옴표 정리
+    text = text.trim().replace(/^"+|"+$/g, "").replace(/""+/g, '"');
 
     // CSV 파싱
     const lines = text.trim().split(/\r?\n/);
