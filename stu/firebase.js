@@ -46,6 +46,14 @@ const cancelFeed = document.getElementById("cancelFeed");
 const introLoading = document.getElementById("introLoading");
 const welcomeText = document.getElementById("welcomeText");
 
+// ===== 키오스크용 =====
+const urlParams = new URLSearchParams(window.location.search);
+const isKioskMode = urlParams.get("kiosk") === "true";
+
+if (isKioskMode) {
+  document.body.classList.add("kiosk-mode");
+}
+
 // ===== 전역 변수 =====
 let lastDoc = null;   // 페이지네이션 포인터
 let isLoading = false;
@@ -127,6 +135,27 @@ function canDeleteFeed(user, tab) {
   return false;
 }
 
+// ✅ 링크 자동 변환 함수 (이 부분 추가)
+function makeLinksClickable(text) {
+  const urlPattern = /(https?:\/\/[^\s]+)/g;
+  const trustedDomains = [
+    "docs.google.com",
+    "drive.google.com",
+    "forms.gle",
+    "sites.google.com",
+    "spreadsheets.google.com"
+  ];
+
+  return text.replace(urlPattern, (url) => {
+    const isTrusted = trustedDomains.some(domain => url.includes(domain));
+    if (isTrusted) {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="feed-link">${url}</a>`;
+    } else {
+      return `<span class="untrusted-link">${url}</span>`; // 클릭 안 됨
+    }
+  });
+}
+
 // ===== 피드 초기화 =====
 function clearFeed() { allFeed.innerHTML = ""; }
 function clearClassFeed() { classFeed.innerHTML = ""; }
@@ -171,15 +200,13 @@ function renderFeedItem(id, item, tab = "all") {
     `;
   }
 
-  // ✅ 전체 HTML 구성
+  const contentHTML = makeLinksClickable(item.content || "");
+
   div.innerHTML = `
     ${actionBtns}
-    <div class="feed-title">
-      ${item.title}
-      <div class="feed-meta">${createdAt} · ${item.author}</div>
-    </div>
-    <div class="feed-content">${item.content}</div>
-    ${tagHTML} <!-- ✅ 태그가 있으면 표시 -->
+    <div class="feed-title">${item.title}</div>
+    <div class="feed-content">${contentHTML}</div>
+    ${tagHTML}
   `;
 
   feedEl.appendChild(div);
