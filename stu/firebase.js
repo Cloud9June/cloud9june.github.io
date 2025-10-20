@@ -9,7 +9,7 @@ import {
 import {
   getFirestore, collection, addDoc, serverTimestamp,
   query, orderBy, limit, startAfter, getDocs, getDoc,
-  doc, deleteDoc, updateDoc, arrayRemove
+  doc, deleteDoc, updateDoc, arrayRemove, getDocFromServer
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
@@ -183,10 +183,16 @@ function renderFeedItem(id, item, tab = "all") {
   const canEdit = user && canWriteFeed(user, tab);
   const canDelete = user && canDeleteFeed(user, tab);
 
-  // ✅ 체크 버튼 (우리반 탭 + 중요 피드일 때만)
+  // ✅ 체크 버튼 (우리반 탭 + 중요 피드 + 학생 번호 있을 때만)
   let checkBtnHTML = "";
-  if (tab === "class" && item.important) {
-    checkBtnHTML = `<button class="check-feed-btn" data-id="${id}" data-tab="${tab}">v</button>`;
+  if (tab === "class" && item.important && user?.number) {
+    const checkedFeeds = JSON.parse(localStorage.getItem("checkedFeeds") || "[]");
+    const isChecked = checkedFeeds.includes(id);
+
+    // ✅ 이미 확인한 피드라면 disabled 처리
+    const disabledAttr = isChecked ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : "";
+
+    checkBtnHTML = `<button class="check-feed-btn" data-id="${id}" data-tab="${tab}" ${disabledAttr}>v</button>`;
   }
 
   if (canEdit || canDelete) {
@@ -226,20 +232,23 @@ function renderFeedItem(id, item, tab = "all") {
 
   // ✅ 우리반 탭에서만, 중요 피드일 경우 번호 표시
   let studentHTML = "";
-  if (
-    tab === "class" &&
-    item.important &&
-    Array.isArray(item.students) &&
-    item.students.length > 0
-  ) {
-    const studentList = item.students
-      .map(num => `<span class="tag">${num}</span>`)
-      .join(" ");
-    studentHTML = `
-      <div class="feed-tags">
-        ${studentList}
-      </div>
-    `;
+  if (tab === "class" && item.important) {
+    if (Array.isArray(item.students) && item.students.length > 0) {
+      const studentList = item.students
+        .map(num => `<span class="tag">${num}</span>`)
+        .join(" ");
+      studentHTML = `
+        <div class="feed-tags">
+          ${studentList}
+        </div>
+      `;
+    } else {
+      studentHTML = `
+        <div class="feed-tags">
+          <span class="tag" style="color:#2e7d32;">학생 모두 확인함.</span>
+        </div>
+      `;
+    }
   }
 
   const contentHTML = makeLinksClickable(item.content || "");
@@ -335,7 +344,10 @@ async function loadClassFeeds(user, initial = true) {
           limit(PAGE_SIZE)
         )
       );
-      snaps = await Promise.all(queries.map(q => getDocs(q)));
+
+      // ✅ 캐시 무시하고 항상 서버에서 새로 불러오기
+      snaps = await Promise.all(queries.map(q => getDocs(q, { source: "server" })));
+
     } else {
       // ✅ 무한 스크롤: 이번 달만 추가 로딩
       const q = query(
@@ -344,14 +356,15 @@ async function loadClassFeeds(user, initial = true) {
         startAfter(lastDocClass),
         limit(PAGE_SIZE)
       );
-      const snap = await getDocs(q);
+
+      // ✅ 캐시 무시하고 서버에서 직접 불러오기
+      const snap = await getDocs(q, { source: "server" });
       snaps = [snap];
     }
 
     if (initial) clearClassFeed();
 
     snaps.forEach((snap, idx) => {
-      // console.log(`우리반 로드 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
       snap.forEach(doc => {
         if (!document.querySelector(`[data-id="${doc.id}"]`)) {
           renderFeedItem(doc.id, doc.data(), "class");
@@ -370,6 +383,7 @@ async function loadClassFeeds(user, initial = true) {
     isLoadingClass = false;
   }
 }
+
 
 async function loadExternalFeeds(initial = false) {
   if (isLoadingExternal) return;
@@ -490,6 +504,7 @@ submitFeed.addEventListener("click", async () => {
   submitFeed.textContent = "등록 중... ⏳";
 
   try {
+    // ✅ 피드 새로 등록
     if (mode === "create") {
       // ✅ 태그 입력값 처리
       const tagInputValue = document.getElementById("tagInput")?.value.trim() || "";
@@ -504,31 +519,17 @@ submitFeed.addEventListener("click", async () => {
         Array.isArray(user.privilege) &&
         user.privilege.some(p => ["담임", "반장", "부반장"].includes(p))
       ) {
-        console.log("🟩 중요 피드 감지:", {
-          grade: user.grade,
-          class: user.class,
-          privilege: user.privilege,
-        });
-
         try {
-          console.log("🟩 Apps Script 호출 시작...");
           const response = await fetch(
             `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?grade=${user.grade}&class=${user.class}`
           );
           const data = await response.json();
-          console.log("🟩 Apps Script 응답:", data);
-
           if (data.success && Array.isArray(data.students)) {
             studentNumbers = data.students;
-            console.log("🟩 학생 목록 불러오기 성공:", studentNumbers);
-          } else {
-            console.warn("⚠️ Apps Script 응답 구조 예상과 다름:", data);
           }
         } catch (err) {
           console.error("❌ 학생 번호 불러오기 오류:", err);
         }
-      } else {
-        console.log("🟨 중요 피드가 아니거나 권한 조건 미충족");
       }
 
       // ✅ Firestore에 저장
@@ -543,16 +544,6 @@ submitFeed.addEventListener("click", async () => {
         colRef = collection(db, "classFeeds", classKey, `feeds_${monthKey}`);
       }
 
-      console.log("🟩 Firestore 저장 대상 컬렉션:", colRef.path);
-      console.log("🟩 저장 데이터 미리보기:", {
-        title,
-        content,
-        tags,
-        author: user.displayName,
-        important: isImportant,
-        students: studentNumbers,
-      });
-
       await addDoc(colRef, {
         title,
         content,
@@ -561,10 +552,8 @@ submitFeed.addEventListener("click", async () => {
         author: user.displayName,
         authorEmail: user.email,
         important: isImportant,
-        students: studentNumbers.length > 0 ? studentNumbers : [], // ✅ 빈 배열 방어
+        students: studentNumbers.length > 0 ? studentNumbers : [],
       });
-
-      console.log("🟩 Firestore 저장 완료");
 
       alert("피드가 등록되었습니다!");
 
@@ -576,7 +565,7 @@ submitFeed.addEventListener("click", async () => {
       } else if (currentTab === "external") {
         loadExternalFeeds(true);
       }
-
+    // ✅ 피드 수정
     } else if (mode === "edit") {
       const monthKey = getCurrentMonthKey();
       let docRef;
@@ -596,15 +585,52 @@ submitFeed.addEventListener("click", async () => {
         .split(" ")
         .filter(tag => tag.startsWith("#") && tag.length > 1);
 
-      console.log("🟩 피드 수정:", { feedId, title, tags });
+      console.log("🟩 피드 수정:", { feedId, title, tags, isImportant });
 
-      await updateDoc(docRef, {
+      // ✅ 중요 체크 시 학생 목록 가져오기
+      let studentNumbers = [];
+      if (
+        isImportant &&
+        currentTab === "class" &&
+        Array.isArray(user.privilege) &&
+        user.privilege.some(p => ["담임", "반장", "부반장"].includes(p))
+      ) {
+        try {
+          console.log("🟩 중요 피드로 변경됨 → 학생 목록 불러오기...");
+          const response = await fetch(
+            `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?grade=${user.grade}&class=${user.class}`
+          );
+          const data = await response.json();
+          if (data.success && Array.isArray(data.students)) {
+            studentNumbers = data.students;
+            console.log("🟩 학생번호 로드 완료:", studentNumbers);
+          } else {
+            console.warn("⚠️ Apps Script 응답 이상:", data);
+          }
+        } catch (err) {
+          console.error("❌ 학생 목록 불러오기 실패:", err);
+        }
+      }
+
+      // ✅ Firestore 업데이트
+      const updateData = {
         title,
         content,
         tags,
-        updatedAt: serverTimestamp()
-      });
+        important: isImportant,
+        updatedAt: serverTimestamp(),
+      };
 
+      // ✅ 중요 체크에 따른 students 필드 반영
+      if (isImportant && studentNumbers.length > 0) {
+        updateData.students = studentNumbers;
+      } else if (!isImportant) {
+        updateData.students = []; // 중요 해제 시 초기화
+      }
+
+      await updateDoc(docRef, updateData);
+
+      // ✅ 화면 즉시 반영 (기존 방식 유지)
       const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
       if (feedEl) {
         feedEl.querySelector(".feed-title").innerHTML = `
@@ -645,16 +671,13 @@ submitFeed.addEventListener("click", async () => {
   }
 });
 
-
-
 // ===== 피드 수정 모드 =====
 document.body.addEventListener("click", (e) => {
   if (e.target.classList.contains("edit-feed-btn")) {
     const feedId = e.target.dataset.id;
-    const feedTitle = e.target.dataset.title || "";
-    const feedContent = e.target.dataset.content || "";
     const tab = e.target.dataset.tab;
     const tagArea = document.querySelector(".tag-area");
+    const importantWrapper = document.getElementById("importantWrapper"); // ✅ 중요 체크박스 영역
 
     // ✅ 전체 탭일 때만 태그 입력창 보이기
     if (tab === "all") {
@@ -663,7 +686,14 @@ document.body.addEventListener("click", (e) => {
       tagArea.style.display = "none";
     }
 
-    // ✅ 새로 추가: Firestore에서 해당 피드 문서 불러오기
+    // ✅ 우리반 탭일 때만 중요 체크박스 표시
+    if (tab === "class") {
+      importantWrapper.style.display = "flex";
+    } else {
+      importantWrapper.style.display = "none";
+    }
+
+    // ✅ Firestore에서 해당 피드 문서 불러오기
     const monthKey = getCurrentMonthKey();
     let docRef;
     if (tab === "all") {
@@ -679,18 +709,25 @@ document.body.addEventListener("click", (e) => {
     getDoc(docRef).then((snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        // ✅ 제목, 내용, 태그 모두 입력창에 표시
+
+        // ✅ 모달 기본 설정
         document.querySelector("#feedModal h2").textContent = "피드 수정";
         document.getElementById("submitFeed").textContent = "수정 완료";
 
+        // ✅ 기존 값 입력창에 반영
         document.getElementById("feedTitle").value = data.title || "";
         document.getElementById("feedContent").value = data.content || "";
+        document.getElementById("tagInput").value = (data.tags || []).join(" ");
 
-        const tagInput = document.getElementById("tagInput");
-        tagInput.value = (data.tags || []).join(" ");
+        // ✅ 중요 여부 반영
+        const importantCheck = document.getElementById("importantCheck");
+        if (importantCheck) {
+          importantCheck.checked = !!data.important; // 중요 여부 상태 복원
+        }
       }
     });
 
+    // ✅ 모달 모드 정보 세팅
     feedModal.style.display = "flex";
     feedModal.dataset.mode = "edit";
     feedModal.dataset.id = feedId;
@@ -1233,6 +1270,13 @@ iOS: Safari → 공유(⬆️) → 홈 화면에 추가
 도움말: 이 안내문 보기`,
     author: "S:NOW 도움말"
   },
+  { 
+    title: "중요 피드 확인 기능", 
+    content: `📢 중요 피드로 등록된 글은 반의 모든 학생 번호가 표시됨.
+각 학생이 피드를 확인하면 자신의 번호가 목록에서 자동으로 사라짐.
+이를 통해 누가 해당 피드를 확인했는지 한눈에 파악할 수 있음.`, 
+    author: "S:NOW 도움말" 
+  },
   {
     title: "글쓰기 / 수정 / 삭제",
     content: `✏️ 버튼으로 글 작성
@@ -1257,7 +1301,7 @@ iOS: Safari → 공유(⬆️) → 홈 화면에 추가
     title: "저작권 및 제작 정보",
     content: `S:NOW는 성일정보고등학교 학생용 웹앱입니다.
 제작 및 운영: 성일정보고등학교 김형준 선생님
-버전: BETA 1.0
+버전: BETA 3.1
 최종 업데이트: 2025.10.15.
 저작권: © 2025 Sungil Information High School. All rights reserved.
 무단 복제 및 배포를 금합니다.
@@ -1291,15 +1335,12 @@ document.addEventListener("click", async (e) => {
     const tab = btn.dataset.tab;
     const user = JSON.parse(localStorage.getItem("userInfo"));
 
-    if (!user?.number) {
-      alert("학생 번호 정보를 확인할 수 없습니다.");
-      return;
-    }
+    // ✅ 학생 번호가 없으면 체크 버튼 기능 차단 (교사 등)
+    if (!user?.number) return;
 
     // ✅ 이미 비활성화된 버튼이라면 바로 return
     if (btn.disabled) return;
 
-    // ✅ Firestore 문서 참조
     const monthKey = getCurrentMonthKey();
     const classKey = `${user.grade}-${user.class}`;
     const feedRef = doc(db, "classFeeds", classKey, `feeds_${monthKey}`, feedId);
@@ -1317,15 +1358,31 @@ document.addEventListener("click", async (e) => {
       btn.style.opacity = "0.5";
       btn.style.cursor = "not-allowed";
 
+      // ✅ 로컬 기록 저장 (새로고침 후에도 유지)
+      let checkedFeeds = JSON.parse(localStorage.getItem("checkedFeeds") || "[]");
+      if (!checkedFeeds.includes(feedId)) {
+        checkedFeeds.push(feedId);
+        localStorage.setItem("checkedFeeds", JSON.stringify(checkedFeeds));
+      }
+
       // ✅ 화면(DOM)에서도 해당 번호 제거
       const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
       if (feedEl) {
-        const allTags = feedEl.querySelectorAll(".feed-tags .tag");
-        allTags.forEach(tag => {
-          if (tag.textContent.trim() === String(user.number)) {
-            tag.remove();
+        const tagContainer = feedEl.querySelector(".feed-tags");
+        if (tagContainer) {
+          const tags = tagContainer.querySelectorAll(".tag");
+          tags.forEach(tag => {
+            if (tag.textContent.trim() === String(user.number)) {
+              tag.remove();
+            }
+          });
+
+          // ✅ 번호가 모두 제거되면 “학생 모두 확인함.” 문구 출력
+          const remaining = tagContainer.querySelectorAll(".tag").length;
+          if (remaining === 0) {
+            tagContainer.innerHTML = `<span class="tag" style="color:#2e7d32;">학생 모두 확인함.</span>`;
           }
-        });
+        }
       }
 
     } catch (err) {
