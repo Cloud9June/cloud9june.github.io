@@ -9,8 +9,9 @@ import {
 import {
   getFirestore, collection, addDoc, serverTimestamp,
   query, orderBy, limit, startAfter, getDocs, getDoc,
-  doc, deleteDoc, updateDoc
+  doc, deleteDoc, updateDoc, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 
 // ===== Firebase 설정 =====
 const firebaseConfig = {
@@ -163,9 +164,9 @@ function clearClassFeed() { classFeed.innerHTML = ""; }
 // ===== 피드 렌더링 =====
 function renderFeedItem(id, item, tab = "all") {
   let feedEl;
-    if (tab === "all") feedEl = document.getElementById("allFeed");
-    else if (tab === "class") feedEl = document.getElementById("classFeed");
-    else if (tab === "external") feedEl = document.getElementById("externalFeed");
+  if (tab === "all") feedEl = document.getElementById("allFeed");
+  else if (tab === "class") feedEl = document.getElementById("classFeed");
+  else if (tab === "external") feedEl = document.getElementById("externalFeed");
   
   const createdAt = item.createdAt?.toDate
     ? formatDate(item.createdAt.toDate())
@@ -177,25 +178,66 @@ function renderFeedItem(id, item, tab = "all") {
 
   const user = JSON.parse(localStorage.getItem("userInfo"));
 
+  // ✅ 버튼 구성
   let actionBtns = "";
-  if (user && canDeleteFeed(user, tab)) {
-    actionBtns += `<button class="delete-feed-btn" data-id="${id}" data-tab="${tab}">×</button>`;
-  }
-  if (user && canWriteFeed(user, tab)) {
-    actionBtns += `<button 
-        class="edit-feed-btn" 
-        data-id="${id}" 
-        data-tab="${tab}"
-        data-title="${item.title}" 
-        data-content="${item.content}">✏️</button>`;
+  const canEdit = user && canWriteFeed(user, tab);
+  const canDelete = user && canDeleteFeed(user, tab);
+
+  // ✅ 체크 버튼 (우리반 탭 + 중요 피드일 때만)
+  let checkBtnHTML = "";
+  if (tab === "class" && item.important) {
+    checkBtnHTML = `<button class="check-feed-btn" data-id="${id}" data-tab="${tab}">v</button>`;
   }
 
-  // ✅ 태그 HTML 구성
+  if (canEdit || canDelete) {
+    // 🔹 권한 있는 사용자 → 체크(조건 만족 시) + 수정 + 삭제
+    actionBtns += checkBtnHTML;
+    if (canEdit) {
+      actionBtns += `<button 
+          class="edit-feed-btn" 
+          data-id="${id}" 
+          data-tab="${tab}"
+          data-title="${item.title}" 
+          data-content="${item.content}">✏️</button>`;
+    }
+    if (canDelete) {
+      actionBtns += `<button class="delete-feed-btn" data-id="${id}" data-tab="${tab}">×</button>`;
+    }
+  } else {
+    // 🔹 권한 없는 사용자 → 체크 버튼만 (조건 만족 시)
+    if (checkBtnHTML) {
+      // solo 전용 클래스 추가 (체크 버튼만 있는 경우)
+      actionBtns += checkBtnHTML.replace(
+        'class="check-feed-btn"',
+        'class="check-feed-btn solo"'
+      );
+    }
+  }
+
+  // ✅ 태그 HTML (전체탭 스타일 재사용)
   let tagHTML = "";
   if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
     tagHTML = `
       <div class="feed-tags">
         ${item.tags.map(tag => `<span class="tag" data-tag="${tag}">${tag}</span>`).join(" ")}
+      </div>
+    `;
+  }
+
+  // ✅ 우리반 탭에서만, 중요 피드일 경우 번호 표시
+  let studentHTML = "";
+  if (
+    tab === "class" &&
+    item.important &&
+    Array.isArray(item.students) &&
+    item.students.length > 0
+  ) {
+    const studentList = item.students
+      .map(num => `<span class="tag">${num}</span>`)
+      .join(" ");
+    studentHTML = `
+      <div class="feed-tags">
+        ${studentList}
       </div>
     `;
   }
@@ -206,7 +248,8 @@ function renderFeedItem(id, item, tab = "all") {
     ${actionBtns}
     <div class="feed-title">${item.title}</div>
     <div class="feed-content">${contentHTML}</div>
-    ${tagHTML}
+    ${studentHTML}  <!-- 🟩 중요 피드 학생번호 (우리반 전용) -->
+    ${tagHTML}      <!-- 🟦 기존 태그 -->
   `;
 
   feedEl.appendChild(div);
@@ -404,7 +447,7 @@ async function saveFeed(title, content, user, tab, isImportant = false) {
   if (isImportant && ["담임", "반장", "부반장"].includes(user.privilege)) {
     try {
       const response = await fetch(
-        `https://script.google.com/macros/s/AKfycbwp-WP0s_G9ibtVBmXSZzTLqMIEMoQej7YBLjk7VX-J98_RvnwjnqGVYroEP_fHN8kXWA/exec?grade=${user.grade}&class=${user.class}`
+        `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?grade=${user.grade}&class=${user.class}`
       );
       const data = await response.json();
       if (data.success && Array.isArray(data.students)) {
@@ -442,6 +485,10 @@ submitFeed.addEventListener("click", async () => {
     return;
   }
 
+  // ✅ 버튼 잠금 (중복 클릭 방지)
+  submitFeed.disabled = true;
+  submitFeed.textContent = "등록 중... ⏳";
+
   try {
     if (mode === "create") {
       // ✅ 태그 입력값 처리
@@ -457,17 +504,31 @@ submitFeed.addEventListener("click", async () => {
         Array.isArray(user.privilege) &&
         user.privilege.some(p => ["담임", "반장", "부반장"].includes(p))
       ) {
+        console.log("🟩 중요 피드 감지:", {
+          grade: user.grade,
+          class: user.class,
+          privilege: user.privilege,
+        });
+
         try {
+          console.log("🟩 Apps Script 호출 시작...");
           const response = await fetch(
-            `https://script.google.com/macros/s/AKfycbwp-WP0s_G9ibtVBmXSZzTLqMIEMoQej7YBLjk7VX-J98_RvnwjnqGVYroEP_fHN8kXWA/exec?grade=${user.grade}&class=${user.class}`
+            `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?grade=${user.grade}&class=${user.class}`
           );
           const data = await response.json();
+          console.log("🟩 Apps Script 응답:", data);
+
           if (data.success && Array.isArray(data.students)) {
             studentNumbers = data.students;
+            console.log("🟩 학생 목록 불러오기 성공:", studentNumbers);
+          } else {
+            console.warn("⚠️ Apps Script 응답 구조 예상과 다름:", data);
           }
         } catch (err) {
-          console.error("학생 번호 불러오기 오류:", err);
+          console.error("❌ 학생 번호 불러오기 오류:", err);
         }
+      } else {
+        console.log("🟨 중요 피드가 아니거나 권한 조건 미충족");
       }
 
       // ✅ Firestore에 저장
@@ -482,6 +543,16 @@ submitFeed.addEventListener("click", async () => {
         colRef = collection(db, "classFeeds", classKey, `feeds_${monthKey}`);
       }
 
+      console.log("🟩 Firestore 저장 대상 컬렉션:", colRef.path);
+      console.log("🟩 저장 데이터 미리보기:", {
+        title,
+        content,
+        tags,
+        author: user.displayName,
+        important: isImportant,
+        students: studentNumbers,
+      });
+
       await addDoc(colRef, {
         title,
         content,
@@ -490,8 +561,10 @@ submitFeed.addEventListener("click", async () => {
         author: user.displayName,
         authorEmail: user.email,
         important: isImportant,
-        students: studentNumbers
+        students: studentNumbers.length > 0 ? studentNumbers : [], // ✅ 빈 배열 방어
       });
+
+      console.log("🟩 Firestore 저장 완료");
 
       alert("피드가 등록되었습니다!");
 
@@ -523,32 +596,28 @@ submitFeed.addEventListener("click", async () => {
         .split(" ")
         .filter(tag => tag.startsWith("#") && tag.length > 1);
 
-      // ✅ Firestore 업데이트 (태그 포함)
+      console.log("🟩 피드 수정:", { feedId, title, tags });
+
       await updateDoc(docRef, {
         title,
         content,
-        tags, // 🔥 새 태그 반영
+        tags,
         updatedAt: serverTimestamp()
       });
 
-      // ✅ 화면(DOM) 즉시 갱신
       const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
       if (feedEl) {
-        // 제목 및 메타 수정
         feedEl.querySelector(".feed-title").innerHTML = `
           ${title}
           <div class="feed-meta">${formatDate(new Date())} · ${user.displayName}</div>
         `;
         feedEl.querySelector(".feed-content").textContent = content;
 
-        // 태그 갱신
         const tagHTML = tags.length
           ? `<div class="feed-tags">
               ${tags.map(t => `<span class="tag" data-tag="${t}">${t}</span>`).join(" ")}
             </div>`
           : "";
-
-        // 기존 태그 영역이 있으면 교체, 없으면 새로 추가
         const existingTags = feedEl.querySelector(".feed-tags");
         if (existingTags) {
           existingTags.outerHTML = tagHTML;
@@ -557,6 +626,7 @@ submitFeed.addEventListener("click", async () => {
         }
       }
 
+      console.log("🟩 수정 완료");
       alert("피드가 수정되었습니다!");
     }
 
@@ -566,10 +636,15 @@ submitFeed.addEventListener("click", async () => {
     document.getElementById("feedContent").value = "";
     document.getElementById("importantCheck").checked = false;
   } catch (err) {
-    console.error("피드 저장 오류:", err);
+    console.error("❌ 피드 저장 오류:", err);
     alert("저장에 실패했습니다.");
+  } finally {
+    // ✅ 버튼 다시 활성화
+    submitFeed.disabled = false;
+    submitFeed.textContent = "등록";
   }
 });
+
 
 
 // ===== 피드 수정 모드 =====
@@ -854,7 +929,7 @@ loginBtn.addEventListener("click", async () => {
 
     // ✅ Apps Script 호출 (URL은 새로 발급받은 Web App URL로 유지)
     const response = await fetch(
-      `https://script.google.com/macros/s/AKfycbxfCkVJWMtxJ7H3SS_5FoPOpAGK1N1i_IX2BH4QizJA6pTVoKNsyEd66q37RAG8N6jqUw/exec?email=${email}`
+      `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?email=${email}`
     );
     const data = await response.json();
 
@@ -1207,3 +1282,55 @@ function renderHelpFeed() {
     helpFeed.appendChild(div);
   });
 }
+
+// ===== 체크 버튼 클릭 =====
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("check-feed-btn")) {
+    const btn = e.target;
+    const feedId = btn.dataset.id;
+    const tab = btn.dataset.tab;
+    const user = JSON.parse(localStorage.getItem("userInfo"));
+
+    if (!user?.number) {
+      alert("학생 번호 정보를 확인할 수 없습니다.");
+      return;
+    }
+
+    // ✅ 이미 비활성화된 버튼이라면 바로 return
+    if (btn.disabled) return;
+
+    // ✅ Firestore 문서 참조
+    const monthKey = getCurrentMonthKey();
+    const classKey = `${user.grade}-${user.class}`;
+    const feedRef = doc(db, "classFeeds", classKey, `feeds_${monthKey}`, feedId);
+
+    try {
+      // ✅ Firestore 배열에서 해당 학생 번호 제거
+      await updateDoc(feedRef, {
+        students: arrayRemove(user.number)
+      });
+
+      alert("확인했습니다!");
+
+      // ✅ 버튼 비활성화 (한 번만 가능)
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      btn.style.cursor = "not-allowed";
+
+      // ✅ 화면(DOM)에서도 해당 번호 제거
+      const feedEl = document.querySelector(`.feed-item[data-id="${feedId}"]`);
+      if (feedEl) {
+        const allTags = feedEl.querySelectorAll(".feed-tags .tag");
+        allTags.forEach(tag => {
+          if (tag.textContent.trim() === String(user.number)) {
+            tag.remove();
+          }
+        });
+      }
+
+    } catch (err) {
+      console.error("⚠️ 확인 처리 중 오류:", err);
+      alert("처리 중 오류가 발생했습니다.");
+    }
+  }
+});
