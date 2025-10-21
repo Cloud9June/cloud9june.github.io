@@ -27,6 +27,22 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
 
+async function getUserPrivilege(email) {
+  try {
+    const snap = await getDoc(doc(db, "users", email));
+    if (!snap.exists()) return [];
+    const data = snap.data();
+    if (Array.isArray(data.privilege)) return data.privilege;
+    if (typeof data.privilege === "string")
+      return data.privilege.split(",").map((p) => p.trim());
+  } catch (err) {
+    console.error("⚠️ 권한 조회 실패:", err);
+  }
+  return [];
+}
+
+let currentPrivileges = [];
+
 // ===== DOM 요소 =====
 const videoWrapper = document.getElementById("videoWrapper");
 const appHeader = document.getElementById("appHeader");
@@ -99,9 +115,11 @@ function applyTabStyle(tabName) {
   }
 }
 
-// ===== 권한 =====
+// ===== 권한 (Firestore 기반) =====
+
+// 🔹 현재 로그인한 사용자의 권한은 로그인 시 getUserPrivilege()로 읽어서 currentPrivileges에 저장되어 있다고 가정
 function canViewTab(user, tab) {
-  const privileges = user.privilege ?? [];
+  const privileges = currentPrivileges ?? [];
 
   if (tab === "all") return true;
   if (tab === "external") return true;
@@ -113,8 +131,9 @@ function canViewTab(user, tab) {
   }
   return false;
 }
+
 function canWriteFeed(user, tab) {
-  const privileges = user.privilege ?? [];
+  const privileges = currentPrivileges ?? [];
 
   if (privileges.includes("총관리자")) return true;
   if (tab === "all" && privileges.includes("관리자")) return true;
@@ -124,8 +143,9 @@ function canWriteFeed(user, tab) {
 
   return false;
 }
+
 function canDeleteFeed(user, tab) {
-  const privileges = user.privilege ?? [];
+  const privileges = currentPrivileges ?? [];
 
   if (privileges.includes("총관리자")) return true;
   if (tab === "all" && privileges.includes("관리자")) return true;
@@ -256,6 +276,7 @@ function renderFeedItem(id, item, tab = "all") {
   div.innerHTML = `
     ${actionBtns}
     <div class="feed-title">${item.title}</div>
+    <div class="feed-meta">${item.author || "작성자 미상"} · ${formatDate(item.createdAt?.toDate?.() || new Date())}</div>
     <div class="feed-content">${contentHTML}</div>
     ${studentHTML}  <!-- 🟩 중요 피드 학생번호 (우리반 전용) -->
     ${tagHTML}      <!-- 🟦 기존 태그 -->
@@ -461,7 +482,7 @@ async function saveFeed(title, content, user, tab, isImportant = false) {
   if (isImportant && ["담임", "반장", "부반장"].includes(user.privilege)) {
     try {
       const response = await fetch(
-        `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?grade=${user.grade}&class=${user.class}`
+        `https://script.google.com/macros/s/AKfycbzZiT5CBT1Bl1vlRRlpBzsJSpssH3Lmd3VgekQnUER36U5d5GcdQn5bZsWr-MIpfCAB9w/exec?grade=${user.grade}&class=${user.class}`
       );
       const data = await response.json();
       if (data.success && Array.isArray(data.students)) {
@@ -521,7 +542,7 @@ submitFeed.addEventListener("click", async () => {
       ) {
         try {
           const response = await fetch(
-            `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?grade=${user.grade}&class=${user.class}`
+            `https://script.google.com/macros/s/AKfycbzZiT5CBT1Bl1vlRRlpBzsJSpssH3Lmd3VgekQnUER36U5d5GcdQn5bZsWr-MIpfCAB9w/exec?grade=${user.grade}&class=${user.class}`
           );
           const data = await response.json();
           if (data.success && Array.isArray(data.students)) {
@@ -598,7 +619,7 @@ submitFeed.addEventListener("click", async () => {
         try {
           console.log("🟩 중요 피드로 변경됨 → 학생 목록 불러오기...");
           const response = await fetch(
-            `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?grade=${user.grade}&class=${user.class}`
+            `https://script.google.com/macros/s/AKfycbzZiT5CBT1Bl1vlRRlpBzsJSpssH3Lmd3VgekQnUER36U5d5GcdQn5bZsWr-MIpfCAB9w/exec?grade=${user.grade}&class=${user.class}`
           );
           const data = await response.json();
           if (data.success && Array.isArray(data.students)) {
@@ -862,7 +883,6 @@ if (guestLink) {
     localStorage.setItem("userInfo", JSON.stringify({
       displayName: "게스트 모드",
       role: "게스트",
-      privilege: [],
       grade: "",
       class: ""
     }));
@@ -956,6 +976,10 @@ loginBtn.addEventListener("click", async () => {
       return;
     }
 
+    // ✅ Firestore에서 권한 가져오기
+    currentPrivileges = await getUserPrivilege(email);
+    console.log("🔥 불러온 권한:", currentPrivileges);
+
     // ✅ 로그인 시에는 항상 전체 탭부터 시작
     localStorage.setItem("activeTab", "all");
 
@@ -966,7 +990,7 @@ loginBtn.addEventListener("click", async () => {
 
     // ✅ Apps Script 호출 (URL은 새로 발급받은 Web App URL로 유지)
     const response = await fetch(
-      `https://script.google.com/macros/s/AKfycbyA0LUNeU99rX4j2UBlRli2BAbgNzyqnCLtUQNOSBRZASGzf5rkvickZUXfnSjCX4Vznw/exec?email=${email}`
+      `https://script.google.com/macros/s/AKfycbzZiT5CBT1Bl1vlRRlpBzsJSpssH3Lmd3VgekQnUER36U5d5GcdQn5bZsWr-MIpfCAB9w/exec?email=${email}`
     );
     const data = await response.json();
 
@@ -1002,7 +1026,6 @@ loginBtn.addEventListener("click", async () => {
         ...userInfo,
         displayName,
         role: userInfo.role || "",
-        privilege: privilegeArray,
         grade: userInfo.grade || "",
         class: userInfo.class || "",
         number: userInfo.number || "",
