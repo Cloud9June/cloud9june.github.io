@@ -1065,10 +1065,25 @@ logoutBtn.addEventListener("click", async () => {
 window.addEventListener("load", async () => {
   const savedUser = JSON.parse(localStorage.getItem("userInfo"));
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
   if (isLoggedIn && savedUser) {
     document.getElementById("reloginLoading").style.display = "flex";
+
+    // 🔹 Firestore에서 권한 다시 불러오기
+    const email = savedUser.email;
+    const privileges = await getUserPrivilege(email);
+    console.log("🔁 새로고침 후 불러온 권한:", privileges);
+
+    // ✅ 전역 변수에 다시 저장 (canViewTab / canWriteFeed에서 사용됨)
+    currentPrivileges = privileges;
+
+    // ✅ UI 업데이트는 권한 세팅 이후!
     await showMainScreen(savedUser, savedUser.displayName);
-    updateUI(savedUser);
+    updateUI({
+      ...savedUser,
+      privilege: privileges,
+    });
+
     setTimeout(() => {
       document.getElementById("reloginLoading").style.display = "none";
     }, 600);
