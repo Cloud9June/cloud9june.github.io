@@ -479,7 +479,11 @@ async function saveFeed(title, content, user, tab, isImportant = false) {
 
   // ✅ 중요 피드일 경우: 시트에서 해당 반 학생 번호 불러오기
   let studentNumbers = [];
-  if (isImportant && ["담임", "반장", "부반장"].includes(user.privilege)) {
+  if (
+    isImportant &&
+    Array.isArray(currentPrivileges) &&
+    currentPrivileges.some(p => ["담임", "반장", "부반장"].includes(p))
+  ) {
     try {
       const response = await fetch(
         `https://script.google.com/macros/s/AKfycbzZiT5CBT1Bl1vlRRlpBzsJSpssH3Lmd3VgekQnUER36U5d5GcdQn5bZsWr-MIpfCAB9w/exec?grade=${user.grade}&class=${user.class}`
@@ -535,10 +539,14 @@ submitFeed.addEventListener("click", async () => {
 
       // ✅ 중요 피드일 경우 학생 번호 목록 가져오기
       let studentNumbers = [];
+      const privileges = Array.isArray(user.privilege)
+        ? user.privilege
+        : currentPrivileges || []; // 🔹 Firestore 기반 권한까지 함께 확인
+
       if (
         isImportant &&
-        Array.isArray(user.privilege) &&
-        user.privilege.some(p => ["담임", "반장", "부반장"].includes(p))
+        Array.isArray(privileges) &&
+        privileges.some(p => ["담임", "반장", "부반장"].includes(p))
       ) {
         try {
           const response = await fetch(
@@ -547,6 +555,9 @@ submitFeed.addEventListener("click", async () => {
           const data = await response.json();
           if (data.success && Array.isArray(data.students)) {
             studentNumbers = data.students;
+            console.log("🟢 학생 번호 불러오기 완료:", studentNumbers);
+          } else {
+            console.warn("⚠️ Apps Script 응답 이상:", data);
           }
         } catch (err) {
           console.error("❌ 학생 번호 불러오기 오류:", err);
