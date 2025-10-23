@@ -169,10 +169,13 @@ function makeLinksClickable(text) {
 
   return text.replace(urlPattern, (url) => {
     const isTrusted = trustedDomains.some(domain => url.includes(domain));
+
     if (isTrusted) {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="feed-link">${url}</a>`;
+      // ✅ 표시 텍스트를 "(링크)"로 통일
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="feed-link">(링크)</a>`;
     } else {
-      return `<span class="untrusted-link">${url}</span>`; // 클릭 안 됨
+      // ❌ 비신뢰 도메인은 그냥 텍스트로 표시
+      return `<span class="untrusted-link">${url}</span>`;
     }
   });
 }
@@ -296,23 +299,44 @@ let isLoadingExternal = false;
 async function loadFeeds(initial = false) {
   if (isLoadingAll) return;
   isLoadingAll = true;
-  try {
-    const monthKeys = getMonthKeys(2); // 이번 달 + 지난달
 
-    let snaps = [];
+  try {
+    const monthKeys = getMonthKeys(2); // 10월 + 9월
+    let feeds = [];
 
     if (initial) {
-      // ✅ 초기 로딩: 이번 달 + 지난달 불러오기
       const queries = monthKeys.map(key =>
-        query(
-          collection(db, "feeds", key, "items"),
-          orderBy("createdAt", "desc"),
-          limit(PAGE_SIZE)
-        )
+        query(collection(db, "feeds", key, "items"), orderBy("createdAt", "desc"))
       );
-      snaps = await Promise.all(queries.map(q => getDocs(q)));
+      const snaps = await Promise.all(queries.map(q => getDocs(q)));
+
+      snaps.forEach(snap => {
+        snap.forEach(doc => {
+          const data = doc.data();
+          const createdAt = data.createdAt?.toDate?.() || new Date(0);
+          feeds.push({ id: doc.id, data, createdAt });
+        });
+      });
+
+      // ✅ createdAt 기준 정렬 (전월/당월 섞여도 정확)
+      feeds.sort((a, b) => b.createdAt - a.createdAt);
+
+      // ✅ 중복 제거 (혹시 동일 ID가 겹칠 경우 대비)
+      const unique = new Map();
+      feeds.forEach(f => unique.set(f.id, f));
+      feeds = [...unique.values()];
+
+      clearFeed();
+      feeds.forEach(f => renderFeedItem(f.id, f.data, "all"));
+
+      // ✅ 마지막 포인터는 최신 달 기준으로 갱신
+      const latestSnap = snaps[0];
+      if (!latestSnap.empty) {
+        lastDocAll = latestSnap.docs[latestSnap.docs.length - 1];
+      }
+
     } else {
-      // ✅ 무한 스크롤: 이번 달만 추가 로딩
+      // 무한스크롤: 이번 달만
       const q = query(
         collection(db, "feeds", monthKeys[0], "items"),
         orderBy("createdAt", "desc"),
@@ -320,25 +344,8 @@ async function loadFeeds(initial = false) {
         limit(PAGE_SIZE)
       );
       const snap = await getDocs(q);
-      snaps = [snap]; // 배열 형태로 맞춰줌
-    }
-
-    if (initial) clearFeed();
-
-    snaps.forEach((snap, idx) => {
-      // console.log(`로드된 문서 개수 (${monthKeys[idx] || "이번달"}):`, snap.docs.length);
-      snap.forEach(doc => {
-        // ✅ 중복 방지: 이미 렌더링된 ID는 스킵
-        if (!document.querySelector(`[data-id="${doc.id}"]`)) {
-          renderFeedItem(doc.id, doc.data(), "all");
-        }
-      });
-    });
-
-    // ✅ 페이지네이션 포인터는 이번 달만 갱신
-    const currentSnap = snaps[0];
-    if (!currentSnap.empty) {
-      lastDocAll = currentSnap.docs[currentSnap.docs.length - 1];
+      snap.forEach(doc => renderFeedItem(doc.id, doc.data(), "all"));
+      if (!snap.empty) lastDocAll = snap.docs[snap.docs.length - 1];
     }
   } catch (err) {
     console.error("피드 로딩 오류:", err);
@@ -346,6 +353,7 @@ async function loadFeeds(initial = false) {
     isLoadingAll = false;
   }
 }
+
 
 async function loadClassFeeds(user, initial = true) {
   if (isLoadingClass) return;
