@@ -1316,7 +1316,15 @@ const helpData = [{
     content: `안드로이드: 크롬 → 메뉴(⋮) → 홈 화면에 추가
 iOS: Safari → 공유(⬆️) → 홈 화면에 추가
 👉 운영체제/브라우저 버전에 따라 위치가 다를 수 있습니다.
-✅ 무엇이 되었든 '홈 화면에 추가'만 찾으면 앱처럼 사용할 수 있습니다.`,
+✅ 무엇이 되었든 '홈 화면에 추가'만 찾으면 앱처럼 사용할 수 있습니다.
+<br>
+📱 <strong>QR코드로 바로 접속:</strong>
+키오스크에서는 아래 QR코드를 스캔하면
+스마트폰에서도 S:NOW를 바로 열 수 있습니다.
+위의 안내를 따라 '홈 화면에 추가'를 하면
+앱처럼 설치하여 사용할 수도 있습니다.<br>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://eduinfo.sungil-i.kr/stu" alt="S:NOW QR코드">
+`,
     author: "S:NOW 도움말"
   },
   {
@@ -1358,8 +1366,8 @@ iOS: Safari → 공유(⬆️) → 홈 화면에 추가
     title: "저작권 및 제작 정보",
     content: `S:NOW는 성일정보고등학교 학생용 웹앱입니다.
 제작 및 운영: 성일정보고등학교 김형준 선생님
-버전: BETA 3.1
-최종 업데이트: 2025.10.15.
+버전: BETA 3.3
+최종 업데이트: 2025.10.23.
 저작권: © 2025 Sungil Information High School. All rights reserved.
 무단 복제 및 배포를 금합니다.
 문의: 교육정보부 김형준`,
