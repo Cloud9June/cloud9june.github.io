@@ -4,16 +4,40 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>성일정보고 학과별 피드보드</title>
+  <!-- 스타일 -->
   <link rel="stylesheet" href="style.css" />
+  <!-- ✅ Cropper.js 안정 버전 -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/cropperjs@1.5.13/dist/cropper.min.css"
+  />
+  <script src="https://unpkg.com/cropperjs@1.5.13/dist/cropper.min.js"></script>
+  <!-- ✅ Cloudinary 위젯 -->
   <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
 </head>
 <body>
   <header>
     <h1>성일정보고 학과별 피드보드</h1>
-    <div class="auth-area">
-      <button id="loginBtn">Google 로그인</button>
-      <button id="logoutBtn" style="display:none;">로그아웃</button>
-      <button id="openPostModal" class="write-btn" style="display:none;">게시글 작성</button>
+    
+    <div class="header-controls">
+      <div class="auth-area">
+        <button id="loginBtn">Google 로그인</button>
+        <button id="logoutBtn" style="display:none;">로그아웃</button>
+        <button id="openPostModal" class="write-btn" style="display:none;">게시글 작성</button>
+      </div>
+
+      <!-- ✅ 학과 선택 셀렉트 -->
+      <select id="deptSelect" class="dept-select">
+        <option value="">학과 선택</option>
+        <option value="뷰티디자인과">뷰티디자인과</option>
+        <option value="부사관과">부사관과</option>
+        <option value="글로벌경영과">글로벌경영과</option>
+        <option value="회계정보과">회계정보과</option>
+        <option value="창업마케팅과">창업마케팅과</option>
+        <option value="AI게임콘텐츠과">AI게임콘텐츠과</option>
+        <option value="소프트웨어개발과">소프트웨어개발과</option>
+        <option value="금융경영과">금융경영과</option>
+      </select>
     </div>
   </header>
 
