@@ -1,0 +1,249 @@
+body {
+  font-family: 'Pretendard', sans-serif;
+  background-color: #f5f6fa;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  font-size: 1.8rem;
+  color: #333;
+  margin: 0 0 0 20px;
+}
+
+.auth-area {
+  display: flex;
+  align-items: center;
+  gap: 2px; /* 버튼 사이 간격 */
+  margin-right: 20px;
+}
+/* 기본 버튼 스타일 */
+button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover {
+  background: #2563eb;
+}
+
+/* 게시글 작성 버튼 */
+.write-btn {
+  margin-left: 10px;
+  padding: 6px 12px;
+  background: #10b981;
+}
+.write-btn:hover {
+  background: #059669;
+}
+
+/* 학과별 피드보드 */
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  padding: 0 20px 60px;
+  width: 95vw;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.column {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.column h2 {
+  text-align: center;
+  font-size: 1rem;
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 0;
+  margin: 0;
+}
+
+/* 학과별 색상 */
+.뷰티디자인과 h2 { background-color: #f472b6; }
+.부사관과 h2 { background-color: #475569; }
+.글로벌경영과 h2 { background-color: #0ea5e9; }
+.회계정보과 h2 { background-color: #22c55e; }
+.창업마케팅과 h2 { background-color: #eab308; }
+.AI게임콘텐츠과 h2 { background-color: #8b5cf6; }
+.소프트웨어개발과 h2 { background-color: #3b82f6; }
+.금융경영과 h2 { background-color: #0284c7; }
+
+/* 카드 디자인 */
+.card {
+  background: #f9fafb;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid #e5e7eb;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+}
+.card img {
+  width: 100%;
+  aspect-ratio: 5 / 2; /* ✅ Cloudinary 크롭 비율과 동일 */
+  object-fit: cover;
+  object-position: center; /* ✅ 항상 중심 기준으로 표시 */
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+.card-content {
+  padding: 12px 14px 16px;
+}
+.card-content h3 {
+  font-size: 0.95rem;
+  color: #222;
+  margin: 6px 0 8px;
+}
+.card-content p {
+  font-size: 0.85rem;
+  color: #444;
+  line-height: 1.5;
+  margin: 0;
+}
+.author {
+  font-size: 0.75rem;
+  color: #777;
+  text-align: right;
+  margin-top: 8px;
+  border-top: 1px dashed #ddd;
+  padding-top: 6px;
+}
+
+.card .actions {
+  text-align: right;
+  margin-top: 6px;
+  font-size: 0.8rem;
+}
+
+.card .actions button {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0;
+  margin-left: 6px;
+  transition: color 0.2s ease;
+}
+
+.card .actions button:hover {
+  text-decoration: underline;
+  color: #1d4ed8;
+}
+
+/* ✨ 모달(팝업) 스타일 */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px 25px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.close {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  font-size: 1.5rem;
+  color: #444;
+  cursor: pointer;
+}
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  margin: 6px 0 12px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+.modal-content button {
+  width: 100%;
+  padding: 10px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.modal-content button:hover {
+  background: #2563eb;
+}
+
+#previewImage {
+  display: none;
+  width: 100%;
+  height: 160px; /* ✅ 실제 피드 카드 비율과 동일 */
+  object-fit: cover; /* ✅ 비율 유지하며 자르기 */
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-top: 8px;
+}
+
+
+/* ✅ 로딩 스피너 스타일 */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 반응형 */
+@media (max-width: 1600px) {
+  .board { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 768px) {
+  .board { grid-template-columns: repeat(1, 1fr); }
+}
