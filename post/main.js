@@ -1,4 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -50,40 +52,92 @@ const closeModal = document.getElementById("closeModal");
 const modalTitle = document.getElementById("modalTitle");
 const submitBtn = document.getElementById("submitBtn");
 const previewImage = document.getElementById("previewImage");
+const uploadWidgetBtn = document.getElementById("uploadWidgetBtn");
 const deleteImageBtn = document.getElementById("deleteImageBtn");
 
 let uploadedImageUrl = "";
-let imageDeleted = false; // ✅ 이미지 삭제 여부 추적
+let imageDeleted = false;
 
-// ✅ Cloudinary Upload Widget (Crop 기능)
-const uploadWidgetBtn = document.getElementById("uploadWidgetBtn");
+// ✅ Cropper.js 기반 이미지 선택 + 크롭
 if (uploadWidgetBtn) {
-  const widget = cloudinary.createUploadWidget(
-    {
-      cloudName: CLOUD_NAME,
-      uploadPreset: UPLOAD_PRESET,
-      cropping: true,
-      croppingAspectRatio: 5 / 2, // ✅ 피드 비율
-      multiple: false,
-      folder: "images",
-      sources: ["local", "camera"],
-      clientAllowedFormats: ["jpg", "jpeg", "png"],
-      maxImageFileSize: 5 * 1024 * 1024, // 5MB
-    },
-    (error, result) => {
-      if (!error && result && result.event === "success") {
-        uploadedImageUrl = result.info.secure_url;
-        previewImage.src = uploadedImageUrl;
-        previewImage.style.display = "block";
-        deleteImageBtn.style.display = "inline-block";
-        imageDeleted = false; // 새로 업로드했으니 삭제 상태 해제
-      }
-    }
-  );
-  uploadWidgetBtn.addEventListener("click", () => widget.open(), false);
+  uploadWidgetBtn.addEventListener("click", async () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        // ✅ 크롭 모달 생성
+        const cropModal = document.createElement("div");
+        cropModal.classList.add("crop-modal");
+        cropModal.innerHTML = `
+          <div class="crop-box">
+            <img id="cropImage" src="${reader.result}" alt="crop image">
+            <div class="crop-actions">
+              <button id="cropConfirmBtn">자르기 완료</button>
+              <button id="cropCancelBtn">취소</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(cropModal);
+
+        // ✅ Cropper.js 초기화
+        const image = document.getElementById("cropImage");
+        const cropper = new Cropper(image, {
+          aspectRatio: 5 / 2,
+          viewMode: 1,
+          autoCropArea: 1,
+          responsive: true,
+          background: false,
+        });
+
+        // ✅ 자르기 완료
+        document.getElementById("cropConfirmBtn").onclick = async () => {
+          const canvas = cropper.getCroppedCanvas({ width: 1000, height: 400 });
+          const blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg"));
+          await uploadToCloudinary(blob);
+          cropper.destroy();
+          cropModal.remove();
+        };
+
+        // ✅ 취소 버튼
+        document.getElementById("cropCancelBtn").onclick = () => {
+          cropper.destroy();
+          cropModal.remove();
+        };
+      };
+      reader.readAsDataURL(file);
+    };
+
+    fileInput.click();
+  });
 }
 
-// ✅ 이미지 삭제 버튼
+
+// ✅ Cloudinary 업로드 함수
+async function uploadToCloudinary(blob) {
+  const formData = new FormData();
+  formData.append("file", blob);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+
+  uploadedImageUrl = data.secure_url;
+  previewImage.src = uploadedImageUrl;
+  previewImage.style.display = "block";
+  deleteImageBtn.style.display = "inline-block";
+  imageDeleted = false;
+}
+
+// ✅ 이미지 삭제
 if (deleteImageBtn) {
   deleteImageBtn.addEventListener("click", () => {
     if (confirm("이미지를 삭제하시겠습니까?")) {
@@ -91,7 +145,7 @@ if (deleteImageBtn) {
       previewImage.src = "";
       previewImage.style.display = "none";
       deleteImageBtn.style.display = "none";
-      imageDeleted = true; // 삭제 표시
+      imageDeleted = true;
     }
   });
 }
@@ -107,6 +161,7 @@ loginBtn.addEventListener("click", async () => {
 
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
+  location.reload(); // ✅ 새로고침
 });
 
 // ✅ 로그인 상태 감시
@@ -116,12 +171,11 @@ onAuthStateChanged(auth, async (user) => {
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-      console.log("✅ 등록된 사용자:", user.email);
       loginBtn.style.display = "none";
       logoutBtn.style.display = "inline-block";
       openPostModal.style.display = "inline-block";
     } else {
-      alert("🚫 접근 권한이 없습니다.\n관리자에게 등록 요청하세요.");
+      alert("🚫 접근 권한이 없습니다.");
       await signOut(auth);
     }
   } else {
@@ -138,10 +192,8 @@ openPostModal.addEventListener("click", () => {
   submitBtn.textContent = "등록";
   form.reset();
   uploadedImageUrl = "";
-  imageDeleted = false;
   previewImage.src = "";
   previewImage.style.display = "none";
-  deleteImageBtn.style.display = "none";
   postModal.style.display = "flex";
 });
 
@@ -150,15 +202,9 @@ closeModal.addEventListener("click", () => {
   postModal.style.display = "none";
 });
 
-// ✅ 모달 바깥 클릭 시 닫기
-window.addEventListener("click", (e) => {
-  if (e.target === postModal) postModal.style.display = "none";
-});
-
-// ✅ 등록 / 수정 공통 처리
+// ✅ 등록 및 수정
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const dept = form.dept.value;
   const title = form.title.value.trim();
   const content = form.content.value.trim();
@@ -171,10 +217,7 @@ form.addEventListener("submit", async (e) => {
   submitBtn.innerHTML = `<div class="spinner"></div> ${editId ? "수정 중..." : "등록 중..."}`;
 
   try {
-    let imageUrl = uploadedImageUrl || "";
-
     if (editId) {
-      // ✅ 수정
       const docRef = doc(db, "feeds", editId);
       const updateData = {
         dept,
@@ -182,59 +225,46 @@ form.addEventListener("submit", async (e) => {
         content,
         updatedAt: serverTimestamp(),
       };
-
-      // 🔹 이미지 상태 처리
-      if (imageDeleted) {
-        updateData.imageUrl = ""; // Firestore에서 필드 제거
-      } else if (imageUrl) {
-        updateData.imageUrl = imageUrl; // 새 이미지 반영
-      }
-
+      if (!imageDeleted && uploadedImageUrl) updateData.imageUrl = uploadedImageUrl;
+      if (imageDeleted) updateData.imageUrl = "";
       await updateDoc(docRef, updateData);
       alert("✅ 게시글이 수정되었습니다!");
     } else {
-      // ✅ 신규 등록
       await addDoc(collection(db, "feeds"), {
         dept,
         title,
         content,
-        imageUrl,
-        author: user.displayName || "000 선생님",
+        imageUrl: uploadedImageUrl,
+        author: (user.displayName ? `${user.displayName} 선생님` : "000 선생님"),
         createdAt: serverTimestamp(),
       });
       alert("✅ 게시글이 등록되었습니다!");
     }
 
-    // ✅ 초기화
     form.reset();
-    uploadedImageUrl = "";
-    imageDeleted = false;
-    previewImage.src = "";
-    previewImage.style.display = "none";
-    deleteImageBtn.style.display = "none";
     delete form.dataset.editId;
+    previewImage.style.display = "none";
     postModal.style.display = "none";
-
-  } catch (error) {
-    console.error(error);
-    alert("⚠️ 게시글 처리 중 오류가 발생했습니다.");
+  } catch (err) {
+    console.error(err);
+    alert("⚠️ 오류 발생");
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "등록";
   }
 });
 
-// ✅ 실시간 피드 반영
+// ✅ 실시간 피드
 const feedRef = collection(db, "feeds");
-const q = query(feedRef, orderBy("createdAt", "desc"));
+const q = query(feedRef, orderBy("createdAt", "asc"));
 
 onSnapshot(q, (snapshot) => {
-  document.querySelectorAll(".column").forEach(col => {
+  document.querySelectorAll(".column").forEach((col) => {
     const deptName = col.classList[1];
     col.innerHTML = `<h2>${deptName}</h2>`;
   });
 
-  snapshot.forEach(docSnap => {
+  snapshot.forEach((docSnap) => {
     const data = docSnap.data();
     const section = document.querySelector(`.${data.dept}`);
 
@@ -246,18 +276,18 @@ onSnapshot(q, (snapshot) => {
             <h3>${data.title}</h3>
             <p style="white-space: pre-line;">${data.content}</p>
             <div class="author">작성자: ${data.author}</div>
-            <div class="actions" style="margin-top:6px;text-align:right;">
-              <button class="editBtn">수정</button>
-              <button class="deleteBtn">삭제</button>
-            </div>
+            ${
+              auth.currentUser
+                ? `<div class="actions"><button class="editBtn">수정</button><button class="deleteBtn">삭제</button></div>`
+                : ""
+            }
           </div>
-        </div>
-      `;
+        </div>`;
     }
   });
 
-  // ✏️ 수정 이벤트
-  document.querySelectorAll(".editBtn").forEach(btn => {
+  // 수정 / 삭제 이벤트
+  document.querySelectorAll(".editBtn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const card = e.target.closest(".card");
       const id = card.dataset.id;
@@ -269,37 +299,57 @@ onSnapshot(q, (snapshot) => {
       modalTitle.textContent = "게시글 수정";
       submitBtn.textContent = "수정 완료";
       postModal.style.display = "flex";
-
-      // ✅ 기존 데이터 세팅
       form.dept.value = data.dept || "";
       form.title.value = data.title || "";
       form.content.value = data.content || "";
-
-      if (data.imageUrl) {
-        uploadedImageUrl = data.imageUrl;
-        previewImage.src = data.imageUrl;
+      uploadedImageUrl = data.imageUrl || "";
+      if (uploadedImageUrl) {
+        previewImage.src = uploadedImageUrl;
         previewImage.style.display = "block";
         deleteImageBtn.style.display = "inline-block";
-        imageDeleted = false;
-      } else {
-        previewImage.style.display = "none";
-        deleteImageBtn.style.display = "none";
-        uploadedImageUrl = "";
       }
-
       form.dataset.editId = id;
     });
   });
 
-  // 🗑️ 삭제
-  document.querySelectorAll(".deleteBtn").forEach(btn => {
+  document.querySelectorAll(".deleteBtn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
-      const card = e.target.closest(".card");
-      const id = card.dataset.id;
+      const id = e.target.closest(".card").dataset.id;
       if (confirm("정말 삭제하시겠습니까?")) {
         await deleteDoc(doc(db, "feeds", id));
         alert("게시글이 삭제되었습니다.");
       }
     });
   });
+});
+
+// ✅ 학과 선택 시 해당 섹션으로 스크롤 이동
+const deptSelect = document.getElementById("deptSelect");
+
+if (deptSelect) {
+  deptSelect.addEventListener("change", (e) => {
+    const value = e.target.value;
+    if (!value) return;
+
+    const targetSection = document.querySelector(`.${value}`);
+    if (targetSection) {
+      targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+}
+
+// ✅ 로그인 상태일 때만 셀렉트 표시
+onAuthStateChanged(auth, async (user) => {
+  const deptSelect = document.getElementById("deptSelect");
+  if (user) {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      deptSelect.style.display = "block";
+    } else {
+      deptSelect.style.display = "none";
+    }
+  } else {
+    deptSelect.style.display = "none";
+  }
 });
