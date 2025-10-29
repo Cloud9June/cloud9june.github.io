@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Pretendard', sans-serif;
   background-color: #f5f6fa;
@@ -5,11 +11,12 @@ body {
   padding: 0;
 }
 
+/* ✅ 헤더 정렬 개선 */
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 40px;
+  padding: 10px 20px;
   background: #fff;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   position: sticky;
@@ -21,15 +28,14 @@ header {
 header h1 {
   font-size: 1.8rem;
   color: #333;
-  margin: 0 0 0 20px;
 }
 
 .auth-area {
   display: flex;
   align-items: center;
-  gap: 2px; /* 버튼 사이 간격 */
-  margin-right: 20px;
+  gap: 6px; /* ✅ 버튼 사이 간격 넓힘 */
 }
+
 /* 기본 버튼 스타일 */
 button {
   padding: 6px 12px;
@@ -109,9 +115,9 @@ button:hover {
 }
 .card img {
   width: 100%;
-  aspect-ratio: 5 / 2; /* ✅ Cloudinary 크롭 비율과 동일 */
+  aspect-ratio: 5 / 3;
   object-fit: cover;
-  object-position: center; /* ✅ 항상 중심 기준으로 표시 */
+  object-position: center;
   border-bottom: 1px solid #e5e7eb;
   border-radius: 8px;
 }
@@ -158,6 +164,18 @@ button:hover {
 .card .actions button:hover {
   text-decoration: underline;
   color: #1d4ed8;
+}
+
+/* ✅ 게시글 작성 폼 버튼 간격 */
+#uploadWidgetBtn,
+#deleteImageBtn {
+  margin-bottom: 10px;
+}
+
+#postForm button {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
 }
 
 /* ✨ 모달(팝업) 스타일 */
@@ -211,18 +229,69 @@ button:hover {
   background: #2563eb;
 }
 
+/* ✅ 미리보기 이미지 */
 #previewImage {
   display: none;
   width: 100%;
-  height: 160px; /* ✅ 실제 피드 카드 비율과 동일 */
-  object-fit: cover; /* ✅ 비율 유지하며 자르기 */
+  height: 180px;
+  object-fit: cover;
   border-radius: 8px;
   border: 1px solid #ddd;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
+/* ✅ Cropper.js 모달 스타일 */
+.crop-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
 
-/* ✅ 로딩 스피너 스타일 */
+.crop-box {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 90%;
+  max-height: 90%;
+  text-align: center;
+}
+
+.crop-box img {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+}
+
+.crop-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 12px; /* ✅ 버튼 간격 */
+}
+
+.crop-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#cropConfirmBtn {
+  background: #3b82f6;
+  color: white;
+}
+#cropCancelBtn {
+  background: #aaa;
+  color: white;
+}
+
+/* ✅ 로딩 스피너 */
 .spinner {
   display: inline-block;
   width: 14px;
@@ -234,16 +303,49 @@ button:hover {
   animation: spin 0.8s linear infinite;
   vertical-align: middle;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* 반응형 */
+/* ✅ 반응형 */
 @media (max-width: 1600px) {
   .board { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* ✅ 기본 숨김 */
+.dept-select {
+  display: none;
+  margin-top: 8px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  width: 100%;
+}
+
+/* ✅ 모바일 전용 */
 @media (max-width: 768px) {
   .board { grid-template-columns: repeat(1, 1fr); }
+  header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .header-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .auth-area {
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .dept-select {
+    display: block;
+  }
 }
