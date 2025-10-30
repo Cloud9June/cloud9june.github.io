@@ -4,7 +4,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import {
   getFirestore,
@@ -14,10 +14,9 @@ import {
   addDoc,
   query,
   orderBy,
-  where,
   onSnapshot,
   serverTimestamp,
-  updateDoc
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 // ✅ Firebase 설정
@@ -56,6 +55,64 @@ const deleteImageBtn = document.getElementById("deleteImageBtn");
 let uploadedImageUrl = "";
 let imageDeleted = false;
 
+// ✅ Quill 구분선(HR) 블롯 등록
+const BlockEmbed = Quill.import("blots/block/embed");
+class DividerBlot extends BlockEmbed {
+  static create() {
+    const node = super.create();
+    node.setAttribute("class", "ql-divider");
+    return node;
+  }
+}
+DividerBlot.blotName = "hr";
+DividerBlot.tagName = "hr";
+Quill.register(DividerBlot);
+
+// ✅ Quill 에디터 초기화
+let quill;
+window.addEventListener("DOMContentLoaded", () => {
+  const editorContainer = document.getElementById("quillEditor");
+  if (editorContainer) {
+    quill = new Quill("#quillEditor", {
+      theme: "snow",
+      placeholder: "내용을 입력하세요...",
+      modules: {
+        toolbar: {
+          container: [
+            ["bold", "italic", "underline", "strike"],
+            // ["blockquote", "code-block"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link"],
+            ["hr"],
+          ],
+          handlers: {
+            // ✅ 구분선 버튼 동작 정의
+            hr: function () {
+              const range = this.quill.getSelection(true);
+              this.quill.insertEmbed(range.index, "hr", true, Quill.sources.USER);
+              this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+            },
+          },
+        },
+      },
+    });
+    const hrButton = document.querySelector(".ql-hr");
+    if (hrButton) {
+      hrButton.innerHTML = "_"; // 수평선 느낌 아이콘
+      // hrButton.title = "구분선 넣기";
+      hrButton.style.fontSize = "16px";
+      hrButton.style.fontWeight = "700";
+      hrButton.style.color = "#333";
+      hrButton.style.minWidth = "28px";
+      hrButton.style.textAlign = "center";
+      hrButton.style.opacity = "1";
+      hrButton.style.transition = "background 0.2s";
+      hrButton.style.cursor = "pointer";
+    }
+  }
+});
+
+
 // ✅ Cropper.js 기반 이미지 선택 + 크롭
 if (uploadWidgetBtn) {
   uploadWidgetBtn.addEventListener("click", async () => {
@@ -93,7 +150,9 @@ if (uploadWidgetBtn) {
 
         document.getElementById("cropConfirmBtn").onclick = async () => {
           const canvas = cropper.getCroppedCanvas({ width: 1000, height: 400 });
-          const blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg"));
+          const blob = await new Promise((res) =>
+            canvas.toBlob(res, "image/jpeg")
+          );
           await uploadToCloudinary(blob);
           cropper.destroy();
           cropModal.remove();
@@ -117,10 +176,13 @@ async function uploadToCloudinary(blob) {
   formData.append("file", blob);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-    method: "POST",
-    body: formData,
-  });
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
   const data = await res.json();
 
   uploadedImageUrl = data.secure_url;
@@ -158,7 +220,7 @@ logoutBtn.addEventListener("click", async () => {
   location.reload();
 });
 
-// ✅ 로그인 상태 감시 (통합 버전)
+// ✅ 로그인 상태 감시
 onAuthStateChanged(auth, async (user) => {
   const deptSelect = document.getElementById("deptSelect");
 
@@ -171,7 +233,6 @@ onAuthStateChanged(auth, async (user) => {
       logoutBtn.style.display = "inline-block";
       openPostModal.style.display = "inline-block";
 
-      // ✅ 모바일 화면일 때만 학과 선택 셀렉트 표시
       if (window.matchMedia("(max-width: 768px)").matches) {
         deptSelect.style.display = "block";
       } else {
@@ -210,6 +271,7 @@ openPostModal.addEventListener("click", () => {
   modalTitle.textContent = "게시글 작성";
   submitBtn.textContent = "등록";
   form.reset();
+  quill.root.innerHTML = ""; // ✅ 에디터 초기화
   uploadedImageUrl = "";
   previewImage.src = "";
   previewImage.style.display = "none";
@@ -226,20 +288,25 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const dept = form.dept.value;
   const title = form.title.value.trim();
-  const content = form.content.value.trim();
+  const content = quill.root.innerHTML.trim(); // ✅ Quill 내용
   const user = auth.currentUser;
   const editId = form.dataset.editId || null;
 
   if (!user) return alert("로그인이 필요합니다.");
+  if (!content || content === "<p><br></p>")
+    return alert("내용을 입력하세요.");
 
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<div class="spinner"></div> ${editId ? "수정 중..." : "등록 중..."}`;
+  submitBtn.innerHTML = `<div class="spinner"></div> ${
+    editId ? "수정 중..." : "등록 중..."
+  }`;
 
   try {
     if (editId) {
       const docRef = doc(db, "feeds", editId);
       const updateData = { dept, title, content, updatedAt: serverTimestamp() };
-      if (!imageDeleted && uploadedImageUrl) updateData.imageUrl = uploadedImageUrl;
+      if (!imageDeleted && uploadedImageUrl)
+        updateData.imageUrl = uploadedImageUrl;
       if (imageDeleted) updateData.imageUrl = "";
       await updateDoc(docRef, updateData);
       alert("✅ 게시글이 수정되었습니다!");
@@ -249,15 +316,16 @@ form.addEventListener("submit", async (e) => {
         title,
         content,
         imageUrl: uploadedImageUrl,
-        author: (user.displayName ? `${user.displayName} 선생님` : "000 선생님"),
+        author: user.displayName ? `${user.displayName} 선생님` : "000 선생님",
         authorUid: user.uid,
-        deleted: false, // ✅ 기본값 추가
+        deleted: false,
         createdAt: serverTimestamp(),
       });
       alert("✅ 게시글이 등록되었습니다!");
     }
 
     form.reset();
+    quill.root.innerHTML = ""; // ✅ 에디터 리셋
     delete form.dataset.editId;
     previewImage.style.display = "none";
     postModal.style.display = "none";
@@ -271,10 +339,16 @@ form.addEventListener("submit", async (e) => {
 });
 
 // ✅ 실시간 피드 (deleted=false 또는 필드 없음만 표시)
+let isRendering = false; // 🔹 중복 렌더링 방지용 플래그
+
 const feedRef = collection(db, "feeds");
 const q = query(feedRef, orderBy("createdAt", "asc"));
 
 onSnapshot(q, async (snapshot) => {
+  if (isRendering) return; // 🚫 이미 렌더링 중이면 중복 방지
+  isRendering = true;
+
+  // ✅ 모든 학과 컬럼 초기화
   document.querySelectorAll(".column").forEach((col) => {
     const deptName = col.classList[1];
     col.innerHTML = `<h2>${deptName}</h2>`;
@@ -283,33 +357,32 @@ onSnapshot(q, async (snapshot) => {
   const currentUser = auth.currentUser;
   let currentRole = "teacher";
 
-  // ✅ 현재 로그인한 유저 role 불러오기
+  // ✅ 로그인한 사용자 권한(role) 가져오기
   if (currentUser) {
     const userRef = doc(db, "users", currentUser.uid);
     const userSnap = await getDoc(userRef);
-    if (userSnap.exists()) {
-      currentRole = userSnap.data().role || "teacher";
-    }
+    if (userSnap.exists()) currentRole = userSnap.data().role || "teacher";
   }
 
+  // ✅ 피드 렌더링
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
     const section = document.querySelector(`.${data.dept}`);
     if (!section) return;
-
     if (data.deleted === true) return; // 삭제된 글 숨기기
 
-    // ✅ 본인 글 or 관리자일 때만 수정/삭제 버튼 보이기
     const canEditOrDelete =
       (currentUser && data.authorUid === currentUser.uid) ||
       currentRole === "admin";
 
-    section.innerHTML += `
+    section.insertAdjacentHTML(
+      "beforeend",
+      `
       <div class="card" data-id="${docSnap.id}">
         ${data.imageUrl ? `<img src="${data.imageUrl}" alt="">` : ""}
         <div class="card-content">
           <h3>${data.title}</h3>
-          <p style="white-space: pre-line;">${data.content}</p>
+          <div class="content">${data.content}</div>
           <div class="author">작성자: ${data.author}</div>
           ${
             canEditOrDelete
@@ -320,10 +393,11 @@ onSnapshot(q, async (snapshot) => {
               : ""
           }
         </div>
-      </div>`;
+      </div>`
+    );
   });
 
-  // ✏️ 수정 버튼 이벤트
+  // ✏️ 수정 버튼
   document.querySelectorAll(".editBtn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const card = e.target.closest(".card");
@@ -333,25 +407,20 @@ onSnapshot(q, async (snapshot) => {
       if (!docSnap.exists()) return alert("데이터를 불러올 수 없습니다.");
 
       const data = docSnap.data();
-
-      // ✅ 현재 로그인한 사용자 정보 가져오기
       const currentUser = auth.currentUser;
       const userRef = doc(db, "users", currentUser.uid);
       const userSnap = await getDoc(userRef);
       const role = userSnap.exists() ? userSnap.data().role : "teacher";
 
-      // ✅ 권한 확인: 관리자 or 본인 글만 수정 가능
-      if (data.authorUid !== currentUser.uid && role !== "admin") {
+      if (data.authorUid !== currentUser.uid && role !== "admin")
         return alert("⚠️ 본인 작성 글 또는 관리자만 수정할 수 있습니다.");
-      }
 
-      // ✅ 수정 모달 열기
       modalTitle.textContent = "게시글 수정";
       submitBtn.textContent = "수정 완료";
       postModal.style.display = "flex";
       form.dept.value = data.dept || "";
       form.title.value = data.title || "";
-      form.content.value = data.content || "";
+      quill.root.innerHTML = data.content || ""; // ✅ Quill 내용 반영
       uploadedImageUrl = data.imageUrl || "";
       if (uploadedImageUrl) {
         previewImage.src = uploadedImageUrl;
@@ -362,7 +431,7 @@ onSnapshot(q, async (snapshot) => {
     });
   });
 
-  // 🗑️ 삭제 버튼 이벤트
+  // 🗑️ 삭제 버튼
   document.querySelectorAll(".deleteBtn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const id = e.target.closest(".card").dataset.id;
@@ -375,10 +444,8 @@ onSnapshot(q, async (snapshot) => {
       const userSnap = await getDoc(userRef);
       const role = userSnap.exists() ? userSnap.data().role : "teacher";
 
-      // ✅ 권한 확인: 관리자 or 본인 글만 삭제 가능
-      if (data.authorUid !== currentUser.uid && role !== "admin") {
+      if (data.authorUid !== currentUser.uid && role !== "admin")
         return alert("⚠️ 본인 작성 글 또는 관리자만 삭제할 수 있습니다.");
-      }
 
       if (confirm("정말 삭제하시겠습니까?")) {
         await updateDoc(docRef, { deleted: true, deletedAt: serverTimestamp() });
@@ -386,6 +453,8 @@ onSnapshot(q, async (snapshot) => {
       }
     });
   });
+
+  isRendering = false; // ✅ 렌더링 완료 후 해제
 });
 
 
@@ -396,6 +465,7 @@ if (deptSelect) {
     const value = e.target.value;
     if (!value) return;
     const targetSection = document.querySelector(`.${value}`);
-    if (targetSection) targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (targetSection)
+      targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
