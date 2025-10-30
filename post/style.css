@@ -129,11 +129,14 @@ button:hover {
   color: #222;
   margin: 6px 0 8px;
 }
-.card-content p {
+.card-content .content {
   font-size: 0.85rem;
   color: #444;
   line-height: 1.5;
   margin: 0;
+}
+.card-content .content p {
+  margin: 3px;
 }
 .author {
   font-size: 0.75rem;
@@ -289,6 +292,57 @@ button:hover {
 #cropCancelBtn {
   background: #aaa;
   color: white;
+}
+
+/* ✅ Quill 툴바: 완전 가로 한 줄로 정렬 */
+.ql-toolbar.ql-snow {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;  /* ✅ 왼쪽 정렬 */
+  overflow-x: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px 8px 0 0;
+  background: #fafafa;
+}
+
+/* ✅ 툴바 안 아이콘 크기 키우기 */
+.ql-toolbar.ql-snow button svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+/* ✅ 각 그룹 간 여백 */
+.ql-toolbar.ql-snow .ql-formats {
+  margin: 0 !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+}
+
+/* ✅ 에디터 본문 */
+.ql-container.ql-snow {
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  min-height: 200px;
+  background: #fff;
+  font-size: 15px;
+  line-height: 1.6;
+  transition: height 0.25s ease;
+  overflow: visible !important;
+}
+
+.ql-toolbar.ql-expanded {
+  height: 90px; /* 필요에 따라 조절 */
+}
+
+/* Quill 구분선(hr) 스타일 */
+.ql-toolbar .ql-hr {
+  background: #fff;
+  transition: 0.2s;
+}
+.ql-toolbar .ql-hr:hover {
+  color: #3b82f6 !important;
 }
 
 /* ✅ 로딩 스피너 */
