@@ -90,6 +90,10 @@ button:hover {
   margin: 0;
 }
 
+#quillEditor {
+  margin-bottom: 10px;
+}
+
 /* 학과별 색상 */
 .뷰티디자인과 h2 { background-color: #f472b6; }
 .부사관과 h2 { background-color: #475569; }
@@ -177,8 +181,7 @@ button:hover {
 
 #postForm button {
   width: 100%;
-  box-sizing: border-box;
-  margin-top: 6px;
+  box-sizing: border-box; 
 }
 
 /* ✨ 모달(팝업) 스타일 */
@@ -304,6 +307,9 @@ button:hover {
   border: 1px solid #ccc;
   border-radius: 8px 8px 0 0;
   background: #fafafa;
+  position: relative;
+  z-index: 2001 !important;
+  overflow: visible;
 }
 
 /* ✅ 툴바 안 아이콘 크기 키우기 */
@@ -319,6 +325,14 @@ button:hover {
   justify-content: flex-start !important;
 }
 
+/* ✅ 팔레트도 툴바 기준으로 표시 */
+.ql-toolbar .ql-picker-options {
+  position: absolute !important;
+  z-index: 2002 !important; /* 툴바보다 위 */
+  top: 100% !important;
+  left: 0;
+}
+
 /* ✅ 에디터 본문 */
 .ql-container.ql-snow {
   border: 1px solid #ccc;
@@ -329,7 +343,6 @@ button:hover {
   font-size: 15px;
   line-height: 1.6;
   transition: height 0.25s ease;
-  overflow: visible !important;
 }
 
 .ql-toolbar.ql-expanded {
@@ -344,6 +357,11 @@ button:hover {
 .ql-toolbar .ql-hr:hover {
   color: #3b82f6 !important;
 }
+
+.ql-container {
+  cursor: text; /* 빈 곳 클릭 시 텍스트 입력 느낌 */
+}
+
 
 /* ✅ 로딩 스피너 */
 .spinner {
