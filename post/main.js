@@ -80,6 +80,7 @@ window.addEventListener("DOMContentLoaded", () => {
         toolbar: {
           container: [
             ["bold", "italic", "underline", "strike"],
+            [{ color: [] }, { background: [] }],
             // ["blockquote", "code-block"],
             [{ list: "ordered" }, { list: "bullet" }],
             ["link"],
@@ -455,6 +456,18 @@ onSnapshot(q, async (snapshot) => {
   });
 
   isRendering = false; // ✅ 렌더링 완료 후 해제
+});
+
+// ✅ Quill 에디터 전체 클릭 시 포커스 이동
+document.addEventListener("click", (e) => {
+  const editorContainer = document.querySelector(".ql-container");
+  const editor = document.querySelector(".ql-editor");
+  if (!editorContainer || !editor) return;
+
+  // 빈 영역 클릭 시 포커스 부여
+  if (editorContainer.contains(e.target) && !editor.contains(e.target)) {
+    quill.focus();
+  }
 });
 
 
