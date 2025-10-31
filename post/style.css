@@ -30,6 +30,10 @@ header h1 {
   color: #333;
 }
 
+header h1 br {
+  display: none;
+}
+
 .auth-area {
   display: flex;
   align-items: center;
@@ -120,9 +124,16 @@ button:active {
 .deleteBtn,
 .editBtn {
   background: #fff !important;
-  border: 1px solid #d1d5db !important;
   color: #333 !important;
 }
+
+.editBtn {
+  color: #3b82f6 !important;
+}
+.deleteBtn {
+  color: coral !important;
+}
+
 #loginBtn:hover,
 #logoutBtn:hover,
 #deleteImageBtn:hover,
@@ -475,24 +486,60 @@ button:active {
 @media (max-width: 768px) {
   .board { grid-template-columns: repeat(1, 1fr); }
   header {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
+    height: auto;
+    padding: 8px 12px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
   }
 
-  .header-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
+  header h1 {
+    font-size: 1.1rem;        /* 제목 크기 줄임 */
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    text-align: left;
+  }
+
+  header h1 br {
+    display: inline;
   }
 
   .auth-area {
-    justify-content: center;
-    gap: 8px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
   }
 
+  .auth-area button,
+  .auth-area select {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    height: 28px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    color: #333;
+    transition: 0.2s ease;
+  }
+
+  /* ✅ hover 시 subtle 효과 */
+  .auth-area button:hover,
+  .auth-area select:hover {
+    background: #f0f0f0;
+  }
+
+  /* ✅ 버튼 색상 구분 제거 */
+  .auth-area button {
+    background: #f9f9f9;
+  }
+
+  /* ✅ 셀렉트박스는 항상 표시 */
   .dept-select {
-    display: block;
+    display: block !important;
+    font-size: 0.7em;
+    color: #333;
+    height: 28px;
+    line-height: 28px;
   }
 }
