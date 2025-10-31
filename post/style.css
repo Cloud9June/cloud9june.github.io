@@ -143,6 +143,7 @@ button:hover {
   margin: 3px;
 }
 .card-content .content ul {
+  margin-top: 2px;
   padding-left: 20px;
 }
 
