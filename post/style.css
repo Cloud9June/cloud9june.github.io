@@ -142,6 +142,10 @@ button:hover {
 .card-content .content p {
   margin: 3px;
 }
+.card-content .content ul {
+  padding-left: 20px;
+}
+
 .author {
   font-size: 0.75rem;
   color: #777;
@@ -361,7 +365,6 @@ button:hover {
 .ql-container {
   cursor: text; /* 빈 곳 클릭 시 텍스트 입력 느낌 */
 }
-
 
 /* ✅ 로딩 스피너 */
 .spinner {
