@@ -233,12 +233,6 @@ onAuthStateChanged(auth, async (user) => {
       loginBtn.style.display = "none";
       logoutBtn.style.display = "inline-block";
       openPostModal.style.display = "inline-block";
-
-      if (window.matchMedia("(max-width: 768px)").matches) {
-        deptSelect.style.display = "block";
-      } else {
-        deptSelect.style.display = "none";
-      }
     } else {
       alert("🚫 접근 권한이 없습니다.");
       await signOut(auth);
@@ -250,6 +244,23 @@ onAuthStateChanged(auth, async (user) => {
     postModal.style.display = "none";
     deptSelect.style.display = "none";
   }
+
+  function updateDeptSelectVisibility() {
+    const deptSelect = document.getElementById("deptSelect");
+    if (!deptSelect) return;
+
+    if (window.innerWidth <= 768) {
+      deptSelect.style.display = "block";  // 모바일 화면이면 표시
+    } else {
+      deptSelect.style.display = "none";   // PC 화면이면 숨김
+    }
+  }
+
+  // 초기 상태에서 한 번 실행
+  updateDeptSelectVisibility();
+
+  // 화면 크기 변경 시 자동 반응
+  window.addEventListener("resize", updateDeptSelectVisibility);
 });
 
 // ✅ 화면 크기 변경 시 처리
@@ -509,7 +520,15 @@ if (deptSelect) {
     const value = e.target.value;
     if (!value) return;
     const targetSection = document.querySelector(`.${value}`);
-    if (targetSection)
-      targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (targetSection) {
+      const headerHeight = document.querySelector("header").offsetHeight; // 헤더 높이
+      const elementTop = targetSection.getBoundingClientRect().top + window.scrollY;
+      
+      // ✅ 스무스하게 스크롤하되, 헤더 높이만큼 덜 이동
+      window.scrollTo({
+        top: elementTop - headerHeight - 10, // 약간 여유 있게 (-10)
+        behavior: "smooth",
+      });
+    }
   });
 }
