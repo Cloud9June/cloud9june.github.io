@@ -470,6 +470,37 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// ✅ 스크롤 시 헤더 투명도 변경
+window.addEventListener("scroll", () => {
+  const header = document.querySelector("header");
+  const scrollY = window.scrollY;
+
+  if (scrollY > 20) {
+    header.style.background = "rgba(255, 255, 255, 0.2)";
+    header.style.backdropFilter = "blur(2px)";
+    header.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
+  } else {
+    header.style.background = "#fff";
+    header.style.backdropFilter = "none";
+    header.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.05)";
+  }
+});
+
+// ✅ 맨 위로 버튼 제어
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+window.addEventListener("scroll", () => {
+  if (window.scrollY > 200) {
+    scrollTopBtn.classList.add("show");
+  } else {
+    scrollTopBtn.classList.remove("show");
+  }
+});
+
+scrollTopBtn.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
 
 // ✅ 학과 선택 스크롤
 const deptSelect = document.getElementById("deptSelect");
