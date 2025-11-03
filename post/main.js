@@ -10,6 +10,7 @@ import {
   getFirestore,
   doc,
   getDoc,
+  setDoc,
   collection,
   addDoc,
   query,
@@ -221,23 +222,54 @@ logoutBtn.addEventListener("click", async () => {
   location.reload();
 });
 
-// ✅ 로그인 상태 감시
+// ✅ 로그인 상태 감시 (업데이트 버전)
 onAuthStateChanged(auth, async (user) => {
   const deptSelect = document.getElementById("deptSelect");
 
   if (user) {
+    const email = user.email || "";
+    const domain = email.split("@")[1] || "";
+
+    // 🚫 외부 계정 차단
+    if (domain !== "sungil-i.kr") {
+      alert("학교 계정(@sungil-i.kr)으로만 로그인할 수 있습니다.");
+      await signOut(auth);
+      return;
+    }
+
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
 
-    if (userSnap.exists()) {
-      loginBtn.style.display = "none";
-      logoutBtn.style.display = "inline-block";
-      openPostModal.style.display = "inline-block";
-    } else {
-      alert("🚫 접근 권한이 없습니다.");
-      await signOut(auth);
+    // ✅ Firestore에 사용자 정보 없으면 자동 등록 (viewer 기본권한)
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        name: user.displayName || "이름 없음",
+        email: user.email,
+        role: "viewer",
+        createdAt: serverTimestamp(),
+      });
+      alert(
+        "학교 계정으로 최초 로그인되었습니다.\n현재는 '열람 전용(viewer)' 상태이며, 관리자가 권한을 부여하면 글쓰기가 가능합니다."
+      );
     }
+
+    // ✅ Firestore에서 role 확인
+    const updatedSnap = await getDoc(userRef);
+    const role = updatedSnap.exists() ? updatedSnap.data().role : "viewer";
+
+    // ✅ UI 표시 제어 (기존 로직 유지 + role 반영)
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+
+    if (role === "viewer") {
+      openPostModal.style.display = "none"; // 글쓰기 버튼 비활성화
+    } else {
+      openPostModal.style.display = "inline-block"; // teacher, admin 가능
+    }
+
   } else {
+    // 🚪 로그아웃 상태
     loginBtn.style.display = "inline-block";
     logoutBtn.style.display = "none";
     openPostModal.style.display = "none";
@@ -245,6 +277,7 @@ onAuthStateChanged(auth, async (user) => {
     deptSelect.style.display = "none";
   }
 
+  // ✅ 반응형 학과 선택 셀렉트박스 표시 제어 (기존 유지)
   function updateDeptSelectVisibility() {
     const deptSelect = document.getElementById("deptSelect");
     if (!deptSelect) return;
@@ -256,12 +289,10 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  // 초기 상태에서 한 번 실행
   updateDeptSelectVisibility();
-
-  // 화면 크기 변경 시 자동 반응
   window.addEventListener("resize", updateDeptSelectVisibility);
 });
+
 
 // ✅ 화면 크기 변경 시 처리
 window.addEventListener("resize", () => {
