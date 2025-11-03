@@ -295,7 +295,7 @@ onAuthStateChanged(auth, async (user) => {
     const deptSelect = document.getElementById("deptSelect");
     if (!deptSelect) return;
 
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 1600) {
       deptSelect.style.display = "block";  // 모바일 화면이면 표시
     } else {
       deptSelect.style.display = "none";   // PC 화면이면 숨김
