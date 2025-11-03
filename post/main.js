@@ -210,8 +210,21 @@ if (deleteImageBtn) {
 // ✅ 로그인/로그아웃
 loginBtn.addEventListener("click", async () => {
   try {
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    const email = user.email || "";
+    const domain = email.split("@")[1] || "";
+
+    // 🚫 학교 계정 외 로그인 차단
+    if (domain !== "sungil-i.kr") {
+      alert("학교 계정(@sungil-i.kr)으로만 로그인할 수 있습니다.\n학교 계정으로 다시 시도해주세요.");
+      await signOut(auth); // 로그인 즉시 강제 로그아웃
+      return;
+    }
+
+    // ✅ 학교 계정이면 그대로 진행 → onAuthStateChanged가 UI 처리함
     location.reload();
+
   } catch (e) {
     alert("로그인 실패: " + e.message);
   }
