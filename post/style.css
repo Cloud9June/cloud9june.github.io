@@ -470,6 +470,9 @@ button:active {
 @media (max-width: 1600px) {
   .board { grid-template-columns: repeat(4, 1fr); }
 }
+@media (max-width: 1000px) {
+  .board { grid-template-columns: repeat(2, 1fr); }
+}
 
 /* ✅ 기본 숨김 */
 .dept-select {
