@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>성일정보고 합격자 조회</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      display: flex;
+      flex-direction: column;        /* ✅ 세로 방향 정렬 */
+      align-items: center;
+      justify-content: flex-start;   /* ✅ 모바일에선 중앙보다 약간 위쪽 */
+      min-height: 100vh;
+      padding: 40px 20px;            /* ✅ 위쪽에 여유 공간 */
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      padding: 25px 20px 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      color: #0d47a1;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #333;
+      font-weight: 500;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background-color: #0d47a1;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    .result {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
+      width: 320px;
+      height: 440px;
+      background: #fff;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .side {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 70px;
+      height: 100%;
+      overflow: hidden;
+      border-top-left-radius: 15px;
+      border-bottom-left-radius: 15px;
+    }
+
+    .photo {
+      position: absolute;
+      top: 20px;
+      left: 90px;
+      width: 200px;
+      height: 210px;
+      border-radius: 10px;
+      border: 2px solid #0d47a1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f8f9fa;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      text-align: center;
+      cursor: pointer; /* 모바일에서 탭 가능 */
+      touch-action: manipulation;
+      transition: transform 0.1s ease-in-out;
+    }
+
+    /* 터치 시 살짝 눌리는 효과 */
+    .photo:active {
+      transform: scale(0.97);
+    }
+
+    .photo img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .camera-btn {
+      all: unset;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .camera-btn img {
+      width: 90px;  /* ✅ 터치하기 좋은 크기 */
+      height: 90px;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+
+    .camera-hint {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: #555;
+      line-height: 1.3;
+      text-align: center;
+      user-select: none;
+    }
+
+    .info {
+      position: absolute;
+      top: 250px;
+      left: 90px;
+      width: 200px;
+    }
+
+    .info-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+    }
+
+    .info-line span.label {
+      color: #999;
+      font-weight: 500;
+    }
+
+    .info-line span.value {
+      color: #0d47a1;
+      font-weight: 700;
+    }
+
+    .congrats {
+      position: absolute;
+      bottom: 20px;
+      right: 23px;
+      width: 100%;
+      text-align: right;
+      color: #e53935;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .save-btn {
+      margin-top: 20px;
+      background-color: #e53935;
+      color: #fff;
+      font-size: 1rem;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* 꽃가루 캔버스 */
+    #confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 입력 폼 -->
+  <div class="container" id="formBox">
+    <h1>성일정보고 합격자 조회</h1>
+
+    <label for="school">중학교</label>
+    <select id="school">
+      <option value="">선택하세요</option>
+    </select>
+
+    <label for="studentId">중학교 학번</label>
+    <input type="text" id="studentId" placeholder="예: 30123" />
+
+    <label for="studentName">이름</label>
+    <input type="text" id="studentName" placeholder="예: 홍길동" />
+
+    <label for="department">지원학과</label>
+    <select id="department">
+      <option value="">선택하세요</option>
+      <option>뷰티디자인과</option>
+      <option>부사관과</option>
+      <option>글로벌경영과</option>
+      <option>회계정보과</option>
+      <option>창업마케팅과</option>
+      <option>AI게임콘텐츠과</option>
+      <option>소프트웨어개발과</option>
+    </select>
+
+    <button onclick="checkResult()">합격자 확인</button>
+  </div>
+
+  <!-- 결과 -->
+  <div class="result" id="resultBox">
+    <div class="card" id="cardArea">
+      <div class="side">
+        <svg xmlns="http://www.w3.org/2000/svg" width="70" height="440" viewBox="0 0 70 440">
+          <rect width="70" height="440" fill="#0d47a1" />
+          <style>
+            text {
+              font-family: Pretendard, sans-serif;
+              font-weight: 700;
+              fill: white;
+              font-size: 20px;
+            }
+          </style>
+          <text x="35" y="225" transform="rotate(90, 35, 220)" text-anchor="middle">
+            SUNGIL INFORMATION HIGH SCHOOL
+          </text>
+        </svg>
+      </div>
+
+      <div class="photo" id="photoArea" ontouchstart="">
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" />
+        
+        <button class="camera-btn" id="cameraButton" onclick="openCamera()">
+          <img src="./camera.png" alt="사진 업로드 버튼">
+          <div class="camera-hint">카메라 버튼을 눌러<br>나의 사진을 올려보세요</div>
+        </button>
+      </div>
+
+      <div class="info">
+        <div class="info-line"><span class="label">학교</span><span class="value">성일정보고등학교</span></div>
+        <div class="info-line"><span class="label">학과</span><span class="value" id="deptValue"></span></div>
+        <div class="info-line"><span class="label">이름</span><span class="value" id="nameValue"></span></div>
+      </div>
+
+      <div class="congrats">합격을 진심으로<br> 축하합니다</div>
+    </div>
+
+    <button class="save-btn" onclick="saveCard()">📥 캡처하기</button>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <script>
+    // ✅ 중학교 목록 자동 생성
+    const middleSchools = [
+      '경안중학교', '경화여자중학교', '곤지암중학교', '광주광남중학교', '광주중학교',
+      '금광중학교', '대원중학교', '도촌중학교', '동광중학교', '매양중학교',
+      '상원여자중학교', '성남동중학교', '성남문원중학교', '성남서중학교', '성남여자중학교',
+      '성남중학교', '성일중학교', '수진중학교', '숭신여자중학교', '야탑중학교',
+      '영성중학교', '은행중학교', '위례중앙중', '창성중학교', '초월중학교',
+      '탄벌중학교', '태전중학교', '태평중학교', '풍생중학교'
+    ];
+
+    const schoolSelect = document.getElementById('school');
+    middleSchools.forEach(school => {
+      const option = document.createElement('option');
+      option.textContent = school;
+      option.value = school;
+      schoolSelect.appendChild(option);
+    });
+
+    function checkResult() {
+      const school = document.getElementById("school").value;
+      const id = document.getElementById("studentId").value.trim();
+      const name = document.getElementById("studentName").value.trim();
+      const dept = document.getElementById("department").value;
+
+      // ✅ 중학교 학번 유효성 검사
+      if (!/^[0-9]{5}$/.test(id)) {
+        alert("중학교 학번은 숫자 5자리로 입력해주세요.");
+        return;
+      }
+      if (!id.startsWith("3")) {
+        alert("중학교 학번은 3으로 시작해야 합니다. 다시 확인해주세요.");
+        return;
+      }
+
+      if (!school || !id || !name || !dept) {
+        alert("모든 항목을 입력해주세요.");
+        return;
+      }
+      showStudentCard(name, dept);
+    }
+
+    function showStudentCard(name, dept){
+      document.getElementById("formBox").style.display="none";
+      document.getElementById("nameValue").textContent=name;
+      document.getElementById("deptValue").textContent=dept;
+      document.getElementById("resultBox").style.display="flex";
+      startConfetti();
+    }
+
+    function openCamera() {
+      document.getElementById('photoInput').click();
+    }
+
+    document.getElementById('photoInput').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const photoArea = document.getElementById('photoArea');
+        const cameraButton = document.getElementById('cameraButton');
+
+        // 배경에 업로드된 사진 표시
+        photoArea.style.backgroundImage = `url(${event.target.result})`;
+        cameraButton.style.display = 'none'; // ✅ 사진 올리면 카메라 숨기기
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('photoArea').addEventListener('click', function () {
+      const cameraButton = document.getElementById('cameraButton');
+      const hasPhoto = this.style.backgroundImage && this.style.backgroundImage !== 'none';
+      
+      // 이미 사진이 있다면 탭 시 다시 선택
+      if (hasPhoto) {
+        openCamera();
+      }
+    });
+
+    function saveCard() {
+      const card = document.getElementById('cardArea');
+      const cameraBtn = document.querySelector('.camera-btn');
+
+      // ✅ 캡처 전 버튼 숨기기
+      cameraBtn.style.display = 'none';
+
+      html2canvas(card, {
+        useCORS: true,
+        scale: 3,
+        backgroundColor: null, // 투명 배경 그대로 유지
+        logging: false
+      }).then(canvas => {
+        // ✅ 캡처 완료 후에도 버튼은 다시 표시하지 않음
+        const link = document.createElement('a');
+        link.download = '성일정보고_합격증.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // 🌸 꽃가루 효과
+    function startConfetti() {
+      const canvas = document.getElementById("confetti");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const colors = ["#e53935", "#0d47a1", "#fdd835", "#43a047"];
+      const confetti = Array.from({ length: 150 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        r: Math.random() * 6 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        tilt: Math.random() * 10 - 10,
+        d: Math.random() * 50 + 10
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach(p => {
+          ctx.beginPath();
+          ctx.fillStyle = p.color;
+          ctx.ellipse(p.x, p.y, p.r, p.r / 2, p.tilt, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+        update();
+        requestAnimationFrame(draw);
+      }
+
+      function update() {
+        confetti.forEach(p => {
+          p.y += 2;
+          p.x += Math.sin(p.d);
+          if (p.y > canvas.height) {
+            p.y = -10;
+            p.x = Math.random() * canvas.width;
+          }
+        });
+      }
+
+      draw();
+    }
+
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById("confetti");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
