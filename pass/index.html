@@ -276,7 +276,7 @@
       </div>
 
       <div class="photo" id="photoArea" ontouchstart="">
-        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" />
+        <input type="file" id="photoInput" accept="image/*" style="display:none" />
         
         <button class="camera-btn" id="cameraButton" onclick="openCamera()">
           <img src="./camera.png" alt="사진 업로드 버튼">
@@ -357,15 +357,12 @@
     document.getElementById('photoInput').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function (event) {
-        const photoArea = document.getElementById('photoArea');
-        const cameraButton = document.getElementById('cameraButton');
-
-        // 배경에 업로드된 사진 표시
-        photoArea.style.backgroundImage = `url(${event.target.result})`;
-        cameraButton.style.display = 'none'; // ✅ 사진 올리면 카메라 숨기기
+        document.getElementById('photoPreview').src = event.target.result;
+        // ✅ 사진 불러오면 카메라 아이콘/힌트 숨김
+        document.querySelector('.camera-btn').style.display = 'none';
+        document.getElementById('cameraHint').style.display = 'none';
       };
       reader.readAsDataURL(file);
     });
@@ -398,6 +395,11 @@
         link.download = '성일정보고_합격증.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
+
+        // ✅ 캡처 후 canvas 제거
+        if (canvas.parentNode) {
+          canvas.parentNode.removeChild(canvas);
+        }
       });
     }
 
