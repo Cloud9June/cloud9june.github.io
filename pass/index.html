@@ -360,15 +360,15 @@
       }
 
       // ✅ 합격자일 경우 수험표 표시
+      startConfetti();
+      window.scrollTo({ top: 0, behavior: "smooth" });
       document.getElementById("formBox").style.display = "none";
       document.getElementById("resultBox").style.display = "flex";
 
       document.getElementById("nameValue").textContent = name;
       document.getElementById("deptValue").textContent = dept;
-      document.getElementById("schoolVal").textContent = school;
-      document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
-
-      startConfetti();
+      // document.getElementById("schoolVal").textContent = school;
+      // document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
     }
 
     let isCameraOpening = false; // 중복 방지용 플래그
@@ -463,7 +463,7 @@
 
       function update() {
         confetti.forEach(p => {
-          p.y += 2;
+          p.y += 1;
           p.x += Math.sin(p.d);
           if (p.y > c.height) {
             p.y = -10;
