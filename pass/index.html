@@ -296,6 +296,7 @@
 
   <canvas id="confetti"></canvas>
 
+  <script src="data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // ✅ 중학교 목록
@@ -343,10 +344,30 @@
       if (!school || !name || !dept || !classNo || !number)
         return alert("모든 항목을 입력해주세요.");
 
+      // ✅ data.js에 있는 studentData 배열에서 합격자 찾기
+      const found = studentData.find(
+        s =>
+        s["이름"] === name &&
+        s["출신중학교"] === school &&
+        s["반"] == classNo &&
+        s["번호"] == number &&
+        s["지원학과"] === dept
+      );
+
+      if (!found) {
+        alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
+        return;
+      }
+
+      // ✅ 합격자일 경우 수험표 표시
       document.getElementById("formBox").style.display = "none";
-      document.getElementById("nameValue").textContent = name;
-      document.getElementById("deptValue").textContent = dept;
       document.getElementById("resultBox").style.display = "flex";
+
+      document.getElementById("nameVal").textContent = name;
+      document.getElementById("deptVal").textContent = dept;
+      document.getElementById("schoolVal").textContent = school;
+      document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
+
       startConfetti();
     }
 
