@@ -280,7 +280,7 @@
                     <td class="label">지원학과</td>
                 </tr>
                 <tr>
-                    <td id="deptVal"></td>                    
+                    <td id="deptVal"></td>
                 </tr>
                 <tr>
                     <td class="label">성명</td>
@@ -291,7 +291,7 @@
                     <td id="schoolVal"></td>
                 </tr>
                 <tr>
-                    <td class="label">학년·반·번호</td>                    
+                    <td class="label">학년·반·번호</td>
                     <td id="classVal"></td>
                 </tr>
             </table>
@@ -315,7 +315,8 @@
     </div>
 
     <canvas id="confetti"></canvas>
-
+    
+    <script src="data.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
         // ✅ 중학교 목록
@@ -353,21 +354,35 @@
         }
 
         function checkResult() {
-            const school = schoolSelect.value;
             const name = document.getElementById("studentName").value.trim();
+            const school = document.getElementById("school").value;
+            const classNo = document.getElementById("classSelect").value;
+            const number = document.getElementById("numberSelect").value;
             const dept = document.getElementById("department").value;
-            const classNo = classSelect.value;
-            const number = numberSelect.value;
 
-            if (!school || !name || !dept || !classNo || !number)
-                return alert("모든 항목을 입력해주세요.");
+            if (!name || !school || !classNo || !number || !dept) {
+                alert("모든 항목을 입력해주세요.");
+                return;
+            }
 
-            document.getElementById("formBox").style.display = "none";
-            document.getElementById("schoolVal").textContent = school;
-            document.getElementById("classVal").textContent = `3학년 ${classNo}반 ${number}번`;
-            document.getElementById("nameVal").textContent = name;
-            document.getElementById("deptVal").textContent = dept;
-            document.getElementById("resultBox").style.display = "flex";
+            const found = studentData.find(
+                s => s["이름"] === name &&
+                s["출신중학교"] === school &&
+                s["반"] == classNo &&
+                s["번호"] == number &&
+                s["지원학과"] === dept
+            );
+
+            if (found) {
+                document.getElementById("formBox").style.display = "none";
+                document.getElementById("resultBox").style.display = "flex";
+                document.getElementById("nameVal").textContent = name;
+                document.getElementById("deptVal").textContent = dept;
+                document.getElementById("schoolVal").textContent = school;
+                document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
+            } else {
+                alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
+            }
         }
 
         // ✅ 사진 업로드
