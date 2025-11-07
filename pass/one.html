@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>성일정보고 1차 합격자 조회</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            padding: 25px 20px 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #0d47a1;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 0.95rem;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #0d47a1;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #1565c0;
+        }
+
+        .result {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ✅ 수험표 스타일 */
+        .exam-card {
+            width: 350px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            padding: 20px;
+            border: 2px solid #0d47a1;
+        }
+
+        .exam-card h2 {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #0d47a1;
+            margin-bottom: 5px;
+        }
+
+        .year {
+            text-align: left;
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .info-table td {
+            border: 1px solid #aaa;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+
+        .info-table td.label {
+            background: #f4f6fa;
+            font-weight: 600;
+            width: 30%;
+        }
+
+        /* ✅ 사진칸 전체 */
+        .photo-cell {
+            width: 60px;
+            /* 기존보다 살짝 좁힘 (예: 기존 100 → 70) */
+            text-align: center;
+            vertical-align: top;
+            padding: 4px;
+        }
+
+        /* ✅ 사진 영역 */
+        .photo-area {
+            width: 100%;
+            height: 150px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            background-size: cover;
+            /* 업로드된 사진 꽉 채우기 */
+            background-position: center;
+            background-repeat: no-repeat;
+            font-size: 0.75rem;
+            color: #777;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.1s ease-in-out;
+        }
+
+        .photo-area:active {
+            transform: scale(0.97);
+        }
+
+
+        .section-title {
+            background: #e3e8ff;
+            text-align: center;
+            padding: 8px;
+            font-weight: 700;
+            color: #0d47a1;
+            border: 1px solid #aab3ff;
+            margin: 20px 0 10px;
+        }
+
+        .notice-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .notice-box strong {
+            color: #0d47a1;
+        }
+
+        .small-text {
+            font-size: 0.75rem;
+            color: #444;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .highlight {
+            color: #e53935;
+            font-weight: 700;
+        }
+
+        .save-btn {
+            margin-top: 20px;
+            background-color: #e53935;
+            color: #fff;
+            font-size: 1rem;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .save-btn:hover {
+            background: #c62828;
+        }
+
+        #confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ✅ 조회 폼 -->
+    <div class="container" id="formBox">
+        <h1>성일정보고 1차 합격자 조회</h1>
+
+        <label>중학교</label>
+        <select id="school">
+            <option value="">선택하세요</option>
+        </select>
+
+        <label>반</label>
+        <select id="classSelect">
+            <option value="">선택하세요</option>
+        </select>
+
+        <label>번호</label>
+        <select id="numberSelect">
+            <option value="">선택하세요</option>
+        </select>
+
+        <label>이름</label>
+        <input type="text" id="studentName" placeholder="예: 홍길동">
+
+        <label>지원학과</label>
+        <select id="department">
+            <option value="">선택하세요</option>
+            <option>뷰티디자인과</option>
+            <option>부사관과</option>
+            <option>글로벌경영과</option>
+            <option>회계정보과</option>
+            <option>창업마케팅과</option>
+            <option>AI게임콘텐츠과</option>
+            <option>소프트웨어개발과</option>
+        </select>
+
+        <button onclick="checkResult()">조회하기</button>
+    </div>
+
+    <!-- ✅ 결과 수험표 -->
+    <div class="result" id="resultBox">
+        <div class="exam-card" id="cardArea">
+            <div class="year">2025학년도</div>
+            <h2>1차 합격자 수험표</h2>
+
+            <table class="info-table">
+                <tr>
+                    <td rowspan="4" class="photo-cell">
+                        <div class="photo-area" id="photoArea" onclick="openCamera()">사진<br>업로드</div>
+                        <input type="file" id="photoInput" accept="image/*" style="display:none;">
+                    </td>
+                    <td class="label">합격구분</td>
+                </tr>
+                <tr>
+                    <td class="highlight">1차 합격</td>
+                </tr>
+                <tr>
+                    <td class="label">지원학과</td>
+                </tr>
+                <tr>
+                    <td id="deptVal"></td>                    
+                </tr>
+                <tr>
+                    <td class="label">성명</td>
+                    <td id="nameVal"></td>
+                </tr>
+                <tr>
+                    <td class="label">출신학교</td>
+                    <td id="schoolVal"></td>
+                </tr>
+                <tr>
+                    <td class="label">학년·반·번호</td>                    
+                    <td id="classVal"></td>
+                </tr>
+            </table>
+            <div class="section-title">면접고사 안내</div>
+            <div class="notice-box">
+                <p>1. 일시: <strong>2025년 11월 11일(화)</strong></p>
+                <p>2. 장소: <strong>성일정보고등학교 본관</strong></p>
+                <p>3. 준비물: 학생증 또는 신분증, 필기도구</p>
+            </div>
+
+            <div class="small-text">
+                <p><strong>[유의사항]</strong></p>
+                <p>① 면접 당일 반드시 지정된 시간에 본관으로 입실 바랍니다.</p>
+                <p>② 수험표는 면접 당일 반드시 지참해야 하며, 분실 시 재발급이 불가합니다.</p>
+                <p>③ 본교 주차장은 혼잡하오니 대중교통을 이용해 주시기 바랍니다.</p>
+                <p>④ 기타 문의사항은 입학홍보부로 연락 바랍니다.</p>
+            </div>
+        </div>
+
+        <button class="save-btn" onclick="saveCard()">📥 수험표 저장하기</button>
+    </div>
+
+    <canvas id="confetti"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        // ✅ 중학교 목록
+        const middleSchools = [
+            '경안중학교', '경화여자중학교', '곤지암중학교', '광주광남중학교', '광주중학교',
+            '금광중학교', '대원중학교', '도촌중학교', '동광중학교', '매양중학교',
+            '상원여자중학교', '성남동중학교', '성남문원중학교', '성남서중학교', '성남여자중학교',
+            '성남중학교', '성일중학교', '수진중학교', '숭신여자중학교', '야탑중학교',
+            '영성중학교', '은행중학교', '위례중앙중', '창성중학교', '초월중학교',
+            '탄벌중학교', '태전중학교', '태평중학교', '풍생중학교'
+        ];
+        const schoolSelect = document.getElementById('school');
+        middleSchools.forEach(s => {
+            const op = document.createElement('option');
+            op.textContent = s;
+            op.value = s;
+            schoolSelect.appendChild(op);
+        });
+
+        // ✅ 반 / 번호 선택
+        const classSelect = document.getElementById('classSelect');
+        for (let i = 1; i <= 20; i++) {
+            const op = document.createElement('option');
+            op.value = i;
+            op.textContent = `${i}반`;
+            classSelect.appendChild(op);
+        }
+
+        const numberSelect = document.getElementById('numberSelect');
+        for (let i = 1; i <= 25; i++) {
+            const op = document.createElement('option');
+            op.value = i;
+            op.textContent = `${i}번`;
+            numberSelect.appendChild(op);
+        }
+
+        function checkResult() {
+            const school = schoolSelect.value;
+            const name = document.getElementById("studentName").value.trim();
+            const dept = document.getElementById("department").value;
+            const classNo = classSelect.value;
+            const number = numberSelect.value;
+
+            if (!school || !name || !dept || !classNo || !number)
+                return alert("모든 항목을 입력해주세요.");
+
+            document.getElementById("formBox").style.display = "none";
+            document.getElementById("schoolVal").textContent = school;
+            document.getElementById("classVal").textContent = `3학년 ${classNo}반 ${number}번`;
+            document.getElementById("nameVal").textContent = name;
+            document.getElementById("deptVal").textContent = dept;
+            document.getElementById("resultBox").style.display = "flex";
+        }
+
+        // ✅ 사진 업로드
+        function openCamera() {
+            document.getElementById('photoInput').click();
+        }
+        document.getElementById('photoInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const photo = document.getElementById('photoArea');
+                photo.style.backgroundImage = `url(${event.target.result})`;
+                photo.textContent = "";
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ✅ 캡처 저장
+        async function saveCard() {
+            const card = document.getElementById('cardArea');
+            const saveBtn = document.querySelector('.save-btn');
+            const photo = document.getElementById('photoArea');
+
+            saveBtn.style.visibility = 'hidden';
+            photo.style.pointerEvents = 'none';
+
+            try {
+                const canvas = await html2canvas(card, {
+                    useCORS: true,
+                    scale: 3,
+                    backgroundColor: null
+                });
+
+                const link = document.createElement('a');
+                link.download = '성일정보고_1차합격_수험표.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+            } catch (err) {
+                alert("⚠️ 수험표 저장 중 오류가 발생했습니다.");
+                console.error(err);
+            } finally {
+                saveBtn.style.visibility = 'visible';
+                photo.style.pointerEvents = 'auto';
+            }
+        }
+    </script>
+</body>
+
+</html>
