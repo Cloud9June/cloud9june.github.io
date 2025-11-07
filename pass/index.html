@@ -15,11 +15,11 @@
       margin: 0;
       background: linear-gradient(135deg, #e3f2fd, #bbdefb);
       display: flex;
-      flex-direction: column;        /* ✅ 세로 방향 정렬 */
+      flex-direction: column;
       align-items: center;
-      justify-content: flex-start;   /* ✅ 모바일에선 중앙보다 약간 위쪽 */
+      justify-content: flex-start;
       min-height: 100vh;
-      padding: 40px 20px;            /* ✅ 위쪽에 여유 공간 */
+      padding: 40px 20px;
     }
 
     .container {
@@ -110,56 +110,46 @@
       height: 210px;
       border-radius: 10px;
       border: 2px solid #0d47a1;
-      overflow: hidden;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: #f8f9fa;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      text-align: center;
-      cursor: pointer; /* 모바일에서 탭 가능 */
-      touch-action: manipulation;
-      transition: transform 0.1s ease-in-out;
+      background: transparent;
+      /* ✅ 배경색 제거 */
+      cursor: pointer;
+      overflow: hidden;
     }
 
-    /* 터치 시 살짝 눌리는 효과 */
-    .photo:active {
-      transform: scale(0.97);
-    }
-
-    .photo img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      display: block;
+    #photoPreview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
     }
 
     .camera-btn {
-      all: unset;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      background: none;
+    }
+
+    .camera-btn:hover {
+      background: none;
     }
 
     .camera-btn img {
-      width: 90px;  /* ✅ 터치하기 좋은 크기 */
+      width: 90px;
       height: 90px;
       object-fit: contain;
+      /* ✅ 비율 유지 */
+      aspect-ratio: 1 / 1;
+      /* ✅ 가로세로 비율 고정 */
       opacity: 0.9;
     }
 
     .camera-hint {
-      margin-top: 10px;
+      margin-top: 8px;
       font-size: 0.8rem;
       color: #555;
-      line-height: 1.3;
       text-align: center;
-      user-select: none;
+      line-height: 1.3;
     }
 
     .info {
@@ -210,7 +200,6 @@
       cursor: pointer;
     }
 
-    /* 꽃가루 캔버스 */
     #confetti {
       position: fixed;
       top: 0;
@@ -234,8 +223,17 @@
       <option value="">선택하세요</option>
     </select>
 
-    <label for="studentId">중학교 학번</label>
-    <input type="text" id="studentId" placeholder="예: 30123" />
+    <!-- ✅ 반 선택 -->
+    <label for="classSelect">반</label>
+    <select id="classSelect">
+      <option value="">선택하세요</option>
+    </select>
+
+    <!-- ✅ 번호 선택 -->
+    <label for="numberSelect">번호</label>
+    <select id="numberSelect">
+      <option value="">선택하세요</option>
+    </select>
 
     <label for="studentName">이름</label>
     <input type="text" id="studentName" placeholder="예: 홍길동" />
@@ -269,18 +267,18 @@
               font-size: 20px;
             }
           </style>
-          <text x="35" y="225" transform="rotate(90, 35, 220)" text-anchor="middle">
+          <text x="35" y="225" transform="rotate(90,35,220)" text-anchor="middle">
             SUNGIL INFORMATION HIGH SCHOOL
           </text>
         </svg>
       </div>
 
-      <div class="photo" id="photoArea" ontouchstart="">
-        <input type="file" id="photoInput" accept="image/*" style="display:none" />
-        
+      <div class="photo" id="photoArea">
+        <img id="photoPreview" alt="학생 사진">
+        <input type="file" id="photoInput" accept="image/*" style="display:none">
         <button class="camera-btn" id="cameraButton" onclick="openCamera()">
-          <img src="./camera.png" alt="사진 업로드 버튼">
-          <div class="camera-hint">카메라 버튼을 눌러<br>나의 사진을 올려보세요</div>
+          <img src="./camera.png" alt="사진 업로드">
+          <div class="camera-hint" id="cameraHint">카메라 버튼을 눌러<br>나의 사진을 올려보세요</div>
         </button>
       </div>
 
@@ -290,7 +288,7 @@
         <div class="info-line"><span class="label">이름</span><span class="value" id="nameValue"></span></div>
       </div>
 
-      <div class="congrats">합격을 진심으로<br> 축하합니다</div>
+      <div class="congrats">합격을 진심으로<br>축하합니다</div>
     </div>
 
     <button class="save-btn" onclick="saveCard()">📥 캡처하기</button>
@@ -299,9 +297,8 @@
   <canvas id="confetti"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
   <script>
-    // ✅ 중학교 목록 자동 생성
+    // ✅ 중학교 목록
     const middleSchools = [
       '경안중학교', '경화여자중학교', '곤지암중학교', '광주광남중학교', '광주중학교',
       '금광중학교', '대원중학교', '도촌중학교', '동광중학교', '매양중학교',
@@ -310,109 +307,121 @@
       '영성중학교', '은행중학교', '위례중앙중', '창성중학교', '초월중학교',
       '탄벌중학교', '태전중학교', '태평중학교', '풍생중학교'
     ];
-
     const schoolSelect = document.getElementById('school');
-    middleSchools.forEach(school => {
-      const option = document.createElement('option');
-      option.textContent = school;
-      option.value = school;
-      schoolSelect.appendChild(option);
+    middleSchools.forEach(s => {
+      const op = document.createElement('option');
+      op.textContent = s;
+      op.value = s;
+      schoolSelect.appendChild(op);
     });
 
-    function checkResult() {
-      const school = document.getElementById("school").value;
-      const id = document.getElementById("studentId").value.trim();
-      const name = document.getElementById("studentName").value.trim();
-      const dept = document.getElementById("department").value;
-
-      // ✅ 중학교 학번 유효성 검사
-      if (!/^[0-9]{5}$/.test(id)) {
-        alert("중학교 학번은 숫자 5자리로 입력해주세요.");
-        return;
-      }
-      if (!id.startsWith("3")) {
-        alert("중학교 학번은 3으로 시작해야 합니다. 다시 확인해주세요.");
-        return;
-      }
-
-      if (!school || !id || !name || !dept) {
-        alert("모든 항목을 입력해주세요.");
-        return;
-      }
-      showStudentCard(name, dept);
+    // ✅ 반 선택 (1~20)
+    const classSelect = document.getElementById('classSelect');
+    for (let i = 1; i <= 20; i++) {
+      const op = document.createElement('option');
+      op.value = i;
+      op.textContent = `${i}반`;
+      classSelect.appendChild(op);
     }
 
-    function showStudentCard(name, dept){
-      document.getElementById("formBox").style.display="none";
-      document.getElementById("nameValue").textContent=name;
-      document.getElementById("deptValue").textContent=dept;
-      document.getElementById("resultBox").style.display="flex";
+    // ✅ 번호 선택 (1~25)
+    const numberSelect = document.getElementById('numberSelect');
+    for (let i = 1; i <= 25; i++) {
+      const op = document.createElement('option');
+      op.value = i;
+      op.textContent = `${i}번`;
+      numberSelect.appendChild(op);
+    }
+
+    function checkResult() {
+      const school = schoolSelect.value;
+      const name = document.getElementById("studentName").value.trim();
+      const dept = document.getElementById("department").value;
+      const classNo = classSelect.value;
+      const number = numberSelect.value;
+
+      if (!school || !name || !dept || !classNo || !number)
+        return alert("모든 항목을 입력해주세요.");
+
+      document.getElementById("formBox").style.display = "none";
+      document.getElementById("nameValue").textContent = name;
+      document.getElementById("deptValue").textContent = dept;
+      document.getElementById("resultBox").style.display = "flex";
       startConfetti();
     }
 
+    let isCameraOpening = false; // 중복 방지용 플래그
+
     function openCamera() {
-      document.getElementById('photoInput').click();
+      if (isCameraOpening) return; // 이미 실행 중이면 무시
+      isCameraOpening = true;
+
+      const input = document.getElementById('photoInput');
+      input.value = ''; // 같은 파일 재선택 가능
+      input.click();
+
+      // 파일창이 열릴 동안 이벤트 잠금 유지
+      setTimeout(() => (isCameraOpening = false), 1000);
     }
 
-    document.getElementById('photoInput').addEventListener('change', function (e) {
+    document.getElementById('photoInput').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function (event) {
-        document.getElementById('photoPreview').src = event.target.result;
-        // ✅ 사진 불러오면 카메라 아이콘/힌트 숨김
-        document.querySelector('.camera-btn').style.display = 'none';
-        document.getElementById('cameraHint').style.display = 'none';
+      reader.onload = ev => {
+        const preview = document.getElementById('photoPreview');
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        document.getElementById('cameraButton').style.display = 'none';
       };
       reader.readAsDataURL(file);
     });
 
-    document.getElementById('photoArea').addEventListener('click', function () {
-      const cameraButton = document.getElementById('cameraButton');
-      const hasPhoto = this.style.backgroundImage && this.style.backgroundImage !== 'none';
-      
-      // 이미 사진이 있다면 탭 시 다시 선택
-      if (hasPhoto) {
-        openCamera();
-      }
+    document.getElementById('photoArea').addEventListener('click', (e) => {
+      e.stopPropagation(); // 버블링 방지
+      openCamera();
     });
 
     function saveCard() {
       const card = document.getElementById('cardArea');
-      const cameraBtn = document.querySelector('.camera-btn');
+      const cameraBtn = document.getElementById('cameraButton');
+      const saveBtn = document.querySelector('.save-btn');
 
-      // ✅ 캡처 전 버튼 숨기기
+      // 📌 버튼 임시 숨김
       cameraBtn.style.display = 'none';
+      saveBtn.style.display = 'none';
 
-      html2canvas(card, {
-        useCORS: true,
-        scale: 3,
-        backgroundColor: null, // 투명 배경 그대로 유지
-        logging: false
-      }).then(canvas => {
-        // ✅ 캡처 완료 후에도 버튼은 다시 표시하지 않음
-        const link = document.createElement('a');
-        link.download = '성일정보고_합격증.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+      setTimeout(() => {
+        html2canvas(card, {
+          useCORS: true,
+          scale: 3,
+          backgroundColor: null
+        }).then(canvas => {
+          const link = document.createElement('a');
+          link.download = '성일정보고_합격증.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
 
-        // ✅ 캡처 후 canvas 제거
-        if (canvas.parentNode) {
-          canvas.parentNode.removeChild(canvas);
-        }
-      });
+          // ✅ 캡처 완료 후, 캡처 버튼만 다시 보이기 (사진은 그대로)
+          setTimeout(() => {
+            saveBtn.style.display = 'block';
+          }, 500);
+        });
+      }, 300);
     }
 
-    // 🌸 꽃가루 효과
+    // 🎉 꽃가루
     function startConfetti() {
-      const canvas = document.getElementById("confetti");
-      const ctx = canvas.getContext("2d");
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const c = document.getElementById("confetti"),
+        ctx = c.getContext("2d");
+      c.width = innerWidth;
+      c.height = innerHeight;
       const colors = ["#e53935", "#0d47a1", "#fdd835", "#43a047"];
-      const confetti = Array.from({ length: 150 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - canvas.height,
+      const confetti = Array.from({
+        length: 150
+      }, () => ({
+        x: Math.random() * c.width,
+        y: Math.random() * c.height - c.height,
         r: Math.random() * 6 + 4,
         color: colors[Math.floor(Math.random() * colors.length)],
         tilt: Math.random() * 10 - 10,
@@ -420,7 +429,7 @@
       }));
 
       function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, c.width, c.height);
         confetti.forEach(p => {
           ctx.beginPath();
           ctx.fillStyle = p.color;
@@ -435,21 +444,21 @@
         confetti.forEach(p => {
           p.y += 2;
           p.x += Math.sin(p.d);
-          if (p.y > canvas.height) {
+          if (p.y > c.height) {
             p.y = -10;
-            p.x = Math.random() * canvas.width;
+            p.x = Math.random() * c.width;
           }
         });
       }
-
       draw();
     }
 
     window.addEventListener('resize', () => {
-      const canvas = document.getElementById("confetti");
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const c = document.getElementById("confetti");
+      c.width = innerWidth;
+      c.height = innerHeight;
     });
   </script>
 </body>
+
 </html>
