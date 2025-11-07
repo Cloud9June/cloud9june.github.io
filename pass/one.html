@@ -380,6 +380,8 @@
                 document.getElementById("deptVal").textContent = dept;
                 document.getElementById("schoolVal").textContent = school;
                 document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
+
+                window.scrollTo({ top: 0, behavior: "smooth" });
             } else {
                 alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
             }
@@ -434,3 +436,4 @@
 </body>
 
 </html>
+
