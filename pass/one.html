@@ -83,7 +83,8 @@
 
         /* ✅ 수험표 스타일 */
         .exam-card {
-            width: 350px;
+            width: 100%;
+            max-width: 380px; /* FHD 화면에서는 여전히 예쁘게 */
             background: #fff;
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
@@ -216,6 +217,21 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
+        }
+
+        @media (max-width: 480px) {
+            .exam-card {
+                padding: 15px;
+            }
+
+            .info-table td {
+                font-size: 0.85rem;
+                padding: 6px;
+            }
+
+            h2 {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
@@ -436,4 +452,3 @@
 </body>
 
 </html>
-
