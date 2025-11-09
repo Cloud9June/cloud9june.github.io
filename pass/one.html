@@ -81,16 +81,16 @@
             align-items: center;
         }
 
-        /* ✅ 수험표 스타일 */
+        /* ✅ 반응형 수험표 */
         .exam-card {
-            width: 100%;
-            max-width: 380px; /* FHD 화면에서는 여전히 예쁘게 */
             background: #fff;
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             padding: 20px;
             border: 2px solid #0d47a1;
+            max-width: 400px;
+            width: 100%;
         }
 
         .exam-card h2 {
@@ -117,6 +117,7 @@
             border: 1px solid #aaa;
             padding: 8px;
             font-size: 0.9rem;
+            word-break: keep-all;
         }
 
         .info-table td.label {
@@ -125,16 +126,13 @@
             width: 30%;
         }
 
-        /* ✅ 사진칸 전체 */
         .photo-cell {
-            width: 60px;
-            /* 기존보다 살짝 좁힘 (예: 기존 100 → 70) */
+            width: 70px;
             text-align: center;
             vertical-align: top;
             padding: 4px;
         }
 
-        /* ✅ 사진 영역 */
         .photo-area {
             width: 100%;
             height: 150px;
@@ -142,7 +140,6 @@
             border-radius: 5px;
             background-color: #f8f9fa;
             background-size: cover;
-            /* 업로드된 사진 꽉 채우기 */
             background-position: center;
             background-repeat: no-repeat;
             font-size: 0.75rem;
@@ -158,7 +155,6 @@
         .photo-area:active {
             transform: scale(0.97);
         }
-
 
         .section-title {
             background: #e3e8ff;
@@ -185,7 +181,7 @@
             font-size: 0.75rem;
             color: #444;
             margin-top: 10px;
-            line-height: 1.4;
+            line-height: 0.7;
         }
 
         .highlight {
@@ -209,31 +205,30 @@
             background: #c62828;
         }
 
-        #confetti {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .event-box {
+            margin-top: 20px;
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 10px;
+            padding: 12px 15px;
+            max-width: 400px;
             width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
+            text-align: center;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
         }
 
-        @media (max-width: 480px) {
-            .exam-card {
-                padding: 15px;
-            }
-
-            .info-table td {
-                font-size: 0.85rem;
-                padding: 6px;
-            }
-
-            h2 {
-                font-size: 1.1rem;
-            }
+        .event-box strong {
+            color: #0d47a1;
         }
+
+        .event-box p {
+            margin: 6px 0;
+        }
+
     </style>
+
 </head>
 
 <body>
@@ -244,16 +239,6 @@
 
         <label>중학교</label>
         <select id="school">
-            <option value="">선택하세요</option>
-        </select>
-
-        <label>반</label>
-        <select id="classSelect">
-            <option value="">선택하세요</option>
-        </select>
-
-        <label>번호</label>
-        <select id="numberSelect">
             <option value="">선택하세요</option>
         </select>
 
@@ -282,6 +267,10 @@
             <h2>1차 합격자 수험표</h2>
 
             <table class="info-table">
+                <colgroup>
+                    <col width="40%">
+                    <col width="60%">
+                </colgroup>
                 <tr>
                     <td rowspan="4" class="photo-cell">
                         <div class="photo-area" id="photoArea" onclick="openCamera()">사진<br>업로드</div>
@@ -299,6 +288,10 @@
                     <td id="deptVal"></td>
                 </tr>
                 <tr>
+                    <td class="label">수험번호</td>
+                    <td id="examNoVal"></td>
+                </tr>
+                <tr>
                     <td class="label">성명</td>
                     <td id="nameVal"></td>
                 </tr>
@@ -306,32 +299,52 @@
                     <td class="label">출신학교</td>
                     <td id="schoolVal"></td>
                 </tr>
-                <tr>
-                    <td class="label">학년·반·번호</td>
-                    <td id="classVal"></td>
-                </tr>
             </table>
-            <div class="section-title">면접고사 안내</div>
+
+            <div class="section-title">입학전형 안내</div>
             <div class="notice-box">
-                <p>1. 일시: <strong>2025년 11월 11일(화)</strong></p>
-                <p>2. 장소: <strong>성일정보고등학교 본관</strong></p>
-                <p>3. 준비물: 학생증 또는 신분증, 필기도구</p>
+                <p>여러분의 성일정보고 지원을 진심으로 환영합니다.<br>
+                    아래 일정을 참고하여 면접 및 실기 전형에 차질이 없도록 준비 바랍니다.</p>
+
+                <p><strong>• 면접 및 실기 전형</strong><br>
+                    2025년 11월 11일(화) 14:00<br>
+                    <span style="color:#0d47a1; font-weight:500;">본교 지정 교실 및 운동장</span></p>
+
+                <p><strong>• 최종 합격자 발표</strong><br>
+                    2025년 11월 14일(금) 11:00<br>
+                    <span style="color:#0d47a1; font-weight:500;">본교 홈페이지</span></p>
             </div>
 
             <div class="small-text">
                 <p><strong>[유의사항]</strong></p>
-                <p>① 면접 당일 반드시 지정된 시간에 본관으로 입실 바랍니다.</p>
-                <p>② 수험표는 면접 당일 반드시 지참해야 하며, 분실 시 재발급이 불가합니다.</p>
-                <p>③ 본교 주차장은 혼잡하오니 대중교통을 이용해 주시기 바랍니다.</p>
-                <p>④ 기타 문의사항은 입학홍보부로 연락 바랍니다.</p>
+                <p>① 면접 불참 시 최하점 처리됩니다.</p>
+                <p>② 복장: 중학교 교복 또는 단정한 복장</p>
+                <p>③ 부사관과 지원자는 운동복 착용</p>
+                <p>④ 문의: ☎ <strong>031-720-1313</strong></p>
             </div>
+
         </div>
 
         <button class="save-btn" onclick="saveCard()">📥 수험표 저장하기</button>
+
+        <div class="event-box">
+            <p>📸 <strong>사진 업로드</strong> 버튼을 눌러 본인의 사진을 넣은 후,<br>
+                <strong>수험표 저장하기</strong> 버튼을 통해 1차 합격 기념 수험표를 저장하세요.</p>
+
+            <p>저장한 수험표를 <strong>인스타그램</strong>에 업로드할 때<br>
+                아래 태그를 함께 달아주세요 👇</p>
+
+            <p style="margin-top:8px;">
+                📍 <strong>@sungil_i.official</strong><br>
+                🔖 <strong>#성일정보고</strong>
+            </p>
+
+            <p style="margin-top:8px;">수험표를 인스타그램에 올리면<br>
+            왠지 <strong>좋은 일이 생길지도 몰라요 ✨</strong></p>
+        </div>
+
     </div>
 
-    <canvas id="confetti"></canvas>
-    
     <script src="data.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
@@ -352,31 +365,12 @@
             schoolSelect.appendChild(op);
         });
 
-        // ✅ 반 / 번호 선택
-        const classSelect = document.getElementById('classSelect');
-        for (let i = 1; i <= 20; i++) {
-            const op = document.createElement('option');
-            op.value = i;
-            op.textContent = `${i}반`;
-            classSelect.appendChild(op);
-        }
-
-        const numberSelect = document.getElementById('numberSelect');
-        for (let i = 1; i <= 25; i++) {
-            const op = document.createElement('option');
-            op.value = i;
-            op.textContent = `${i}번`;
-            numberSelect.appendChild(op);
-        }
-
         function checkResult() {
             const name = document.getElementById("studentName").value.trim();
             const school = document.getElementById("school").value;
-            const classNo = document.getElementById("classSelect").value;
-            const number = document.getElementById("numberSelect").value;
             const dept = document.getElementById("department").value;
 
-            if (!name || !school || !classNo || !number || !dept) {
+            if (!name || !school || !dept) {
                 alert("모든 항목을 입력해주세요.");
                 return;
             }
@@ -384,8 +378,6 @@
             const found = studentData.find(
                 s => s["이름"] === name &&
                 s["출신중학교"] === school &&
-                s["반"] == classNo &&
-                s["번호"] == number &&
                 s["지원학과"] === dept
             );
 
@@ -395,9 +387,7 @@
                 document.getElementById("nameVal").textContent = name;
                 document.getElementById("deptVal").textContent = dept;
                 document.getElementById("schoolVal").textContent = school;
-                document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
-
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                document.getElementById("examNoVal").textContent = found["수험번호"];
             } else {
                 alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
             }
@@ -419,7 +409,7 @@
             reader.readAsDataURL(file);
         });
 
-        // ✅ 캡처 저장
+        // ✅ 수험표 저장
         async function saveCard() {
             const card = document.getElementById('cardArea');
             const saveBtn = document.querySelector('.save-btn');
@@ -430,16 +420,13 @@
 
             try {
                 const canvas = await html2canvas(card, {
-                    useCORS: true,
                     scale: 3,
                     backgroundColor: null
                 });
-
                 const link = document.createElement('a');
                 link.download = '성일정보고_1차합격_수험표.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-
             } catch (err) {
                 alert("⚠️ 수험표 저장 중 오류가 발생했습니다.");
                 console.error(err);
