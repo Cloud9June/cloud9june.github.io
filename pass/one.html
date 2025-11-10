@@ -226,7 +226,6 @@
         .event-box p {
             margin: 6px 0;
         }
-
     </style>
 
 </head>
@@ -340,7 +339,7 @@
             </p>
 
             <p style="margin-top:8px;">수험표를 인스타그램에 올리면<br>
-            왠지 <strong>좋은 일이 생길지도 몰라요 ✨</strong></p>
+                왠지 <strong>좋은 일이 생길지도 몰라요 ✨</strong></p>
         </div>
 
     </div>
@@ -350,16 +349,16 @@
     <script>
         // ✅ 중학교 목록
         const middleSchools = [
-          '경안중학교', '곤지암중학교', '광주광남중학교', '광주중학교',
-          '금광중학교', '나곡중학교', '늘푸른중학교', '도촌중학교',
-          '동광중학교', '매양중학교', '보평중학교', '삼평중학교',
-          '상원여자중학교', '샛별중학교', '세정중학교', '성남동중학교',
-          '성남문원중학교', '성남서중학교', '성남여자중학교', '성남중학교',
-          '성일중학교', '손곡중학교', '송례중학교', '수진중학교',
-          '숭신여자중학교', '야탑중학교', '여주여자중학교', '영성중학교', '운중중학교',
-          '위례중학교', '위례중앙중학교', '위례한빛중학교', '장안중학교',
-          '창성중학교', '청옥중학교', '초월중학교', '탄벌중학교',
-          '태전중학교', '태평중학교', '하탑중학교', '검정고시자'
+            '경안중학교', '곤지암중학교', '광주광남중학교', '광주중학교',
+            '금광중학교', '나곡중학교', '늘푸른중학교', '대원중학교', '도촌중학교',
+            '동광중학교', '매양중학교', '보평중학교', '삼평중학교',
+            '상원여자중학교', '샛별중학교', '세정중학교', '성남동중학교',
+            '성남문원중학교', '성남서중학교', '성남여자중학교', '성남중학교',
+            '성일중학교', '손곡중학교', '송례중학교', '수진중학교',
+            '숭신여자중학교', '신현중학교', '야탑중학교', '여주여자중학교', '영성중학교', '운중중학교',
+            '위례중학교', '위례중앙중학교', '위례한빛중학교', '은행중학교', '장안중학교',
+            '창성중학교', '청옥중학교', '초월중학교', '탄벌중학교',
+            '태전중학교', '태평중학교', '풍생중학교', '하탑중학교', '검정고시자'
         ];
         const schoolSelect = document.getElementById('school');
         middleSchools.forEach(s => {
@@ -370,39 +369,39 @@
         });
 
         function normalizeName(name) {
-          return name.replace(/\s+/g, "").toLowerCase();
+            return name.replace(/\s+/g, "").toLowerCase();
         }
-        
+
         function checkResult() {
-          const name = document.getElementById("studentName").value.trim();
-          const school = document.getElementById("school").value;
-          const dept = document.getElementById("department").value;
-        
-          if (!name || !school || !dept) {
-            alert("모든 항목을 입력해주세요.");
-            return;
-          }
-        
-          const found = studentData.find(
-            s =>
-              normalizeName(s["이름"]) === normalizeName(name) &&
-              s["출신중학교"] === school &&
-              s["지원학과"] === dept
-          );
-        
-          if (found) {
-            document.getElementById("formBox").style.display = "none";
-            document.getElementById("resultBox").style.display = "flex";
-        
-            document.getElementById("nameVal").textContent = found["이름"];
-            document.getElementById("deptVal").textContent = found["지원학과"];
-            document.getElementById("schoolVal").textContent = found["출신중학교"];
-            document.getElementById("examNoVal").textContent = found["수험번호"]; // ✅ 그대로 출력
-          } else {
-            alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
-          }
+            const name = document.getElementById("studentName").value.trim();
+            const school = document.getElementById("school").value;
+            const dept = document.getElementById("department").value;
+
+            if (!name || !school || !dept) {
+                alert("모든 항목을 입력해주세요.");
+                return;
+            }
+
+            const found = studentData.find(
+                s =>
+                normalizeName(s["이름"]) === normalizeName(name) &&
+                s["출신중학교"] === school &&
+                s["지원학과"] === dept
+            );
+
+            if (found) {
+                document.getElementById("formBox").style.display = "none";
+                document.getElementById("resultBox").style.display = "flex";
+
+                document.getElementById("nameVal").textContent = found["이름"];
+                document.getElementById("deptVal").textContent = found["지원학과"];
+                document.getElementById("schoolVal").textContent = found["출신중학교"];
+                document.getElementById("examNoVal").textContent = found["수험번호"]; // ✅ 그대로 출력
+            } else {
+                alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
+            }
         }
-        
+
         // ✅ 사진 업로드
         function openCamera() {
             document.getElementById('photoInput').click();
@@ -449,8 +448,3 @@
 </body>
 
 </html>
-
-
-
-
-
