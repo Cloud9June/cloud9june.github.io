@@ -397,8 +397,7 @@
             document.getElementById("nameVal").textContent = found["이름"];
             document.getElementById("deptVal").textContent = found["지원학과"];
             document.getElementById("schoolVal").textContent = found["출신중학교"];
-            document.getElementById("examNoVal").textContent = 
-              String(found["수험번호"]).padStart(6, '0'); // ✅ 앞자리 0 유지
+            document.getElementById("examNoVal").textContent = found["수험번호"]; // ✅ 그대로 출력
           } else {
             alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
           }
@@ -450,6 +449,7 @@
 </body>
 
 </html>
+
 
 
 
