@@ -398,7 +398,11 @@
                 document.getElementById("schoolVal").textContent = found["출신중학교"];
                 document.getElementById("examNoVal").textContent = found["수험번호"]; // ✅ 그대로 출력
             } else {
-                alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
+                alert(
+                    "명단에 없습니다. 입력 정보를 다시 확인해주세요.\n\n" +
+                    "※ 입력 정보가 정확한데도 조회되지 않는 경우,\n" +
+                    "성일정보고 입학상담실(031-720-1313)로 문의해주세요."
+                );
             }
         }
 
