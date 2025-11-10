@@ -356,7 +356,7 @@
           '상원여자중학교', '샛별중학교', '세정중학교', '성남동중학교',
           '성남문원중학교', '성남서중학교', '성남여자중학교', '성남중학교',
           '성일중학교', '손곡중학교', '송례중학교', '수진중학교',
-          '숭신여자중학교', '야탑중학교', '여주여자중학교', '운중중학교',
+          '숭신여자중학교', '야탑중학교', '여주여자중학교', '영성중학교', '운중중학교',
           '위례중학교', '위례중앙중학교', '위례한빛중학교', '장안중학교',
           '창성중학교', '청옥중학교', '초월중학교', '탄벌중학교',
           '태전중학교', '태평중학교', '하탑중학교', '검정고시자'
@@ -394,11 +394,11 @@
             document.getElementById("formBox").style.display = "none";
             document.getElementById("resultBox").style.display = "flex";
         
-            // ✅ 반드시 found로 접근해야 합니다
             document.getElementById("nameVal").textContent = found["이름"];
             document.getElementById("deptVal").textContent = found["지원학과"];
             document.getElementById("schoolVal").textContent = found["출신중학교"];
-            document.getElementById("examNoVal").textContent = found["수험번호"];
+            document.getElementById("examNoVal").textContent = 
+              String(found["수험번호"]).padStart(6, '0'); // ✅ 앞자리 0 유지
           } else {
             alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
           }
@@ -450,6 +450,7 @@
 </body>
 
 </html>
+
 
 
 
