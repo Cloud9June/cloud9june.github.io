@@ -370,37 +370,38 @@
         });
 
         function normalizeName(name) {
-            return name.replace(/\s+/g, "").toLowerCase();
+          return name.replace(/\s+/g, "").toLowerCase();
         }
-
+        
         function checkResult() {
-            const name = document.getElementById("studentName").value.trim();
-            const school = document.getElementById("school").value;
-            const dept = document.getElementById("department").value;
+          const name = document.getElementById("studentName").value.trim();
+          const school = document.getElementById("school").value;
+          const dept = document.getElementById("department").value;
         
-            if (!name || !school || !dept) {
-                alert("모든 항목을 입력해주세요.");
-                return;
-            }
+          if (!name || !school || !dept) {
+            alert("모든 항목을 입력해주세요.");
+            return;
+          }
         
-            // 🔍 이름 비교 시 대소문자·띄어쓰기 무시
-            const found = studentData.find(
-                s =>
-                    normalizeName(s["이름"]) === normalizeName(name) &&
-                    s["출신중학교"] === school &&
-                    s["지원학과"] === dept
-            );
+          const found = studentData.find(
+            s =>
+              normalizeName(s["이름"]) === normalizeName(name) &&
+              s["출신중학교"] === school &&
+              s["지원학과"] === dept
+          );
         
-            if (found) {
-                document.getElementById("formBox").style.display = "none";
-                document.getElementById("resultBox").style.display = "flex";
-                document.getElementById("nameVal").textContent = s["이름"]; // 원본 이름 그대로 표시
-                document.getElementById("deptVal").textContent = dept;
-                document.getElementById("schoolVal").textContent = school;
-                document.getElementById("examNoVal").textContent = found["수험번호"];
-            } else {
-                alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
-            }
+          if (found) {
+            document.getElementById("formBox").style.display = "none";
+            document.getElementById("resultBox").style.display = "flex";
+        
+            // ✅ 반드시 found로 접근해야 합니다
+            document.getElementById("nameVal").textContent = found["이름"];
+            document.getElementById("deptVal").textContent = found["지원학과"];
+            document.getElementById("schoolVal").textContent = found["출신중학교"];
+            document.getElementById("examNoVal").textContent = found["수험번호"];
+          } else {
+            alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
+          }
         }
         
         // ✅ 사진 업로드
@@ -449,5 +450,6 @@
 </body>
 
 </html>
+
 
 
