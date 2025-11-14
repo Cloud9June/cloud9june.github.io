@@ -209,6 +209,48 @@
       pointer-events: none;
       z-index: 0;
     }
+
+    .event-box {
+      margin-top: 20px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 10px;
+      padding: 12px 15px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .event-box strong {
+      color: #0d47a1;
+    }
+
+    .event-box p {
+      margin: 6px 0;
+    }
+
+    .guide-box {
+      margin-top: 20px;
+      background: #ffffffcc;
+      /* 약한 화이트 */
+      border: 1px solid #dfe7f3;
+      border-radius: 15px;
+      padding: 15px 20px;
+      max-width: 400px;
+      width: 100%;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .guide-box p {
+      margin: 6px 0;
+      color: #333;
+    }
   </style>
 </head>
 
@@ -235,9 +277,6 @@
       <option value="">선택하세요</option>
     </select>
 
-    <label for="studentName">이름</label>
-    <input type="text" id="studentName" placeholder="예: 홍길동" />
-
     <label for="department">지원학과</label>
     <select id="department">
       <option value="">선택하세요</option>
@@ -251,6 +290,13 @@
     </select>
 
     <button onclick="checkResult()">합격자 확인</button>
+  </div>
+
+  <!-- 안내 박스 -->
+  <div class="guide-box" id="guideBox">
+    <p>🔹 <strong>검정고시자</strong>는 <strong>반 번호를 0</strong>으로 선택해주세요.</p>
+    <p>🔹 조회 오류 또는 문의사항은 아래 연락처로 연락주세요.<br></p>
+    <p>🔹 <strong>성일정보고등학교 입학상담실 031-720-1313</strong></p>
   </div>
 
   <!-- 결과 -->
@@ -292,21 +338,44 @@
     </div>
 
     <button class="save-btn" onclick="saveCard()">📥 캡처하기</button>
+
+    <div class="event-box">
+      <p><strong>🎉 최종합격을 정말 축하합니다!</strong></p>
+
+      <p>📥 <strong>캡처하기</strong> 버튼을 눌러<br>
+        나만의 <strong>합격 학생증</strong>을 저장하세요.</p>
+
+      <p>저장한 <strong>합격 학생증</strong>을 <strong>인스타그램</strong>에 업로드해주세요!<br>
+        업로드할 때 아래 태그를 함께 달아주세요 👇</p>
+
+      <p style="margin-top:8px;">
+        📍 <strong>@sungil.2025</strong><br>
+        📍 <strong>@sungil_i.official</strong><br>
+        🔖 <strong>#성일정보고</strong>
+      </p>
+
+      <p style="margin-top:8px;">
+        12월 5일 <strong>신입생 예비소집일</strong>에 만나요<br>
+        <!-- 작은 <strong>선물</strong>을 드려요 🎁 -->
+      </p>
+    </div>
   </div>
 
   <canvas id="confetti"></canvas>
 
-  <script src="data20251115.js"></script>
+  <script src="data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // ✅ 중학교 목록
     const middleSchools = [
-      '경안중학교', '경화여자중학교', '곤지암중학교', '광주광남중학교', '광주중학교',
-      '금광중학교', '대원중학교', '도촌중학교', '동광중학교', '매양중학교',
-      '상원여자중학교', '성남동중학교', '성남문원중학교', '성남서중학교', '성남여자중학교',
-      '성남중학교', '성일중학교', '수진중학교', '숭신여자중학교', '야탑중학교',
-      '영성중학교', '은행중학교', '위례중앙중', '창성중학교', '초월중학교',
-      '탄벌중학교', '태전중학교', '태평중학교', '풍생중학교'
+      "경안중학교", "곤지암중학교", "광주광남중학교", "광주중학교", "금광중학교", "나곡중학교",
+      "늘푸른중학교", "대원중학교", "도촌중학교", "동광중학교", "매양중학교", "보평중학교",
+      "삼평중학교", "상원여자중학교", "샛별중학교", "성남동중학교", "성남문원중학교", "성남서중학교",
+      "성남여자중학교", "성남중학교", "성일중학교", "세정중학교", "손곡중학교", "송례중학교",
+      "수진중학교", "숭신여자중학교", "신현중학교", "야탑중학교", "여주여자중학교", "영성중학교",
+      "운중중학교", "위례중앙중학교", "위례중학교", "위례한빛중학교", "은행중학교", "장안중학교",
+      "창성중학교", "청옥중학교", "초월중학교", "탄벌중학교", "태전중학교", "태평중학교",
+      "풍생중학교", "하탑중학교", "검정고시자"
     ];
     const schoolSelect = document.getElementById('school');
     middleSchools.forEach(s => {
@@ -316,38 +385,52 @@
       schoolSelect.appendChild(op);
     });
 
-    // ✅ 반 선택 (1~20)
+    // ✅ 반 선택 (1~15 + 마지막에 0반)
     const classSelect = document.getElementById('classSelect');
-    for (let i = 1; i <= 20; i++) {
+
+    // 1~15반 먼저 추가
+    for (let i = 1; i <= 15; i++) {
       const op = document.createElement('option');
       op.value = i;
       op.textContent = `${i}반`;
       classSelect.appendChild(op);
     }
 
-    // ✅ 번호 선택 (1~25)
+    // 마지막에 0반 추가
+    const zeroClass = document.createElement('option');
+    zeroClass.value = 0;
+    zeroClass.textContent = "0반";
+    classSelect.appendChild(zeroClass);
+
+    // ✅ 번호 선택 (1~35 + 마지막에 0번)
     const numberSelect = document.getElementById('numberSelect');
-    for (let i = 1; i <= 25; i++) {
+
+    // 1~35번 먼저 추가
+    for (let i = 1; i <= 35; i++) {
       const op = document.createElement('option');
       op.value = i;
       op.textContent = `${i}번`;
       numberSelect.appendChild(op);
     }
 
+    // 마지막에 0번 추가
+    const zeroNumber = document.createElement('option');
+    zeroNumber.value = 0;
+    zeroNumber.textContent = "0번";
+    numberSelect.appendChild(zeroNumber);
+
     function checkResult() {
       const school = schoolSelect.value;
-      const name = document.getElementById("studentName").value.trim();
       const dept = document.getElementById("department").value;
       const classNo = classSelect.value;
       const number = numberSelect.value;
 
-      if (!school || !name || !dept || !classNo || !number)
+      if (!school || !dept || !classNo || !number)
         return alert("모든 항목을 입력해주세요.");
 
       // ✅ data.js에 있는 studentData 배열에서 합격자 찾기
       const found = studentData.find(
         s =>
-        s["이름"] === name &&
         s["출신중학교"] === school &&
         s["반"] == classNo &&
         s["번호"] == number &&
@@ -355,20 +438,25 @@
       );
 
       if (!found) {
-        alert("명단에 없습니다. 입력 정보를 다시 확인해주세요.");
+        alert(
+          "아쉽지만 합격 명단에 없습니다.\n" +
+          "입력하신 정보를 다시 한 번 확인해주시고,\n" +
+          "이상이 있을 경우에는 성일정보고 입학상담실(031-720-1313)로 연락해주세요."
+        );
         return;
       }
 
       // ✅ 합격자일 경우 수험표 표시
-      startConfetti();
-      window.scrollTo({ top: 0, behavior: "smooth" });
       document.getElementById("formBox").style.display = "none";
+      document.getElementById("guideBox").style.display = "none";
       document.getElementById("resultBox").style.display = "flex";
 
-      document.getElementById("nameValue").textContent = name;
+      document.getElementById("nameValue").textContent = found["이름"];
       document.getElementById("deptValue").textContent = dept;
-      // document.getElementById("schoolVal").textContent = school;
-      // document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
+      document.getElementById("schoolVal").textContent = school;
+      document.getElementById("classVal").textContent = `${classNo}반 ${number}번`;
+
+      startConfetti();
     }
 
     let isCameraOpening = false; // 중복 방지용 플래그
@@ -463,7 +551,7 @@
 
       function update() {
         confetti.forEach(p => {
-          p.y += 1;
+          p.y += 2;
           p.x += Math.sin(p.d);
           if (p.y > c.height) {
             p.y = -10;
@@ -483,4 +571,3 @@
 </body>
 
 </html>
-
