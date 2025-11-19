@@ -294,7 +294,7 @@
 
   <!-- 안내 박스 -->
   <div class="guide-box" id="guideBox">
-    <p>🔹 <strong>검정고시자</strong>는 <strong>반 번호를 0</strong>으로 선택해주세요.</p>
+    <!-- <p>🔹 <strong>검정고시자</strong>는 <strong>반 번호를 0</strong>으로 선택해주세요.</p> -->
     <p>🔹 조회 오류 또는 문의사항은 아래 연락처로 연락주세요.<br></p>
     <p>🔹 <strong>성일정보고등학교 입학상담실 031-720-1313</strong></p>
   </div>
@@ -368,14 +368,8 @@
   <script>
     // ✅ 중학교 목록
     const middleSchools = [
-      "경안중학교", "곤지암중학교", "광주광남중학교", "광주중학교", "금광중학교", "나곡중학교",
-      "늘푸른중학교", "대원중학교", "도촌중학교", "동광중학교", "매양중학교", "보평중학교",
-      "삼평중학교", "상원여자중학교", "샛별중학교", "성남동중학교", "성남문원중학교", "성남서중학교",
-      "성남여자중학교", "성남중학교", "성일중학교", "세정중학교", "손곡중학교", "송례중학교",
-      "수진중학교", "숭신여자중학교", "신현중학교", "야탑중학교", "여주여자중학교", "영성중학교",
-      "운중중학교", "위례중앙중학교", "위례중학교", "위례한빛중학교", "은행중학교", "장안중학교",
-      "창성중학교", "청옥중학교", "초월중학교", "탄벌중학교", "태전중학교", "태평중학교",
-      "풍생중학교", "하탑중학교", "검정고시자"
+      "경안중학교", "곤지암중학교", "금광중학교", "도촌중학교", "동광중학교", "성남동중학교", "성남서중학교", 
+      "성일중학교", "수진중학교", "초월중학교", "태평중학교"
     ];
     const schoolSelect = document.getElementById('school');
     middleSchools.forEach(s => {
@@ -389,7 +383,7 @@
     const classSelect = document.getElementById('classSelect');
 
     // 1~15반 먼저 추가
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 12; i++) {
       const op = document.createElement('option');
       op.value = i;
       op.textContent = `${i}반`;
@@ -397,16 +391,16 @@
     }
 
     // 마지막에 0반 추가
-    const zeroClass = document.createElement('option');
-    zeroClass.value = 0;
-    zeroClass.textContent = "0반";
-    classSelect.appendChild(zeroClass);
+    // const zeroClass = document.createElement('option');
+    // zeroClass.value = 0;
+    // zeroClass.textContent = "0반";
+    // classSelect.appendChild(zeroClass);
 
     // ✅ 번호 선택 (1~35 + 마지막에 0번)
     const numberSelect = document.getElementById('numberSelect');
 
     // 1~35번 먼저 추가
-    for (let i = 1; i <= 35; i++) {
+    for (let i = 1; i <= 30; i++) {
       const op = document.createElement('option');
       op.value = i;
       op.textContent = `${i}번`;
@@ -414,10 +408,10 @@
     }
 
     // 마지막에 0번 추가
-    const zeroNumber = document.createElement('option');
-    zeroNumber.value = 0;
-    zeroNumber.textContent = "0번";
-    numberSelect.appendChild(zeroNumber);
+    // const zeroNumber = document.createElement('option');
+    // zeroNumber.value = 0;
+    // zeroNumber.textContent = "0번";
+    // numberSelect.appendChild(zeroNumber);
 
     function checkResult() {
       const school = schoolSelect.value;
