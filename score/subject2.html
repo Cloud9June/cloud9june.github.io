@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>성적확인</title>
+
+<style>
+  * { box-sizing: border-box; font-family:'Pretendard','Noto Sans KR',sans-serif; }
+  body {
+    margin:0; background:#f3f6fa;
+    display:flex; justify-content:center; align-items:flex-start;
+    padding:30px 10px; min-height:100vh;
+  }
+  .container {
+    width:90%; max-width:420px;
+    background:white; border-radius:16px;
+    padding:28px 24px; text-align:center;
+    box-shadow:0 6px 15px rgba(0,0,0,0.08);
+  }
+  h1 { font-size:22px; margin-bottom:18px; font-weight:700; }
+  #logoutBtn {
+    width:100%; margin-top:12px; padding:10px;
+    background:#555; color:white; cursor:pointer;
+    border-radius:10px; font-weight:600;
+  }
+
+  .section-title { text-align:left; font-size:18px; font-weight:700; margin:25px 0 12px; }
+  .info-box {
+    background:#fafafa; border:1px solid #eee; border-radius:12px;
+    padding:14px 20px; margin-bottom:14px; text-align:left;
+  }
+
+  .info-line {
+    padding:6px 0; border-bottom:1px dashed #e5e5e5;
+    display:flex; justify-content:space-between;
+  }
+  .info-line:last-child { border-bottom:none; }
+  .label { font-weight:700; width:80px; display:inline-block; }
+  .answer-btn {
+    padding:4px 10px; background:#5c7cfa; border:none;
+    border-radius:6px; color:white; cursor:pointer; font-size:13px;
+  }
+
+  #answerModal {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(2px);
+    justify-content:center; align-items:center; z-index:999;
+  }
+
+  .modal-content { background:white; padding:12px; border-radius:12px; max-width:95%; max-height:90%; overflow:auto; }
+  #answerImage { width:100%; border-radius:10px; }
+  .close-modal { text-align:right; cursor:pointer; font-size:22px; margin-bottom:5px; }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>2025학년도 2학기 성적확인</h1>
+
+  <div id="loadingBox" style="
+    display:flex; 
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:200px;
+    color:#555;
+    font-size:16px;
+    font-weight:600;
+  ">
+    <div class="spinner" style="
+      width:28px; height:28px; 
+      border:4px solid #ddd;
+      border-top-color:#5c7cfa;
+      border-radius:50%;
+      animation:spin 0.8s linear infinite;
+      margin-bottom:12px;
+    "></div>
+    성적 정보를 불러오는 중입니다...
+  </div>
+
+  <div id="mainPage" style="display:none;">
+
+    <div class="section-title">학생 기본 정보</div>
+    <div class="info-box">
+      <div class="info-line"><span class="label">이름</span><span id="stuName"></span></div>
+      <div class="info-line"><span class="label">학년</span><span id="stuGrade"></span></div>
+      <div class="info-line"><span class="label">반</span><span id="stuClass"></span></div>
+      <div class="info-line"><span class="label">번호</span><span id="stuNumber"></span></div>
+    </div>
+
+    <div class="section-title">성적 정보</div>
+    <div class="info-box">
+      <div class="info-line"><span class="label">과목명</span><span id="subjectName"></span></div>
+      <div class="info-line"><span class="label">능력단위명</span><span id="unitName"></span></div>
+    </div>
+
+    <div class="info-box" id="roundBox">
+
+      <!-- 1~6차 자동 생성 -->
+      <script>
+        for (let i = 1; i <= 6; i++) {
+          document.write(`
+            <div class="info-line" id="round${i}">
+              <div><span class="label">${i}차</span><span id="score${i}"></span></div>
+              <button class="answer-btn" data-round="${i}">정답확인</button>
+            </div>
+          `);
+        }
+      </script>
+
+    </div>
+
+    <div class="info-box">
+      <div class="info-line"><span class="label">총점</span><span id="sum"></span></div>
+      <div class="info-line"><span class="label">평균</span><span id="avg"></span></div>
+      <div class="info-line"><span class="label">등수</span><span id="rank"></span></div>
+    </div>
+
+    <button id="backBtn" style="
+      width:100%; 
+      margin-top:10px; 
+      padding:10px; 
+      background:#888; 
+      border:none; 
+      border-radius:10px; 
+      color:white; 
+      font-weight:600;
+      cursor:pointer;
+    ">
+      ← 과목 선택 화면으로 돌아가기
+    </button>
+    
+    <button id="logoutBtn">로그아웃</button>
+  </div>
+
+</div>
+
+<div id="answerModal">
+  <div class="modal-content">
+    <div class="close-modal" id="closeModal">×</div>
+    <img id="answerImage">
+  </div>
+</div>
+
+<script type="module">
+import { doLogout, checkLogin } from "./login.js";
+
+const mainPage = document.getElementById("mainPage");
+const logoutBtn = document.getElementById("logoutBtn");
+
+function hideUnusedRounds(u) {
+  for (let i = 1; i <= 6; i++) {
+    const row = document.getElementById(`round${i}`);
+    const scoreEl = document.getElementById(`score${i}`);
+    const val = u[`${i}차`];
+
+    if (!val) {
+      row.style.display = "none";
+    } else {
+      row.style.display = "flex";
+      scoreEl.textContent = val;
+    }
+  }
+}
+
+function fillData(u) {
+  document.getElementById("stuName").textContent = u["이름"];
+  document.getElementById("stuGrade").textContent = u["학년"];
+  document.getElementById("stuClass").textContent = u["반"];
+  document.getElementById("stuNumber").textContent = u["번호"];
+
+  document.getElementById("subjectName").textContent = u["과목명"];
+  document.getElementById("unitName").textContent = u["능력단위명"];
+
+  hideUnusedRounds(u);
+
+  document.getElementById("sum").textContent = u["총점"];
+  document.getElementById("avg").textContent = u["평균"];
+  document.getElementById("rank").textContent = u["등수"];
+}
+
+async function loadData(email) {
+  const url = `https://script.google.com/macros/s/AKfycby56tCKVONzEwQ1rqnsAH8DYzwiKnXxTnp1KmW2hVD5hNqP7SMf7BMRvMeE1GtxZ52k/exec?email=${email}&subject=2`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if (!data.success) {
+    alert("학생 정보를 찾을 수 없습니다.");
+    return;
+  }
+
+  fillData(data.user);
+  document.getElementById("loadingBox").style.display = "none";
+  mainPage.style.display = "block";
+}
+
+checkLogin((email) => {
+  if (!email) {
+    location.href = "index.html";
+    return;
+  }
+  loadData(email);
+});
+
+logoutBtn.onclick = () => doLogout();
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("answer-btn")) {
+    const r = e.target.dataset.round;
+    document.getElementById("answerImage").src = `./images/subject2/${r}.jpg`;
+    document.getElementById("answerModal").style.display = "flex";
+  }
+});
+
+document.getElementById("closeModal").onclick = () => {
+  document.getElementById("answerModal").style.display = "none";
+};
+
+document.getElementById("backBtn").onclick = () => {
+  location.href = "index.html";
+};
+</script>
+
+</body>
+</html>
