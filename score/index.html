@@ -1,372 +1,113 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>성적확인</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>성적확인</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
-    }
+<style>
+  body {
+    margin: 0;
+    background: #f3f6fa;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 10px;
+    min-height: 100vh;
+    font-family: 'Pretendard', sans-serif;
+  }
 
-    body {
-      margin: 0;
-      background: #f3f6fa;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 30px 10px;
-      min-height: 100vh;
-    }
+  .container {
+    width: 90%;
+    max-width: 420px;
+    background: #fff;
+    padding: 28px 24px;
+    border-radius: 16px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    text-align: center;
+  }
 
-    .container {
-      width: 90%;
-      max-width: 420px;
-      background: #fff;
-      border: 1px solid #dcdcdc;
-      border-radius: 16px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-      padding: 28px 24px;
-      text-align: center;
-    }
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 18px;
+  }
 
-    h1 {
-      font-weight: 700;
-      font-size: 24px;
-      margin-bottom: 18px;
-      color: #333;
-    }
+  #loginBtn, #logoutBtn {
+    padding: 12px 18px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 20px;
+  }
 
-    #loginBtn, #logoutBtn {
-      padding: 10px 18px;
-      background: #555;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 12px;
-    }
+  #logoutBtn { display: none; }
 
-    #logoutBtn {
-        display: none;
-    }
-
-    .section-title {
-      font-size: 19px;
-      font-weight: 700;
-      text-align: left;
-      margin-top: 25px;
-      margin-bottom: 12px;
-      color: #444;
-    }
-
-    .info-box {
-      width: 100%;
-      background: #fafafa;
-      border: 1px solid #eee;
-      border-radius: 12px;
-      padding: 14px 20px;
-      margin-bottom: 14px;
-      text-align: left;
-    }
-
-    .info-line {
-      padding: 6px 0;
-      border-bottom: 1px dashed #e5e5e5;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .info-line:last-child {
-      border-bottom: none;
-    }
-
-    .label {
-      font-weight: 700;
-      color: #333;
-      width: 80px;
-      display: inline-block;
-    }
-
-    .answer-btn {
-      margin-left: 8px;
-      padding: 4px 10px;
-      background: #5c7cfa;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-size: 13px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    #answerModal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(2px);
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      max-width: 95%;
-      max-height: 90%;
-      overflow: auto;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-      animation: fadeIn 0.25s ease;
-    }
-
-    .modal-content img {
-      width: 100%;
-      border-radius: 10px;
-    }
-
-    .close-modal {
-      text-align: right;
-      font-size: 22px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #555;
-      margin-bottom: 5px;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-
-  </style>
+  .subject-btn {
+    width: 100%;
+    padding: 14px 18px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 14px;
+  }
+</style>
 </head>
 
 <body>
 
-  <div class="container">
-    <h1 id="subjectTitle">2025학년도 2학기 성적확인</h1>
+<div class="container">
+  <h1>2025학년도 2학기 성적확인</h1>
 
-    <button id="loginBtn">Google 계정으로 로그인</button>
-    <button id="logoutBtn">로그아웃</button>
+  <button id="loginBtn">Google 계정으로 로그인</button>
+  <button id="logoutBtn">로그아웃</button>
 
-    <div id="mainPage" style="display:none;">
+  <div id="subjectMenu" style="display:none;">
+    <button class="subject-btn" onclick="location.href='subject1.html'">
+      응용프로그래밍개발 성적 보기
+    </button>
 
-      <div class="section-title">학생 기본 정보</div>
-      <div class="info-box">
-        <div class="info-line"><span class="label">이름</span> <span id="stuName"></span></div>
-        <div class="info-line"><span class="label">학년</span> <span id="stuGrade"></span></div>
-        <div class="info-line"><span class="label">반</span> <span id="stuClass"></span></div>
-        <div class="info-line"><span class="label">번호</span> <span id="stuNumber"></span></div>
-      </div>
-
-      <div class="section-title">성적 정보</div>
-
-      <div class="info-box">
-        <div class="info-line">
-          <span class="label">과목명</span> 
-          <span id="subjectName"></span>
-        </div>
-        <div class="info-line">
-          <span class="label">능력단위명</span> 
-          <span id="unitName"></span>
-        </div>
-      </div>
-
-      <div class="info-box">
-
-        <div class="info-line">
-          <div><span class="label">1차</span> <span id="score1"></span></div>
-          <button class="answer-btn" data-round="1">정답확인</button>
-        </div>
-
-        <div class="info-line">
-          <div><span class="label">2차</span> <span id="score2"></span></div>
-          <button class="answer-btn" data-round="2">정답확인</button>
-        </div>
-
-        <div class="info-line">
-          <div><span class="label">3차</span> <span id="score3"></span></div>
-          <button class="answer-btn" data-round="3">정답확인</button>
-        </div>
-
-        <div class="info-line">
-          <div><span class="label">4차</span> <span id="score4"></span></div>
-          <button class="answer-btn" data-round="4">정답확인</button>
-        </div>
-
-      </div>
-
-      <div class="info-box">
-        <div class="info-line"><span class="label">총점</span> <span id="sum"></span></div>
-        <div class="info-line"><span class="label">평균</span> <span id="avg"></span></div>
-        <div class="info-line"><span class="label">등수</span> <span id="rank"></span></div>
-      </div>
-
-    </div>
+    <button class="subject-btn" onclick="location.href='subject2.html'">
+      시스템프로그래밍 성적 보기
+    </button>
   </div>
+</div>
 
-  <div id="answerModal">
-    <div class="modal-content">
-      <div class="close-modal" id="closeModal">×</div>
-      <img id="answerImage" src="" alt="정답 이미지">
-    </div>
-  </div>
+<script type="module">
+import { doLogin, doLogout, checkLogin } from "./login.js";
 
-  <!-- FIREBASE + 시트 데이터 로드 -->
-  <script type="module">
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const subjectMenu = document.getElementById("subjectMenu");
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getAuth,
-      signInWithPopup,
-      GoogleAuthProvider,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+loginBtn.onclick = async () => {
+  const email = await doLogin();
+  if (!email) return;
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA_ufzFnMFovKW0JhNyrXWYV2a_1cCt5Vs",
-      authDomain: "sungilnow.firebaseapp.com",
-      projectId: "sungilnow",
-      storageBucket: "sungilnow.appspot.com",
-      messagingSenderId: "458932138557",
-      appId: "1:458932138557:web:f1a508865261ffaafbf054"
-    };
+  loginBtn.style.display = "none";
+  logoutBtn.style.display = "block";
+  subjectMenu.style.display = "block";
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+logoutBtn.onclick = () => doLogout();
 
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const mainPage = document.getElementById("mainPage");
-
-    const stuNameEl = document.getElementById("stuName");
-    const stuGradeEl = document.getElementById("stuGrade");
-    const stuClassEl = document.getElementById("stuClass");
-    const stuNumberEl = document.getElementById("stuNumber");
-
-    const s1 = document.getElementById("score1");
-    const s2 = document.getElementById("score2");
-    const s3 = document.getElementById("score3");
-    const s4 = document.getElementById("score4");
-    const sum = document.getElementById("sum");
-    const avg = document.getElementById("avg");
-    const rank = document.getElementById("rank");
-
-    const subjectTitle = document.getElementById("subjectTitle");
-    const subjectName = document.getElementById("subjectName");
-    const unitName = document.getElementById("unitName");
-
-    loginBtn.addEventListener("click", async () => {
-      try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-
-        if (!user.email.endsWith("@sungil-i.kr")) {
-          alert("학교 계정(@sungil-i.kr)으로만 로그인 가능합니다.");
-          await signOut(auth);
-          return;
-        }
-
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("email", user.email);
-
-        await loadStudentScore(user.email);
-
-      } catch (err) {
-        alert("로그인 오류 발생");
-        console.error(err);
-      }
-    });
-
-    async function loadStudentScore(email) {
-      try {
-        const response = await fetch(
-          `https://script.google.com/macros/s/AKfycbydO-X9rba2PMhX0Xk45O8VcZCCEJsMjpDTfzMGXADp0ga6U25ojjd6hXJYVLWYjbBv/exec?email=${email}`
-        );
-
-        const data = await response.json();
-
-        if (!data.success) {
-          alert("학생 정보를 찾을 수 없습니다.");
-          return;
-        }
-
-        const u = data.user;
-
-        stuNameEl.textContent = u["이름"];
-        stuGradeEl.textContent = u["학년"];
-        stuClassEl.textContent = u["반"];
-        stuNumberEl.textContent = u["번호"];
-
-        subjectName.textContent = u["과목명"];
-        unitName.textContent = u["능력단위명"];
-
-        // subjectTitle.textContent = `${u["과목명"]} 성적확인`;
-
-        s1.textContent = u["1차"];
-        s2.textContent = u["2차"];
-        s3.textContent = u["3차"];
-        s4.textContent = u["4차"];
-        sum.textContent = u["총점"];
-        avg.textContent = u["평균"];
-        rank.textContent = u["등수"];
-
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "block";
-        mainPage.style.display = "block";
-
-      } catch (err) {
-        console.error("시트 조회 오류:", err);
-        alert("성적 정보를 가져오지 못했습니다.");
-      }
-    }
-
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      localStorage.clear();
-      location.reload();
-    });
-
-    window.addEventListener("load", async () => {
-      if (localStorage.getItem("isLoggedIn") === "true") {
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "block";
-        mainPage.style.display = "block";
-
-        const email = localStorage.getItem("email");
-        if (email) await loadStudentScore(email);
-      }
-    });
-
-    document.addEventListener("click", (e) => {
-      if (e.target.classList.contains("answer-btn")) {
-        const round = e.target.dataset.round;
-        const imgPath = `./images/${round}.jpg`;
-
-        document.getElementById("answerImage").src = imgPath;
-        document.getElementById("answerModal").style.display = "flex";
-      }
-    });
-
-    document.getElementById("closeModal").addEventListener("click", () => {
-      document.getElementById("answerModal").style.display = "none";
-    });
-
-  </script>
+checkLogin((email) => {
+  if (email) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+    subjectMenu.style.display = "block";
+  }
+});
+</script>
 
 </body>
 </html>
