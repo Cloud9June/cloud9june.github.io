@@ -306,6 +306,22 @@ header.scrolled {
     font-size: 13px;
 }
 
+.show-all-btn {
+  display: none;
+  margin: 10px auto;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #333;
+  border: 1px solid #cfd9e3;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+.show-all-btn:hover {
+  background: #e2e8f0;
+}
+
 /* ===== 탭 ===== */
 .tabs {
     display: flex;
@@ -1115,7 +1131,7 @@ main.purple-border {
   margin-top: 6px;
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 5px;
 }
 
 .feed-tags .tag {
@@ -1161,138 +1177,143 @@ main.class-tab .feed-tags .tag {
 .tag[data-tag="#스마트웹콘텐츠과"] { color:#0077b6; }
 .tag[data-tag="#소프트웨어개발과"] { color:#155ab6; }
 
-/* ✅ 전체 키오스크 모드 스타일 */
+/* ================================================
+      🎨 KIOSK MODE — 피드보드 스타일 스킨
+   ================================================ */
+
 body.kiosk-mode {
-  font-size: 1.25rem;            /* 전체 폰트 크기 약간 키움 */
-  max-width: 1600px;
-  margin: 100px auto;            /* 상단 탭과 간격 확보 */
-  background-color: #f9fafc;
+    --kiosk-bg: #f7f8fa;
+    --kiosk-card: #ffffff;
+    --kiosk-border: #e5e7eb;
+    --kiosk-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    --kiosk-title: #1e1e1e;
+    --kiosk-text: #4a4a4a;
+    --kiosk-accent: #6c63ff;  /* 피드보드 메인 보라 */
+    --kiosk-accent-light: #ecebff;
+
+    background: var(--kiosk-bg) !important;
+    color: var(--kiosk-text) !important;
+    font-size: 1.25rem;
+    max-width: 1600px;
+    margin: 90px auto;
+    padding-bottom: 60px;
 }
 
-body.kiosk-mode #appHeader {
-  margin: 0;
-  font-size: 2rem;
-  color: white;
-  text-align: center;
-  padding: 0 20px;
-  border-radius: 0 0 0 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: background 0.3s ease;
-}
-
-/* ✅ 피드 카드 디자인 */
-body.kiosk-mode .feed-item {
-  background: #fff;
-  border-radius: 14px;
-  padding: 20px 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  font-size: 1.1rem;
-}
-body.kiosk-mode .feed-item:active {
-  transform: scale(1.02);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* ✅ 제목 / 내용 / 태그 */
-body.kiosk-mode .feed-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-body.kiosk-mode .feed-content {
-  font-size: 1rem;
-  color: #333;
-  line-height: 1.4;
-}
-body.kiosk-mode .feed-tags {
-  font-size: 0.9rem;
-  margin-top: 10px;
-  opacity: 0.8;
-}
-
-/* ✅ 상단 헤더 (크게 강조하되 색상 유지) */
-body.kiosk-mode #appHeader {
-  font-size: 1.6rem;
-  padding: 20px;
-  color: white;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+/* --- 헤더 영역을 피드보드처럼 얇고 깔끔하게 --- */
+body.kiosk-mode header {
+    background: #ffffff !important;
+    border-radius: 16px;
+    width: calc(100% - 40px);
+    margin: 10px auto;
+    padding: 18px 26px;
+    box-shadow: var(--kiosk-shadow);
 }
 
 body.kiosk-mode #appTitle {
-    font-size: 2.5rem;
+    font-size: 2.2rem !important;
+    font-weight: 800;
+    font-family: 'Pretendard', sans-serif;
+    color: var(--kiosk-accent);
+    letter-spacing: -0.5px;
 }
 
-/* ✅ 탭 버튼 - 기존 스타일 유지하면서 키오스크에 맞게 확대 */
-body.kiosk-mode .tabs {
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 0;
-}
-body.kiosk-mode .tabs button {
-  font-size: 1.0rem;
-  font-weight: 600;
-  margin-top: 15px;
-  padding: 10px 22px;
-  border-radius: 10px;
-  letter-spacing: 0.3px;
-  transition: transform 0.15s ease, background 0.25s ease;
-}
-body.kiosk-mode .tabs button.active {
-  transform: scale(1.05);
-}
-
-/* ✅ 글쓰기 버튼 숨김 */
-body.kiosk-mode #writeFeedBtn {
-  display: none !important;
-}
-
-/* 키오스크 모드에서는 수정·삭제 버튼 숨김 */
+/* 로그아웃, 글쓰기 숨김 */
+body.kiosk-mode #logoutBtn,
+body.kiosk-mode .write-feed-btn,
 body.kiosk-mode .edit-feed-btn,
 body.kiosk-mode .delete-feed-btn {
-  display: none !important;
+    display: none !important;
 }
 
-/* ✅ 키오스크 모드에서는 로그아웃 버튼 숨기기 */
-body.kiosk-mode #logoutBtn {
-  display: none !important;
+/* --- 탭 버튼 피드보드 스타일 --- */
+body.kiosk-mode .tabs {
+    margin-top: 140px;
+    justify-content: center !important;
 }
-/*
-body.kiosk-mode .feed-item:nth-child(5n+1) {
-    border-left: 5px solid #a8e6cf;
-    border-right: 5px solid #a8e6cf;
+
+body.kiosk-mode .tabs button {
+    background: #ffffff !important;
+    border: 1px solid var(--kiosk-border);
+    padding: 12px 26px;
+    border-radius: 12px;
+    font-size: 1.0rem;
+    color: #555;
+    font-weight: 600;
+    box-shadow: var(--kiosk-shadow);
+    transition: background 0.25s, transform 0.15s;
+    
 }
-body.kiosk-mode .feed-item:nth-child(5n+2) {
-    border-left: 5px solid #ffe66d;
-    border-right: 5px solid #ffe66d;
+
+body.kiosk-mode .tabs button.active {
+    background: var(--kiosk-accent) !important;
+    color: #fff !important;
+    transform: scale(1.03);
 }
-body.kiosk-mode .feed-item:nth-child(5n+3) {
-    border-left: 5px solid #bdb2ff;
-    border-right: 5px solid #bdb2ff;
+
+/* --- 메인 컨테이너 --- */
+body.kiosk-mode main {
+    border-top: none !important;
+    padding: 0 20px;
+    margin-top: 20px;
 }
-body.kiosk-mode .feed-item:nth-child(5n+4) {
-    border-left: 5px solid #ffd6a5;
-    border-right: 5px solid #ffd6a5;
+
+/* --- 피드 아이템 (카드 형태로 재정의) --- */
+body.kiosk-mode .feed-item {
+    background: var(--kiosk-card) !important;
+    border: none !important;
+    border-radius: 18px !important;
+    padding: 24px 28px !important;
+    margin: 18px 0 !important;
+    box-shadow: var(--kiosk-shadow) !important;
+    position: relative;
+    left: 0 !important; 
+    margin-left: 0 !important;
 }
-body.kiosk-mode .feed-item:nth-child(5n+5) {
-    border-left: 5px solid #caf0f8;
-    border-right: 5px solid #caf0f8;
+
+/* 불필요한 left line 제거 */
+body.kiosk-mode .feed-item::before {
+    display: none !important;
 }
-:root[data-theme="dark"] body.kiosk-mode main.all-tab .feed-item {
-  border-left: 4px solid var(--pastel-blue);
-  border-right: 4px solid var(--pastel-blue);
+
+/* --- 제목 --- */
+body.kiosk-mode .feed-title {
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    color: var(--kiosk-accent) !important;
+    margin-bottom: 10px !important;
 }
-:root[data-theme="dark"] body.kiosk-mode main.class-tab .feed-item {
-  border-left: 4px solid var(--pastel-pink);
-  border-right: 4px solid var(--pastel-pink);
+
+/* --- 메타 (날짜/작성자) --- */
+body.kiosk-mode .feed-meta {
+    font-size: 0.9rem !important;
+    color: #9da3ae !important;
+    margin-bottom: 14px !important;
 }
-:root[data-theme="dark"] body.kiosk-mode main.help-tab .feed-item {
-  border-left: 4px solid var(--pastel-purple);
-  border-right: 4px solid var(--pastel-purple);
+
+/* --- 내용 --- */
+body.kiosk-mode .feed-content {
+    font-size: 1.05rem !important;
+    line-height: 1.55 !important;
+    color: var(--kiosk-text) !important;
 }
-:root[data-theme="dark"] body.kiosk-mode main.external-tab .feed-item {
-  border-left: 4px solid var(--pastel-mint);
-  border-right: 4px solid var(--pastel-mint);
+
+/* --- 태그 --- */
+body.kiosk-mode .feed-tags .tag {
+    background: var(--kiosk-accent-light) !important;
+    color: var(--kiosk-accent) !important;
+    font-size: 0.85rem !important;
+    padding: 6px 10px !important;
+    border-radius: 10px !important;
+    font-weight: 600;
 }
-*/
+
+/* --- back to top 버튼 피드보드 스타일 --- */
+body.kiosk-mode #backToTop {
+    background: var(--kiosk-accent) !important;
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4) !important;
+}
+
+/* --- 다크모드 무시(키오스크는 항상 라이트 스타일 우선) --- */
+body.kiosk-mode[data-theme="dark"] {
+    background: var(--kiosk-bg) !important;
+}
