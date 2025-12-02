@@ -198,6 +198,7 @@ function renderFeedItem(id, item, tab = "all") {
   const div = document.createElement("div");
   div.className = "feed-item";
   div.setAttribute("data-id", id);
+  div.setAttribute("data-tags", (item.tags || []).join(" "));
 
   const user = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -822,7 +823,13 @@ function showMainScreen(userInfo, displayName) {
   appHeader.style.display = "block";
   tabs.style.display = "flex";
   mainContent.style.display = "block";
-  document.getElementById("userInfo").textContent = displayName;
+  
+  // ✅ 키오스크 모드에서는 이름 대신 학교명 고정
+  if (isKioskMode) {
+    document.getElementById("userInfo").textContent = "성일정보고등학교";
+  } else {
+    document.getElementById("userInfo").textContent = displayName;
+  }
 
   const savedTab = localStorage.getItem("activeTab") || "all";
 
@@ -1022,10 +1029,14 @@ loginBtn.addEventListener("click", async () => {
     const userInfo = data.user;
 
     // ✅ 이름 표시
-    const displayName =
+    let displayName =
       userInfo.role === "교사"
         ? `${userInfo.name} 선생님`
         : `${userInfo.grade}학년 ${userInfo.class}반 ${userInfo.name}`;
+
+    if (isKioskMode) {
+      displayName = "성일정보고등학교";
+    }
 
     // ✅ privilege가 문자열일 수도 있으므로 배열로 변환
     let privilegeArray = [];
@@ -1205,6 +1216,8 @@ tabButtons.forEach(tab => {
     
     const savedUser = JSON.parse(localStorage.getItem("userInfo"));
     if (savedUser) updateUI(savedUser);
+
+    document.getElementById("showAllFeedsBtn").style.display = "none";
   });
 });
 
@@ -1456,3 +1469,165 @@ document.addEventListener("click", async (e) => {
     }
   }
 });
+
+// 🏷️ 전체탭에서만 태그 클릭 시 필터링
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("tag")) {
+    const activeTab = document.querySelector(".tabs button.active")?.dataset.tab;
+    if (activeTab !== "all") return; // ✅ 전체탭 아닐 경우 무시
+
+    const selectedTag = e.target.dataset.tag;
+    const showAllBtn = document.getElementById("showAllFeedsBtn");
+    showAllBtn.style.display = "block";
+    // showAllBtn.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // ✅ 전체탭에서만 필터링
+    document.querySelectorAll("#allFeed .feed-item").forEach((item) => {
+      const tags = item.dataset.tags || "";
+      item.style.display = tags.includes(selectedTag) ? "block" : "none";
+    });
+  }
+});
+
+// 🔙 전체보기 버튼 클릭 시 복귀
+document.getElementById("showAllFeedsBtn").addEventListener("click", () => {
+  const activeTab = document.querySelector(".tabs button.active")?.dataset.tab;
+  if (activeTab !== "all") return;
+
+  document.querySelectorAll("#allFeed .feed-item").forEach((item) => {
+    item.style.display = "block";
+  });
+  document.getElementById("showAllFeedsBtn").style.display = "none";
+});
+
+// if (location.search.includes("kiosk=true")) {
+
+//     document.body.style.opacity = "0";
+//     setTimeout(() => {
+//         document.body.style.transition = "opacity 0.4s";
+//         document.body.style.opacity = "1";
+//     }, 10);
+
+//     setInterval(async () => {
+//         const main = document.querySelector("main");
+//         if (!main) return; // main 없으면 오류 방지
+
+//         main.style.transition = "opacity 0.3s";
+//         main.style.opacity = "0.2";
+
+//         try {
+//             lastDocAll = null;
+//             await loadFeeds(true);  // 새 데이터 없으면 snap.empty라도 정상
+//         } catch (err) {
+//             console.error("Refetch 중 오류:", err);
+//         } finally {
+//             // ❗ 성공 / 실패 / 새 데이터 없음 모두 복구
+//             setTimeout(() => {
+//                 main.style.opacity = "1";
+//             }, 300);
+//         }
+
+//     }, 18000); // 3분
+// }
+
+// ====== 키오스크 모드: 실시간 피드 변경 감지 ======
+import { onSnapshot } from 
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+if (isKioskMode) {
+
+    console.log("🟣 키오스크 모드 실시간 피드 감지 활성화됨");
+
+    const monthKey = getCurrentMonthKey();
+    const liveQuery = query(
+        collection(db, "feeds", monthKey, "items"),
+        orderBy("createdAt", "desc")
+    );
+
+    let initialized = false;
+
+    // ===== 1시간마다 전체 페이지 강제 리로드 =====
+    setInterval(() => {
+        console.log("⏳ 1시간 경과 → 키오스크 페이지 자동 리로드");
+        location.reload();
+    }, 3600000);  // 1 hour
+
+    onSnapshot(liveQuery, async (snapshot) => {
+
+        // 🟦 최초 1회 스냅샷은 무시 (초기 로딩)
+        if (!initialized) {
+            initialized = true;
+            console.log("📌 초기 로딩 완료");
+            return;
+        }
+
+        const changes = snapshot.docChanges();
+        const main = document.getElementById("mainContent");
+
+        // ===== 공통: mainContent 흐려짐 → 복구 보장 =====
+        if (main && main.style.display !== "none") {
+            main.style.transition = "opacity 0.25s";
+            main.style.opacity = "0.25";
+
+            // 🔥 복구가 누락되는 경우를 대비해 항상 fade-in 강제 복구
+            setTimeout(() => {
+                main.style.opacity = "1";
+            }, 350);
+        }
+
+        // ===== 변경된 문서 개수만큼 처리 =====
+        for (const change of changes) {
+
+            const docId = change.doc.id;
+            const data = change.doc.data();
+
+            // ===============================
+            // 🔵 1) 새 글 추가 (added)
+            // ===============================
+            if (change.type === "added") {
+                console.log("🟢 실시간 추가 감지:", docId);
+
+                lastDocAll = null;
+                await loadFeeds(true);
+                continue;
+            }
+
+            // ===============================
+            // 🟡 2) 글 수정 (modified)
+            // ===============================
+            if (change.type === "modified") {
+                console.log("🟡 실시간 수정 감지:", docId);
+
+                const feedEl = document.querySelector(`.feed-item[data-id="${docId}"]`);
+
+                if (feedEl) {
+                    feedEl.querySelector(".feed-title").textContent = data.title;
+                    feedEl.querySelector(".feed-content").innerHTML =
+                        makeLinksClickable(data.content);
+                } else {
+                    lastDocAll = null;
+                    await loadFeeds(true);
+                }
+                continue;
+            }
+
+            // ===============================
+            // 🔴 3) 글 삭제 (removed)
+            // ===============================
+            if (change.type === "removed") {
+                console.log("🔴 실시간 삭제 감지:", docId);
+
+                const feedEl = document.querySelector(`.feed-item[data-id="${docId}"]`);
+
+                if (feedEl) {
+                    feedEl.remove();
+                } else {
+                    lastDocAll = null;
+                    await loadFeeds(true);
+                }
+                continue;
+            }
+        }
+    });
+}
