@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실습실 관리 시스템</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <nav class="sidebar">
+            <h2 id="home-btn" style="cursor: pointer;" title="처음 화면으로 돌아가기">실습실 목록</h2>
+            <ul id="lab-list">
+                </ul>
+
+            <div id="auth-container" style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div id="user-info" style="font-size: 0.9rem; margin-bottom: 10px; color: #ccc; text-align: center;">로그인이 필요합니다</div>
+                <button id="login-btn" style="width: 100%; background: #4285F4; color: white;">G Google 로그인</button>
+                <button id="logout-btn" style="width: 100%; background: #555; color: white; display: none;">로그아웃</button>
+            </div>
+        </nav>
+
+        <main class="content">
+    
+            <div id="dashboard-view" class="dashboard-container">
+    
+                <div class="dashboard-top">
+                    <div class="welcome-box">
+                        <h1>👋 실습실 종합 현황판</h1>
+                        <p>실습실별 가동 현황과 고장 좌석을 한눈에 확인하세요.</p>
+                    </div>
+
+                    <div class="legend-mini-card">
+                        <span>📌 <b>상태 범례:</b></span>
+                        <span class="badge normal">✅ 정상</span>
+                        <span class="badge error">❌ 고장/점검</span>
+                        <span class="badge hidden">⬜ 빈 공간(제외)</span>
+                    </div>
+                </div>
+
+                <div class="lab-status-container">
+                    <div class="status-header">
+                        <div class="col-name">실습실명</div>
+                        <div class="col-stat">총 좌석</div>
+                        <div class="col-stat">사용 가능</div>
+                        <div class="col-stat">사용 불가</div>
+                        <div class="col-list">고장 좌석 번호</div>
+                    </div>
+                    <ul id="lab-status-list">
+                        <li class="loading-msg">데이터를 불러오는 중입니다... ⏳</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div id="lab-view" style="display: none;">
+                <div class="lab-header">
+                    <h2 id="current-lab-title">실습실 선택</h2>
+                    <span id="current-lab-desc" class="lab-desc"></span>
+                    <button id="edit-info-btn" class="edit-btn" title="설명 수정">✏️</button>
+                </div>
+
+                <div class="time-slot-container"></div>
+                <div id="seat-grid" class="seat-grid"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>좌석 상태 변경 (<span id="selected-seat-num"></span>번)</h3>
+            
+            <label>상태 선택:</label>
+            <select id="issue-select">
+            </select>
+
+            <div class="modal-buttons">
+                <button id="cancel-btn">취소</button>
+                <button id="save-btn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
