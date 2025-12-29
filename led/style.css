@@ -1,0 +1,97 @@
+/* 기본 */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+}
+
+/* 컨테이너 */
+#container {
+    width: 3480px;
+    height: 1044px;
+    display: flex;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* 패널 */
+.image-panel {
+    flex-grow: 1;
+    margin: 5px;
+    border: 5px solid #333;
+    overflow: hidden;
+    position: relative;
+
+    transform: translateY(-100vh);
+    opacity: 0;
+}
+
+/* 내부 래퍼 (STATIC 효과 전용) */
+.img-inner {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+/* 이미지 */
+.image-panel img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+/* 레이어 */
+.old-img { z-index: 1; }
+.new-img {
+    z-index: 2;
+    box-shadow: -12px 0 30px rgba(0,0,0,0.45);
+}
+.main-img { z-index: 2; }
+
+/* ENTRY / EXIT */
+.panel-active {
+    animation: slide-down 0.8s ease-out forwards;
+}
+
+.panel-remove {
+    animation: slide-up-remove 0.8s ease-out forwards;
+}
+
+/* 키프레임 */
+@keyframes slide-down {
+    from { transform: translateY(-100vh); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-up-remove {
+    from { transform: translateY(0); opacity: 1; }
+    to   { transform: translateY(100vh); opacity: 0; }
+}
+
+/* =========================
+   STATIC 효과
+   느린 줌 + 약한 명암
+========================= */
+
+@keyframes slow-zoom {
+    from { transform: scale(1); }
+    to   { transform: scale(1.06); } /* 🔥 6% */
+}
+
+@keyframes soft-bright {
+    0%   { filter: brightness(1); }
+    50%  { filter: brightness(1.08); } /* 🔥 8% */
+    100% { filter: brightness(1); }
+}
+
+.idle-zoom {
+    animation: slow-zoom 10s linear forwards;
+}
+
+.idle-bright {
+    animation: soft-bright 6s ease-in-out infinite;
+}
