@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>세로 슬라이드</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+        }
+
+        .slideshow-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column; 
+            position: relative;
+            /* transition: transform 0.8s ease-in-out; */
+        }
+
+        .slide-image {
+            width: 100%;
+            
+            /* ★ 수정 핵심 1: height: 100%로 강제 지정 */
+            height: 100%; 
+            
+            /* ★ 수정 핵심 2: 불필요한 속성 제거 (min-height, flex-shrink) */
+            /* min-height: 100%;  <- 제거하거나 주석 처리 */
+            /* flex-shrink: 0;    <- 제거하거나 주석 처리 */
+            
+            /* 비율 무시하고 프레임에 강제 맞춤 유지 */
+            object-fit: fill; 
+            
+            display: block; 
+        }
+    </style>
+</head>
+<body>
+    <div class="slideshow-container" id="slideshow">
+        <img src="images/0.jpg" alt="이미지 0" class="slide-image">
+        <img src="images/1.jpg" alt="이미지 1" class="slide-image">
+        <img src="images/2.jpg" alt="이미지 2" class="slide-image">
+        <img src="images/3.jpg" alt="이미지 3" class="slide-image">
+        <img src="images/4.jpg" alt="이미지 4" class="slide-image">
+        <img src="images/5.jpg" alt="이미지 5" class="slide-image">
+        <img src="images/6.jpg" alt="이미지 6" class="slide-image">
+        <img src="images/7.jpg" alt="이미지 7" class="slide-image">
+    </div>
+
+    <script>
+        const container = document.getElementById('slideshow');
+        const images = document.querySelectorAll('.slide-image');
+
+        let currentIndex = 0; // 현재 보여지는 이미지 인덱스
+        const totalImages = images.length; // 총 이미지 개수 (8)
+        const transitionDuration = 3000; // 전환 간격 (3초)
+        // const scrollSpeed = 500; // 이제 'behavior: smooth'가 속도를 제어합니다.
+
+        function slideToNextImage() {
+            // 1. 다음 이미지 인덱스 계산
+            currentIndex = (currentIndex + 1) % totalImages;
+            
+            // 2. 스크롤 위치 (scrollTop) 계산
+            const frameHeight = container.clientHeight; // 현재 프레임의 실제 높이
+            
+            // 이 부분이 조정의 핵심입니다!
+            // frameHeight에 미세 조정 수치 (오프셋)를 더하거나 빼줍니다.
+            
+            // *******************************************************
+            const ADJUSTMENT_OFFSET = 0; // 1px을 위로 당겨서 오차를 보정 (음수 = 위로 이동, 양수 = 아래로 이동)
+            // *******************************************************
+            
+            const singleImageScrollDistance = frameHeight + ADJUSTMENT_OFFSET;
+            
+            const scrollPosition = currentIndex * singleImageScrollDistance;
+
+            // 3. 부드러운 스크롤 애니메이션 적용
+            container.scrollTo({
+                top: scrollPosition,
+                behavior: 'smooth' 
+            });
+        }
+
+        function startVerticalSlide() {
+            // 3초 간격으로 slideToNextImage 함수 호출
+            setInterval(slideToNextImage, transitionDuration);
+        }
+
+        // **★ 수정된 부분: 모든 콘텐츠(이미지 포함)가 로드된 후 시작**
+        // 이렇게 해야 container.clientHeight가 정확하고, 이미지의 크기 변화로 인한 오차가 없습니다.
+        window.addEventListener('load', () => {
+            // 이미지 1장의 높이가 컨테이너 높이와 정확히 일치하는지 확인 (디버깅용)
+            // console.log(`Container Height: ${container.clientHeight}px`); 
+            startVerticalSlide();
+        });
+    </script>
+</body>
+</html>
