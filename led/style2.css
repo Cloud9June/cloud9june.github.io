@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Moirai+One&display=swap');
+
 /* --- 1. 전체 페이지 설정 (세로 스크롤 허용) --- */
 body, html {
     margin: 0;
@@ -33,6 +35,18 @@ body, html {
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); 
     padding: 5px;
     margin-right: 10px; 
+    position: relative;
+}
+.split-screen p {
+    position: absolute;
+    bottom: 0;
+    z-index: 100;
+    left: 50%;
+    transform: translate(-50%);
+    color: coral;
+    font-family: "Archivo Black", sans-serif;
+    font-weight: bold;
+    font-size: 60px;
 }
 
 /* 1번 화면: 1/7 크기 (유지) */
@@ -56,5 +70,5 @@ body, html {
     width: 100%;
     height: 100%;
     border: none; 
-
 }
+
