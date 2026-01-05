@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function getImg(panelId, set) {
         const idx = panelId.replace('img', '');
         return set === 1
-            ? `images/${idx}.jpg`
-            : `images/1-${idx}.jpg`;
+            ? `images/${idx}.png`
+            : `images/1-${idx}.png`;
     }
 
     /* ENTRY */
