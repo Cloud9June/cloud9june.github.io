@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>2025 Graduation Ceremony</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Dongle&family=Gamja+Flower&family=Moirai+One&display=swap');
+
+        body {
+            margin: 0 auto; padding: 0;
+            width: 860px; height: 1034px;
+            overflow: hidden;
+            background: url('images/background.png') no-repeat center center;
+            background-size: cover;
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 253, 245, 0.6); 
+            z-index: 0;
+        }
+
+        #slider-wrapper {
+            position: relative;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 70px; 
+            box-sizing: border-box;
+            transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .slide.next { transform: scale(0.5) rotate(10deg); opacity: 0; }
+        .slide.current { transform: scale(1) rotate(0deg); opacity: 1; }
+        .slide.prev { transform: scale(1.5) rotate(-10deg); opacity: 0; }
+
+        .header-box { 
+            text-align: center; 
+            height: 180px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 최상단 축하 문구 */
+        .congrats-text { 
+            font-family: "Gamja Flower", sans-serif;
+            font-size: 32px; 
+            color: #e67e22; 
+            font-weight: 800; 
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        /* 학과 및 반 정보 */
+        .main-title { 
+            font-family: "Dongle", sans-serif;
+            font-size: 90px; /* 문구가 길어짐에 따라 폰트 크기 미세 조정 */
+            color: #2c3e50; 
+            margin: 0;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+            line-height: 1.2;
+        }
+
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px 15px;
+            justify-items: center;
+            width: 750px;
+            margin-top: 40px; 
+        }
+
+        .name-card {
+            border-radius: 18px;
+            width: 220px;
+            height: 72px;
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(40px) scale(0.5);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: floating 3s ease-in-out infinite;
+            font-size: 30px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .name-card.active { opacity: 1; transform: translateY(0) scale(1); }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .nav-dots {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+        .dot { width: 12px; height: 12px; background: #ccc; border-radius: 50%; transition: 0.4s; }
+        .dot.active { background: #ffadad; width: 32px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+<div id="slider-wrapper"></div>
+<div class="nav-dots" id="dots"></div>
+
+<script type="module">
+    import graduationData from './data.js';
+
+    const wrapper = document.getElementById('slider-wrapper');
+    const dotsContainer = document.getElementById('dots');
+    let currentIndex = 0;
+
+    const pastelRainbow = ['#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', '#A0C4FF', '#BDB2FF'];
+
+    graduationData.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = `dot ${i === 0 ? 'active' : ''}`;
+        dotsContainer.appendChild(d);
+    });
+
+    function fireCelebration() {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+            const particleCount = 50 * (timeLeft / duration);
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+    }
+
+    function renderSlide(index) {
+        const data = graduationData[index];
+        const slide = document.createElement('div');
+        slide.className = 'slide next';
+        slide.innerHTML = `
+            <div class="header-box">
+                <div class="congrats-text">졸업을 축하해!!</div>
+                <h1 class="main-title">${data.department} ${data.class}반</h1>
+            </div>
+            <div class="student-grid">
+                ${data.students.map((name, i) => {
+                    // 7가지 파스텔 무지개색
+                    const bgColor = pastelRainbow[i % pastelRainbow.length];
+                    
+                    // 글자색 균등 배분 로직: 
+                    // 배경이 밝은 [노랑(2), 초록(3), 물색(4)]은 어두운 글자색
+                    // 배경이 상대적으로 진한 [빨강(0), 주황(1), 파랑(5), 보라(6)]은 흰색 글자색
+                    const darkColors = [2, 3, 4];
+                    const isDarkText = darkColors.includes(i % pastelRainbow.length);
+                    
+                    const textColor = isDarkText ? '#444444' : '#ffffff';
+                    
+                    return `
+                        <div class="name-card" style="
+                            background-color: ${bgColor};
+                            color: ${textColor};
+                            animation-delay: ${Math.random() * 2}s;
+                        ">
+                            ${name}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        return slide;
+    }
+
+    function update() {
+        const oldSlide = wrapper.querySelector('.current');
+        const nextIndex = (currentIndex + 1) % graduationData.length;
+        const newSlide = renderSlide(nextIndex);
+
+        wrapper.appendChild(newSlide);
+        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === nextIndex));
+
+        setTimeout(() => {
+            if (oldSlide) {
+                oldSlide.classList.replace('current', 'prev');
+                setTimeout(() => oldSlide.remove(), 1200);
+            }
+            newSlide.classList.replace('next', 'current');
+            setTimeout(fireCelebration, 600);
+            const cards = newSlide.querySelectorAll('.name-card');
+            cards.forEach((card, i) => {
+                setTimeout(() => card.classList.add('active'), 800 + (i * 70));
+            });
+        }, 50);
+        currentIndex = nextIndex;
+    }
+
+    const startSlide = renderSlide(0);
+    startSlide.classList.replace('next', 'current');
+    wrapper.appendChild(startSlide);
+    setTimeout(() => {
+        startSlide.querySelectorAll('.name-card').forEach((c, i) => {
+            setTimeout(() => c.classList.add('active'), 500 + (i * 70));
+        });
+        fireCelebration();
+    }, 100);
+
+    setInterval(update, 10000);
+</script>
+</body>
+</html>
