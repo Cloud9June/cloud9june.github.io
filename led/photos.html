@@ -2,17 +2,15 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Graduation Memories - Full Screen Scatter</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <title>Graduation Memories - Optimized Fall</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Dongle&family=Gamja+Flower&family=Moirai+One&display=swap');
 
         body {
             margin: 0 auto; padding: 0;
             width: 860px; height: 1034px;
             overflow: hidden;
-            background: url('images/background_p.png') no-repeat center center;
+            background: url('images/background.png') no-repeat center center;
             background-size: cover;
             font-family: 'Pretendard', sans-serif;
             position: relative;
@@ -36,7 +34,7 @@
             position: absolute;
             top: 40px; width: 100%;
             text-align: center;
-            font-family: "Dongle", sans-serif;
+            font-family: 'Black Han Sans', sans-serif;
             font-size: 50px;
             color: #2c3e50;
             z-index: 1000;
@@ -46,24 +44,25 @@
 
         .stacked-photo {
             position: absolute;
-            width: 300px; /* 모서리 활용을 위해 크기를 살짝 더 줄임 */
+            width: 300px;
             padding: 10px 10px 40px 10px; 
             background: white;
             box-shadow: 5px 12px 25px rgba(0,0,0,0.2);
             border-radius: 2px;
             opacity: 0;
-            transform: scale(1.5) translateY(-50px);
-            transition: opacity 0.5s ease-out, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* transform 지연 최소화를 위해 초기값 설정 */
+            transform: scale(1.1) translateY(-20px);
+            transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
             display: flex;
             flex-direction: column;
             align-items: center;
+            will-change: transform, opacity; /* 브라우저 최적화 힌트 */
         }
 
         .stacked-photo img {
             max-width: 100%;
             max-height: 380px;
-            width: auto;
-            height: auto;
+            width: auto; height: auto;
             object-fit: contain;
             display: block;
         }
@@ -75,7 +74,8 @@
 
         .stacked-photo.falling {
             opacity: 0;
-            transition: transform 1.2s cubic-bezier(0.5, 0, 1, 0.5), opacity 1s ease-in;
+            pointer-events: none;
+            transition: transform 1s cubic-bezier(0.5, 0, 1, 0.5), opacity 0.8s ease-in;
         }
     </style>
 </head>
@@ -85,63 +85,60 @@
     <div id="photo-container"></div>
 
 <script>
-    const TOTAL_PHOTOS = 124; // 더 넓게 쓰므로 장수를 조금 늘려도 예쁩니다
-    const IMAGE_EXTENSION = 'jpg';
-    const SHOW_INTERVAL = 1000; // 조금 더 빠르게 1초 간격
+    const TOTAL_PHOTOS = 124; 
+    const IMAGE_EXTENSION = 'jpg'; 
+    const SHOW_INTERVAL = 1000; // 1초 간격 고정
     const WAIT_BEFORE_CLEAR = 5000; 
 
     const container = document.getElementById('photo-container');
     let currentIndex = 1;
+    let timer = null;
 
-    function addPhoto() {
-        if (currentIndex > TOTAL_PHOTOS) {
-            setTimeout(clearPhotos, WAIT_BEFORE_CLEAR);
-            return;
-        }
+    function startSlideshow() {
+        // 일정한 주기로 실행되는 인터벌 방식 사용
+        timer = setInterval(() => {
+            if (currentIndex > TOTAL_PHOTOS) {
+                clearInterval(timer); // 사진 다 뜨면 타이머 중지
+                setTimeout(clearPhotos, WAIT_BEFORE_CLEAR);
+                return;
+            }
+            renderPhoto(currentIndex);
+            currentIndex++;
+        }, SHOW_INTERVAL);
+    }
 
+    function renderPhoto(num) {
         const imgFrame = document.createElement('div');
         imgFrame.className = 'stacked-photo';
         
-        const img = document.createElement('img');
-        img.src = `photos/${currentIndex}.${IMAGE_EXTENSION}`;
+        const img = new Image();
+        img.src = `photos/${num}.${IMAGE_EXTENSION}`;
         
-        img.onerror = function() {
-            imgFrame.remove();
-            currentIndex++;
-            addPhoto();
-        };
-
         img.onload = function() {
             imgFrame.appendChild(img);
             container.appendChild(imgFrame);
 
-            // --- [핵심 수정] 860x1034 전체 범위를 사용하도록 계산 ---
-            // 사진 너비가 300px이므로 -100px ~ 660px 사이에서 랜덤하게 발생 (모서리 허용)
-            const randomX = Math.floor(Math.random() * (860 - 200)) - 50; 
-            // 세로 역시 모서리를 쓰기 위해 범위를 크게 잡음
+            const randomX = Math.floor(Math.random() * (860 - 250)) - 30; 
             const randomY = Math.floor(Math.random() * (1034 - 300)) - 20;
+            const randomRotate = Math.floor(Math.random() * 60) - 30;
 
-            // 제목(상단 중앙)을 너무 가리지 않게 필터링하는 로직 (선택 사항)
-            // 만약 상단 중앙 근처라면 위치를 다시 조정함
             let finalX = randomX;
             let finalY = randomY;
             if (finalY < 150 && (finalX > 200 && finalX < 450)) {
-                finalY += 200; // 제목 영역이면 아래로 밀기
+                finalY += 220;
             }
-
-            const randomRotate = Math.floor(Math.random() * 60) - 30; // 회전각도도 더 과감하게 (-30~30)
 
             imgFrame.style.left = `${finalX}px`;
             imgFrame.style.top = `${finalY}px`;
             imgFrame.dataset.rotate = randomRotate;
 
-            setTimeout(() => {
-                imgFrame.style.transform = `rotate(${randomRotate}deg) scale(1)`;
-                imgFrame.classList.add('active');
-            }, 50);
-
-            currentIndex++;
-            setTimeout(addPhoto, SHOW_INTERVAL);
+            // 브라우저 렌더링 타이밍 강제 동기화 (requestAnimationFrame)
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    imgFrame.style.transform = `rotate(${randomRotate}deg) scale(1)`;
+                    imgFrame.classList.add('active');
+                }, 10);
+            });
         };
     }
 
@@ -150,7 +147,7 @@
         const shuffledPhotos = photos.sort(() => Math.random() - 0.5);
 
         shuffledPhotos.forEach((photo, index) => {
-            const delay = Math.random() * 1500; 
+            const delay = Math.random() * 1000; 
             setTimeout(() => {
                 const currentRotate = parseFloat(photo.dataset.rotate);
                 const extraRotate = (Math.random() > 0.5 ? 180 : -180);
@@ -162,14 +159,13 @@
         setTimeout(() => {
             container.innerHTML = '';
             currentIndex = 1;
-            addPhoto();
-        }, 4000); 
+            startSlideshow(); // 다시 시작
+        }, 3000); 
     }
 
-    addPhoto();
+    // 초기 실행
+    startSlideshow();
 </script>
 
 </body>
 </html>
-
-
