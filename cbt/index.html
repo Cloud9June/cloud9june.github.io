@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정보처리산업기사 과정평가형 CBT</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        :root { --primary: #2563eb; --light: #eff6ff; --correct: #22c55e; --wrong: #ef4444; --text: #1f2937; }
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6; color: var(--text); display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 600px; background: white; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+        
+        /* 화면 전환용 */
+        .screen { display: none; flex-direction: column; height: 100%; }
+        .active { display: flex; }
+
+        /* 공통 헤더 */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; }
+        .home-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 5px; }
+        .timer-badge { background: #fee2e2; color: #991b1b; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 14px; display: none; }
+
+        /* 메인 화면 */
+        h1 { text-align: center; color: var(--primary); margin-bottom: 10px; font-size: 24px; }
+        .desc { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+        
+        /* 버튼 리스트 컨테이너 (간격 수정됨) */
+        #subject-list { display: flex; flex-direction: column; gap: 12px; } /* 간격 12px 추가 */
+        
+        .subject-btn { background: white; border: 1px solid #d1d5db; padding: 16px; border-radius: 12px; font-size: 16px; cursor: pointer; transition: 0.2s; text-align: left; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .subject-btn:hover { background: var(--light); border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        
+        /* 실전 모의고사 버튼 (강조) */
+        .mock-exam-btn { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); text-align: center; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .mock-exam-btn:hover { transform: scale(1.02); }
+
+        /* 퀴즈 화면 */
+        .status-bar { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; color: #6b7280; font-size: 14px; }
+        .question-box { font-size: 19px; font-weight: bold; margin-bottom: 30px; line-height: 1.6; word-break: keep-all; }
+        
+        .option-btn { display: block; width: 100%; padding: 16px; margin-bottom: 10px; border: 1px solid #d1d5db; border-radius: 12px; background: white; font-size: 16px; cursor: pointer; text-align: left; transition: 0.2s; line-height: 1.4; }
+        .option-btn:hover { background: var(--light); border-color: var(--primary); }
+        
+        .input-box { width: 100%; padding: 15px; font-size: 16px; border: 2px solid #d1d5db; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+        .submit-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+        /* 피드백 */
+        .feedback { margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; display: none; line-height: 1.5; }
+        .feedback.correct { background: #dcfce7; color: #166534; }
+        .feedback.wrong { background: #fee2e2; color: #991b1b; }
+        .next-btn { margin-top: 15px; width: 100%; padding: 15px; background: #374151; color: white; border: none; border-radius: 8px; cursor: pointer; display: none; font-size: 16px; }
+
+        /* 결과 화면 */
+        .result-container { padding: 10px; background: white; border-radius: 10px; }
+        .result-score { font-size: 42px; font-weight: bold; text-align: center; color: var(--primary); margin: 20px 0; }
+        
+        /* 분석 테이블 */
+        .analysis-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        .analysis-table th, .analysis-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
+        .analysis-table th { background-color: #f9fafb; font-weight: bold; color: #4b5563; }
+        .analysis-table td { color: #1f2937; }
+        .low-score { color: #ef4444; font-weight: bold; }
+        
+        .restart-btn { padding: 15px; background: #4b5563; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .capture-btn { padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 10px; margin-bottom: 10px;}
+
+        /* 유틸리티 */
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <div id="screen-home" class="screen active">
+        <h1 style="margin-top: 20px;">정보처리산업기사<br>필기 핵심요약 CBT</h1>
+        <p class="desc">능력단위별 학습 및 실전 모의고사</p>
+        
+        <button class="mock-exam-btn" onclick="startMockExam()">
+            <span>⏰ 실전대비 문제풀이 (45문제)</span>
+        </button>
+
+        <div style="font-size: 14px; font-weight: bold; color: #4b5563; margin-bottom: 10px;">능력단위별 학습하기</div>
+        <div id="subject-list"></div>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+        <div class="header">
+            <button class="home-btn" onclick="confirmHome()" title="처음으로">🏠</button>
+            <div id="timer-badge" class="timer-badge">남은 시간 20:00</div>
+        </div>
+        
+        <div class="status-bar">
+            <span id="subject-title" style="font-weight: normal; color: var(--primary);">과목명</span>
+            <span id="progress-text">1 / 50</span>
+        </div>
+        <div class="question-box" id="question-text">문제 내용</div>
+        
+        <div id="options-area"></div>
+        
+        <div id="short-area" class="hidden">
+            <input type="text" id="short-input" class="input-box" placeholder="정답 입력 (띄어쓰기 무관)">
+            <button class="submit-btn" onclick="checkShortAnswer()">제출하기</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+        <button id="next-btn" class="next-btn" onclick="nextQuestion()">다음 문제 ➜</button>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <div class="result-container" id="capture-area">
+            <h1 style="margin-bottom: 5px;">시험 결과 분석</h1>
+            <p style="text-align: center; color: #666; margin-top: 0;" id="result-subtitle">과목별 점수 확인</p>
+            
+            <div class="result-score" id="final-score">0점</div>
+            <div style="text-align: center; margin-bottom: 20px; font-weight: bold;" id="result-msg"></div>
+
+            <table class="analysis-table" id="analysis-table">
+                <thead>
+                    <tr>
+                        <th>능력단위 (과목)</th>
+                        <th>맞은 개수</th>
+                    </tr>
+                </thead>
+                <tbody id="analysis-body">
+                    </tbody>
+            </table>
+            <p style="text-align: center; font-size: 12px; color: #999;">* 본 결과표는 개인 분석용으로 활용하세요.</p>
+        </div>
+
+        <button class="capture-btn" onclick="captureResult()">📸 결과 화면 캡처(저장)</button>
+        <button class="restart-btn" onclick="goHome()">🏠 처음 화면으로</button>
+    </div>
+</div>
+
+<script src="quizData.js"></script>
+
+<script>
+    /* =========================================
+       전역 변수
+       ========================================= */
+    let currentMode = "study"; // 'study' (단과목) or 'mock' (모의고사)
+    let currentQuestions = []; // 현재 풀 문제 리스트
+    let currentIndex = 0;
+    let score = 0;
+    let isAnswered = false;
+    
+    // 모의고사용 변수
+    let mockScores = {}; // 과목별 점수 저장용 { "과목명": 0 }
+    let timerInterval = null;
+    const TIME_LIMIT_MIN = 20;
+
+    /* =========================================
+       초기화 및 네비게이션
+       ========================================= */
+    function init() {
+        const list = document.getElementById('subject-list');
+        list.innerHTML = "";
+        
+        if (typeof quizDatabase === 'undefined') {
+            alert("quizData.js 파일을 찾을 수 없습니다.");
+            return;
+        }
+
+        Object.keys(quizDatabase).forEach(subject => {
+            const btn = document.createElement('button');
+            btn.className = 'subject-btn';
+            btn.innerText = subject;
+            btn.onclick = () => startStudyMode(subject);
+            list.appendChild(btn);
+        });
+    }
+
+    // 홈으로 가기 (확인 절차)
+    function confirmHome() {
+        if (confirm("시험을 중단하고 처음 화면으로 돌아가시겠습니까?\n(진행 상황은 저장되지 않습니다.)")) {
+            stopTimer();
+            goHome();
+        }
+    }
+
+    function goHome() {
+        switchScreen('screen-home');
+        init();
+    }
+
+    function switchScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    /* =========================================
+       [모드 1] 단과목 학습 모드
+       ========================================= */
+    function startStudyMode(subject) {
+        currentMode = "study";
+        currentQuestions = [...quizDatabase[subject]]; // 복사
+        
+        // 문제 섞기 원하면 아래 주석 해제
+        // currentQuestions.sort(() => Math.random() - 0.5); 
+
+        // 데이터 정규화 (과목명 태깅)
+        currentQuestions.forEach(q => q._subject = subject);
+
+        resetQuizState();
+        document.getElementById('subject-title').innerText = subject;
+        document.getElementById('timer-badge').style.display = 'none';
+        
+        switchScreen('screen-quiz');
+        loadQuestion();
+    }
+
+    /* =========================================
+       [모드 2] 실전 모의고사 (45문제, 20분)
+       ========================================= */
+    function startMockExam() {
+        currentMode = "mock";
+        currentQuestions = [];
+        mockScores = {};
+
+        // 1. 각 과목별로 5문제씩 랜덤 추출
+        const subjects = Object.keys(quizDatabase);
+        subjects.forEach(subject => {
+            mockScores[subject] = 0; // 점수 초기화
+            const pool = [...quizDatabase[subject]];
+            // 랜덤 셔플
+            pool.sort(() => Math.random() - 0.5);
+            // 5개 추출
+            const selected = pool.slice(0, 5);
+            // 과목명 태깅 (결과 분석용)
+            selected.forEach(q => q._subject = subject);
+            
+            currentQuestions.push(...selected);
+        });
+
+        // 2. 전체 문제 순서는 과목 순서대로 할지, 완전 섞을지 결정 (여기선 과목별 묶음 유지)
+        // 만약 전체를 섞고 싶다면: currentQuestions.sort(() => Math.random() - 0.5);
+
+        if (currentQuestions.length === 0) {
+            alert("문제 데이터가 없습니다.");
+            return;
+        }
+
+        resetQuizState();
+        document.getElementById('subject-title').innerText = "실전 모의고사";
+        
+        // 타이머 시작
+        document.getElementById('timer-badge').style.display = 'block';
+        startTimer(TIME_LIMIT_MIN * 60);
+
+        switchScreen('screen-quiz');
+        loadQuestion();
+    }
+
+    function resetQuizState() {
+        currentIndex = 0;
+        score = 0;
+        isAnswered = false;
+    }
+
+    /* =========================================
+       타이머 로직
+       ========================================= */
+    function startTimer(durationSeconds) {
+        stopTimer();
+        let timer = durationSeconds;
+        const display = document.getElementById('timer-badge');
+        
+        updateTimerDisplay(timer, display);
+
+        timerInterval = setInterval(function () {
+            timer--;
+            updateTimerDisplay(timer, display);
+
+            if (timer <= 0) {
+                stopTimer();
+                alert("시험 시간이 종료되었습니다! 결과를 확인합니다.");
+                showResult();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay(seconds, displayElement) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        displayElement.innerText = `남은 시간 ${m}:${s < 10 ? '0' + s : s}`;
+        
+        // 1분 미만일 때 빨간색 강조
+        if (seconds < 60) displayElement.style.background = "#ef4444";
+        else displayElement.style.background = "#fee2e2";
+        displayElement.style.color = seconds < 60 ? "white" : "#991b1b";
+    }
+
+    function stopTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+    }
+
+    /* =========================================
+       문제 로드 및 정답 처리
+       ========================================= */
+    function loadQuestion() {
+        isAnswered = false;
+        const qData = currentQuestions[currentIndex];
+        
+        document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${currentQuestions.length}`;
+        document.getElementById('question-text').innerText = `Q. ${qData.q}`;
+        
+        // 피드백 초기화
+        const feedback = document.getElementById('feedback');
+        feedback.style.display = 'none';
+        feedback.className = 'feedback';
+        document.getElementById('next-btn').style.display = 'none';
+
+        // UI 렌더링
+        const optsArea = document.getElementById('options-area');
+        const shortArea = document.getElementById('short-area');
+        const shortInput = document.getElementById('short-input');
+
+        optsArea.innerHTML = "";
+        shortInput.value = "";
+
+        if (qData.type === 'choice') {
+            shortArea.classList.add('hidden');
+            optsArea.classList.remove('hidden');
+            qData.o.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, qData); // 객체 전체 전달
+                optsArea.appendChild(btn);
+            });
+        } else {
+            optsArea.classList.add('hidden');
+            shortArea.classList.remove('hidden');
+        }
+    }
+
+    function checkAnswer(userAnswer, qData) {
+        if (isAnswered) return;
+        isAnswered = true;
+        
+        const feedback = document.getElementById('feedback');
+        feedback.style.display = 'block';
+        
+        const isCorrect = (userAnswer === qData.a);
+        
+        if (isCorrect) {
+            score++;
+            // 모의고사 모드일 경우 과목별 점수 기록
+            if (currentMode === "mock") {
+                mockScores[qData._subject]++;
+            }
+            feedback.innerText = "정답입니다! ⭕";
+            feedback.classList.add('correct');
+        } else {
+            feedback.innerHTML = `오답입니다 ❌<br>정답: <span style="color:#d97706">${qData.a}</span>`;
+            feedback.classList.add('wrong');
+        }
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function checkShortAnswer() {
+        if (isAnswered) return;
+        
+        const input = document.getElementById('short-input');
+        const userVal = input.value.trim().replace(/\s+/g, '').toLowerCase();
+        const qData = currentQuestions[currentIndex];
+        const correctVal = qData.a.trim().replace(/\s+/g, '').toLowerCase();
+
+        if (userVal === "") {
+            alert("답을 입력해주세요.");
+            return;
+        }
+
+        // 주관식도 checkAnswer 로직과 동일하게 처리하기 위해 호출
+        // 단, userVal과 correctVal 비교는 여기서 수행하지만, 
+        // 편의상 checkAnswer 함수를 약간 수정하거나 직접 로직 구현
+        
+        isAnswered = true;
+        const feedback = document.getElementById('feedback');
+        feedback.style.display = 'block';
+
+        if (userVal === correctVal) {
+            score++;
+            if (currentMode === "mock") mockScores[qData._subject]++;
+            feedback.innerText = "정답입니다! ⭕";
+            feedback.classList.add('correct');
+        } else {
+            feedback.innerHTML = `오답입니다 ❌<br>정답: <span style="color:#d97706">${qData.a}</span>`;
+            feedback.classList.add('wrong');
+        }
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < currentQuestions.length) {
+            loadQuestion();
+        } else {
+            stopTimer(); // 시험 종료 시 타이머 정지
+            showResult();
+        }
+    }
+
+    /* =========================================
+       결과 화면 및 캡처
+       ========================================= */
+    function showResult() {
+        switchScreen('screen-result');
+        
+        const finalScore = document.getElementById('final-score');
+        const resultMsg = document.getElementById('result-msg');
+        const tbody = document.getElementById('analysis-body');
+        const subTitle = document.getElementById('result-subtitle');
+        
+        tbody.innerHTML = ""; // 테이블 초기화
+
+        if (currentMode === "study") {
+            // 단과목 모드
+            subTitle.innerText = "단원별 학습 결과";
+            const convertedScore = Math.round((score / currentQuestions.length) * 100);
+            finalScore.innerText = `${convertedScore}점`;
+            resultMsg.innerText = `${currentQuestions.length}문제 중 ${score}문제 정답`;
+            
+            // 테이블 숨기거나 간단히 표시
+            document.getElementById('analysis-table').style.display = 'none';
+
+        } else {
+            // 모의고사 모드
+            subTitle.innerText = "실전 모의고사 분석표";
+            document.getElementById('analysis-table').style.display = 'table';
+            
+            // 총점 계산 (100점 만점 환산: 45문제 중 맞은 개수 * 2.22... 혹은 그냥 개수 표시)
+            // 산업기사는 과목당 20문제지만 여기선 약식이므로 100점 만점으로 단순 환산
+            const totalScore = Math.round((score / 45) * 100);
+            finalScore.innerText = `총점: ${totalScore}점`;
+            
+            let msg = "";
+            if (totalScore >= 60) msg = "합격 가능권입니다! 🎉";
+            else msg = "조금 더 노력이 필요합니다. 🔥";
+            resultMsg.innerText = msg;
+
+            // 과목별 분석 테이블 생성
+            const subjects = Object.keys(mockScores);
+            subjects.forEach(subj => {
+                const correctCount = mockScores[subj];
+                const tr = document.createElement('tr');
+                
+                // 과목명 앞의 숫자(1. 2...) 제거하고 깔끔하게 표시
+                const cleanSubjName = subj.replace(/^\d+\./, ''); 
+                
+                let countHtml = `${correctCount} / 5`;
+                if (correctCount <= 2) {
+                    countHtml = `<span class="low-score">${countHtml} (보충 필요)</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td style="text-align:left;">${cleanSubjName}</td>
+                    <td>${countHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    }
+
+    // 결과 화면 캡처 기능
+    function captureResult() {
+        const captureArea = document.getElementById('capture-area');
+        
+        html2canvas(captureArea).then(canvas => {
+            // 이미지 다운로드 링크 생성
+            const link = document.createElement('a');
+            link.download = '시험결과_분석표.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+
+    // 앱 시작
+    init();
+
+</script>
+</body>
+</html>
