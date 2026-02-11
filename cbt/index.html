@@ -151,23 +151,58 @@
     /* =========================================
        초기화 및 네비게이션
        ========================================= */
-    function init() {
-        const list = document.getElementById('subject-list');
-        list.innerHTML = "";
-        
-        if (typeof quizDatabase === 'undefined') {
-            alert("quizData.js 파일을 찾을 수 없습니다.");
-            return;
-        }
+/* =========================================
+   [수정] 상세 학습 내용(sub*.html) 연동
+   ========================================= */
+function init() {
+    const list = document.getElementById('subject-list');
+    list.innerHTML = "";
+    
+    // 과목명과 파일명 맵핑 (1~9)
+    const fileMap = {
+        "1.응용SW기초기술활용": "sub1.html",
+        "2.개발자환경구축": "sub2.html",
+        "3.프로그래밍언어활용": "sub3.html",
+        "4.프로그래밍언어응용": "sub4.html",
+        "5.애플리케이션테스트수행": "sub5.html",
+        "6.화면구현": "sub6.html",
+        "7.애플리케이션배포": "sub7.html",
+        "8.SQL활용": "sub8.html",
+        "9.UI테스트": "sub9.html"
+    };
 
+    if (typeof quizDatabase !== 'undefined') {
         Object.keys(quizDatabase).forEach(subject => {
-            const btn = document.createElement('button');
-            btn.className = 'subject-btn';
-            btn.innerText = subject;
-            btn.onclick = () => startStudyMode(subject);
-            list.appendChild(btn);
+            // 1. 가로줄 컨테이너
+            const row = document.createElement('div');
+            row.className = 'subject-row';
+            row.style.display = 'flex';
+            row.style.gap = '8px';
+
+            // 2. 왼쪽: 문제 풀기 버튼
+            const quizBtn = document.createElement('button');
+            quizBtn.className = 'subject-btn';
+            quizBtn.style.flex = '1'; // 너비 꽉 채우기
+            quizBtn.innerText = subject;
+            quizBtn.onclick = () => startStudyMode(subject);
+
+            // 3. 오른쪽: 내용 보기 버튼 (새 창 열기)
+            const studyBtn = document.createElement('a');
+            studyBtn.href = fileMap[subject] || "#"; 
+            studyBtn.target = "_blank"; // 새 창으로 열기
+            studyBtn.style.cssText = "width: 70px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; color: #c2410c; font-weight: bold; font-size: 13px; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;";
+            
+            studyBtn.innerHTML = `
+                <span style="font-size: 18px; margin-bottom: 2px;">📚</span>
+                <span>이론</span>
+            `;
+
+            row.appendChild(quizBtn);
+            row.appendChild(studyBtn);
+            list.appendChild(row);
         });
     }
+}
 
     // 홈으로 가기 (확인 절차)
     function confirmHome() {
