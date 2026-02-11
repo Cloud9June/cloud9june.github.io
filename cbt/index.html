@@ -65,6 +65,37 @@
 
         /* 유틸리티 */
         .hidden { display: none; }
+
+        /* [신규] 하단 공지사항 박스 스타일 */
+        .notice-box {
+            margin-top: 30px;
+            background-color: #f8fafc; /* 연한 회색/하늘색 배경 */
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+        .notice-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #1e40af; /* 진한 파란색 제목 */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .notice-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .notice-box li {
+            margin-bottom: 6px;
+        }
+        .notice-box strong {
+            color: #b91c1c; /* 강조색 (빨강) */
+        }
     </style>
 </head>
 <body>
@@ -80,6 +111,15 @@
 
         <div style="font-size: 14px; font-weight: bold; color: #4b5563; margin-bottom: 10px;">능력단위별 학습하기</div>
         <div id="subject-list"></div>
+
+        <div class="notice-box">
+            <h3>📢 알림 및 유의사항</h3>
+            <ul>
+                <li>🏆 <strong>랭킹 시스템</strong>이 곧 도입될 예정입니다! 친구들과 점수 대결을 기대해 주세요.</li>
+                <li>📚 제공되는 [요약] 내용은 핵심 사항 위주로 정리된 것입니다.</li>
+                <li>💯 고득점을 위해서는 반드시 <strong>NCS 학습모듈 원문</strong>을 함께 참고하여 깊이 있게 공부하시기 바랍니다.</li>
+            </ul>
+        </div>
     </div>
 
     <div id="screen-quiz" class="screen">
