@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6. 화면 구현 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>6. 화면 구현</h1>
+        <p>UI/UX 설계 도구, 웹 표준 및 접근성, HTML/CSS 문법을 다룹니다.</p>
+
+        <h2>1. UI 설계 도구 (충실도에 따른 분류)</h2>
+        <table>
+            <tr><th>도구</th><th>설명</th><th>충실도</th></tr>
+            <tr><td><strong>와이어프레임</strong></td><td>화면의 뼈대를 잡는 스케치 (손그림, PPT)</td><td>Low</td></tr>
+            <tr><td><strong>목업 (Mockup)</strong></td><td>실제 화면과 흡사한 <strong>정적</strong> 디자인</td><td>High (Visual)</td></tr>
+            <tr><td><strong>프로토타입</strong></td><td>실제 작동하는 <strong>인터랙션</strong> 시제품</td><td>High (Action)</td></tr>
+        </table>
+
+        <h2>2. 웹 표준 및 접근성</h2>
+        <ul>
+            <li><strong>웹 표준</strong>: 어떤 브라우저에서도 동등하게 보이도록 W3C 표준 준수.</li>
+            <li><strong>웹 접근성</strong>: 장애인, 고령자 등 <strong>모든 사용자</strong>가 이용 가능해야 함.
+                <ul>
+                    <li><strong>대체 텍스트(alt)</strong>: 시각 장애인을 위한 이미지 설명.</li>
+                    <li><strong>키보드 접근성</strong>: 마우스 없이 사용 가능.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>3. HTML5 & CSS3</h2>
+        <ul>
+            <li><strong>시맨틱 태그</strong>: <code>header</code>, <code>nav</code>, <code>footer</code> 등 의미 있는 태그.</li>
+            <li><strong>CSS 박스 모델</strong> (안 ➔ 밖):
+                <br>Content ➔ <strong>Padding</strong> ➔ <strong>Border</strong> ➔ <strong>Margin</strong>.
+            </li>
+            <li><strong>선택자 우선순위</strong>:
+                <br><code>!important</code> > <code>#ID</code> > <code>.Class</code> > <code>Tag</code>.
+            </li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>설계 도구 중 뼈대만 스케치한 것은? (와이어프레임)</li>
+                <li>이미지 태그에서 시각 장애인을 위한 속성은? (alt)</li>
+                <li>ID 선택자를 나타내는 기호는? (#)</li>
+                <li>박스 모델에서 테두리와 내용 사이의 여백은? (Padding)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7. 애플리케이션 배포 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>7. 애플리케이션 배포</h1>
+        <p>패키징 절차, DRM(디지털 저작권 관리), 무결성 검증 기술이 핵심입니다.</p>
+
+        <h2>1. DRM (Digital Rights Management)</h2>
+        <h3>A. 주요 구성요소 (짝짓기 문제)</h3>
+        
+        <ul>
+            <li><strong>콘텐츠 제공자</strong>: 저작권자.</li>
+            <li><strong>콘텐츠 분배자</strong>: 유통 쇼핑몰.</li>
+            <li><strong>클리어링 하우스 (Clearing House)</strong>: <span class="highlight">라이선스 발급 및 키 관리</span>, 사용 권한 정책 관리.</li>
+            <li><strong>DRM 컨트롤러</strong>: 디바이스 내에서 사용 권한을 통제하는 모듈.</li>
+        </ul>
+
+        <h2>2. 저작권 보호 기술</h2>
+        <table>
+            <tr><th>기술명</th><th>목적</th><th>특징</th></tr>
+            <tr><td><strong>워터마킹</strong></td><td>저작권 정보 표시</td><td>소유권 증명</td></tr>
+            <tr><td><strong>핑거프린팅</strong></td><td>불법 유포자 추적</td><td><span class="highlight">구매자 정보</span> 삽입 (디지털 지문)</td></tr>
+            <tr><td><strong>난독화</strong></td><td>기술 유출 방지</td><td>역공학(Reverse Engineering) 방지</td></tr>
+        </table>
+
+        <h2>3. 무결성 검증 & 식별</h2>
+        <ul>
+            <li><strong>해시(Hash) 함수</strong>: 단방향 암호화. 파일이 1비트만 달라져도 결과가 완전히 달라짐 (무결성 확인용). SHA-256 등.</li>
+            <li><strong>DOI</strong>: 디지털 저작물 식별 번호.</li>
+            <li><strong>릴리즈 노트</strong>: 배포 시 변경 사항, 버그 수정 등을 기록한 문서.</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>DRM에서 라이선스와 키를 관리하는 곳은? (클리어링 하우스)</li>
+                <li>구매자 정보를 삽입하여 추적하는 기술은? (핑거프린팅)</li>
+                <li>무결성 검증을 위해 사용하는 암호화 기술은? (해시 함수)</li>
+                <li>역공학을 방지하기 위해 코드를 어렵게 만드는 것은? (난독화)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

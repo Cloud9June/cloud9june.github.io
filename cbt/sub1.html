@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1. 응용SW 기초기술 활용 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>1. 응용SW 기초 기술 활용</h1>
+        <p>운영체제, 데이터베이스, 네트워크의 기초 개념 및 심화 내용을 다룹니다.</p>
+
+        <h2>1. 운영체제 (OS) 기초</h2>
+        <h3>A. 프로세스 스케줄링</h3>
+        <ul>
+            <li><strong>비선점(Non-Preemptive)</strong>: CPU를 강제로 뺏을 수 <strong>없음</strong>.
+                <ul>
+                    <li><strong>FIFO(FCFS)</strong>: 먼저 들어온 순서대로.</li>
+                    <li><strong>SJF</strong>: 실행 시간이 가장 짧은 것 우선.</li>
+                    <li><strong>HRN</strong>: 대기 시간이 긴 작업 배려. <br>
+                        <span class="highlight">우선순위 = (대기시간 + 서비스시간) / 서비스시간</span>
+                    </li>
+                </ul>
+            </li>
+            <li><strong>선점(Preemptive)</strong>: CPU를 강제로 <strong>뺏을 수 있음</strong>.
+                <ul>
+                    <li><strong>Round Robin(RR)</strong>: 시간 할당량(Time Slice)만큼 실행 (시분할).</li>
+                    <li><strong>SRT</strong>: 남은 시간이 가장 짧은 프로세스에게 할당.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>B. 메모리 관리</h3>
+        <ul>
+            <li><strong>배치 정책</strong>: 최초 적합(First-fit), 최적 적합(Best-fit), 최악 적합(Worst-fit).</li>
+            <li><strong>교체 정책</strong>: FIFO, LRU(가장 오랫동안 미사용), LFU(사용 횟수 최소).</li>
+        </ul>
+
+        <h3>C. UNIX 명령어 (단답형 대비)</h3>
+        <ul>
+            <li><code>chmod</code>: 파일 권한 변경 (r=4, w=2, x=1).</li>
+            <li><code>ps</code>: 프로세스 상태 확인.</li>
+            <li><code>kill</code>: 프로세스 강제 종료.</li>
+            <li><code>pwd</code>: 현재 경로 출력.</li>
+            <li><code>fork</code>: 프로세스 복제 생성.</li>
+        </ul>
+
+        <h2>2. 데이터베이스 (DB) 기초</h2>
+        <h3>A. 트랜잭션의 4대 특성 (ACID) ★</h3>
+        <ul>
+            <li><strong>Atomicity (원자성)</strong>: All or Nothing.</li>
+            <li><strong>Consistency (일관성)</strong>: 상태가 모순 없이 일관됨.</li>
+            <li><strong>Isolation (격리성)</strong>: 끼어들기 금지.</li>
+            <li><strong>Durability (영속성)</strong>: 영구 저장.</li>
+        </ul>
+
+        <h3>B. 키(Key)와 무결성</h3>
+        <ul>
+            <li><strong>기본키(Primary Key)</strong>: 유일성 + 최소성 + <span class="highlight">NOT NULL</span>.</li>
+            <li><strong>외래키(Foreign Key)</strong>: 다른 테이블의 기본키 참조 (참조 무결성).</li>
+        </ul>
+
+        <h2>3. 네트워크 기초</h2>
+        <h3>A. OSI 7계층 (물데네전세표응)</h3>
+        <ul>
+            <li><strong>2계층(데이터링크)</strong>: <span class="highlight">스위치</span>, MAC 주소, 프레임.</li>
+            <li><strong>3계층(네트워크)</strong>: <span class="highlight">라우터</span>, IP 주소, 패킷, 경로 설정(Routing).</li>
+            <li><strong>4계층(전송)</strong>: TCP(신뢰성), UDP(속도), 세그먼트.</li>
+        </ul>
+
+        <h3>B. 프로토콜</h3>
+        <ul>
+            <li><strong>ARP</strong>: IP 주소 ➜ MAC 주소 변환.</li>
+            <li><strong>RARP</strong>: MAC 주소 ➜ IP 주소 변환.</li>
+            <li><strong>ICMP</strong>: 네트워크 오류 제어 (Ping).</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>`chmod 755`의 의미는? (소유자: rwx, 그룹: r-x, 기타: r-x)</li>
+                <li>HRN 우선순위 공식은? ((대기+서비스)/서비스)</li>
+                <li>트랜잭션의 4가지 특징은? (ACID)</li>
+                <li>라우터가 속한 OSI 계층은? (3계층 네트워크)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

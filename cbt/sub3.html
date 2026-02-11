@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3. 프로그래밍 언어 활용 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        .code-box { background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; margin: 10px 0; }
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>3. 프로그래밍 언어 활용</h1>
+        <p>기초 문법, 연산자 우선순위, 제어문 흐름을 파악하는 계산 문제가 주로 출제됩니다.</p>
+
+        <h2>1. 데이터 타입 (Data Type)</h2>
+        <ul>
+            <li><strong>정수형</strong>: <code>int</code> (4byte), <code>long</code> (8byte).</li>
+            <li><strong>실수형</strong>: <code>float</code> (4byte), <code>double</code> (8byte).</li>
+            <li><strong>문자형</strong>: <code>char</code> (2byte).
+                <ul>
+                    <li>아스키 코드: <strong>'A'(65)</strong>, <strong>'a'(97)</strong>, '0'(48).</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>2. 연산자 (Operator) ★ 계산 주의</h2>
+        <h3>A. 산술 연산</h3>
+        <ul>
+            <li><code>/</code> : 몫 (정수끼리 나누면 소수점 버림. 예: <code>5/2 = 2</code>).</li>
+            <li><code>%</code> : 나머지 (예: <code>5%2 = 1</code>).</li>
+        </ul>
+
+        <h3>B. 증감 연산자 (전위 vs 후위)</h3>
+        <ul>
+            <li><strong>전위 (++i)</strong>: 값을 먼저 1 증가시키고, 그 값을 연산에 사용.</li>
+            <li><strong>후위 (i++)</strong>: 현재 값을 연산에 먼저 사용하고, 나중에 1 증가.</li>
+        </ul>
+
+        <h3>C. 비트(Bit) 연산자</h3>
+        <ul>
+            <li><code>&</code> (AND): 둘 다 1일 때 1.</li>
+            <li><code>|</code> (OR): 둘 중 하나라도 1이면 1.</li>
+            <li><code>^</code> (XOR): 서로 <strong>다르면 1</strong>, 같으면 0.</li>
+            <li><code><<</code>, <code>>></code> (Shift): 비트 이동 (2배 곱하기/나누기 효과).</li>
+        </ul>
+
+        <h2>3. 제어문 (Control Flow)</h2>
+        <h3>A. Switch 문</h3>
+        <ul>
+            <li><code>break</code>가 없으면 조건이 맞아도 멈추지 않고 아래 <code>case</code>까지 계속 실행됨 (Fall-through 현상).</li>
+        </ul>
+        <h3>B. 반복문</h3>
+        <ul>
+            <li><code>continue</code>: 남은 문장을 실행하지 않고 다음 반복 회차로 넘어감.</li>
+            <li><code>break</code>: 반복문을 즉시 탈출.</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>`int a=10; int b=a++;` 실행 후 a와 b의 값은? (a=11, b=10)</li>
+                <li>10 % 3 의 결과값은? (1)</li>
+                <li>비트 연산에서 XOR(^)의 특징은? (서로 다르면 1)</li>
+                <li>배열의 인덱스는 몇 번부터 시작하는가? (0번)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

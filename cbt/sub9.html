@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9. UI 테스트 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 10px; }
+        
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>9. UI 테스트 (상세)</h1>
+        <p>사용성(Usability), 테스트 기법, 결함 관리에 대한 상세 내용입니다.</p>
+
+        <h2>1. UI 테스트 개요 및 사용성 (Usability)</h2>
+        <h3>A. UI 테스트의 목적</h3>
+        <ul>
+            <li>사용자에게 결함 없는 기능을 제공하고, 사용의 편의성(Usability)을 높여 만족도를 개선하는 것.</li>
+            <li><strong>ISO/IEC 9126 품질 특성</strong>: 기능성, 신뢰성, <span class="highlight">사용성</span>, 효율성, 유지보수성, 이식성.</li>
+        </ul>
+
+        <h3>B. 제이콥 닐슨(Jakob Nielsen)의 10가지 사용성 원칙 ★</h3>
+        <p>사용자가 시스템을 쉽게 사용할 수 있는지 평가하는 10가지 기준입니다.</p>
+        <ul>
+            <li><strong>시스템 상태 가시성 (Visibility of system status)</strong>: 현재 무엇이 진행 중인지 사용자에게 알려야 함 (예: 로딩 바, 배터리 잔량).</li>
+            <li><strong>시스템과 실세계의 일치 (Match between system and the real world)</strong>: 사용자가 이해하는 언어와 개념 사용 (예: 휴지통 아이콘, 폴더).</li>
+            <li><strong>사용자 제어와 자유 (User control and freedom)</strong>: 실수로 수행한 작업을 취소(Undo)하거나 다시 실행(Redo)할 수 있는 비상구 제공.</li>
+            <li><strong>일관성과 표준 (Consistency and standards)</strong>: 같은 기능은 같은 버튼/위치에 있어야 함 (예: '확인' 버튼은 항상 오른쪽).</li>
+            <li><strong>오류 방지 (Error prevention)</strong>: 오류가 발생하기 전에 미리 방지 (예: 검색어 자동완성, 삭제 시 확인 창).</li>
+            <li><strong>기억보다는 인식 (Recognition rather than recall)</strong>: 사용자가 기억하게 하지 말고 눈에 보이게 함 (예: 메뉴 아이콘, 최근 검색어).</li>
+            <li><strong>유연성과 효율성 (Flexibility and efficiency of use)</strong>: 초보자와 전문가 모두를 위한 단축키나 옵션 제공.</li>
+            <li><strong>심미적이고 최소화된 디자인 (Aesthetic and minimalist design)</strong>: 불필요한 정보는 줄이고 핵심에 집중 (심플한 디자인).</li>
+            <li><strong>오류 복구 지원</strong>: 오류 메시지는 이해하기 쉽게 쓰고 해결책 제시 (예: "404 Error" 대신 "주소를 확인해주세요").</li>
+            <li><strong>도움말과 문서화</strong>: 사용법을 쉽게 찾을 수 있는 도움말 제공.</li>
+        </ul>
+
+        <h2>2. UI 테스트 기법</h2>
+        <h3>A. 전문가 기반 테스트 (Inspection)</h3>
+        <p>사용자가 아닌 <strong>UI/UX 전문가</strong>가 평가하는 방법입니다.</p>
+        <ul>
+            <li><strong>휴리스틱 평가 (Heuristic Evaluation)</strong>: 전문가(3~5명)가 '10가지 사용성 원칙'을 기준으로 체크리스트를 보며 문제점을 찾음.</li>
+            <li><strong>인지적 워크스루 (Cognitive Walkthrough)</strong>: 학습 용이성을 평가. "사용자가 이 버튼을 보면 무슨 기능을 하는지 알까?"를 시뮬레이션.</li>
+        </ul>
+
+        <h3>B. 사용자 기반 테스트 (Usability Testing)</h3>
+        <p><strong>실제 사용자</strong>를 대상으로 수행합니다.</p>
+        <ul>
+            <li><strong>랩(Lab) 테스트</strong>: 통제된 환경(실험실)에서 카메라 등으로 관찰하며 테스트.</li>
+            <li><strong>현장 테스트</strong>: 사용자가 실제 사용하는 장소(집, 회사)에서 테스트.</li>
+            <li><strong>A/B 테스트</strong>: 두 가지 시안(A안, B안)을 비교하여 더 나은 것을 선택.</li>
+        </ul>
+
+        <h2>3. 테스트 케이스와 시나리오</h2>
+        <h3>A. 테스트 케이스 (Test Case)</h3>
+        <ul>
+            <li>특정 요구사항을 준수하는지 확인하기 위해 입력값, 실행 조건, 기대 결과를 명시한 문서.</li>
+            <li><strong>구성요소</strong>: 식별자(ID), 테스트 항목, 입력값(Input), 기대 결과(Output), 선수 조건(Prerequisite).</li>
+        </ul>
+
+        <h3>B. 테스트 시나리오 (Test Scenario)</h3>
+        <ul>
+            <li>여러 개의 테스트 케이스를 <strong>동작 순서(Flow)</strong>에 따라 묶은 절차서.</li>
+            <li>예: <code>[로그인]</code> ➜ <code>[상품 검색]</code> ➜ <code>[장바구니 담기]</code> ➜ <code>[결제]</code></li>
+        </ul>
+
+        <h3>C. 테스트 오라클 (Test Oracle)</h3>
+        <ul>
+            <li><strong>참(True)</strong>: 모든 입력값 검사.</li>
+            <li><strong>샘플링(Sampling)</strong>: 일부만 검사.</li>
+            <li><strong>휴리스틱(Heuristic)</strong>: 일부 + 나머지는 직관(추정).</li>
+            <li><strong>일관성(Consistent)</strong>: 변경 전후 결과 비교.</li>
+        </ul>
+
+        <h2>4. 결함(Defect) 관리</h2>
+        <h3>A. 결함 심각도 (Severity)</h3>
+        <ul>
+            <li><strong>치명적(Critical)</strong>: 시스템 다운, 데이터 손실 (테스트 진행 불가).</li>
+            <li><strong>주요(Major)</strong>: 주요 기능 장애.</li>
+            <li><strong>보통(Normal)</strong>: 일반적인 기능 장애.</li>
+            <li><strong>경미(Minor)</strong>: 화면 글자 깨짐, 오타 등 사소한 문제.</li>
+        </ul>
+
+        <h3>B. 결함 상태 (Status)</h3>
+        <ul>
+            <li><strong>Open</strong>: 결함 보고됨.</li>
+            <li><strong>Assigned</strong>: 개발자에게 배정됨.</li>
+            <li><strong>Fixed</strong>: 개발자가 수정함.</li>
+            <li><strong>Closed</strong>: 테스터가 재확인(Retest) 결과 해결됨.</li>
+            <li><strong>Deferred</strong>: 수정을 나중으로 미룸.</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트 (Self-Test)</span>
+            <ul>
+                <li>사용자가 실수로 파일을 삭제했을 때 '되살리기' 기능을 제공하는 것은? <br>➔ <strong>사용자 제어와 자유</strong></li>
+                <li>오류 메시지를 "Error Code: 0x001" 대신 이해하기 쉽게 표시하는 것은? <br>➔ <strong>오류 복구 지원 / 시스템과 실세계의 일치</strong></li>
+                <li>전문가가 사용성 원칙 기준을 가지고 UI를 평가하는 기법은? <br>➔ <strong>휴리스틱 평가</strong></li>
+                <li>테스트 케이스들을 실행 순서에 맞춰 묶어 놓은 문서는? <br>➔ <strong>테스트 시나리오</strong></li>
+                <li>개발자가 수정을 완료했으나 아직 테스터가 확인하지 않은 상태는? <br>➔ <strong>Fixed</strong></li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

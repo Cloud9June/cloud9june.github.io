@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2. 개발자 환경 구축 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+        .code-box { background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; margin: 10px 0; }
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2. 개발자 환경 구축</h1>
+        <p>웹 서버와 WAS의 차이, 빌드 도구, 형상 관리(Git)에 대한 핵심 내용입니다.</p>
+
+        <h2>1. 서버 및 하드웨어 환경</h2>
+        <h3>A. Web Server vs WAS (핵심 구분)</h3>
+        
+        <table>
+            <tr><th>구분</th><th>Web Server (웹 서버)</th><th>WAS (웹 애플리케이션 서버)</th></tr>
+            <tr><td><strong>역할</strong></td><td><strong>정적(Static)</strong> 콘텐츠 처리<br>(HTML, CSS, 이미지)</td><td><strong>동적(Dynamic)</strong> 콘텐츠 처리<br>(DB 조회, 비즈니스 로직)</td></tr>
+            <tr><td><strong>특징</strong></td><td>단순하고 빠름</td><td>트랜잭션 처리, 미들웨어 역할</td></tr>
+            <tr><td><strong>종류</strong></td><td>Apache, Nginx, IIS</td><td>Tomcat, Jeus, WebLogic</td></tr>
+        </table>
+
+        <h2>2. 빌드(Build) 도구</h2>
+        <ul>
+            <li><strong>Ant</strong>: XML 기반 스크립트. 오래되었으나 유연함.</li>
+            <li><strong>Maven</strong>: <code>pom.xml</code> 파일 사용. 정해진 생명주기(Lifecycle)에 따라 관리. 라이브러리 자동 다운로드.</li>
+            <li><strong>Gradle</strong>: <code>Groovy</code> 기반 스크립트. 안드로이드 표준. 속도가 빠르고 유연함 (Ant+Maven 장점).</li>
+        </ul>
+
+        <h2>3. 형상 관리 (SCM) - Git</h2>
+        
+        <h3>A. 주요 명령어 흐름</h3>
+        <div class="code-box">
+            1. git init      (저장소 초기화)<br>
+            2. git add .     (작업 파일을 스테이징 영역으로)<br>
+            3. git commit    (로컬 저장소에 확정 저장)<br>
+            4. git push      (원격 저장소로 업로드)
+        </div>
+
+        <h3>B. 용어 정리</h3>
+        <ul>
+            <li><strong>Clone</strong>: 원격 저장소 복제 (최초 1회).</li>
+            <li><strong>Pull</strong>: 원격 변경 사항을 가져와서 <strong>병합(Merge)</strong>함.</li>
+            <li><strong>Fetch</strong>: 원격 변경 사항을 가져오지만 <strong>병합하지 않음</strong> (확인용).</li>
+            <li><strong>Checkout</strong>: 브랜치(Branch) 전환.</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>Apache는 웹 서버인가 WAS인가? (웹 서버)</li>
+                <li>Maven 설정 파일의 확장자는? (pom.xml)</li>
+                <li>Git에서 원격 저장소에 올리는 명령어는? (push)</li>
+                <li>Git에서 변경 사항을 가져오되 합치지 않는 명령어는? (fetch)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

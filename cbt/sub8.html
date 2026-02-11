@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8. SQL 활용 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>8. SQL 활용</h1>
+        <p>DDL/DML/DCL 구분, 제약조건, SELECT 실행 순서가 중요합니다.</p>
+
+        <h2>1. SQL 명령어 분류 (암기 필수)</h2>
+        <table>
+            <tr><th>분류</th><th>설명</th><th>명령어</th></tr>
+            <tr><td><strong>DDL</strong> (정의)</td><td>구조 생성/변경</td><td>CREATE, ALTER, DROP, <strong>TRUNCATE</strong></td></tr>
+            <tr><td><strong>DML</strong> (조작)</td><td>데이터 처리</td><td>SELECT, INSERT, UPDATE, DELETE</td></tr>
+            <tr><td><strong>DCL</strong> (제어)</td><td>권한/트랜잭션</td><td>GRANT, REVOKE, COMMIT</td></tr>
+        </table>
+
+        <h2>2. 제약조건 (Constraints)</h2>
+        <ul>
+            <li><strong>Primary Key (기본키)</strong>: 유일성 + 최소성 + <strong>Not Null</strong>.</li>
+            <li><strong>Foreign Key (외래키)</strong>: 참조 무결성 유지.</li>
+        </ul>
+
+        <h2>3. SELECT 문 실행 순서</h2>
+        <p>코드는 <code>SELECT ... FROM ...</code> 순으로 쓰지만, 실행은 다릅니다.</p>
+        <p class="highlight" style="font-size: 18px; text-align: center;">FROM ➔ WHERE ➔ GROUP BY ➔ HAVING ➔ SELECT ➔ ORDER BY</p>
+
+        <h2>4. 조인 (JOIN) 및 기타</h2>
+        <ul>
+            <li><strong>Inner Join</strong>: 교집합 (조건 일치하는 행만).</li>
+            <li><strong>Outer Join</strong>: 조건 불일치해도 한쪽 모두 표시 (Left, Right).</li>
+            <li><strong>View</strong>: 가상의 테이블 (보안, 편의성).</li>
+            <li><strong>Index</strong>: 검색 속도 향상, CUD 속도 저하.</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>데이터만 지우고 구조는 남기며 복구 불가능한 명령어는? (TRUNCATE)</li>
+                <li>GROUP BY에 대한 조건절은 어디에 쓰는가? (HAVING)</li>
+                <li>'김%' 가 의미하는 것은? (김으로 시작하는 모든 문자열)</li>
+                <li>권한을 부여하는 명령어는? (GRANT)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5. 애플리케이션 테스트 수행 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>5. 애플리케이션 테스트 수행</h1>
+        <p>테스트 기법(화이트/블랙박스), 통합 테스트 전략, 테스트 오라클이 핵심입니다.</p>
+
+        <h2>1. 화이트박스 vs 블랙박스 (구분 필수)</h2>
+        <table>
+            <tr><th>구분</th><th>화이트박스 (White-box)</th><th>블랙박스 (Black-box)</th></tr>
+            <tr><td><strong>관점</strong></td><td>내부 <strong>소스 코드</strong>와 로직 검증</td><td>외부 <strong>기능</strong>과 입출력 값 검증</td></tr>
+            <tr><td><strong>주체</strong></td><td>개발자 관점</td><td>사용자 관점</td></tr>
+            <tr><td><strong>기법</strong></td><td>기초 경로 검사<br>제어 구조 검사 (조건, 루프)</td><td><strong>동치 분할 (Equivalence)</strong><br><strong>경계값 분석 (Boundary)</strong><br>원인-효과 그래프</td></tr>
+        </table>
+        <ul>
+            <li><strong>McCabe 순환 복잡도</strong>: <code>V(G) = 간선(E) - 노드(N) + 2</code></li>
+        </ul>
+
+        <h2>2. 통합 테스트 전략</h2>
+        
+        <ul>
+            <li><strong>하향식 (Top-down)</strong>: 위에서 아래로. 아직 없는 하위 모듈 대신 <strong>스텁(Stub)</strong> 사용.</li>
+            <li><strong>상향식 (Bottom-up)</strong>: 아래에서 위로. 상위 모듈 역할 <strong>드라이버(Driver)</strong> 사용.</li>
+            <li><strong>빅뱅 (Big Bang)</strong>: 모든 모듈을 한꺼번에 결합.</li>
+        </ul>
+
+        <h2>3. 테스트 레벨 & 오라클</h2>
+        <ul>
+            <li><strong>레벨</strong>: 단위 ➔ 통합 ➔ 시스템 ➔ 인수 테스트.</li>
+            <li><strong>인수 테스트</strong>: 알파(개발자 환경), 베타(실제 환경).</li>
+            <li><strong>오라클</strong>: 참(전수), 샘플링(일부), 휴리스틱(일부+추정), 일관성.</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>경계값 분석은 어떤 테스트 기법인가? (블랙박스)</li>
+                <li>하향식 테스트에서 하위 모듈 역할을 하는 것은? (스텁)</li>
+                <li>개발자 환경에서 사용자가 수행하는 인수 테스트는? (알파)</li>
+                <li>변경 전후 결과가 같은지 확인하는 오라클은? (일관성)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>

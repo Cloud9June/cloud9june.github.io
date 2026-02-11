@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. 프로그래밍 언어 응용 상세 학습</title>
+    <style>
+        :root { --primary: #2563eb; --text: #1f2937; --bg: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; line-height: 1.7; color: var(--text); background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); border-bottom: 3px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px; }
+        h2 { background: #eff6ff; color: #1e40af; padding: 12px 15px; border-radius: 8px; margin-top: 40px; font-size: 22px; border-left: 5px solid var(--primary); }
+        h3 { color: #4b5563; margin-top: 25px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; font-size: 18px; font-weight: bold; }
+        ul, ol { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
+        .highlight { color: #b91c1c; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .checklist-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-top: 40px; }
+        .checklist-title { font-weight: bold; color: #166534; font-size: 18px; margin-bottom: 15px; display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; text-align: center; }
+        .close-btn { display: block; width: 100%; padding: 15px; background: #475569; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 40px; transition: 0.2s; }
+        .close-btn:hover { background: #334155; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>4. 프로그래밍 언어 응용</h1>
+        <p>C언어 포인터, Java 객체지향, Python 문법 등 변별력 있는 문제가 출제됩니다.</p>
+
+        <h2>1. C언어 포인터 (Pointer)</h2>
+        <ul>
+            <li><strong><code>&</code> (주소 연산자)</strong>: 변수의 메모리 주소를 반환.</li>
+            <li><strong><code>*</code> (참조 연산자)</strong>: 포인터가 가리키는 곳의 <strong>실제 값</strong>을 가져옴.</li>
+            <li><strong>배열과 포인터</strong>: 배열 이름(<code>arr</code>)은 배열의 시작 주소와 같음.
+                <br><code>arr[i]</code> == <code>*(arr + i)</code>
+            </li>
+            <li><strong>구조체 접근</strong>: 포인터로 구조체 멤버 접근 시 <code>-></code> 화살표 사용.</li>
+        </ul>
+
+        <h2>2. Java 객체지향 (OOP)</h2>
+        <h3>A. 오버로딩 vs 오버라이딩 (필수 암기)</h3>
+        <table>
+            <tr><th>구분</th><th>오버로딩 (Overloading)</th><th>오버라이딩 (Overriding)</th></tr>
+            <tr><td><strong>정의</strong></td><td>같은 이름 메소드 <strong>여러 개</strong> 정의</td><td>상속받은 메소드 <strong>재정의</strong></td></tr>
+            <tr><td><strong>조건</strong></td><td>매개변수 개수/타입 달라야 함</td><td>이름, 매개변수, 리턴타입 같아야 함</td></tr>
+            <tr><td><strong>비유</strong></td><td>New (새 기능 추가)</td><td>Change (기능 변경)</td></tr>
+        </table>
+
+        <h3>B. 접근 제한자 (범위 순서)</h3>
+        <p><code>private</code> (내 클래스) ➔ <code>default</code> (같은 패키지) ➔ <code>protected</code> (상속 포함) ➔ <code>public</code> (전체)</p>
+
+        <h2>3. Python 기초</h2>
+        <ul>
+            <li><strong>특징</strong>: 들여쓰기(Indentation)로 블록 구분.</li>
+            <li><strong>슬라이싱(Slicing)</strong>: <code>list[start : end]</code>
+                <br>👉 <span class="highlight">end 인덱스는 포함하지 않음 (end - 1 까지)</span>
+            </li>
+            <li><strong>음수 인덱스</strong>: <code>-1</code>은 맨 뒤의 요소.</li>
+            <li><strong>딕셔너리</strong>: <code>{'key': 'value'}</code> 형태의 자료구조.</li>
+        </ul>
+
+        <div class="checklist-box">
+            <span class="checklist-title">📝 시험 전 체크리스트</span>
+            <ul>
+                <li>`int *p = &a;` 에서 `*p`가 의미하는 것은? (a의 값)</li>
+                <li>상속받은 메소드의 내용을 고쳐 쓰는 것은? (오버라이딩)</li>
+                <li>`a=[1,2,3]` 일 때 `a[0:2]`의 결과는? ([1, 2])</li>
+                <li>Java에서 상속을 구현하는 키워드는? (extends)</li>
+            </ul>
+        </div>
+
+        <a href="javascript:window.close()" class="close-btn">창 닫기</a>
+    </div>
+</body>
+</html>
