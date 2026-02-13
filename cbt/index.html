@@ -319,9 +319,6 @@
 
         if(currentQuestions.length === 0) { alert("문제 데이터 없음"); return; }
 
-        // 테스트용 문제 갯수 수정
-        currentQuestions = currentQuestions.slice(0, 5);
-
         resetQuiz();
         document.getElementById('subject-title').innerText = "실전 모의고사 (랭킹전)";
         document.getElementById('timer-badge').style.display = 'block';
