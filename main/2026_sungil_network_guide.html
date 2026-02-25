@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 성일정보고 인터넷 설정 가이드</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f9; }
+        header { text-align: center; padding: 20px; background-color: #004a94; color: white; border-radius: 10px 10px 0 0; }
+        .container { background: white; padding: 20px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* 탭 스타일 */
+        .tabs { display: flex; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid #004a94; }
+        .tab-link { padding: 10px 20px; cursor: pointer; background: #e9ecef; border: none; outline: none; transition: 0.3s; margin-right: 5px; border-radius: 5px 5px 0 0; font-weight: bold; }
+        .tab-link.active { background: #004a94; color: white; }
+        .tab-content { display: none; animation: fadeIn 0.5s; }
+        .tab-content.active { display: block; }
+
+        /* 정보 박스 */
+        .info-box { background-color: #f8f9fa; border-left: 5px solid #004a94; padding: 15px; margin: 15px 0; }
+        .step-list { padding-left: 20px; }
+        .step-list li { margin-bottom: 10px; }
+        .highlight { color: #d9534f; font-weight: bold; }
+        .footer { text-align: center; margin-top: 30px; font-size: 0.9em; color: #666; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>2026 인터넷 설정 안내</h1>
+    <p>성일정보고등학교 교육정보부</p>
+</header>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-link active" onclick="openTab(event, 'wired')">노트북 유선</button>
+        <button class="tab-link" onclick="openTab(event, 'wifi')">교실 Wi-Fi</button>
+        <button class="tab-link" onclick="openTab(event, 'messenger')">쿨메신저</button>
+        <button class="tab-link" onclick="openTab(event, 'comtime')">컴시간알리미</button>
+    </div>
+
+    <div id="wired" class="tab-content active">
+        <h2>1. 노트북 유선 인터넷 설정</h2>
+        <ul class="step-list">
+            <li><strong>Step 1:</strong> 윈도우 검색창(Win+S)에 <span class="highlight">"네트워크 연결 보기"</span>를 검색하여 실행합니다.</li>
+            <li><strong>Step 2:</strong> '이더넷' 항목에서 마우스 우클릭 후 <strong>[속성]</strong>을 선택합니다.</li>
+            <li><strong>Step 3:</strong> <span class="highlight">인터넷 프로토콜 버전 4(TCP/IPv4)</span>를 선택하고 [속성]을 클릭합니다.</li>
+            <li><strong>Step 4:</strong> 다음 정보를 입력합니다:
+                <div class="info-box">
+                    • <strong>IP 주소:</strong> 10.101.80.XXX (안내받은 3자리)<br>
+                    • <strong>서브넷 마스크:</strong> 255.255.254.0<br>
+                    • <strong>기본 게이트웨이:</strong> 10.101.80.1<br>
+                    • <strong>기본 설정 DNS 서버:</strong> 168.126.63.1
+                </div>
+            </li>
+            <li><strong>Step 5:</strong> [확인] 및 [닫기]를 눌러 설정을 완료합니다.</li>
+        </ul>
+    </div>
+
+    <div id="wifi" class="tab-content">
+        <h2>2. 교실용 G02 Wi-Fi 설정</h2>
+        <p>※ 모바일 및 태블릿에서도 동일하게 사용 가능합니다.</p>
+        <div class="info-box">
+            • <strong>SSID (목록):</strong> G02-141 또는 G02-141_2.4G<br>
+            • <strong>ID:</strong> G02_141<br>
+            • <strong>PW (일반):</strong> <span class="highlight">smart02_141</span><br>
+            • <strong>PW (IoT):</strong> <span class="highlight">smart02_141@</span>
+        </div>
+    </div>
+
+    <div id="messenger" class="tab-content">
+        <h2>3. 쿨메신저 설정</h2>
+        <div class="info-box">
+            • <strong>서버 주소:</strong> <span class="highlight">10.104.147.199</span><br>
+            • <strong>아이디:</strong> 나이스 신청 ID<br>
+            • <strong>패스워드:</strong> 1234
+        </div>
+    </div>
+
+    <div id="comtime" class="tab-content">
+        <h2>4. 컴시간알리미 설정</h2>
+        <ul class="step-list">
+            <li>[일과 찾기]를 클릭하여 학교 일과를 찾습니다.</li>
+            <li>찾을 수 없는 경우 직접 <strong>일과관리 IP</strong>를 입력합니다: <span class="highlight">10.104.147.199</span></li>
+            <li>처음 사용자는 [사용자 등록]을 통해 직접 계정을 생성 후 로그인합니다.</li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        &copy; 2026 성일정보고등학교 교육정보부
+    </div>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+</script>
+
+</body>
+</html>
