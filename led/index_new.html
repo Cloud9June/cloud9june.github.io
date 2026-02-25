@@ -2,98 +2,159 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Wide Graduation Display - 3480x1044</title>
+    <title>2026 Graduation - School List</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@800;900&display=swap');
 
         body {
             margin: 0; padding: 0;
-            /* 와이드 해상도 고정 */
             width: 3480px; height: 1044px;
             overflow: hidden;
-            background-color: #000;
+            background-color: #f0f2f5;
             font-family: 'Pretendard', sans-serif;
             display: flex;
             flex-direction: column;
         }
 
-        /* 1. 상단 현수막: 가로 전체 사용 */
+        /* 1. 현수막 영역 (400px) */
         #banner-area {
-            width: 3480px;
-            height: 400px;
+            width: 3480px; height: 400px;
             background: #fff;
             z-index: 10;
             position: relative;
-            border-bottom: 4px solid #e67e22; /* 경계선 포인트 */
-            margin-bottom: 10px;
+            border-bottom: 4px solid #000;
         }
-
         #banner-area img {
-            width: 100%;
-            height: 100%;
-            object-fit: fill; /* 가로로 긴 현수막 이미지 권장 */
-            display: block;
-        }
-
-        /* 2. 하단 콘텐츠 영역 컨테이너 */
-        #content-area {
-            width: 3480px;
-            height: 644px; /* 1044 - 200 */
-            display: flex;
-            gap: 10px;
-        }
-
-        /* 3. 좌우 2분할 화면 */
-        .screen {
-            width: calc(50% - 5px);
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* 중앙 구분선 스타일 (선택 사항) */
-        #screen-left {
-            border-right: 2px solid rgba(255,255,255,0.2);
-        }
-
-        .screen img {
-            width: 100%;
-            height: 100%;
-            /* 사진의 비율을 유지하며 꽉 채움 */
+            width: 100%; height: 100%;
             object-fit: fill;
             display: block;
         }
 
-        /* 텍스트 오버레이 (이미지 위에 글자를 띄울 경우) */
-        .overlay-text {
+        /* 2. 컨텐츠 컨테이너 (644px) */
+        #content-area {
+            width: 3480px; height: 644px;
+            display: flex;
+            gap: 4px;
+            background-color: #000; 
+        }
+
+        /* 3. 컨텐츠 1 (중학교 명단) */
+        #screen-left {
+            width: calc(50% - 5px);
+            height: 100%;
+            /* 선형 그라데이션 적용 (밝은 파랑에서 보라색 느낌) */
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        /* 배경 흐림 처리 (명단 가독성) */
+        #screen-left::before {
+            content: "";
             position: absolute;
-            bottom: 50px;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            z-index: 1;
+        }
+
+        .school-grid {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            /* 6열로 변경 */
+            grid-template-columns: repeat(6, 1fr); 
+            /* 행 간격과 열 간격을 해상도에 맞춰 조정 */
+            gap: 12px;
             width: 100%;
+            height: 100%;
+            align-content: center; /* 세로 중앙 정렬 */
+        }
+
+        .school-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            /* 6열이므로 글자 크기를 살짝 조정 (26~28px 추천) */
+            font-size: 26px; 
+            font-weight: 900;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
             text-align: center;
-            color: white;
-            font-family: 'Black Han Sans', sans-serif;
-            font-size: 60px; /* 해상도가 크므로 폰트도 크게 */
-            text-shadow: 4px 4px 15px rgba(0,0,0,0.7);
-            pointer-events: none;
+            height: 55px; /* 카드의 높이를 일정하게 고정 */
+            padding: 5px 10px;
+            word-break: keep-all; /* 단어 끊김 방지 */
+            line-height: 1.2;
+        }
+
+        /* 4. 컨텐츠 2 (사진 파일) */
+        #screen-right {
+            width: calc(50% - 5px);
+            height: 100%;
+            background: #000;
+        }
+        #screen-right img {
+            width: 100%; height: 100%;
+            object-fit: fill;
+            display: block;
         }
     </style>
 </head>
 <body>
 
     <header id="banner-area">
-        <img src="images/new.jpg" alt="졸업 축하 와이드 현수막">
-        </header>
+        <img src="images/new.jpg" alt="졸업 현수막">
+    </header>
 
     <main id="content-area">
-        <div class="screen" id="screen-left">
-            <img src="images/background_p.png" alt="좌측 콘텐츠">
-            <!-- <div class="overlay-text">빛나는 우리의 추억</div> -->
+        <div id="screen-left">
+            <div class="school-grid" id="schoolGrid">
+                </div>
         </div>
-        <div class="screen" id="screen-right">
-            <img src="images/classroom.jpg" alt="우측 콘텐츠">
-            <!-- <div class="overlay-text">새로운 시작을 응원합니다</div> -->
+
+        <div id="screen-right">
+            <img src="images/classroom.jpg" alt="추억 사진">
         </div>
     </main>
+
+<script>
+    const schools = [
+        "경안중학교", "곤지암중학교", "광주광남중학교", "광주중학교", "금광중학교",
+        "나곡중학교", "늘푸른중학교", "대원중학교", "도촌중학교", "동광중학교",
+        "매양중학교", "보평중학교", "삼평중학교", "상원여자중학교", "샛별중학교",
+        "성남동중학교", "성남문원중학교", "성남서중학교", "성남여자중학교", "성남중학교",
+        "성일중학교", "세정중학교", "손곡중학교", "송례중학교", "수진중학교",
+        "숭신여자중학교", "신현중학교", "야탑중학교", "여주여자중학교", "영성중학교",
+        "운중중학교", "위례중앙중학교", "위례중학교", "위례한빛중학교", "은행중학교",
+        "장안중학교", "창성중학교", "청옥중학교", "초월중학교", "탄벌중학교",
+        "태전중학교", "태평중학교", "풍생중학교", "하탑중학교"
+    ];
+
+    // 파스텔 무지개 7색
+    const colors = ['#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', '#A0C4FF', '#BDB2FF'];
+
+    const grid = document.getElementById('schoolGrid');
+
+    schools.forEach((name, i) => {
+        const card = document.createElement('div');
+        card.className = 'school-card';
+        const bgColor = colors[i % colors.length];
+        
+        // 노란색 계열 글자색 보정
+        const textColor = bgColor === '#FDFFB6' ? '#858100' : '#ffffff';
+        
+        card.style.backgroundColor = bgColor;
+        card.style.color = textColor;
+        card.innerText = name;
+        
+        grid.appendChild(card);
+    });
+</script>
 
 </body>
 </html>
