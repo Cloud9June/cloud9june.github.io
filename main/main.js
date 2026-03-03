@@ -255,7 +255,8 @@ return s.replace(/<br\s*\/?>/gi, ' · ' ) .replace(/\([^)]*\)/g, '' ) .replace(/
         textEl.textContent = text;
         localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
     } else {
-        textEl.textContent = "🥳 급식은 없지만, 대신 더 많은 자유가 기다립니다!";
+        // textEl.textContent = "🥳 급식은 없지만, 대신 더 많은 자유가 기다립니다!";
+        textEl.textContent = "현재 NEIS 점검 중으로 급식 정보를 불러올 수 없습니다.";
         localStorage.removeItem(CACHE_KEY);
     }
     }
