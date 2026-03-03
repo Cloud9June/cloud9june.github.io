@@ -724,7 +724,7 @@ closeScheduleBtn.addEventListener("click", () => {
 
 async function loadSchedule() {
   // ✅ 오늘일정 시트의 CSV 주소
-  const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVGElXniOyF3A9SaK2l_8Zm6omPzbialdK8pCdeI5QuEiRXcOMC8ylwNHFI8coP8rfvykhcVwC08pe/pub?gid=0&single=true&output=csv";
+  const url = "https://docs.google.com/spreadsheets/d/1PsddTQqOyLU62EqyRrZFFXnoowL1-m09dUa-tLqCJcE/export?format=csv&gid=0";
 
   try {
     const res = await fetch(url);
