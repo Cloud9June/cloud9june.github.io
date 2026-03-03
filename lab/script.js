@@ -100,9 +100,9 @@ onAuthStateChanged(auth, async (user) => {
 // 🏫 실습실 데이터 및 로직
 // ==========================================================
 const labs = [
-    { id: "lab_01", name: "컴퓨터 1실", rows: 0, cols: 0 },
+    { id: "lab_01", name: "컴퓨터 1실", rows: 5, cols: 6 },
     { id: "lab_02", name: "컴퓨터 2실", rows: 8, cols: 6 },
-    { id: "lab_03", name: "컴퓨터 3실", rows: 0, cols: 0 },
+    { id: "lab_03", name: "컴퓨터 3실", rows: 5, cols: 6 },
     { id: "lab_04", name: "컴퓨터 4실", rows: 5, cols: 6 },
     { id: "lab_05", name: "컴퓨터 5실", rows: 5, cols: 6 },
     { id: "lab_06", name: "컴퓨터 6실", rows: 5, cols: 6 },
@@ -114,7 +114,7 @@ const labs = [
     { id: "lab_12", name: "컴퓨터 12실", rows: 5, cols: 6 },
     { id: "lab_13", name: "컴퓨터 13실", rows: 5, cols: 6 },
     { id: "lab_14", name: "컴퓨터 14실", rows: 5, cols: 6 },
-    { id: "lab_15", name: "컴퓨터 15실", rows: 0, cols: 0 },
+    { id: "lab_15", name: "미디어실습실", rows: 5, cols: 6 },
     { id: "lab_multi", name: "멀티미디어실", rows: 5, cols: 6 },
 ];
 
