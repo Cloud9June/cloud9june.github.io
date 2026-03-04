@@ -195,66 +195,93 @@ on(ticker, 'mouseleave', () => track && (track.style.animationPlayState = 'runni
 
 // ===== 오늘 급식 (NEIS) =====
 (function () {
-const textEl = $('todayMealText');
-if (!textEl) return;
+    const textEl = $('todayMealText');
+    if (!textEl) return;
 
-const officeCode = "J10",
-schoolCode = "7530591",
-key = "86d5824114ac4902a87d57ce9146867d";
+    // 설정 정보
+    const officeCode = "J10",
+        schoolCode = "7530591",
+        key = "bdcd0ca692e6441a8522db4496c56216"; // 새로 발급받으신 키 적용
 
-const CACHE_KEY = "todayMealCache";
+    const CACHE_KEY = "todayMealCache";
 
-function todayYMD() {
-const kst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
-const y = kst.getFullYear(),
-m = String(kst.getMonth() + 1).padStart(2, '0'),
-d = String(kst.getDate()).padStart(2, '0');
-return `${y}${m}${d}`;
-}
-
-function formatMenu(s) {
-if (!s) return '';
-return s.replace(/<br\s*\/?>/gi, ' · ' ) .replace(/\([^)]*\)/g, '' ) .replace(/\b\d+\./g, '' )
-    .replace(/\s{2,}/g, ' ' ) .trim(); } async function fetchMeal() { const ymd=todayYMD(); const
-    url=`https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${encodeURIComponent(key)}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_FROM_YMD=${ymd}&MLSV_TO_YMD=${ymd}`;
-    try { const res=await fetch(url); const data=await res.json(); if (data &&
-    Array.isArray(data.mealServiceDietInfo)) { const withRow=data.mealServiceDietInfo.find(x=>
-    Array.isArray(x.row));
-    const rows = withRow ? withRow.row : [];
-    if (rows.length) {
-    const target = rows.find(r => (r.MMEAL_SC_NM || '').includes('중식')) || rows[0];
-    const text = formatMenu(target && target.DDISH_NM);
-    return text || null;
-    }
-    }
-    } catch (e) {
-    console.warn("급식 불러오기 실패:", e);
-    }
-    return null;
+    // 날짜 구하기 (KST 기준)
+    function todayYMD() {
+        const kst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+        const y = kst.getFullYear(),
+            m = String(kst.getMonth() + 1).padStart(2, '0'),
+            d = String(kst.getDate()).padStart(2, '0');
+        return `${y}${m}${d}`;
     }
 
+    // 메뉴 텍스트 정리 (불필요한 숫자, 괄호 제거)
+    function formatMenu(s) {
+        if (!s) return '';
+        return s.replace(/<br\s*\/?>/gi, ' · ')
+                .replace(/\([^)]*\)/g, '')
+                .replace(/\b\d+\./g, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+    }
+
+    // NEIS API에서 급식 정보 가져오기
+    async function fetchMeal() {
+        const ymd = todayYMD();
+        // 단일 날짜 조회를 위해 MLSV_YMD 파라미터 사용
+        const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${key}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${ymd}`;
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            // 디버깅용: 데이터가 어떻게 오는지 콘솔에서 확인 가능합니다.
+            console.log("NEIS API 응답 데이터:", data);
+
+            // API 응답 결과 코드 확인 (INFO-000이 정상)
+            if (data.RESULT && data.RESULT.CODE !== "INFO-000") {
+                console.warn("NEIS 메시지:", data.RESULT.MESSAGE);
+                return null;
+            }
+
+            // 데이터 구조에서 실제 급식 행(row) 찾기
+            if (data.mealServiceDietInfo) {
+                const rowData = data.mealServiceDietInfo.find(item => item.row);
+                if (rowData && rowData.row) {
+                    const rows = rowData.row;
+                    // '중식'을 우선으로 찾고, 없으면 첫 번째 항목 선택
+                    const target = rows.find(r => (r.MMEAL_SC_NM || '').includes('중식')) || rows[0];
+                    return formatMenu(target.DDISH_NM);
+                }
+            }
+        } catch (e) {
+            console.error("급식 API 호출 중 오류 발생:", e);
+        }
+        return null;
+    }
+
+    // 화면에 급식 표시 및 캐싱 처리
     async function loadMeal() {
-    const today = todayYMD();
+        const today = todayYMD();
 
-    // 1) 캐시 먼저 확인
-    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
-    if (cache.date === today && cache.text) {
-        textEl.textContent = cache.text; // 즉시 표시
-        return;
-    } else {
-        textEl.textContent = "🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중...";
-    }
+        // 1) 캐시 확인 (오늘 이미 받은 데이터가 있다면 즉시 표시)
+        const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+        if (cache.date === today && cache.text) {
+            textEl.textContent = cache.text;
+            return;
+        } else {
+            textEl.textContent = "🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중...";
+        }
 
-    // 2) 백그라운드에서 새로 요청
-    const text = await fetchMeal();
-    if (text) {
-        textEl.textContent = text;
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
-    } else {
-        // textEl.textContent = "🥳 급식은 없지만, 대신 더 많은 자유가 기다립니다!";
-        textEl.textContent = "현재 NEIS 점검 중으로 급식 정보를 불러올 수 없습니다.";
-        localStorage.removeItem(CACHE_KEY);
-    }
+        // 2) API 호출
+        const text = await fetchMeal();
+        if (text) {
+            textEl.textContent = text;
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ date: today, text }));
+        } else {
+            // 데이터가 없을 때의 메시지
+            textEl.textContent = "현재 NEIS 점검 중이거나 급식 정보가 등록되지 않았습니다.";
+            localStorage.removeItem(CACHE_KEY);
+        }
     }
 
     loadMeal();

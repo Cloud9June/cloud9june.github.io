@@ -85,7 +85,7 @@ const data = [
     { title: "행정실장", name: "이경미", ext: "330" },
     { title: "주무관", name: "장수지", ext: "332" },
     { title: "행정부장", name: "강승훈", ext: "333" },
-    { title: "주무관", name: "박은지", ext: "336" },
+    { title: "주무관", name: "최윤재", ext: "336" },
     { title: "주무관", name: "이충진", ext: "335" },
     { title: "주무관", name: "박준서", ext: "334" },
     { title: "행정실무사", name: "한승정", ext: "337" }
