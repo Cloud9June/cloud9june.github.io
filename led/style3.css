@@ -1,0 +1,50 @@
+/* 기본 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 스크롤 방지 */
+    background-color: #000;
+}
+
+.container {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    /* 가로 비율: 1:1:2 (왼쪽 두 칸은 작게, 오른쪽 달력은 크게) */
+    grid-template-columns: 1fr 1fr 2fr; 
+    /* 세로 비율: 1:1 (상하 균등 분할) */
+    grid-template-rows: 1fr 1fr;
+    gap: 2px; /* 경계선 두께 (원치 않으면 0으로 설정) */
+    
+    /* 레이아웃 지도 정의 */
+    grid-template-areas: 
+        "notice   meal     calendar"
+        "youtube  d-day    calendar";
+}
+
+/* 공통 아이템 스타일 */
+.item {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    position: relative;
+}
+
+.item iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* 각 영역 배치 */
+.notice   { grid-area: notice; }
+.meal     { grid-area: meal; }
+.youtube  { grid-area: youtube; }
+.d-day    { grid-area: d-day; }
+.calendar { grid-area: calendar; } /* 오른쪽 세로를 통째로 차지 */

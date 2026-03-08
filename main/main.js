@@ -200,7 +200,7 @@ on(ticker, 'mouseleave', () => track && (track.style.animationPlayState = 'runni
 
     // 설정 정보
     const officeCode = "J10",
-        schoolCode = "7530591",
+        schoolCode = "7530167",
         key = "bdcd0ca692e6441a8522db4496c56216"; // 새로 발급받으신 키 적용
 
     const CACHE_KEY = "todayMealCache";
