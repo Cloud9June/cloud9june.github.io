@@ -672,21 +672,31 @@ async function loadDuty() {
 
     // 오늘 데이터 ------------------
     let today = rows[0][0];
-    let jubun = rows[3][0];
-    let gyotong = rows[7][0];
+    let jubun = rows[3][4];
+    let gyotong = rows[3][4];
     let jubunGyotong = (jubun === gyotong) ? jubun : `${jubun}, ${gyotong}`;
-    let gupsikA = [rows[3][3], rows[4][3]].filter(v => v).join(", ");
-    let gupsikB = [rows[7][3], rows[8][3]].filter(v => v).join(", ");
-    let yaja = [rows[3][6], rows[4][6]].filter(v => v).join(", ");
+    let gupsikA = [rows[3][7], rows[4][7]].filter(v => v).join(", ");
+    let gupsikB = [rows[6][7], rows[7][7]].filter(v => v).join(", ");
+    // let yaja = [rows[3][1], rows[4][1], rows[5][1], rows[6][1], rows[7][1]].filter(v => v).join(", ");
+    let basic = rows[3][1];
+    let ncs = rows[4][1];
+    let army1 = rows[5][1];
+    let army2 = rows[6][1];
+    let gongmuwon = rows[7][1];
 
     // 내일 데이터 ------------------
     let tomorrow = rows[11][0];
-    let jubun2 = rows[14][0];
-    let gyotong2 = rows[18][0];
+    let jubun2 = rows[14][4];
+    let gyotong2 = rows[14][4];
     let jubunGyotong2 = (jubun2 === gyotong2) ? jubun2 : `${jubun2}, ${gyotong2}`;
-    let gupsikA2 = [rows[14][3], rows[15][3]].filter(v => v).join(", ");
-    let gupsikB2 = [rows[18][3], rows[19][3]].filter(v => v).join(", ");
-    let yaja2 = [rows[14][6], rows[15][6]].filter(v => v).join(", ");
+    let gupsikA2 = [rows[14][7], rows[15][7]].filter(v => v).join(", ");
+    let gupsikB2 = [rows[17][7], rows[18][7]].filter(v => v).join(", ");
+    // let yaja2 = [rows[3][1], rows[4][1], rows[5][1], rows[6][1], rows[7][1]].filter(v => v).join(", ");
+    let basic2 = rows[14][1];
+    let ncs2 = rows[15][1];
+    let army1_2 = rows[16][1];
+    let army2_2 = rows[17][1];
+    let gongmuwon2 = rows[18][1];
 
     // ✅ 표 구조로 HTML 생성
     let html = `
@@ -715,9 +725,29 @@ async function loadDuty() {
             <td>${gupsikB2}</td>
         </tr>
         <tr>
-            <td>야자[당직]</td>
-            <td>${yaja}</td>
-            <td>${yaja2}</td>
+            <td>일반야자</td>
+            <td>${basic}</td>
+            <td>${basic2}</td>
+        </tr>
+        <tr>
+            <td>NCS야자</td>
+            <td>${ncs}</td>
+            <td>${ncs2}</td>
+        </tr>
+        <tr>
+            <td>부사관야자1</td>
+            <td>${army1}</td>
+            <td>${army1_2}</td>
+        </tr>
+        <tr>
+            <td>부사관야자2</td>
+            <td>${army2}</td>
+            <td>${army2_2}</td>
+        </tr>
+        <tr>
+            <td>공무원반야자</td>
+            <td>${gongmuwon}</td>
+            <td>${gongmuwon2}</td>
         </tr>
         </tbody>
     </table>
