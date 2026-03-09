@@ -725,27 +725,27 @@ async function loadDuty() {
             <td>${gupsikB2}</td>
         </tr>
         <tr>
-            <td>일반야자</td>
+            <td>야자[일반]</td>
             <td>${basic}</td>
             <td>${basic2}</td>
         </tr>
         <tr>
-            <td>NCS야자</td>
+            <td>야자[NCS]</td>
             <td>${ncs}</td>
             <td>${ncs2}</td>
         </tr>
         <tr>
-            <td>부사관야자1</td>
+            <td>야자[부사관1]</td>
             <td>${army1}</td>
             <td>${army1_2}</td>
         </tr>
         <tr>
-            <td>부사관야자2</td>
+            <td>야자[부사관2]</td>
             <td>${army2}</td>
             <td>${army2_2}</td>
         </tr>
         <tr>
-            <td>공무원반야자</td>
+            <td>야자[공무원]</td>
             <td>${gongmuwon}</td>
             <td>${gongmuwon2}</td>
         </tr>
