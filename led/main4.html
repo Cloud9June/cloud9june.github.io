@@ -9,7 +9,22 @@
 <body>
     <div class="container">
         <div class="item notice" style="width: 910px; height: auto; overflow: hidden; background: #fff;">
-            <img src="images/news.png" style="width: 100%; height: auto; display: block;">
+            <div style="
+                position: absolute; 
+                top: 15px; 
+                left: 50%; 
+                transform: translateX(-50%); 
+                background: rgba(0, 0, 0, 0.6); /* 반투명 검정 배경 */
+                color: #fff; 
+                padding: 5px 15px; 
+                border-radius: 20px; 
+                font-size: 14px; 
+                z-index: 10;
+                white-space: nowrap;
+            ">
+                경인일보, 2026.02.23일 기사
+            </div>
+            <img src="images/news.png" style="width: 100%; height: 100%; object-fit: fill; display: block;">
         </div>
         <!-- <div class="item notice">
             <iframe src="https://script.google.com/macros/s/AKfycbxZKkFIDh61VUTe7ii6ixOyGPHPOlchjGQxrA50S_cPIdVqvdvLdEhKBVtHFxYAZS73/exec" frameborder="0"></iframe>
