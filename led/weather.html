@@ -164,12 +164,13 @@
         </div>
 
     <script>
-        // ★ 인증키 입력 (기존 발급받으신 키를 유지해 주세요) ★
+        // ★ 기존 인증키 유지 ★
         const API_KEY = 'ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd'; 
-        const nx = 63; 
-        const ny = 124; 
+        const nx = 63; // 성남시 중원구 X좌표
+        const ny = 124; // 성남시 중원구 Y좌표
 
-        function getBaseDateTime() {
+        // 1. 하단 6분할(단기예보)용 기준 시간 (3시간 단위)
+        function getForecastBaseDateTime() {
             const now = new Date();
             let year = now.getFullYear();
             let month = String(now.getMonth() + 1).padStart(2, '0');
@@ -193,9 +194,28 @@
             return { date: `${year}${month}${day}`, time: base_time };
         }
 
+        // 2. 중앙 메인(초단기예보)용 기준 시간 (매시간 45분 업데이트)
+        function getLiveBaseDateTime() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            if (m < 45) { // 45분 이전이면 이전 시간대 데이터 요청
+                h = h - 1;
+                if (h < 0) {
+                    h = 23;
+                    now.setDate(now.getDate() - 1);
+                }
+            }
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            // 초단기예보 base_time은 매시간 30분 형태 (예: 0830)
+            return { date: `${year}${month}${day}`, time: String(h).padStart(2, '0') + "30" };
+        }
+
         function getWeatherIcon(sky, pty) {
-            if (pty === "1" || pty === "4") return "🌧️";
-            if (pty === "2" || pty === "3") return "❄️";
+            if (pty === "1" || pty === "4" || pty === "5") return "🌧️";
+            if (pty === "2" || pty === "3" || pty === "6" || pty === "7") return "❄️";
             if (sky === "1") return "☀️";
             if (sky === "3") return "⛅";
             if (sky === "4") return "☁️";
@@ -203,41 +223,47 @@
         }
 
         async function fetchWeather() {
-            const { date, time } = getBaseDateTime();
-            const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${API_KEY}&pageNo=1&numOfRows=1000&dataType=JSON&base_date=${date}&base_time=${time}&nx=${nx}&ny=${ny}`;
+            const forecastInfo = getForecastBaseDateTime();
+            const liveInfo = getLiveBaseDateTime();
+
+            // API URL 2개 준비 (초단기예보 & 단기예보)
+            const liveUrl = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${API_KEY}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${liveInfo.date}&base_time=${liveInfo.time}&nx=${nx}&ny=${ny}`;
+            const forecastUrl = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${API_KEY}&pageNo=1&numOfRows=1000&dataType=JSON&base_date=${forecastInfo.date}&base_time=${forecastInfo.time}&nx=${nx}&ny=${ny}`;
 
             try {
-                const response = await fetch(url);
-                const json = await response.json();
-                const items = json.response.body.items.item;
+                // --- 1. 실시간 날씨 (초단기예보) 데이터 처리 ---
+                const liveRes = await fetch(liveUrl);
+                const liveJson = await liveRes.json();
+                const liveItems = liveJson.response.body.items.item;
 
-                const getVal = (cat, srcItems) => {
+                const getLiveVal = (cat) => {
+                    const found = liveItems.find(i => i.category === cat);
+                    return found ? found.fcstValue : '-';
+                };
+
+                const currentSky = getLiveVal('SKY');
+                const currentPty = getLiveVal('PTY');
+                const currentTemp = getLiveVal('T1H'); // 초단기는 기온 코드가 T1H
+
+                document.getElementById('current-temp').innerText = `${currentTemp}°`;
+                document.getElementById('current-icon').innerText = getWeatherIcon(currentSky, currentPty);
+                
+                let desc = "날씨 맑음 😎";
+                if (currentPty === "1" || currentPty === "4" || currentPty === "5") desc = "비가 내리고 있어요 ☔";
+                else if (currentPty === "2" || currentPty === "3" || currentPty === "6" || currentPty === "7") desc = "눈이 내리고 있어요 ❄️";
+                else if (currentSky === "3" || currentSky === "4") desc = "구름이 낀 날씨 ☁️";
+                document.getElementById('current-desc').innerText = desc;
+
+                // --- 2. 하단 6분할 하교 날씨 (단기예보) 데이터 처리 ---
+                const forecastRes = await fetch(forecastUrl);
+                const forecastJson = await forecastRes.json();
+                const forecastItems = forecastJson.response.body.items.item;
+
+                const getForecastVal = (cat, srcItems) => {
                     const found = srcItems.find(i => i.category === cat);
                     return found ? found.fcstValue : '-';
                 };
 
-                // --- 1. 실시간 날씨 ---
-                const now = new Date();
-                const currentHourStr = String(now.getHours()).padStart(2, '0') + "00";
-                const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-                
-                let currentItems = items.filter(i => i.fcstDate === todayStr && i.fcstTime === currentHourStr);
-                if (currentItems.length === 0) currentItems = items.filter(i => i.fcstDate === items[0].fcstDate && i.fcstTime === items[0].fcstTime);
-
-                const currentSky = getVal('SKY', currentItems);
-                const currentPty = getVal('PTY', currentItems);
-
-                document.getElementById('current-temp').innerText = `${getVal('TMP', currentItems)}°`;
-                document.getElementById('current-icon').innerText = getWeatherIcon(currentSky, currentPty);
-                
-                let desc = "날씨 맑음 😎";
-                if (currentPty === "1" || currentPty === "4") desc = "비가 내리고 있어요 ☔";
-                else if (currentPty === "2" || currentPty === "3") desc = "눈이 내리고 있어요 ❄️";
-                else if (currentSky === "3" || currentSky === "4") desc = "구름이 낀 날씨 ☁️";
-                document.getElementById('current-desc').innerText = desc;
-
-
-                // --- 2. 하단 6분할 하교/야간 날씨 ---
                 const grid = document.getElementById('forecast-grid');
                 grid.innerHTML = '';
 
@@ -253,14 +279,14 @@
                 const targetTimes = ["1700", "1800", "1900", "2000", "2100", "2200"];
 
                 targetTimes.forEach(tTime => {
-                    const timeItems = items.filter(item => item.fcstDate === tDateStr && item.fcstTime === tTime);
+                    const timeItems = forecastItems.filter(item => item.fcstDate === tDateStr && item.fcstTime === tTime);
                     const displayTime = tTime.substring(0, 2) + ":00";
 
                     if (timeItems.length > 0) {
-                        const tSky = getVal('SKY', timeItems);
-                        const tPty = getVal('PTY', timeItems);
-                        const tTmp = getVal('TMP', timeItems);
-                        const tPop = getVal('POP', timeItems);
+                        const tSky = getForecastVal('SKY', timeItems);
+                        const tPty = getForecastVal('PTY', timeItems);
+                        const tTmp = getForecastVal('TMP', timeItems);
+                        const tPop = getForecastVal('POP', timeItems);
 
                         grid.innerHTML += `
                             <div class="time-card">
