@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성일정보고 맞춤형 하교 날씨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mint: #00ffcc;
+            --pink: #ff0077;
+            --blue: #00bfff;
+            --bg-dark: #0a0a0a;
+            --text-main: #ffffff;
+            --box-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Noto Sans KR', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* 바깥쪽 패딩을 줄여서 공간 확보 */
+            padding: 15px 20px; 
+        }
+
+        /* 상단 여백 최소화 */
+        .spacer {
+            height: 2vh; 
+        }
+
+        /* 중앙 실시간 날씨 영역 */
+        .center-weather {
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .today-label {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+        }
+
+        .today-label span { color: var(--mint); }
+
+        .current-main {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* 메인 아이콘/온도 크기를 슬롯에 맞게 살짝 조정 */
+        .current-icon {
+            font-size: 7.5rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+        }
+
+        .current-temp {
+            font-family: 'Black Han Sans', sans-serif;
+            font-size: 7.5rem;
+            color: var(--mint);
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+            line-height: 1;
+        }
+
+        .current-desc {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--pink);
+            margin-top: 10px;
+        }
+
+        /* 하단 6분할 영역 타이틀 */
+        .forecast-header {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+
+        /* 하단 6분할 하교 날씨 영역 */
+        .bottom-forecast {
+            /* 하단 카드에 충분한 높이 보장 */
+            height: 32vh; 
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            padding-bottom: 5px;
+        }
+
+        .time-card {
+            background: var(--box-bg);
+            border-radius: 15px;
+            padding: 12px 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .time-label {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--bg-dark);
+            background: var(--mint);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .time-icon {
+            font-size: 3rem;
+            margin: 5px 0;
+        }
+        
+        .time-temp {
+            font-family: 'Black Han Sans', sans-serif;
+            font-size: 1.8rem;
+            color: #fff;
+        }
+
+        .time-pop {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--blue);
+            margin-top: 2px;
+        }
+
+        .fade-in { animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="fade-in">
+
+    <div class="spacer"></div>
+
+    <div class="center-weather">
+        <div class="today-label">TODAY <span>NOW</span></div>
+        <div class="current-main">
+            <div id="current-icon" class="current-icon">⏳</div>
+            <div id="current-temp" class="current-temp">--°</div>
+        </div>
+        <div id="current-desc" class="current-desc">날씨 데이터를 불러오는 중...</div>
+    </div>
+
+    <div class="forecast-header" id="forecast-header">🌙 오늘 하교/야간 날씨</div>
+
+    <div class="bottom-forecast" id="forecast-grid">
+        </div>
+
+    <script>
+        // ★ 인증키 입력 (기존 발급받으신 키를 유지해 주세요) ★
+        const API_KEY = 'ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd'; 
+        const nx = 63; 
+        const ny = 124; 
+
+        function getBaseDateTime() {
+            const now = new Date();
+            let year = now.getFullYear();
+            let month = String(now.getMonth() + 1).padStart(2, '0');
+            let day = String(now.getDate()).padStart(2, '0');
+            let hours = now.getHours();
+            
+            let base_time = "0200";
+            if (hours < 2) { 
+                now.setDate(now.getDate() - 1);
+                year = now.getFullYear(); month = String(now.getMonth() + 1).padStart(2, '0'); day = String(now.getDate()).padStart(2, '0');
+                base_time = "2300";
+            } else if (hours < 5) base_time = "0200";
+            else if (hours < 8) base_time = "0500";
+            else if (hours < 11) base_time = "0800";
+            else if (hours < 14) base_time = "1100";
+            else if (hours < 17) base_time = "1400";
+            else if (hours < 20) base_time = "1700";
+            else if (hours < 23) base_time = "2000";
+            else base_time = "2300";
+
+            return { date: `${year}${month}${day}`, time: base_time };
+        }
+
+        function getWeatherIcon(sky, pty) {
+            if (pty === "1" || pty === "4") return "🌧️";
+            if (pty === "2" || pty === "3") return "❄️";
+            if (sky === "1") return "☀️";
+            if (sky === "3") return "⛅";
+            if (sky === "4") return "☁️";
+            return "🌡️";
+        }
+
+        async function fetchWeather() {
+            const { date, time } = getBaseDateTime();
+            const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${API_KEY}&pageNo=1&numOfRows=1000&dataType=JSON&base_date=${date}&base_time=${time}&nx=${nx}&ny=${ny}`;
+
+            try {
+                const response = await fetch(url);
+                const json = await response.json();
+                const items = json.response.body.items.item;
+
+                const getVal = (cat, srcItems) => {
+                    const found = srcItems.find(i => i.category === cat);
+                    return found ? found.fcstValue : '-';
+                };
+
+                // --- 1. 실시간 날씨 ---
+                const now = new Date();
+                const currentHourStr = String(now.getHours()).padStart(2, '0') + "00";
+                const todayStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+                
+                let currentItems = items.filter(i => i.fcstDate === todayStr && i.fcstTime === currentHourStr);
+                if (currentItems.length === 0) currentItems = items.filter(i => i.fcstDate === items[0].fcstDate && i.fcstTime === items[0].fcstTime);
+
+                const currentSky = getVal('SKY', currentItems);
+                const currentPty = getVal('PTY', currentItems);
+
+                document.getElementById('current-temp').innerText = `${getVal('TMP', currentItems)}°`;
+                document.getElementById('current-icon').innerText = getWeatherIcon(currentSky, currentPty);
+                
+                let desc = "날씨 맑음 😎";
+                if (currentPty === "1" || currentPty === "4") desc = "비가 내리고 있어요 ☔";
+                else if (currentPty === "2" || currentPty === "3") desc = "눈이 내리고 있어요 ❄️";
+                else if (currentSky === "3" || currentSky === "4") desc = "구름이 낀 날씨 ☁️";
+                document.getElementById('current-desc').innerText = desc;
+
+
+                // --- 2. 하단 6분할 하교/야간 날씨 ---
+                const grid = document.getElementById('forecast-grid');
+                grid.innerHTML = '';
+
+                let targetDateObj = new Date();
+                if (targetDateObj.getHours() >= 22) {
+                    targetDateObj.setDate(targetDateObj.getDate() + 1);
+                    document.getElementById('forecast-header').innerText = "🌙 내일 하교/야간 날씨";
+                } else {
+                    document.getElementById('forecast-header').innerText = "🌙 오늘 하교/야간 날씨";
+                }
+
+                const tDateStr = `${targetDateObj.getFullYear()}${String(targetDateObj.getMonth()+1).padStart(2,'0')}${String(targetDateObj.getDate()).padStart(2,'0')}`;
+                const targetTimes = ["1700", "1800", "1900", "2000", "2100", "2200"];
+
+                targetTimes.forEach(tTime => {
+                    const timeItems = items.filter(item => item.fcstDate === tDateStr && item.fcstTime === tTime);
+                    const displayTime = tTime.substring(0, 2) + ":00";
+
+                    if (timeItems.length > 0) {
+                        const tSky = getVal('SKY', timeItems);
+                        const tPty = getVal('PTY', timeItems);
+                        const tTmp = getVal('TMP', timeItems);
+                        const tPop = getVal('POP', timeItems);
+
+                        grid.innerHTML += `
+                            <div class="time-card">
+                                <div class="time-label">${displayTime}</div>
+                                <div class="time-icon">${getWeatherIcon(tSky, tPty)}</div>
+                                <div class="time-temp">${tTmp}°</div>
+                                <div class="time-pop">☂️ ${tPop}%</div>
+                            </div>
+                        `;
+                    } else {
+                        grid.innerHTML += `
+                            <div class="time-card" style="opacity: 0.5;">
+                                <div class="time-label">${displayTime}</div>
+                                <div class="time-temp" style="font-size: 1.2rem; margin-top: 20px;">-</div>
+                            </div>
+                        `;
+                    }
+                });
+
+            } catch (error) {
+                console.error('날씨 데이터 로드 실패:', error);
+                document.getElementById('current-desc').innerText = "데이터 통신 지연 중 📡";
+            }
+        }
+
+        fetchWeather();
+        setInterval(fetchWeather, 3600000); 
+    </script>
+</body>
+</html>

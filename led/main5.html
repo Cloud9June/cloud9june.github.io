@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비디오월 5분할 레이아웃</title>
+    <link rel="stylesheet" href="style3.css">
+    <style>
+        .dynamic-slot {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+        }
+
+        .pane {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s ease-in-out; 
+        }
+
+        .pane iframe, 
+        .pane img {
+            width: 100%;
+            height: 100%;
+            border: none;
+            object-fit: fill;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="item calendar">
+            <iframe src="https://script.google.com/macros/s/AKfycbyukUYfw1h-QiYXCF5Vt_ZIflO4e_rkGg9Q_BSW2XCzzVENtNtl9MmQZHPR7hLbOGnF/exec" frameborder="0"></iframe>
+        </div>
+
+        <div class="item notice dynamic-slot" id="slot-0"></div>
+        <div class="item meal dynamic-slot" id="slot-1"></div>
+        <div class="item youtube dynamic-slot" id="slot-2"></div>
+        <div class="item d-day dynamic-slot" id="slot-3"></div>
+    </div>
+
+    <script>
+        const contents = [
+            // 1~4: 기존 콘텐츠
+            `<div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.6); color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 14px; z-index: 10; white-space: nowrap;">경인일보, 2026.02.23일 기사</div>
+             <img src="images/news.png">`,
+            `<iframe src="https://script.google.com/macros/s/AKfycbz6WCbzIZ7gomhpv8Oq63K-nM2EjND4jtKRGPGpyYgaiRkeTV_q7MdhFn7z9f8sTCfC/exec"></iframe>`,
+            `<iframe src="https://www.youtube.com/embed/OvhnZfQ_1q8?si=W8ffeu_Ul2bO7nAz" allowfullscreen></iframe>`,
+            `<iframe src="food.html"></iframe>`,
+            
+            // 5~8: 전환될 추가 콘텐츠
+            `<iframe src="weather.html"></iframe>`,
+            `<img src="images/extra_notice.png">`,
+            `<iframe src="https://sungil-info.goesn.kr/"></iframe>`,
+            `<iframe src="https://www.youtube.com/embed/다른영상ID" allowfullscreen></iframe>`
+        ];
+
+        const slots = [
+            document.getElementById('slot-0'),
+            document.getElementById('slot-1'),
+            document.getElementById('slot-2'),
+            document.getElementById('slot-3')
+        ];
+
+        // 초기 화면 세팅 (0번~3번 콘텐츠)
+        slots.forEach((slot, i) => {
+            slot.innerHTML = `
+                <div class="pane active" style="transform: translateX(0%);">${contents[i]}</div>
+                <div class="pane standby" style="transform: translateX(100%);"></div>
+            `;
+        });
+
+        // 처음에 0~3번을 보여줬으므로, 다음 전환 시에는 4번부터 보여주도록 설정
+        let currentIndex = 4; 
+
+        function updateVideoWall() {
+            // [수정된 부분] 이번 턴에 사용할 기준 인덱스를 미리 저장해둡니다.
+            const currentTurnBaseIndex = currentIndex;
+
+            slots.forEach((slot, index) => {
+                const delay = index * 400; 
+                
+                // [수정된 부분] 시간차 애니메이션이 실행되기 전에, 들어갈 콘텐츠 번호를 확실히 고정해 둡니다.
+                const contentIndex = (currentTurnBaseIndex + index) % contents.length; 
+
+                setTimeout(() => {
+                    const activePane = slot.querySelector('.active');
+                    const standbyPane = slot.querySelector('.standby');
+                    
+                    // 고정해둔 새 콘텐츠 번호를 대기 화면에 삽입
+                    standbyPane.innerHTML = contents[contentIndex];
+                    
+                    setTimeout(() => {
+                        activePane.style.transform = 'translateX(-100%)'; 
+                        standbyPane.style.transform = 'translateX(0%)';   
+                        
+                        activePane.classList.replace('active', 'standby');
+                        standbyPane.classList.replace('standby', 'active');
+                        
+                        setTimeout(() => {
+                            activePane.style.transition = 'none'; 
+                            activePane.style.transform = 'translateX(100%)'; 
+                            activePane.innerHTML = ''; 
+                            
+                            setTimeout(() => {
+                                activePane.style.transition = 'transform 0.8s ease-in-out'; 
+                            }, 50);
+                        }, 800); 
+                    }, 50); 
+                }, delay);
+            });
+            
+            // 모든 슬롯의 교체 예약이 끝난 후, 다음 턴을 위해 인덱스 업데이트
+            currentIndex = (currentIndex + 4) % contents.length;
+        }
+
+        // 15초마다 순차적 밀어내기 실행
+        setInterval(updateVideoWall, 15000); 
+    </script>
+</body>
+</html>
