@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0a0a0a;
+      --accent-color: #00ffcc;
+      --text-color: #ffffff;
+      --sub-text-color: #cccccc;
+      --border-color: rgba(0, 255, 204, 0.2);
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0; padding: 0;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      height: 100vh;
+    }
+
+    #slider-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px; /* 외곽 여백 추가 */
+    }
+
+    .notice-slide {
+      /* 전체 크기를 기존보다 축소 (80% 수준) */
+      width: 80%; 
+      max-width: 600px; 
+      text-align: center;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .title {
+      /* 제목 크기도 소폭 조정 */
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--accent-color);
+      margin-bottom: 30px;
+      text-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+    }
+
+    .timetable-container {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.02);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .time-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr 0.8fr;
+      align-items: center;
+      /* 행 높이 조절 */
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .time-row:last-child {
+      border-bottom: none;
+    }
+
+    .label {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-align: left;
+    }
+
+    .time {
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--text-color);
+      letter-spacing: 0.5px;
+    }
+
+    .duration {
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: var(--sub-text-color);
+      text-align: right;
+    }
+
+    .lunch-row {
+      background: rgba(0, 255, 204, 0.06);
+    }
+    
+    .lunch-row .label {
+      color: #ffffff;
+    }
+
+    .indicators {
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dot {
+      width: 25px;
+      height: 3px;
+      background: var(--accent-color);
+      border-radius: 2px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="slider-container">
+    <div class="notice-slide">
+      <div class="title">3월 전국연합학력평가 시간표</div>
+      
+      <div class="timetable-container">
+        <div class="time-row">
+          <span class="label">준 비</span>
+          <span class="time">08:40 ~ 09:00</span>
+          <span class="duration">20분</span>
+        </div>
+        <div class="time-row">
+          <span class="label">1교시</span>
+          <span class="time">09:00 ∼ 10:20</span>
+          <span class="duration">80분</span>
+        </div>
+        <div class="time-row">
+          <span class="label">2교시</span>
+          <span class="time">10:30 ∼ 12:10</span>
+          <span class="duration">100분</span>
+        </div>
+        <div class="time-row">
+          <span class="label">3교시</span>
+          <span class="time">12:20 ∼ 12:50</span>
+          <span class="duration">30분</span>
+        </div>
+        <div class="time-row lunch-row">
+          <span class="label">점심시간</span>
+          <span class="time">12:50 ~ 13:50</span>
+          <span class="duration">60분</span>
+        </div>
+        <div class="time-row">
+          <span class="label">4교시</span>
+          <span class="time">13:50 ∼ 15:00</span>
+          <span class="duration">70분</span>
+        </div>
+        <div class="time-row">
+          <span class="label">5교시</span>
+          <span class="time">15:10 ~ 16:30</span>
+          <span class="duration">80분</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="indicators">
+    <div class="dot"></div>
+  </div>
+
+</body>
+</html>
