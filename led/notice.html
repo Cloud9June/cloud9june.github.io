@@ -23,31 +23,23 @@
 
     #slider-container {
       flex: 1;
-      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px; /* 상하 여백 축소 */
+      padding: 15px;
     }
 
     .notice-slide {
       width: 85%; 
       max-width: 550px; 
       text-align: center;
-      animation: fadeIn 0.8s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .title {
-      /* 타이틀 크기 및 여백 축소 */
-      font-size: 1.8rem;
+      font-size: 1.7rem;
       font-weight: 900;
       color: var(--accent-color);
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
     }
 
@@ -60,10 +52,9 @@
 
     .time-row {
       display: grid;
-      grid-template-columns: 0.9fr 2fr 0.7fr;
+      grid-template-columns: 1fr 1.8fr 0.7fr;
       align-items: center;
-      /* 세로 높이 핵심 조정: padding을 14px -> 10px로 축소 */
-      padding: 10px 18px;
+      padding: 8px 18px; /* 세로 여백 추가 축소 */
       border-bottom: 1px solid var(--border-color);
     }
 
@@ -71,11 +62,25 @@
       border-bottom: none;
     }
 
+    /* 교시와 과목 레이아웃 */
+    .label-group {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+    }
+
     .label {
       font-size: 1.1rem;
       font-weight: 700;
       color: var(--accent-color);
-      text-align: left;
+    }
+
+    .subject {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: #fff;
+      margin-top: -2px;
+      opacity: 0.9;
     }
 
     .time {
@@ -85,7 +90,7 @@
     }
 
     .duration {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 300;
       color: var(--sub-text-color);
       text-align: right;
@@ -95,13 +100,10 @@
       background: rgba(0, 255, 204, 0.06);
     }
     
-    .lunch-row .label {
-      color: #ffffff;
-    }
+    .lunch-row .label { color: #ffffff; }
 
     .indicators {
-      /* 하단 인디케이터 높이 축소 */
-      height: 40px;
+      height: 30px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -112,7 +114,7 @@
       height: 3px;
       background: var(--accent-color);
       border-radius: 2px;
-      opacity: 0.5;
+      opacity: 0.4;
     }
   </style>
 </head>
@@ -124,37 +126,64 @@
       
       <div class="timetable-container">
         <div class="time-row">
-          <span class="label">준 비</span>
+          <div class="label-group">
+            <span class="label">준비</span>
+            <span class="subject">유의사항</span>
+          </div>
           <span class="time">08:40 ~ 09:00</span>
           <span class="duration">20분</span>
         </div>
+        
         <div class="time-row">
-          <span class="label">1교시</span>
+          <div class="label-group">
+            <span class="label">1교시</span>
+            <span class="subject">국어</span>
+          </div>
           <span class="time">09:00 ∼ 10:20</span>
           <span class="duration">80분</span>
         </div>
+        
         <div class="time-row">
-          <span class="label">2교시</span>
+          <div class="label-group">
+            <span class="label">2교시</span>
+            <span class="subject">수학</span>
+          </div>
           <span class="time">10:30 ∼ 12:10</span>
           <span class="duration">100분</span>
         </div>
+        
         <div class="time-row">
-          <span class="label">3교시</span>
+          <div class="label-group">
+            <span class="label">3교시</span>
+            <span class="subject">한국사</span>
+          </div>
           <span class="time">12:20 ∼ 12:50</span>
           <span class="duration">30분</span>
         </div>
+        
         <div class="time-row lunch-row">
-          <span class="label">점심시간</span>
+          <div class="label-group">
+            <span class="label">점심시간</span>
+            <span class="subject">휴식</span>
+          </div>
           <span class="time">12:50 ~ 13:50</span>
           <span class="duration">60분</span>
         </div>
+        
         <div class="time-row">
-          <span class="label">4교시</span>
+          <div class="label-group">
+            <span class="label">4교시</span>
+            <span class="subject">영어</span>
+          </div>
           <span class="time">13:50 ∼ 15:00</span>
           <span class="duration">70분</span>
         </div>
+        
         <div class="time-row">
-          <span class="label">5교시</span>
+          <div class="label-group">
+            <span class="label">5교시</span>
+            <span class="subject">탐구</span>
+          </div>
           <span class="time">15:10 ~ 16:30</span>
           <span class="duration">80분</span>
         </div>

@@ -1,199 +1,172 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <base target="_top">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500;700;900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-color: #0a0a0a;
-      --accent-color: #00ffcc;
-      --text-color: #ffffff;
-      --sub-text-color: #cccccc;
-      --border-color: rgba(0, 255, 204, 0.2);
-    }
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: 'Noto Sans KR', sans-serif;
-      margin: 0; padding: 0;
-      overflow: hidden;
-      display: flex; flex-direction: column;
-      height: 100vh;
-    }
+    <meta charset="UTF-8">
+    <title>Graduation Memories - Optimized Fall</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Pretendard:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Dongle&family=Gamja+Flower&family=Moirai+One&display=swap');
 
-    #slider-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 15px;
-    }
+        body {
+            margin: 0 auto; padding: 0;
+            width: 860px; height: 1034px;
+            overflow: hidden;
+            background: url('images/background_p.png') no-repeat center center;
+            background-size: cover;
+            font-family: 'Pretendard', sans-serif;
+            position: relative;
+        }
 
-    .notice-slide {
-      width: 85%; 
-      max-width: 550px; 
-      text-align: center;
-    }
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 253, 245, 0.4); 
+            z-index: 0;
+        }
 
-    .title {
-      font-size: 1.7rem;
-      font-weight: 900;
-      color: var(--accent-color);
-      margin-bottom: 15px;
-      text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-    }
+        #photo-container {
+            position: relative;
+            width: 860px; height: 1034px;
+            z-index: 1;
+        }
 
-    .timetable-container {
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.02);
-    }
+        .header-title {
+            position: absolute;
+            top: 40px; width: 100%;
+            text-align: center;
+            font-family: "Gamja Flower", sans-serif;
+            font-size: 50px;
+            color: #2c3e50;
+            z-index: 1000;
+            text-shadow: 2px 2px 10px rgba(255,255,255,0.9);
+            pointer-events: none;
+        }
 
-    .time-row {
-      display: grid;
-      grid-template-columns: 1fr 1.8fr 0.7fr;
-      align-items: center;
-      padding: 8px 18px; /* 세로 여백 추가 축소 */
-      border-bottom: 1px solid var(--border-color);
-    }
+        .stacked-photo {
+            position: absolute;
+            width: 300px;
+            padding: 10px 10px 40px 10px; 
+            background: white;
+            box-shadow: 5px 12px 25px rgba(0,0,0,0.2);
+            border-radius: 2px;
+            opacity: 0;
+            /* transform 지연 최소화를 위해 초기값 설정 */
+            transform: scale(1.1) translateY(-20px);
+            transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            will-change: transform, opacity; /* 브라우저 최적화 힌트 */
+        }
 
-    .time-row:last-child {
-      border-bottom: none;
-    }
+        .stacked-photo img {
+            max-width: 100%;
+            max-height: 380px;
+            width: auto; height: auto;
+            object-fit: contain;
+            display: block;
+        }
 
-    /* 교시와 과목 레이아웃 */
-    .label-group {
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-    }
+        .stacked-photo.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
 
-    .label {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent-color);
-    }
-
-    .subject {
-      font-size: 0.85rem;
-      font-weight: 400;
-      color: #fff;
-      margin-top: -2px;
-      opacity: 0.9;
-    }
-
-    .time {
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: var(--text-color);
-    }
-
-    .duration {
-      font-size: 0.85rem;
-      font-weight: 300;
-      color: var(--sub-text-color);
-      text-align: right;
-    }
-
-    .lunch-row {
-      background: rgba(0, 255, 204, 0.06);
-    }
-    
-    .lunch-row .label { color: #ffffff; }
-
-    .indicators {
-      height: 30px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .dot {
-      width: 20px;
-      height: 3px;
-      background: var(--accent-color);
-      border-radius: 2px;
-      opacity: 0.4;
-    }
-  </style>
+        .stacked-photo.falling {
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 1s cubic-bezier(0.5, 0, 1, 0.5), opacity 0.8s ease-in;
+        }
+    </style>
 </head>
 <body>
 
-  <div id="slider-container">
-    <div class="notice-slide">
-      <div class="title">3월 전국연합학력평가 시간표</div>
-      
-      <div class="timetable-container">
-        <div class="time-row">
-          <div class="label-group">
-            <span class="label">준비</span>
-            <span class="subject">유의사항</span>
-          </div>
-          <span class="time">08:40 ~ 09:00</span>
-          <span class="duration">20분</span>
-        </div>
-        
-        <div class="time-row">
-          <div class="label-group">
-            <span class="label">1교시</span>
-            <span class="subject">국어</span>
-          </div>
-          <span class="time">09:00 ∼ 10:20</span>
-          <span class="duration">80분</span>
-        </div>
-        
-        <div class="time-row">
-          <div class="label-group">
-            <span class="label">2교시</span>
-            <span class="subject">수학</span>
-          </div>
-          <span class="time">10:30 ∼ 12:10</span>
-          <span class="duration">100분</span>
-        </div>
-        
-        <div class="time-row">
-          <div class="label-group">
-            <span class="label">3교시</span>
-            <span class="subject">한국사</span>
-          </div>
-          <span class="time">12:20 ∼ 12:50</span>
-          <span class="duration">30분</span>
-        </div>
-        
-        <div class="time-row lunch-row">
-          <div class="label-group">
-            <span class="label">점심시간</span>
-            <span class="subject">휴식</span>
-          </div>
-          <span class="time">12:50 ~ 13:50</span>
-          <span class="duration">60분</span>
-        </div>
-        
-        <div class="time-row">
-          <div class="label-group">
-            <span class="label">4교시</span>
-            <span class="subject">영어</span>
-          </div>
-          <span class="time">13:50 ∼ 15:00</span>
-          <span class="duration">70분</span>
-        </div>
-        
-        <div class="time-row">
-          <div class="label-group">
-            <span class="label">5교시</span>
-            <span class="subject">탐구</span>
-          </div>
-          <span class="time">15:10 ~ 16:30</span>
-          <span class="duration">80분</span>
-        </div>
-      </div>
-    </div>
-  </div>
+    <h1 class="header-title">우리들의 소중한 기억</h1>
+    <div id="photo-container"></div>
 
-  <div class="indicators">
-    <div class="dot"></div>
-  </div>
+<script>
+    const TOTAL_PHOTOS = 124; 
+    const IMAGE_EXTENSION = 'jpg'; 
+    const SHOW_INTERVAL = 1000; // 1초 간격 고정
+    const WAIT_BEFORE_CLEAR = 5000; 
+
+    const container = document.getElementById('photo-container');
+    let currentIndex = 1;
+    let timer = null;
+
+    function startSlideshow() {
+        // 일정한 주기로 실행되는 인터벌 방식 사용
+        timer = setInterval(() => {
+            if (currentIndex > TOTAL_PHOTOS) {
+                clearInterval(timer); // 사진 다 뜨면 타이머 중지
+                setTimeout(clearPhotos, WAIT_BEFORE_CLEAR);
+                return;
+            }
+            renderPhoto(currentIndex);
+            currentIndex++;
+        }, SHOW_INTERVAL);
+    }
+
+    function renderPhoto(num) {
+        const imgFrame = document.createElement('div');
+        imgFrame.className = 'stacked-photo';
+        
+        const img = new Image();
+        img.src = `photos/${num}.${IMAGE_EXTENSION}`;
+        
+        img.onload = function() {
+            imgFrame.appendChild(img);
+            container.appendChild(imgFrame);
+
+            const randomX = Math.floor(Math.random() * (860 - 250)) - 30; 
+            const randomY = Math.floor(Math.random() * (1034 - 300)) - 20;
+            const randomRotate = Math.floor(Math.random() * 60) - 30;
+
+            let finalX = randomX;
+            let finalY = randomY;
+            if (finalY < 150 && (finalX > 200 && finalX < 450)) {
+                finalY += 220;
+            }
+
+            imgFrame.style.left = `${finalX}px`;
+            imgFrame.style.top = `${finalY}px`;
+            imgFrame.dataset.rotate = randomRotate;
+
+            // 브라우저 렌더링 타이밍 강제 동기화 (requestAnimationFrame)
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    imgFrame.style.transform = `rotate(${randomRotate}deg) scale(1)`;
+                    imgFrame.classList.add('active');
+                }, 10);
+            });
+        };
+    }
+
+    function clearPhotos() {
+        const photos = Array.from(document.querySelectorAll('.stacked-photo'));
+        const shuffledPhotos = photos.sort(() => Math.random() - 0.5);
+
+        shuffledPhotos.forEach((photo, index) => {
+            const delay = Math.random() * 1000; 
+            setTimeout(() => {
+                const currentRotate = parseFloat(photo.dataset.rotate);
+                const extraRotate = (Math.random() > 0.5 ? 180 : -180);
+                photo.style.transform = `translateY(1200px) rotate(${currentRotate + extraRotate}deg)`;
+                photo.classList.add('falling');
+            }, delay);
+        });
+
+        setTimeout(() => {
+            container.innerHTML = '';
+            currentIndex = 1;
+            startSlideshow(); // 다시 시작
+        }, 3000); 
+    }
+
+    // 초기 실행
+    startSlideshow();
+</script>
 
 </body>
 </html>
