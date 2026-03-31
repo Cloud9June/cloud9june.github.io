@@ -439,7 +439,7 @@ onSnapshot(q, async (snapshot) => {
         <div class="card-content">
           <h3>${data.title}</h3>
           <div class="content">${data.content}</div>
-          <div class="author">작성자: ${data.author}</div>
+          ${currentUser ? `<div class="author">작성자: ${data.author}</div>` : ""}
           ${
             canEditOrDelete
               ? `<div class="actions">
