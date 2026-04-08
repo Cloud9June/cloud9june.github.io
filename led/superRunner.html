@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SUPER RUNNER - EVENT EDITION</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+        body { margin: 0; background: #0b0b1a; color: white; overflow: hidden; font-family: 'Black Han Sans', sans-serif; user-select: none; }
+        canvas { display: block; }
+        
+        /* UI 레이어 */
+        #ui { position: absolute; top: 0; left: 0; width: 100%; padding: 40px; box-sizing: border-box; display: none; justify-content: space-between; font-size: 50px; pointer-events: none; z-index: 10; text-shadow: 0 0 15px rgba(0,210,255,0.7); }
+        #shield-ui { color: #00f2ff; font-size: 40px; margin-top: 10px; }
+
+        /* 오버레이 공통 스타일 */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .card { background: #1a1a3a; padding: 50px 80px; border-radius: 40px; border: 6px solid #00d2ff; text-align: center; box-shadow: 0 0 70px rgba(0,210,255,0.3); max-width: 900px; }
+        
+        h1 { font-size: 80px; color: #00d2ff; margin: 0 0 30px 0; text-shadow: 0 0 20px #00d2ff; }
+        .rules { text-align: left; font-size: 24px; line-height: 1.6; margin-bottom: 40px; background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; }
+        .rules b { color: #ffca3a; }
+
+        /* 입력 폼 스타일 */
+        .input-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+        .input-row { display: flex; gap: 10px; justify-content: center; }
+        input { padding: 18px; font-size: 24px; border-radius: 12px; border: 2px solid #333; background: #fff; color: #000; text-align: center; font-family: 'Black Han Sans'; }
+        input:focus { border-color: #00d2ff; outline: none; background: #eefbff; }
+        
+        button { padding: 22px 70px; font-size: 32px; cursor: pointer; background: #00d2ff; color: white; border: none; border-radius: 20px; font-family: 'Black Han Sans'; box-shadow: 0 0 20px #00d2ff; transition: 0.2s; }
+        button:hover { transform: scale(1.05); background: #00f2ff; }
+        button:disabled { background: #555; box-shadow: none; cursor: default; }
+    </style>
+</head>
+<body>
+    <div id="start-overlay" class="overlay">
+        <div class="card">
+            <h1>SUPER RUNNER</h1>
+            <div class="rules">
+                🎮 <b>조작:</b> 클릭 또는 스페이스바 (<b>2단 점프 가능</b>)<br>
+                🚀 <b>득점:</b> 함정 회피 시 점수 추가! <b>낭떠러지 점프는 +500점!</b><br>
+                🛡️ <b>쉴드:</b> <b>2,000점마다</b> 방어막 1개 추가 (중첩/횟수 표시)<br>
+                ⚠️ <b>주의:</b> 속도는 계속 빨라지며, 추락 시에는 쉴드가 작동하지 않아요!
+            </div>
+            <button onclick="startGame()">게임 시작!</button>
+        </div>
+    </div>
+
+    <div id="ui">
+        <div>
+            SCORE: <span id="score-val" style="color:#ffca3a">0</span>
+            <div id="shield-ui">SHIELD: <span id="shield-count">0</span></div>
+        </div>
+        <div>SPEED: <span id="speed-val">1.0</span>x</div>
+    </div>
+
+    <div id="overlay" class="overlay" style="display: none;">
+        <div class="card" style="border-color: #ff595e; box-shadow: 0 0 70px rgba(255,89,94,0.4);">
+            <h1 style="color: #ff595e; text-shadow: 0 0 20px #ff595e;">GAME OVER</h1>
+            <div style="font-size: 45px; margin-bottom: 30px;">최종 기록: <span id="final-score" style="color:#ffca3a">0</span>점</div>
+            
+            <div class="input-container">
+                <input type="text" id="user-school" placeholder="학교명 (예: ○○고)">
+                <input type="text" id="user-dept" placeholder="학과 (예: 컴퓨터과 / 해당없음)">
+                <div class="input-row">
+                    <input type="text" id="user-grade" placeholder="학년" style="width: 100px;">
+                    <input type="text" id="user-group" placeholder="반" style="width: 100px;">
+                    <input type="text" id="user-name" placeholder="이름" style="width: 150px;">
+                </div>
+            </div>
+
+            <button id="submit-btn" onclick="submitRanking()">랭킹 등록하기</button>
+            <br>
+            <button onclick="location.reload()" style="background:#444; box-shadow:none; font-size:22px; margin-top:15px; padding: 15px 40px;">등록 없이 다시하기</button>
+            <div id="status-msg" style="margin-top:20px; color:#8ac926; font-size: 22px;"></div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // --- [설정: 본인의 GAS URL을 여기에 넣으세요] ---
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbymVtFZFh8J7ckBojBIVn5vHvMqL7scnbWnQRdcr1L1TzD-0V_LhCcACgFfLOGe3li9Qg/exec"; 
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let gameActive = false;
+        let gameSpeed = 7;
+        let frameCount = 0;
+        const gravity = 0.85;
+        const groundY = canvas.height - 180;
+
+        let obstacles = [];
+        let grounds = [];
+        let particles = [];
+        let scorePopups = [];
+
+        function startGame() {
+            document.getElementById('start-overlay').style.display = 'none';
+            document.getElementById('ui').style.display = 'flex';
+            gameActive = true;
+            spawnObstacle();
+            animate();
+        }
+
+        const player = {
+            x: 180, y: groundY - 100, width: 80, height: 90,
+            dy: 0, jumpForce: -21, jumpCount: 0, maxJumps: 2,
+            shieldCount: 0, lastShieldScore: 0, onGap: false,
+
+            jump() {
+                if (this.jumpCount < this.maxJumps) {
+                    if (this.jumpCount === 0 && this.y < groundY - this.height - 20) return;
+                    this.dy = (this.jumpCount === 0) ? this.jumpForce : -18; 
+                    this.jumpCount++;
+                    createExplosion(this.x + this.width/2, this.y + this.height, '#00d2ff', 15);
+                }
+            },
+
+            draw() {
+                if (this.shieldCount > 0) {
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width/2, this.y + this.height/2, 75 + Math.sin(frameCount*0.1)*8, 0, Math.PI*2);
+                    ctx.strokeStyle = `rgba(0, 242, 255, ${0.4 + Math.sin(frameCount*0.1)*0.2})`;
+                    ctx.lineWidth = 3 + (this.shieldCount * 2); ctx.stroke();
+                    ctx.fillStyle = "#00f2ff"; ctx.font = "30px Black Han Sans";
+                    ctx.fillText("x" + this.shieldCount, this.x + this.width + 10, this.y + 10);
+                }
+                ctx.fillStyle = '#00d2ff'; ctx.shadowBlur = 20; ctx.shadowColor = '#00d2ff';
+                drawRoundedRect(ctx, this.x, this.y, this.width, this.height, 12);
+                ctx.fillStyle = '#fff'; ctx.fillRect(this.x + 50, this.y + 20, 20, 20); ctx.shadowBlur = 0;
+            },
+
+            update() {
+                this.dy += gravity; this.y += this.dy;
+                let onGround = false;
+                for (let g of grounds) {
+                    if (this.x + this.width*0.2 < g.x + g.w && this.x + this.width*0.8 > g.x) {
+                        if (this.y + this.height >= groundY && this.y + this.height <= groundY + this.dy + 20) {
+                            if (this.dy >= 0) {
+                                this.y = groundY - this.height; this.dy = 0; this.jumpCount = 0;
+                                onGround = true;
+                                if (this.onGap) {
+                                    score += 500; addScorePopup(this.x, this.y, "GAP CLEAR! +500", "#8ac926");
+                                    this.onGap = false;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!onGround && this.y >= groundY - 10) this.onGap = true;
+                if (this.y < 0) { this.y = 0; this.dy = 0; }
+                if (this.y > canvas.height + 100) gameOver();
+
+                let currentShields = Math.floor(score / 2000);
+                if (currentShields > this.lastShieldScore) {
+                    this.shieldCount++; this.lastShieldScore = currentShields;
+                    document.getElementById('shield-count').innerText = this.shieldCount;
+                    addScorePopup(this.x, this.y - 50, "SHIELD STACKED!", "#00f2ff");
+                }
+            }
+        };
+
+        function updateGrounds() {
+            if (grounds.length === 0 || grounds[grounds.length-1].x + grounds[grounds.length-1].w < canvas.width + 600) {
+                const lastG = grounds[grounds.length-1];
+                const isGap = (Math.random() > 0.7 && frameCount > 200);
+                const gapSize = isGap ? Math.random() * 180 + 150 : 0;
+                const width = Math.random() * 1500 + 1000;
+                const startX = lastG ? lastG.x + lastG.w + gapSize : 0;
+                grounds.push({ x: startX, w: width });
+            }
+            grounds.forEach((g, i) => { g.x -= gameSpeed; if(g.x + g.w < -200) grounds.splice(i,1); });
+        }
+
+        const OB_TYPES = [
+            {w:50, h:80, s:100, c:'#ff595e'}, {w:140, h:60, s:150, c:'#ffca3a'},  
+            {w:40, h:150, s:250, c:'#8ac926'}, {w:180, h:120, s:400, c:'#6a4c93'}  
+        ];
+
+        function spawnObstacle() {
+            if (!gameActive) return;
+            const t = OB_TYPES[Math.floor(Math.random()*OB_TYPES.length)];
+            let canSpawn = false;
+            for(let g of grounds) { if(canvas.width > g.x && canvas.width + t.w < g.x + g.w) { canSpawn = true; break; }}
+            if(canSpawn) obstacles.push({ x: canvas.width, y: groundY - t.h, ...t, passed: false });
+            setTimeout(spawnObstacle, (Math.random()*1400 + 700) / (gameSpeed/7));
+        }
+
+        function animate() {
+            if (!gameActive) return;
+            frameCount++;
+            ctx.fillStyle = '#0b0b1a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            for(let i=0; i<40; i++) {
+                let x = (Math.random()*canvas.width - frameCount*(gameSpeed*0.1*(i%4+1))) % canvas.width;
+                if(x<0) x+=canvas.width; ctx.fillRect(x, Math.random()*groundY, 4, 4);
+            }
+
+            updateGrounds();
+            ctx.fillStyle = '#222244';
+            grounds.forEach(g => { ctx.fillRect(g.x, groundY, g.w, canvas.height - groundY); });
+
+            player.update(); player.draw();
+
+            obstacles.forEach((o, i) => {
+                o.x -= gameSpeed;
+                ctx.fillStyle = o.c; ctx.shadowBlur = 20; ctx.shadowColor = o.c;
+                drawRoundedRect(ctx, o.x, o.y, o.w, o.h, 10); ctx.shadowBlur = 0;
+
+                if (player.x+20 < o.x+o.w && player.x+player.width-20 > o.x && player.y+10 < o.y+o.h && player.y+player.height-10 > o.y) {
+                    if (player.shieldCount > 0) {
+                        player.shieldCount--; document.getElementById('shield-count').innerText = player.shieldCount;
+                        o.x = -500; createExplosion(player.x+80, player.y+40, '#00f2ff', 35);
+                        addScorePopup(player.x, player.y, "SHIELD USED!", "#ff595e");
+                    } else gameOver();
+                }
+                if (o.x + o.w < player.x && !o.passed) {
+                    score += o.s; o.passed = true;
+                    document.getElementById('score-val').innerText = score;
+                    addScorePopup(player.x, player.y - 30, `+${o.s}`);
+                    gameSpeed += 0.15;
+                    document.getElementById('speed-val').innerText = (gameSpeed/7).toFixed(1);
+                }
+                if (o.x + o.w < -200) obstacles.splice(i, 1);
+            });
+
+            particles.forEach((p, i) => { p.x+=Math.cos(p.a)*p.s; p.y+=Math.sin(p.a)*p.s+0.4; p.l-=0.02; if(p.l<=0) particles.splice(i,1); ctx.globalAlpha=p.l; ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; });
+            scorePopups.forEach((p, i) => { p.y-=2.5; p.l-=0.02; if(p.l<=0) scorePopups.splice(i,1); ctx.globalAlpha=p.l; ctx.fillStyle=p.color; ctx.font='40px Black Han Sans'; ctx.fillText(p.text, p.x, p.y); ctx.globalAlpha=1; });
+
+            requestAnimationFrame(animate);
+        }
+
+        function gameOver() {
+            gameActive = false;
+            document.getElementById('overlay').style.display = 'flex';
+            document.getElementById('final-score').innerText = score;
+        }
+
+        async function submitRanking() {
+            const school = document.getElementById('user-school').value;
+            const dept = document.getElementById('user-dept').value;
+            const grade = document.getElementById('user-grade').value;
+            const group = document.getElementById('user-group').value;
+            const name = document.getElementById('user-name').value;
+            const status = document.getElementById('status-msg');
+            const btn = document.getElementById('submit-btn');
+
+            if(!school || !dept || !grade || !group || !name) { alert("모든 정보를 입력해주세요!"); return; }
+            
+            btn.disabled = true;
+            status.innerText = "서버로 전송 중...";
+
+            try {
+                const payload = {
+                    school, dept, grade, group, name,
+                    score, date: new Date().toLocaleString()
+                };
+                // mode: 'no-cors'는 응답을 읽지는 못하지만 전송은 수행합니다.
+                await fetch(GAS_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify(payload) 
+                });
+                status.innerText = "등록 완료! 초기화 중...";
+                setTimeout(() => location.reload(), 2000);
+            } catch (e) { 
+                status.innerText = "전송 중 오류 발생!"; 
+                btn.disabled = false;
+            }
+        }
+
+        function createExplosion(x,y,c,n) { for(let i=0;i<n;i++) particles.push({x,y,c,a:Math.random()*Math.PI*2,s:Math.random()*8+3,l:1}); }
+        function addScorePopup(x,y,text,color='#fff') { scorePopups.push({x,y,text,color,l:1}); }
+        function drawRoundedRect(ctx,x,y,w,h,r) { ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.fill(); }
+
+        window.addEventListener('mousedown', (e) => { if(gameActive && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') player.jump(); });
+        window.addEventListener('keydown', (e) => { if(gameActive && (e.code==='Space' || e.key===' ')) { e.preventDefault(); player.jump(); }});
+
+        grounds.push({ x: 0, w: canvas.width + 800 });
+    </script>
+</body>
+</html>

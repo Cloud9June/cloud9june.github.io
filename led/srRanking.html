@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SUPER RUNNER - TOP 20 RANKING</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+        
+        body { 
+            margin: 0; background: #0b0b1a; color: white; 
+            font-family: 'Black Han Sans', sans-serif; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        .bg-particles {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1a3a 0%, #0b0b1a 100%);
+            z-index: -1;
+        }
+
+        h1 { 
+            font-size: 80px; color: #00d2ff; margin: 40px 0; 
+            text-shadow: 0 0 20px rgba(0,210,255,0.6); letter-spacing: 5px;
+        }
+
+        .ranking-container {
+            width: 90%; max-width: 1200px;
+            background: rgba(26, 26, 58, 0.8);
+            border: 4px solid #00d2ff; border-radius: 30px;
+            padding: 40px; box-shadow: 0 0 50px rgba(0,210,255,0.2);
+            margin-bottom: 50px;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 28px; }
+        th { border-bottom: 3px solid #333; padding: 20px; color: #8ac926; text-align: center; }
+        td { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        .rank-1 { color: #ffca3a; font-size: 45px; text-shadow: 0 0 15px #ffca3a; }
+        .rank-2 { color: #e5e5e5; font-size: 38px; }
+        .rank-3 { color: #cd7f32; font-size: 34px; }
+        
+        .score-col { color: #00f2ff; font-size: 35px; }
+        .school-col { color: #aaa; font-size: 22px; }
+        .loading { font-size: 30px; color: #555; margin-top: 100px; text-align: center; width: 100%; }
+        
+        .btn-home {
+            padding: 20px 50px; font-size: 24px; background: #ff595e;
+            color: white; border: none; border-radius: 15px;
+            cursor: pointer; font-family: 'Black Han Sans';
+            text-decoration: none; margin-bottom: 50px; transition: 0.3s;
+        }
+        .btn-home:hover { transform: scale(1.1); box-shadow: 0 0 20px #ff595e; }
+    </style>
+</head>
+<body>
+    <div class="bg-particles"></div>
+    <h1>TOP 20 RANKERS</h1>
+
+    <div class="ranking-container">
+        <table id="rank-table">
+            <thead>
+                <tr>
+                    <th>순위</th>
+                    <th>학교 / 학과</th>
+                    <th>이름</th>
+                    <th>SCORE</th>
+                </tr>
+            </thead>
+            <tbody id="rank-body"></tbody>
+        </table>
+        <div id="loading-msg" class="loading">데이터를 불러오는 중...</div>
+    </div>
+
+    <a href="index.html" class="btn-home">게임으로 돌아가기</a>
+
+    <script>
+        // --- [설정: 본인의 GAS URL을 여기에 넣으세요] ---
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbymVtFZFh8J7ckBojBIVn5vHvMqL7scnbWnQRdcr1L1TzD-0V_LhCcACgFfLOGe3li9Qg/exec"; 
+
+        function fetchRanking() {
+            // JSONP 방식: 보안 우회를 위해 스크립트 태그를 동적으로 생성합니다.
+            const script = document.createElement('script');
+            script.src = `${GAS_URL}?callback=handleResponse&t=${new Date().getTime()}`;
+            document.body.appendChild(script);
+            
+            // 사용 완료한 스크립트 태그는 바로 제거합니다.
+            script.onload = () => document.body.removeChild(script);
+        }
+
+        // 구글에서 데이터를 받아오면 실행되는 함수
+        function handleResponse(data) {
+            const body = document.getElementById('rank-body');
+            const loading = document.getElementById('loading-msg');
+            
+            if (!data || data.length === 0) {
+                loading.innerText = "아직 등록된 랭킹이 없습니다.";
+                body.innerHTML = "";
+                return;
+            }
+
+            loading.style.display = "none";
+            body.innerHTML = "";
+
+            // 점수(인덱스 5) 기준으로 내림차순 정렬
+            data.sort((a, b) => Number(b[5]) - Number(a[5]));
+
+            // 상위 20개 추출
+            const top20 = data.slice(0, 20);
+
+            top20.forEach((row, index) => {
+                const rank = index + 1;
+                const tr = document.createElement('tr');
+                
+                let rankClass = "";
+                if (rank === 1) rankClass = "rank-1";
+                else if (rank === 2) rankClass = "rank-2";
+                else if (rank === 3) rankClass = "rank-3";
+
+                // row[0]:학교, row[1]:학과, row[2]:학년, row[3]:반, row[4]:이름, row[5]:점수
+                const schoolInfo = `<div class="school-col">${row[0]} ${row[1]}</div>`;
+                const userInfo = `${row[2]}학년 ${row[3]}반 ${row[4]}`;
+                const scoreVal = Number(row[5]).toLocaleString();
+
+                tr.innerHTML = `
+                    <td class="${rankClass}">${rank}등</td>
+                    <td>${schoolInfo}</td>
+                    <td>${userInfo}</td>
+                    <td class="score-col">${scoreVal}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // 초기 실행
+        fetchRanking();
+
+        // 10초마다 자동 갱신 (현장 이벤트용)
+        setInterval(fetchRanking, 10000);
+    </script>
+</body>
+</html>

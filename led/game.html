@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>FEVER CLICK CHALLENGE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+        body { margin: 0; background: #000; color: white; overflow: hidden; font-family: 'Black Han Sans', sans-serif; user-select: none; }
+        #canvas { display: block; cursor: crosshair; }
+        #ui { position: absolute; top: 0; left: 0; width: 100%; padding: 30px; box-sizing: border-box; display: flex; justify-content: space-between; font-size: 40px; pointer-events: none; text-shadow: 0 0 10px rgba(255,255,255,0.8); z-index: 10; }
+        #fever-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 150px; color: #ffca3a; text-align: center; opacity: 0; transition: all 0.2s ease-out; pointer-events: none; z-index: 5; text-shadow: 0 0 20px #ffca3a; }
+        #fever-text.show { transform: translate(-50%, -50%) scale(1); opacity: 1; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.1); } 100% { transform: translate(-50%, -50%) scale(1); } }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div>TIME: <span id="time">30</span></div>
+        <div>SCORE: <span id="score">0</span></div>
+    </div>
+    <div id="fever-text">FEVER!!</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const feverText = document.getElementById('fever-text');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = true;
+        let target = { x: 0, y: 0, r: 60 };
+        let combo = 0;
+        let particles = [];
+
+        // 파티클 (폭발 효과) 클래스
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.color = color;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = Math.random() * 8 + 4;
+                this.friction = 0.95;
+                this.gravity = 0.2;
+                this.life = 1;
+                this.decay = Math.random() * 0.03 + 0.02;
+            }
+            update() {
+                this.speed *= this.friction;
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed + this.gravity;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function spawnTarget() {
+            target.r = Math.max(30, 70 - combo * 2); // 콤보가 높을수록 작아짐
+            target.x = Math.random() * (canvas.width - target.r * 2) + target.r;
+            target.y = Math.random() * (canvas.height - target.r * 2) + target.r;
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 20; i++) particles.push(new Particle(x, y, color));
+        }
+
+        function updateFeverUI() {
+            if (combo >= 10) {
+                feverText.classList.add('show');
+                feverText.innerText = `${combo} COMBO!\nFEVER!!`;
+            } else if (combo > 0 && combo % 5 === 0) {
+                feverText.classList.add('show');
+                feverText.innerText = `${combo} COMBO!`;
+                setTimeout(() => { if(combo < 10) feverText.classList.remove('show'); }, 500);
+            } else if (combo === 0) {
+                feverText.classList.remove('show');
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!gameActive) return;
+            const dist = Math.sqrt((e.clientX - target.x)**2 + (e.clientY - target.y)**2);
+            
+            if (dist < target.r) {
+                combo++;
+                let points = 100 + combo * 10;
+                score += points;
+                document.getElementById('score').innerText = score;
+                
+                // 시각 효과: 폭발 및 배경 깜빡임
+                createExplosion(target.x, target.y, (combo >= 10) ? '#ffca3a' : '#ff595e');
+                if (combo >= 10) ctx.fillStyle = 'rgba(255, 202, 58, 0.2)'; // 피버 시 노란색 배경 섬광
+                else ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                updateFeverUI();
+                spawnTarget();
+                // 사운드: 콤보에 따라 음정이 높아지는 소리 (구현 필요)
+            } else {
+                combo = 0; // 놓치면 콤보 초기화
+                updateFeverUI();
+            }
+        });
+
+        // 타이머 및 게임 루프
+        const timer = setInterval(() => {
+            if(!gameActive) return;
+            timeLeft--;
+            document.getElementById('time').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                gameActive = false;
+                alert(`게임 종료! 최종 점수: ${score}`);
+                // 구글 시트 전송 로직
+                location.reload();
+            }
+        }, 1000);
+
+        function animate() {
+            if (!gameActive) return;
+            // 배경 그리기 (잔상 효과)
+            ctx.fillStyle = (combo >= 10) ? 'rgba(30, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 파티클 업데이트 및 그리기
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => { p.update(); p.draw(); });
+
+            // 타겟 그리기 (콤보에 따라 색상 변화)
+            ctx.beginPath();
+            ctx.arc(target.x, target.y, target.r, 0, Math.PI * 2);
+            ctx.fillStyle = (combo >= 10) ? '#ffca3a' : (combo > 5 ? '#ff595e' : '#fff');
+            ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.stroke(); ctx.closePath();
+
+            requestAnimationFrame(animate);
+        }
+
+        spawnTarget();
+        animate();
+    </script>
+</body>
+</html>
