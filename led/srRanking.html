@@ -25,14 +25,43 @@
         }
 
         .ranking-container {
-            width: 90%; max-width: 1200px;
+            width: 95%; /* 화면 꽉 차지 않게 너비 유지 */
+            max-width: 1100px; /* 최대 너비 미세 조정 */
             background: rgba(26, 26, 58, 0.8);
-            border: 4px solid #00d2ff; border-radius: 30px;
-            padding: 40px; box-shadow: 0 0 50px rgba(0,210,255,0.2);
-            margin-bottom: 50px;
+            border: 4px solid #00d2ff;
+            border-radius: 30px;
+            padding: 30px; /* 내부 여백 유지 */
+            box-shadow: 0 0 50px rgba(0,210,255,0.2);
+            margin-bottom: 40px;
+            box-sizing: border-box;
+            margin-left: auto; /* 중앙 정렬 */
+            margin-right: auto;
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 28px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 21px; /* [중요] 전체 폰트 크기 미세 축소 */
+            table-layout: fixed; /* 테이블 레이아웃 고정 유지 */
+        }
+
+        th, td {
+            padding: 15px 8px; /* 간격 살짝 조정 */
+            /* [유지] 줄바꿈 절대 방지 및 넘치는 글자 생략 */
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis; 
+        }
+
+        /* 1. 순위: 좁혀도 됨 */
+        th:nth-child(1), td:nth-child(1) { width: 15%; text-align: center; }
+        /* 2. 학교/학과: 가장 기므로 충분한 너비 확보 */
+        th:nth-child(2), td:nth-child(2) { width: 40%; text-align: center; } 
+        /* 3. 이름(학년/반): 짤리지 않게 너비 크게 확대 */
+        th:nth-child(3), td:nth-child(3) { width: 30%; text-align: center; } 
+        /* 4. 점수: 숫자 단위가 크므로 충분한 너비 확보 */
+        th:nth-child(4), td:nth-child(4) { width: 15%; text-align: right; }
+
         th { border-bottom: 3px solid #333; padding: 20px; color: #8ac926; text-align: center; }
         td { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
 
@@ -40,8 +69,13 @@
         .rank-2 { color: #e5e5e5; font-size: 38px; }
         .rank-3 { color: #cd7f32; font-size: 34px; }
         
-        .score-col { color: #00f2ff; font-size: 35px; }
-        .school-col { color: #aaa; font-size: 22px; }
+        .score-col { color: #00f2ff; font-size: 25px; }
+        .school-col {
+            color: #aaa;
+            font-size: 17px; /* [유지] 학교/학과 폰트는 미세하게 더 작게 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .loading { font-size: 30px; color: #555; margin-top: 100px; text-align: center; width: 100%; }
         
         .btn-home {

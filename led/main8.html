@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비디오월 - 게임 & 랭킹 가로 배치</title>
+    <link rel="stylesheet" href="style3.css">
+    <style>
+        /* 전체 화면 설정 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+
+        .container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* [왼쪽 영역] 전체의 50%를 차지하며 다시 좌우로 나뉨 */
+        .left-section {
+            flex: 1; 
+            display: flex; /* 내부 아이템을 가로로 배치 */
+            height: 100%;
+            border-right: 2px solid #333;
+        }
+
+        /* [오른쪽 영역] 달력 고정 */
+        .right-section {
+            flex: 1; 
+            height: 100%;
+        }
+
+        /* 왼쪽 내부의 게임과 랭킹 (각각 50%씩) */
+        .game-area {
+            flex: 1;
+            border-right: 1px solid #444;
+        }
+        .ranking-area {
+            flex: 1;
+        }
+
+        .item {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="item game-area">
+                <iframe src="superRunner.html" frameborder="0"></iframe>
+            </div>
+            <div class="item ranking-area">
+                <iframe src="srRanking.html" frameborder="0"></iframe>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div class="item calendar">
+                <iframe src="https://script.google.com/macros/s/AKfycbwnCwbYfgcekhsKf2jOuSs8gym3hu1UyjYSQCuPrhnky3MHG3T4p5aKVR2lawK1_8Mw/exec" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
