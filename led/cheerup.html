@@ -45,7 +45,16 @@
         }
 
         .content { font-size: 1.3rem; line-height: 1.25; color: #111; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
-        .author { text-align: right; font-size: 1.1rem; color: #555; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 4px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .author { 
+            text-align: right; 
+            font-size: 1.05rem;
+            color: #444;
+            border-top: 1px solid rgba(0,0,0,0.1); 
+            padding-top: 4px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
 
         .c1 { background-color: #fff9c4; } .c2 { background-color: #ffecb3; }
         .c3 { background-color: #f8bbd0; } .c4 { background-color: #e1f5fe; } .c5 { background-color: #f0f4c3; }
@@ -95,7 +104,6 @@
             const pageDiv = document.createElement('div');
             pageDiv.className = 'slide-page';
 
-            // 해당 페이지에 들어갈 20개 추출
             const pageItems = currentData.slice(i * itemsPerPage, (i + 1) * itemsPerPage);
 
             pageItems.forEach((item, index) => {
@@ -106,16 +114,30 @@
                 lantern.className = `lantern ${colors[globalIndex % colors.length]}`;
                 lantern.style.setProperty('--r', `${rotate}deg`);
                 
-                const cleanName = item.name.length > 10 ? item.name.substring(0, 10) + ".." : item.name;
+                // --- 날짜 처리 로직 추가 ---
+                const dateObj = new Date(item.date);
+                const year = String(dateObj.getFullYear()).slice(0);
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const dateStr = `${year}.${month}.${day}`;
+
+                // 이름은 8자로 살짝 줄여서 날짜와 겹치지 않게 조정
+                const cleanName = item.name.length > 8 ? item.name.substring(0, 8) + ".." : item.name;
                 const cleanContent = item.content.length > 70 ? item.content.substring(0, 70) + "..." : item.content;
 
-                lantern.innerHTML = `<div class="content">${cleanContent}</div><div class="author">- ${cleanName}</div>`;
+                // 출력 부분에 날짜(dateStr) 추가
+                lantern.innerHTML = `
+                    <div class="content">${cleanContent}</div>
+                    <div class="author">
+                        <span style="font-size: 0.9em; opacity: 0.8; margin-right: 5px;">${dateStr}</span>
+                        ${cleanName}
+                    </div>
+                `;
                 pageDiv.appendChild(lantern);
             });
 
             container.appendChild(pageDiv);
 
-            // 인디케이터 도트 추가
             const dot = document.createElement('div');
             dot.className = `dot ${i === currentPage ? 'active' : ''}`;
             dotsContainer.appendChild(dot);
