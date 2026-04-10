@@ -1,0 +1,50 @@
+/* 기본 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 스크롤 방지 */
+    background-color: #000;
+}
+
+.container {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    /* 가로 비율: 1:1:2 */
+    grid-template-columns: 1fr 1fr 2fr; 
+    /* 세로 비율: 1:1 */
+    grid-template-rows: 1fr 1fr;
+    gap: 2px; /* 경계선 두께 */
+    
+    /* 레이아웃 지도 수정: 왼쪽 첫 번째 열(세로)을 cheerup으로 통일 */
+    grid-template-areas: 
+        "cheerup   meal    calendar"
+        "cheerup   d-day   calendar";
+}
+
+/* 공통 아이템 스타일 */
+.item {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    position: relative;
+    border: 1px solid #fff;
+}
+
+.item iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* 각 영역 배치 */
+.cheerup  { grid-area: cheerup; }  /* 왼쪽 세로 전체 차지 */
+.meal     { grid-area: meal; }
+.d-day    { grid-area: d-day; }
+.calendar { grid-area: calendar; } /* 오른쪽 세로 전체 차지 */

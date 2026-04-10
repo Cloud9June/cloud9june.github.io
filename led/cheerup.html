@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>응원의 밤하늘 슬라이드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; background-color: #050a0f; color: white; font-family: sans-serif; overflow: hidden; }
+        
+        /* 전체 컨테이너 */
+        .video-wall-section {
+            width: 100vw; max-width: 864px; height: 100vh;
+            margin: 0 auto; position: relative;
+            background: linear-gradient(to bottom, #050a0f 0%, #102a3d 50%, #243b55 100%);
+            overflow: hidden;
+        }
+
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 100px 150px, #fff, rgba(0,0,0,0)); background-size: 400px 400px; opacity: 0.3; }
+
+        /* 슬라이드 프레임 */
+        #slider-container {
+            display: flex; height: 100%; transition: transform 1s cubic-bezier(0.45, 0, 0.55, 1);
+        }
+
+        /* 개별 페이지 (20개씩 담는 칸) */
+        .slide-page {
+            min-width: 100%; height: 100%;
+            display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr);
+            gap: 15px; padding: 30px 20px; box-sizing: border-box;
+        }
+
+        /* 풍등 스타일 */
+        .lantern {
+            aspect-ratio: 1 / 1.05; padding: 12px; font-family: 'Nanum Pen Script', cursive;
+            box-sizing: border-box; border-radius: 4px; display: flex; flex-direction: column;
+            justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 -15px 25px rgba(255, 200, 50, 0.2);
+            animation: float 4s infinite ease-in-out alternate; overflow: hidden;
+        }
+
+        @keyframes float { 
+            from { transform: translateY(0) rotate(var(--r)); } 
+            to { transform: translateY(-5px) rotate(var(--r)); } 
+        }
+
+        .content { font-size: 1.3rem; line-height: 1.25; color: #111; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+        .author { text-align: right; font-size: 1.1rem; color: #555; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 4px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+
+        .c1 { background-color: #fff9c4; } .c2 { background-color: #ffecb3; }
+        .c3 { background-color: #f8bbd0; } .c4 { background-color: #e1f5fe; } .c5 { background-color: #f0f4c3; }
+
+        /* 하단 페이지 표시 (인디케이터) */
+        .dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.3); border-radius: 50%; transition: background 0.3s; }
+        .dot.active { background: white; box-shadow: 0 0 10px white; }
+    </style>
+</head>
+<body>
+<div class="video-wall-section">
+    <div class="stars"></div>
+    <div id="slider-container"></div>
+    <div class="dots" id="dots"></div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyDZG5lEbpFfgpKlKNnQ2dVR6TgnCN-g9hujI5DyrTQx-Qw7hGqmYgJixLwScoFyL8_0w/exec"; 
+    let currentData = [];
+    let currentPage = 0;
+    const itemsPerPage = 20;
+    const colors = ['c1', 'c2', 'c3', 'c4', 'c5'];
+
+    async function loadMessages() {
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            
+            // 데이터가 변경되었을 때만 화면 갱신
+            if (JSON.stringify(data) !== JSON.stringify(currentData)) {
+                currentData = data;
+                renderSlides();
+            }
+        } catch (e) { console.error("데이터 로드 실패", e); }
+    }
+
+    function renderSlides() {
+        const container = document.getElementById('slider-container');
+        const dotsContainer = document.getElementById('dots');
+        container.innerHTML = '';
+        dotsContainer.innerHTML = '';
+
+        const pageCount = Math.ceil(currentData.length / itemsPerPage);
+
+        for (let i = 0; i < pageCount; i++) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'slide-page';
+
+            // 해당 페이지에 들어갈 20개 추출
+            const pageItems = currentData.slice(i * itemsPerPage, (i + 1) * itemsPerPage);
+
+            pageItems.forEach((item, index) => {
+                const globalIndex = (i * itemsPerPage) + index;
+                const lantern = document.createElement('div');
+                const rotate = (Math.random() * 6 - 3).toFixed(2);
+                
+                lantern.className = `lantern ${colors[globalIndex % colors.length]}`;
+                lantern.style.setProperty('--r', `${rotate}deg`);
+                
+                const cleanName = item.name.length > 10 ? item.name.substring(0, 10) + ".." : item.name;
+                const cleanContent = item.content.length > 70 ? item.content.substring(0, 70) + "..." : item.content;
+
+                lantern.innerHTML = `<div class="content">${cleanContent}</div><div class="author">- ${cleanName}</div>`;
+                pageDiv.appendChild(lantern);
+            });
+
+            container.appendChild(pageDiv);
+
+            // 인디케이터 도트 추가
+            const dot = document.createElement('div');
+            dot.className = `dot ${i === currentPage ? 'active' : ''}`;
+            dotsContainer.appendChild(dot);
+        }
+    }
+
+    function startSlide() {
+        setInterval(() => {
+            const pageCount = Math.ceil(currentData.length / itemsPerPage);
+            if (pageCount <= 1) return;
+
+            currentPage = (currentPage + 1) % pageCount;
+            const container = document.getElementById('slider-container');
+            container.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            // 도트 업데이트
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentPage);
+            });
+        }, 7000); // 7초마다 페이지 전환
+    }
+
+    window.onload = () => {
+        loadMessages();
+        startSlide();
+        setInterval(loadMessages, 10000); // 10초마다 서버에서 새 데이터 확인
+    };
+</script>
+</body>
+</html>
