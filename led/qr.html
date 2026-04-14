@@ -19,6 +19,7 @@
       overflow: hidden;
       display: flex; flex-direction: column;
       height: 100vh;
+      perspective: 1000px; /* 3D 효과 원근감 */
     }
 
     #slider-container {
@@ -29,46 +30,81 @@
       padding: 15px;
     }
 
+    /* 30초 주기로 카드 회전 (가독성을 위해 3초만 회전) */
+    @keyframes rotateCard {
+      0% { transform: rotateY(0deg); }
+      90% { transform: rotateY(0deg); }
+      100% { transform: rotateY(360deg); }
+    }
+
+    /* 테두리 네온 빛 애니메이션 */
+    @keyframes rotateBorder {
+      0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 204, 0.2); border-color: rgba(0, 255, 204, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(0, 255, 204, 0.5); border-color: rgba(0, 255, 204, 0.8); }
+    }
+
     .notice-slide {
       width: 85%; 
       max-width: 550px; 
       text-align: center;
+      animation: rotateCard 30s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      transform-style: preserve-3d;
     }
 
+    /* --- 타이틀 통통 튀는 애니메이션 추가 --- */
     .title {
-      font-size: 1.7rem;
+      font-size: 2rem; /* 크기 약간 키움 */
       font-weight: 900;
       color: var(--accent-color);
       margin-bottom: 25px;
-      text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-      line-height: 1.4;
+      text-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+      display: flex; /* 글자 중앙 정렬을 위해 */
+      justify-content: center;
+      gap: 2px; /* 글자 간격 */
     }
 
-    /* QR 컨테이너 스타일 */
+    /* 통통 튀는 모션 정의 */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); text-shadow: 0 0 25px rgba(0, 255, 204, 0.8); }
+    }
+
+    .title span {
+      display: inline-block; /* transform 적용을 위해 */
+      animation: bounce 1.5s ease-in-out infinite;
+    }
+
+    /* 각 글자별 애니메이션 지연 시간 설정 (통통 튀는 순서) */
+    .title span:nth-child(1) { animation-delay: 0.0s; }
+    .title span:nth-child(2) { animation-delay: 0.1s; }
+    .title span:nth-child(3) { animation-delay: 0.2s; }
+    .title span:nth-child(4) { animation-delay: 0.3s; }
+    .title span:nth-child(5) { animation-delay: 0.4s; }
+    /* ------------------------------------------- */
+
     .qr-container {
-      border: 1px solid var(--border-color);
+      border: 2px solid var(--accent-color);
       border-radius: 20px;
-      padding: 30px 20px;
-      background: rgba(255, 255, 255, 0.02);
+      padding: 40px 20px;
+      background: rgba(255, 255, 255, 0.03);
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: rotateBorder 3s ease-in-out infinite;
     }
 
     .qr-image {
-      width: 200px; /* QR 코드 크기 조절 */
-      height: 200px;
+      width: 220px;
+      height: 220px;
       border-radius: 15px;
-      border: 3px solid var(--accent-color);
       padding: 10px;
-      background: white; /* QR 인식을 위해 배경은 흰색 유지 */
-      margin-bottom: 25px;
-      box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+      background: white;
+      margin-bottom: 30px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
     }
 
     .message {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       font-weight: 700;
       color: var(--text-color);
       line-height: 1.6;
@@ -78,28 +114,47 @@
     .highlight {
       color: var(--accent-color);
       font-weight: 900;
+      text-decoration: underline;
+      text-underline-offset: 5px;
     }
 
     .sub-message {
-      margin-top: 10px;
-      font-size: 0.95rem;
+      margin-top: 15px;
+      font-size: 1rem;
       color: var(--sub-text-color);
-      font-weight: 300;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 5px 15px;
+      border-radius: 20px;
     }
 
     .indicators {
-      height: 30px;
+      height: 40px;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
-    .dot {
-      width: 20px;
-      height: 3px;
-      background: var(--accent-color);
+    /* 30초 타이머 프로그레스 바 */
+    @keyframes loadingBar {
+      0% { width: 0%; opacity: 0.4; }
+      100% { width: 100%; opacity: 1; }
+    }
+
+    .dot-bg {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 2px;
-      opacity: 0.4;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dot-fill {
+      position: absolute;
+      left: 0; top: 0;
+      height: 100%;
+      background: var(--accent-color);
+      animation: loadingBar 30s linear infinite;
     }
   </style>
 </head>
@@ -107,25 +162,29 @@
 
   <div id="slider-container">
     <div class="notice-slide">
-      <div class="title">EVENT</div>
+      <div class="title">
+        <span>E</span><span>V</span><span>E</span><span>N</span><span>T</span>
+      </div>
       
       <div class="qr-container">
         <img src="images/qr.jpg" alt="QR Code" class="qr-image">
         
         <div class="message">
-        매주 QR 찍고 응원 멘트 남기면<br>
-        <span class="highlight">베스트 멘트</span>를 뽑아 <span class="highlight">선물</span>을 드립니다!
+            매주 QR 찍고 응원 멘트 남기면<br>
+            <span class="highlight">베스트 멘트</span>를 뽑아 <span class="highlight">선물</span>을 드립니다!
         </div>
 
         <div class="sub-message">
-        매주 새로운 당첨의 기회, 지금 바로 참여하세요!
+            매주 새로운 당첨의 기회, 지금 바로 참여하세요!
         </div>
       </div>
     </div>
   </div>
 
   <div class="indicators">
-    <div class="dot"></div>
+    <div class="dot-bg">
+      <div class="dot-fill"></div>
+    </div>
   </div>
 
 </body>
