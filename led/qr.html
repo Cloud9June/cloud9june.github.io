@@ -19,7 +19,7 @@
       overflow: hidden;
       display: flex; flex-direction: column;
       height: 100vh;
-      perspective: 1000px; /* 3D 효과 원근감 */
+      perspective: 1000px;
     }
 
     #slider-container {
@@ -27,65 +27,64 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 15px;
+      padding: 10px; /* 전체 패딩 축소 */
     }
 
-    /* 30초 주기로 카드 회전 (가독성을 위해 3초만 회전) */
+    /* 30초 회전 애니메이션 */
     @keyframes rotateCard {
       0% { transform: rotateY(0deg); }
-      90% { transform: rotateY(0deg); }
+      92% { transform: rotateY(0deg); }
       100% { transform: rotateY(360deg); }
     }
 
-    /* 테두리 네온 빛 애니메이션 */
+    /* 테두리 빛 애니메이션 */
     @keyframes rotateBorder {
-      0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 204, 0.2); border-color: rgba(0, 255, 204, 0.4); }
-      50% { box-shadow: 0 0 30px rgba(0, 255, 204, 0.5); border-color: rgba(0, 255, 204, 0.8); }
+      0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 204, 0.1); border-color: rgba(0, 255, 204, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); border-color: rgba(0, 255, 204, 0.6); }
     }
 
     .notice-slide {
-      width: 85%; 
-      max-width: 550px; 
+      width: 90%; 
+      max-width: 480px; /* 최대폭을 살짝 줄여 짤림 방지 */
       text-align: center;
       animation: rotateCard 30s cubic-bezier(0.4, 0, 0.2, 1) infinite;
       transform-style: preserve-3d;
     }
 
-    /* --- 타이틀 통통 튀는 애니메이션 추가 --- */
+    /* --- 타이틀 애니메이션 (짤림 방지 처리) --- */
     .title {
-      font-size: 2rem; /* 크기 약간 키움 */
+      font-size: 1.8rem;
       font-weight: 900;
       color: var(--accent-color);
-      margin-bottom: 25px;
-      text-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
-      display: flex; /* 글자 중앙 정렬을 위해 */
+      margin-bottom: 20px;
+      padding-top: 20px; /* 튀어오를 때 위쪽 공간 확보 */
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+      display: flex;
       justify-content: center;
-      gap: 2px; /* 글자 간격 */
+      gap: 3px;
     }
 
-    /* 통통 튀는 모션 정의 */
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-15px); text-shadow: 0 0 25px rgba(0, 255, 204, 0.8); }
+      50% { transform: translateY(-12px); } /* 튀는 높이 조절 */
     }
 
     .title span {
-      display: inline-block; /* transform 적용을 위해 */
+      display: inline-block;
       animation: bounce 1.5s ease-in-out infinite;
     }
 
-    /* 각 글자별 애니메이션 지연 시간 설정 (통통 튀는 순서) */
     .title span:nth-child(1) { animation-delay: 0.0s; }
     .title span:nth-child(2) { animation-delay: 0.1s; }
     .title span:nth-child(3) { animation-delay: 0.2s; }
     .title span:nth-child(4) { animation-delay: 0.3s; }
     .title span:nth-child(5) { animation-delay: 0.4s; }
-    /* ------------------------------------------- */
 
+    /* QR 컨테이너 */
     .qr-container {
       border: 2px solid var(--accent-color);
       border-radius: 20px;
-      padding: 40px 20px;
+      padding: 30px 15px; /* 내부 여백 최적화 */
       background: rgba(255, 255, 255, 0.03);
       display: flex;
       flex-direction: column;
@@ -94,55 +93,52 @@
     }
 
     .qr-image {
-      width: 220px;
-      height: 220px;
-      border-radius: 15px;
-      padding: 10px;
+      width: 180px; /* 크기 소폭 축소 */
+      height: 180px;
+      border-radius: 12px;
+      padding: 8px;
       background: white;
-      margin-bottom: 30px;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
     }
 
     .message {
-      font-size: 1.4rem;
+      font-size: 1.25rem; /* 가독성 유지하며 크기 최적화 */
       font-weight: 700;
       color: var(--text-color);
-      line-height: 1.6;
+      line-height: 1.5;
       word-break: keep-all;
     }
 
     .highlight {
       color: var(--accent-color);
       font-weight: 900;
-      text-decoration: underline;
-      text-underline-offset: 5px;
     }
 
     .sub-message {
-      margin-top: 15px;
-      font-size: 1rem;
+      margin-top: 12px;
+      font-size: 0.9rem;
       color: var(--sub-text-color);
       background: rgba(255, 255, 255, 0.1);
-      padding: 5px 15px;
-      border-radius: 20px;
+      padding: 4px 12px;
+      border-radius: 15px;
     }
 
+    /* 하단 인디케이터 */
     .indicators {
-      height: 40px;
+      height: 35px;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
-    /* 30초 타이머 프로그레스 바 */
     @keyframes loadingBar {
       0% { width: 0%; opacity: 0.4; }
       100% { width: 100%; opacity: 1; }
     }
 
     .dot-bg {
-      width: 200px;
-      height: 4px;
+      width: 150px;
+      height: 3px;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 2px;
       position: relative;
