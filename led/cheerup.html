@@ -122,7 +122,7 @@
                 const dateStr = `${year}.${month}.${day}`;
 
                 // 이름은 8자로 살짝 줄여서 날짜와 겹치지 않게 조정
-                const cleanName = item.name.length > 8 ? item.name.substring(0, 8) + ".." : item.name;
+                const cleanName = item.name.length > 12 ? item.name.substring(0, 12) + ".." : item.name;
                 const cleanContent = item.content.length > 70 ? item.content.substring(0, 70) + "..." : item.content;
 
                 // 출력 부분에 날짜(dateStr) 추가
