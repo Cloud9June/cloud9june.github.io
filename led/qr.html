@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0a0a0a;
+      --accent-color: #00ffcc;
+      --text-color: #ffffff;
+      --sub-text-color: #cccccc;
+      --border-color: rgba(0, 255, 204, 0.2);
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0; padding: 0;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      height: 100vh;
+    }
+
+    #slider-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+    }
+
+    .notice-slide {
+      width: 85%; 
+      max-width: 550px; 
+      text-align: center;
+    }
+
+    .title {
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: var(--accent-color);
+      margin-bottom: 25px;
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+      line-height: 1.4;
+    }
+
+    /* QR 컨테이너 스타일 */
+    .qr-container {
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .qr-image {
+      width: 200px; /* QR 코드 크기 조절 */
+      height: 200px;
+      border-radius: 15px;
+      border: 3px solid var(--accent-color);
+      padding: 10px;
+      background: white; /* QR 인식을 위해 배경은 흰색 유지 */
+      margin-bottom: 25px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+    }
+
+    .message {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-color);
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+
+    .highlight {
+      color: var(--accent-color);
+      font-weight: 900;
+    }
+
+    .sub-message {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      color: var(--sub-text-color);
+      font-weight: 300;
+    }
+
+    .indicators {
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dot {
+      width: 20px;
+      height: 3px;
+      background: var(--accent-color);
+      border-radius: 2px;
+      opacity: 0.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="slider-container">
+    <div class="notice-slide">
+      <div class="title">EVENT</div>
+      
+      <div class="qr-container">
+        <img src="images/qr.jpg" alt="QR Code" class="qr-image">
+        
+        <div class="message">
+        매주 QR 찍고 응원 멘트 남기면<br>
+        <span class="highlight">베스트 멘트</span>를 뽑아 <span class="highlight">선물</span>을 드립니다!
+        </div>
+
+        <div class="sub-message">
+        매주 새로운 당첨의 기회, 지금 바로 참여하세요!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="indicators">
+    <div class="dot"></div>
+  </div>
+
+</body>
+</html>
