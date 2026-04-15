@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>응원의 밤하늘 롤링 보드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; background-color: #050a0f; color: white; font-family: sans-serif; overflow: hidden; }
+        
+        .video-wall-section {
+            width: 100vw; max-width: 864px; height: 100vh;
+            margin: 0 auto; position: relative;
+            background: linear-gradient(to bottom, #050a0f 0%, #102a3d 50%, #243b55 100%);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 100px 150px, #fff, rgba(0,0,0,0)); background-size: 400px 400px; opacity: 0.3; }
+
+        #slider-container {
+            display: block; 
+            transition: transform 1s cubic-bezier(0.45, 0, 0.55, 1);
+        }
+
+        .slide-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            height: 20vh;
+        }
+
+        /* 💡 여백 줄 스타일 */
+        .spacer-row { height: 20vh; display: flex; align-items: center; justify-content: center; opacity: 0.3; font-style: italic; font-size: 0.9rem; letter-spacing: 2px; }
+
+        .lantern {
+            position: relative;
+            aspect-ratio: 1 / 1.05; padding: 12px; font-family: 'Nanum Pen Script', cursive;
+            box-sizing: border-box; border-radius: 4px; display: flex; flex-direction: column;
+            justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 -15px 25px rgba(255, 200, 50, 0.2);
+            animation: float 4s infinite ease-in-out alternate; overflow: hidden;
+        }
+
+        /* 💡 NEW 뱃지 스타일 */
+        .new-badge {
+            display: inline-block;
+            background: #ff4444;
+            color: white;
+            font-family: sans-serif;
+            font-size: 0.6rem;
+            font-weight: bold;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-right: 5px; /* 이름과의 간격 */
+            vertical-align: middle;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes float { from { transform: translateY(0) rotate(var(--r)); } to { transform: translateY(-5px) rotate(var(--r)); } }
+
+        .content { font-size: 1.3rem; line-height: 1.25; color: #111; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .author { 
+            text-align: right; font-size: 1.05rem; color: #444;
+            border-top: 1px solid rgba(0,0,0,0.1); padding-top: 4px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
+
+        .c1 { background-color: #fff9c4; } .c2 { background-color: #ffecb3; }
+        .c3 { background-color: #f8bbd0; } .c4 { background-color: #e1f5fe; } .c5 { background-color: #f0f4c3; }
+    </style>
+</head>
+<body>
+<div class="video-wall-section">
+    <div class="stars"></div>
+    <div id="slider-container"></div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyDZG5lEbpFfgpKlKNnQ2dVR6TgnCN-g9hujI5DyrTQx-Qw7hGqmYgJixLwScoFyL8_0w/exec"; 
+    let currentData = [];
+    let currentRow = 0;
+    const itemsPerRow = 4;
+    const colors = ['c1', 'c2', 'c3', 'c4', 'c5'];
+
+    async function loadMessages() {
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            if (JSON.stringify(data) !== JSON.stringify(currentData)) {
+                currentData = data;
+                renderRows();
+            }
+        } catch (e) { console.error("로드 실패", e); }
+    }
+
+    function renderRows() {
+        const container = document.getElementById('slider-container');
+        container.innerHTML = '';
+
+        for (let i = 0; i < currentData.length; i += itemsPerRow) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'slide-row';
+            const rowItems = currentData.slice(i, i + itemsPerRow);
+
+            rowItems.forEach((item, index) => {
+                const globalIndex = i + index;
+                const lantern = document.createElement('div');
+                const rotate = (Math.random() * 6 - 3).toFixed(2);
+                lantern.className = `lantern ${colors[globalIndex % colors.length]}`;
+                lantern.style.setProperty('--r', `${rotate}deg`);
+                
+                const dateObj = new Date(item.date);
+                const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+
+                // 💡 1시간 이내 작성된 글인지 확인
+                const isNew = (new Date() - dateObj) < (60 * 60 * 1000);
+                const newTag = isNew ? '<div class="new-badge">NEW</div>' : '';
+
+                const cleanName = item.name.length > 12 ? item.name.substring(0, 12) + ".." : item.name;
+                const cleanContent = item.content.length > 70 ? item.content.substring(0, 70) + "..." : item.content;
+
+                lantern.innerHTML = `
+                    <div class="content">${cleanContent}</div>
+                    <div class="author">
+                        ${newTag} <span style="font-size: 0.85em; opacity: 0.6; margin-right: 5px; font-family: sans-serif;">${dateStr}</span>
+                        ${cleanName}
+                    </div>
+                `;
+                rowDiv.appendChild(lantern);
+            });
+            container.appendChild(rowDiv);
+        }
+
+        // 💡 마지막에 여백 줄 추가 (리스트 끝 알림)
+        const spacer = document.createElement('div');
+        spacer.className = 'slide-row spacer-row';
+        spacer.innerHTML = '<div style="grid-column: span 4; text-align: center;">✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦</div>';
+        container.appendChild(spacer);
+
+        // 무한 롤링을 위한 복사본 (여백 줄 포함 5줄 복사)
+        const clones = Array.from(container.children).slice(0, 5);
+        clones.forEach(row => container.appendChild(row.cloneNode(true)));
+    }
+
+    function startRolling() {
+        setInterval(() => {
+            const container = document.getElementById('slider-container');
+            const totalRowsIncludingSpacer = Math.ceil(currentData.length / itemsPerRow) + 1;
+            
+            if (totalRowsIncludingSpacer <= 5) return;
+
+            currentRow++;
+            container.style.transition = 'transform 1s cubic-bezier(0.45, 0, 0.55, 1)';
+            container.style.transform = `translateY(-${currentRow * 20}vh)`;
+
+            if (currentRow >= totalRowsIncludingSpacer) {
+                setTimeout(() => {
+                    container.style.transition = 'none';
+                    currentRow = 0;
+                    container.style.transform = `translateY(0)`;
+                }, 1000);
+            }
+        }, 3500);
+    }
+
+    window.onload = () => { loadMessages(); startRolling(); setInterval(loadMessages, 20000); };
+</script>
+</body>
+</html>
