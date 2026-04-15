@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>응원의 밤하늘 롤링 보드</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+
     <style>
-        body { margin: 0; padding: 0; background-color: #050a0f; color: white; font-family: sans-serif; overflow: hidden; }
+        /* 2. 전체 기본 폰트 설정 (숫자와 한글은 나눔펜이 우선) */
+        body { 
+            margin: 0; padding: 0; background-color: #050a0f; color: white; 
+            font-family: 'Nanum Pen Script', 'Noto Color Emoji', sans-serif; 
+            overflow: hidden; 
+        }
         
         .video-wall-section {
             width: 100vw; max-width: 864px; height: 100vh;
@@ -33,19 +39,19 @@
             height: 20vh;
         }
 
-        /* 💡 여백 줄 스타일 */
         .spacer-row { height: 20vh; display: flex; align-items: center; justify-content: center; opacity: 0.3; font-style: italic; font-size: 0.9rem; letter-spacing: 2px; }
 
         .lantern {
             position: relative;
-            aspect-ratio: 1 / 1.05; padding: 12px; font-family: 'Nanum Pen Script', cursive;
+            aspect-ratio: 1 / 1.05; padding: 12px; 
+            /* 나눔펜을 앞에 두어 숫자/글자를 먼저 처리하고, 없는 이모지만 Noto가 처리합니다 */
+            font-family: 'Nanum Pen Script', 'Noto Color Emoji', cursive;
             box-sizing: border-box; border-radius: 4px; display: flex; flex-direction: column;
             justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 -15px 25px rgba(255, 200, 50, 0.2);
             animation: float 4s infinite ease-in-out alternate; overflow: hidden;
         }
 
-        /* 💡 NEW 뱃지 스타일 */
         .new-badge {
             display: inline-block;
             background: #ff4444;
@@ -55,7 +61,7 @@
             font-weight: bold;
             padding: 1px 4px;
             border-radius: 3px;
-            margin-right: 5px; /* 이름과의 간격 */
+            margin-right: 5px;
             vertical-align: middle;
             animation: blink 1s infinite;
         }
@@ -63,12 +69,22 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes float { from { transform: translateY(0) rotate(var(--r)); } to { transform: translateY(-5px) rotate(var(--r)); } }
 
-        .content { font-size: 1.3rem; line-height: 1.25; color: #111; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+        .content { 
+            font-size: 1.3rem; line-height: 1.25; color: #111; word-break: break-all; 
+            display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; 
+            overflow: hidden; 
+            font-family: 'Nanum Pen Script', 'Noto Color Emoji', cursive;
+        }
         
         .author { 
-            text-align: right; font-size: 1.05rem; color: #444;
+            text-align: right; font-size: 1.0rem; color: #444;
             border-top: 1px solid rgba(0,0,0,0.1); padding-top: 4px; 
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            font-family: 'Nanum Pen Script', 'Noto Color Emoji', cursive;
+        }
+
+        .author span {
+            font-size: 0.6rem !important;
         }
 
         .c1 { background-color: #fff9c4; } .c2 { background-color: #ffecb3; }
@@ -116,7 +132,7 @@
                 lantern.style.setProperty('--r', `${rotate}deg`);
                 
                 const dateObj = new Date(item.date);
-                const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+                const dateStr = `${String(dateObj.getFullYear()).slice(-2)}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
 
                 // 💡 1시간 이내 작성된 글인지 확인
                 const isNew = (new Date() - dateObj) < (60 * 60 * 1000);
