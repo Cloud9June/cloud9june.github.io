@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
 
     <style>
-        /* 2. 전체 기본 폰트 설정 (숫자와 한글은 나눔펜이 우선) */
         body { 
             margin: 0; padding: 0; background-color: #050a0f; color: white; 
             font-family: 'Nanum Pen Script', 'Noto Color Emoji', sans-serif; 
@@ -44,7 +43,6 @@
         .lantern {
             position: relative;
             aspect-ratio: 1 / 1.05; padding: 12px; 
-            /* 나눔펜을 앞에 두어 숫자/글자를 먼저 처리하고, 없는 이모지만 Noto가 처리합니다 */
             font-family: 'Nanum Pen Script', 'Noto Color Emoji', cursive;
             box-sizing: border-box; border-radius: 4px; display: flex; flex-direction: column;
             justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.2);
@@ -52,17 +50,31 @@
             animation: float 4s infinite ease-in-out alternate; overflow: hidden;
         }
 
+        /* 🏆 베스트 메모 스타일 (별가루 후광) */
+        .lantern.best {
+            border: 2px solid #ffca28 !important;
+            animation: float 4s infinite ease-in-out alternate, glow 2s infinite alternate !important;
+            z-index: 5;
+        }
+
+        /* 👑 왕관 뱃지 */
+        .best-crown {
+            position: absolute; bottom: 5px; left: 5px;
+            font-size: 1.8rem; z-index: 10;
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+            to { box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 255, 255, 0.3); }
+        }
+
         .new-badge {
             display: inline-block;
-            background: #ff4444;
-            color: white;
-            font-family: sans-serif;
-            font-size: 0.6rem;
-            font-weight: bold;
-            padding: 1px 4px;
-            border-radius: 3px;
-            margin-right: 5px;
-            vertical-align: middle;
+            background: #ff4444; color: white;
+            font-family: sans-serif; font-size: 0.6rem; font-weight: bold;
+            padding: 1px 4px; border-radius: 3px;
+            margin-right: 5px; vertical-align: middle;
             animation: blink 1s infinite;
         }
 
@@ -83,9 +95,7 @@
             font-family: 'Nanum Pen Script', 'Noto Color Emoji', cursive;
         }
 
-        .author span {
-            font-size: 0.6rem !important;
-        }
+        .author span { font-size: 0.8rem !important; opacity: 0.7; margin-right: 8px; font-family: sans-serif; }
 
         .c1 { background-color: #fff9c4; } .c2 { background-color: #ffecb3; }
         .c3 { background-color: #f8bbd0; } .c4 { background-color: #e1f5fe; } .c5 { background-color: #f0f4c3; }
@@ -128,13 +138,18 @@
                 const globalIndex = i + index;
                 const lantern = document.createElement('div');
                 const rotate = (Math.random() * 6 - 3).toFixed(2);
-                lantern.className = `lantern ${colors[globalIndex % colors.length]}`;
+                
+                // 💡 베스트 판별 및 클래스 추가
+                const isBest = item.best === "O";
+                const bestClass = isBest ? 'best' : '';
+                const crownTag = isBest ? '<div class="best-crown">👑</div>' : '';
+
+                lantern.className = `lantern ${colors[globalIndex % colors.length]} ${bestClass}`;
                 lantern.style.setProperty('--r', `${rotate}deg`);
                 
                 const dateObj = new Date(item.date);
                 const dateStr = `${String(dateObj.getFullYear()).slice(-2)}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
 
-                // 💡 1시간 이내 작성된 글인지 확인
                 const isNew = (new Date() - dateObj) < (60 * 60 * 1000);
                 const newTag = isNew ? '<div class="new-badge">NEW</div>' : '';
 
@@ -142,9 +157,10 @@
                 const cleanContent = item.content.length > 70 ? item.content.substring(0, 70) + "..." : item.content;
 
                 lantern.innerHTML = `
+                    ${crownTag}
                     <div class="content">${cleanContent}</div>
                     <div class="author">
-                        ${newTag} <span style="font-size: 0.85em; opacity: 0.6; margin-right: 5px; font-family: sans-serif;">${dateStr}</span>
+                        ${newTag} <span>${dateStr}</span>
                         ${cleanName}
                     </div>
                 `;
@@ -153,13 +169,11 @@
             container.appendChild(rowDiv);
         }
 
-        // 💡 마지막에 여백 줄 추가 (리스트 끝 알림)
         const spacer = document.createElement('div');
         spacer.className = 'slide-row spacer-row';
         spacer.innerHTML = '<div style="grid-column: span 4; text-align: center;">✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦</div>';
         container.appendChild(spacer);
 
-        // 무한 롤링을 위한 복사본 (여백 줄 포함 5줄 복사)
         const clones = Array.from(container.children).slice(0, 5);
         clones.forEach(row => container.appendChild(row.cloneNode(true)));
     }
