@@ -559,7 +559,7 @@ button:active {
 
   .auth-area button,
   .auth-area select {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     padding: 4px 8px;
     border-radius: 6px;
     height: 28px;
@@ -583,7 +583,7 @@ button:active {
   /* ✅ 셀렉트박스는 항상 표시 */
   .dept-select {
     display: block !important;
-    font-size: 0.7em;
+    font-size: 0.8em;
     color: #333;
     height: 28px;
     line-height: 28px;

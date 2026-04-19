@@ -51,23 +51,48 @@
         }
 
         /* 🏆 베스트 메모 스타일 (별가루 후광) */
-        .lantern.best {
-            border: 2px solid #ffca28 !important;
-            animation: float 4s infinite ease-in-out alternate, glow 2s infinite alternate !important;
-            z-index: 5;
-        }
+.lantern.best {
+    /* 1. 배경을 화려한 황금빛 그라데이션으로 변경 */
+    background: linear-gradient(135deg, #fffde7 0%, #fff176 50%, #ffd600 100%) !important;
+    border: 3px solid #ffca28 !important; /* 테두리를 조금 더 진하게 */
+    
+    /* 2. 대형 화면용 강력한 이중 글로우 효과 */
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), 
+                0 0 80px rgba(255, 255, 255, 0.4), 
+                inset 0 0 15px rgba(255, 255, 255, 0.6) !important;
+    
+    /* 💡 크기 고정: scale 조절 없이 회전값(var(--r))만 유지 */
+    transform: rotate(var(--r)) !important;
+    
+    /* 3. 메모지 자체가 주기적으로 빛나는 애니메이션 */
+    animation: float 4s infinite ease-in-out alternate, bestGlow 1.5s infinite alternate !important;
+    z-index: 50; 
+    overflow: hidden; 
+}
 
-        /* 👑 왕관 뱃지 */
-        .best-crown {
-            position: absolute; bottom: 5px; left: 5px;
-            font-size: 1.8rem; z-index: 10;
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
-        }
+/* 👑 왕관: 가독성을 위해 상단 바깥으로 배치 */
+.best-crown {
+    position: absolute;
+    top: 0px;    /* 메모지 상단 위로 완전히 올림 */
+    right: 0px;  /* 오른쪽 모서리에 살짝 걸침 */
+    font-size: 1.2rem; /* 대형 화면에서 잘 보이도록 더 키움 */
+    transform: rotate(15deg); /* 살짝 기울임 */
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)); /* 그림자를 더 진하게 */
+    z-index: 60;
+    pointer-events: none;
+}
 
-        @keyframes glow {
-            from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
-            to { box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 255, 255, 0.3); }
-        }
+/* 베스트 전용 강력한 후광 애니메이션 */
+@keyframes bestGlow {
+    from {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+        filter: brightness(1.0);
+    }
+    to {
+        box-shadow: 0 0 55px rgba(255, 215, 0, 1), 0 0 90px rgba(255, 255, 255, 0.5);
+        filter: brightness(1.15); /* 전체적으로 빛이 번쩍이는 느낌 */
+    }
+}
 
         .new-badge {
             display: inline-block;
