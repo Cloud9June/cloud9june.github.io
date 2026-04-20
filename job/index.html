@@ -161,10 +161,12 @@
   function simpleLogin() {
     const id = document.getElementById('userId').value;
     const pw = document.getElementById('userPw').value;
+    
     if (id && pw) {
-      window.location.href = "main.html";
+        // 현재 창이 아닌 최상위 창을 이동시켜 메모리 누수를 방지합니다.
+        window.top.location.href = "main.html";
     } else {
-      alert("아이디와 비밀번호를 입력해주세요.");
+        alert("아이디와 비밀번호를 입력해주세요.");
     }
   }
 
@@ -195,7 +197,7 @@
     };
 
     // 알려주신 배포 URL
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbypdRS2y8YKYoMUkrJ5txSSnRcZ74Km-BvA_AYri8GcSw99uvZvQ_xKMcSjK40NLx1p/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxsx1y2m4QVvaRbdmGOnQXBB-lTWNgL2aO7X-MI4tNwlaS6-5isbKTu1PDY5N4YxhmL/exec";
 
     // 로컬에서도 작동하는 fetch 방식
     fetch(GAS_URL, {
