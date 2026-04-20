@@ -1,34 +1,228 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>성일정보고 졸업생 인력풀</title>
-    <style>
-        /* 화면 전체를 여백 없이 채우기 위한 설정 */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden; /* 스크롤바가 이중으로 생기는 것 방지 */
-        }
-        
-        iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-    </style>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>성일정보고 졸업생 인력풀</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-color: #004a99;
+      --sub-color: #eef5ff;
+    }
+
+    body { 
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .app-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin: auto;
+      transition: all 0.3s ease;
+    }
+
+    .narrow-width { max-width: 500px; padding: 50px 30px; }
+    .wide-width { max-width: 1100px; padding: 40px 20px; background-color: #f8f9fa; }
+
+    .school-logo { width: 100px; margin-bottom: 25px; }
+
+    .quote-box {
+      background-color: #f8fbff;
+      border-left: 4px solid var(--main-color);
+      padding: 15px;
+      margin-bottom: 30px;
+      text-align: left;
+      border-radius: 0 10px 10px 0;
+    }
+
+    .quote-text {
+      color: #555; font-size: 0.95rem; line-height: 1.6; word-break: keep-all; margin: 0;
+    }
+
+    .btn-main { background-color: var(--main-color); color: white; border: none; padding: 12px; font-weight: 600; border-radius: 10px; }
+    .btn-main:hover { background-color: #003366; color: white; transform: translateY(-2px); }
+    .btn-outline-main { border: 2px solid var(--main-color); color: var(--main-color); padding: 12px; font-weight: 600; border-radius: 10px; background: transparent; }
+    .btn-outline-main:hover { background-color: var(--sub-color); }
+
+    .student-card { 
+      background: white; border: 1px solid #eee; border-radius: 15px; 
+      transition: all 0.3s ease; height: 100%; 
+    }
+    .student-card:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+    .badge-dept { background-color: var(--sub-color); color: var(--main-color); font-weight: 600; }
+    .badge-skill { background-color: #f1f3f4; color: #5f6368; font-size: 0.75rem; padding: 4px 8px; border-radius: 5px; margin: 2px; display: inline-block; }
+    .status-active { background-color: #28a745 !important; color: white; }
+    
+    .loading-spinner { display: none; text-align: center; padding: 50px; }
+  </style>
 </head>
 <body>
 
-    <iframe src="https://script.google.com/macros/s/AKfycbymN7XUuRNOb_RbXjVjCJYm0mYyyHuv8UGqFQZr_SQt6zaYF1DvOKaCHhG4XSJuxZX6/exec" 
-            allow="telephone=yes; clipboard-write">
-    </iframe>
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 90vh;">
+  
+  <div id="startScreen" class="app-container narrow-width text-center">
+    <img src="SchoolOfLogo.gif" alt="성일 로고" class="school-logo">
+    <h3 class="fw-bold mb-4">성일정보고 졸업생 인력풀</h3>
+    <div class="quote-box">
+      <p class="quote-text">
+        "우리 학교는 졸업생 여러분을 <strong>끝까지 책임집니다.</strong><br>
+        포기하지 말고 도전하세요. 성일이 당신의 내일을 응원합니다."
+      </p>
+    </div>
+    <div class="d-grid gap-3">
+      <button class="btn btn-outline-main" onclick="showPage('registerPage')">📍 졸업생 인재 등록</button>
+      <button class="btn btn-main" onclick="showPage('loginPage')">기업 로그인 (인재 조회)</button>
+    </div>
+  </div>
 
+  <div id="loginPage" class="app-container narrow-width text-center" style="display:none;">
+    <h4 class="fw-bold mb-4">기업/학교 로그인</h4>
+    <p class="text-muted small mb-4">인재 정보를 확인하시려면 계정으로 로그인해주세요.</p>
+    <div class="mb-3"><input type="text" id="userId" class="form-control form-control-lg" placeholder="아이디"></div>
+    <div class="mb-4"><input type="password" id="userPw" class="form-control form-control-lg" placeholder="비밀번호"></div>
+    <div class="d-grid gap-2">
+      <button class="btn btn-main" onclick="simpleLogin()">접속하기</button>
+      <button class="btn btn-link text-muted" onclick="showPage('startScreen')">뒤로가기</button>
+    </div>
+  </div>
+
+  <div id="registerPage" class="app-container narrow-width" style="display:none; max-width: 600px;">
+    <h4 class="fw-bold text-center mb-4">인재 정보 등록</h4>
+    <form id="regForm" class="row g-3">
+      <div class="col-md-6"><label class="form-label small fw-bold">성명</label><input type="text" name="이름" class="form-control" required></div>
+      <div class="col-md-6"><label class="form-label small fw-bold">졸업년도</label><input type="number" name="졸업년도" class="form-control" placeholder="2026" required></div>
+      
+      <div class="col-md-6">
+        <label class="form-label small fw-bold">학과</label>
+        <select name="학과" class="form-select" required>
+          <option value="">선택</option>
+          <option value="뷰티디자인과">뷰티디자인과</option>
+          <option value="부사관과">부사관과</option>
+          <option value="글로벌경영과">글로벌경영과</option>
+          <option value="금융경영과">금융경영과</option>
+          <option value="회계정보과">회계정보과</option>
+          <option value="창업마케팅과">창업마케팅과</option>
+          <option value="AI게임콘텐츠과">AI게임콘텐츠과</option>
+          <option value="스마트웹콘텐츠과">스마트웹콘텐츠과</option>
+          <option value="소프트웨어개발과">소프트웨어개발과</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label small fw-bold">성별</label>
+        <select name="성별" class="form-select">
+          <option value="남성">남성</option>
+          <option value="여성">여성</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label small fw-bold">담임 선생님</label>
+        <input type="text" name="담임" class="form-control" placeholder="성함 입력">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label small fw-bold">희망분야</label>
+        <input type="text" name="희망분야" class="form-control" placeholder="예: 재무, 웹개발">
+      </div>
+
+      <div class="col-12"><label class="form-label small fw-bold">보유 자격증 (콤마로 구분)</label><textarea name="자격증" class="form-control" rows="2"></textarea></div>
+      
+      <div class="col-12 d-grid gap-2 mt-4">
+        <button type="button" class="btn btn-main" id="regBtn" onclick="submitRegistration()">등록 신청하기</button>
+        <button type="button" class="btn btn-link text-muted" onclick="showPage('startScreen')">취소</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="poolPage" class="app-container wide-width" style="display:none;">
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let allData = [];
+
+  function showPage(pageId) {
+    const pages = ['startScreen', 'loginPage', 'registerPage', 'poolPage'];
+    pages.forEach(id => document.getElementById(id).style.display = (id === pageId) ? 'block' : 'none');
+  }
+
+  function simpleLogin() {
+    const id = document.getElementById('userId').value;
+    const pw = document.getElementById('userPw').value;
+    if (id && pw) {
+      window.location.href = "main.html";
+    } else {
+      alert("아이디와 비밀번호를 입력해주세요.");
+    }
+  }
+
+  // 등록 제출 함수 (데이터 전송 로직)
+    function submitRegistration() {
+    const form = document.getElementById('regForm');
+    const name = form.이름.value.trim();
+    const year = form.졸업년도.value.trim();
+    const dept = form.학과.value;
+
+    if (!name || !year || !dept) {
+        alert("성명, 졸업년도, 학과는 필수 항목입니다.");
+        return;
+    }
+
+    const btn = document.getElementById('regBtn');
+    btn.disabled = true;
+    btn.innerText = "시트로 전송 중...";
+
+    const obj = {
+        이름: name,
+        졸업년도: year,
+        학과: dept,
+        성별: form.성별.value,
+        담임: form.담임.value,
+        희망분야: form.희망분야.value,
+        자격증: form.자격증.value
+    };
+
+    // 알려주신 배포 URL
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbypdRS2y8YKYoMUkrJ5txSSnRcZ74Km-BvA_AYri8GcSw99uvZvQ_xKMcSjK40NLx1p/exec";
+
+    // 로컬에서도 작동하는 fetch 방식
+    fetch(GAS_URL, {
+        method: 'POST',
+        contentType: 'application/json',
+        body: JSON.stringify(obj)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.result === 'success') {
+        alert("인재 등록이 성공적으로 완료되었습니다!");
+        location.reload();
+        } else {
+        alert("오류 발생: " + data.message);
+        btn.disabled = false;
+        btn.innerText = "등록 신청하기";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // CORS 정책 때문에 실제 전송은 성공해도 에러로 빠질 수 있습니다. 
+        // 시트를 확인해보고 데이터가 들어왔다면 성공한 것입니다.
+        alert("전송 요청을 보냈습니다. 시트를 확인해주세요.");
+        btn.disabled = false;
+        btn.innerText = "등록 신청하기";
+    });
+    }
+</script>
 </body>
 </html>

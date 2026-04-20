@@ -1,0 +1,74 @@
+/* 기본 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+}
+
+.container {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+
+    /* 가로 비율: 메모(4) : 중앙영역(4) : 달력(8) = 총 16 */
+    /* 결과적으로 메모 1/4, 중앙 1/4, 달력 1/2이 됩니다. */
+    grid-template-columns: 4fr 2fr 2fr 8fr;
+
+    /* 세로 비율: 상단(1) : 하단(1) */
+    grid-template-rows: 1fr 1fr;
+
+    gap: 2px;
+}
+
+/* 공통 아이템 스타일 */
+.item {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+}
+
+.item iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* --- 각 영역 배치 --- */
+
+/* 1. 메모(응원): 왼쪽 1/4 (세로 전체) */
+.cheerup {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+
+/* 2. QR 코드: 중앙 상단 왼쪽 (1/16) */
+.qr-code {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+/* 3. 디데이: 중앙 상단 오른쪽 (1/16) */
+.d-day {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+/* 4. 급식: 중앙 하단 (1/8 - QR과 디데이 합친 너비) */
+.meal {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+}
+
+/* 5. 달력: 오른쪽 1/2 (세로 전체) */
+.calendar {
+    grid-column: 4;
+    grid-row: 1 / span 2;
+}
