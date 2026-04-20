@@ -21,6 +21,20 @@
       padding: 20px;
     }
 
+    input::placeholder, 
+    textarea::placeholder {
+      color: #adb5bd !important;   /* 연한 회색 */
+      font-size: 0.85rem;          /* 본문보다 약간 작게 */
+      font-weight: 300;            /* 얇은 폰트 두께 */
+      font-style: italic;          /* 기울임꼴로 '예시'임을 강조 */
+      opacity: 0.7;                /* 투명도를 주어 더 배경처럼 보이게 함 */
+    }
+
+    /* 포커스(클릭)했을 때는 힌트가 더 연해지거나 사라지게 보정 */
+    input:focus::placeholder {
+      opacity: 0.3;
+    }
+
     .app-container {
       background: white;
       border-radius: 20px;
@@ -63,6 +77,8 @@
     .status-active { background-color: #28a745 !important; color: white; }
     
     .loading-spinner { display: none; text-align: center; padding: 50px; }
+
+    .form-control-lg::placeholder { font-size: 0.7em; }
   </style>
 </head>
 <body>
@@ -80,7 +96,17 @@
     </div>
     <div class="d-grid gap-3">
       <button class="btn btn-outline-main" onclick="showPage('registerPage')">📍 졸업생 인재 등록</button>
-      <button class="btn btn-main" onclick="showPage('loginPage')">기업 로그인 (인재 조회)</button>
+      <button class="btn btn-main" onclick="showPage('loginPage')">학교 / 기업 로그인 (인재 조회)</button>
+    </div>
+    <div class="mt-4 p-3 rounded-3 shadow-sm border" style="background-color: #f1f8ff; border-color: #d1e7ff !important;">
+      <p class="mb-2 small text-dark fw-bold">
+        📢 기업 전용 로그인 안내
+      </p>
+      <p class="mb-0 small text-secondary" style="word-break: keep-all; line-height: 1.6;">
+        발급받으신 기업용 ID가 있으시면 해당 정보로 로그인해 주시기 바랍니다.<br>
+        <span class="text-primary">●</span> <strong>첫 방문이시거나 계정이 없으신 경우</strong>, 아래 번호로 문의하시면 즉시 기업 전용 ID를 발급해 드립니다.<br>
+        <span class="fw-bold text-dark">📞 문의처: 031-720-1392 (취업전략부)</span>
+      </p>
     </div>
   </div>
 
@@ -135,6 +161,12 @@
         <input type="text" name="희망분야" class="form-control" placeholder="예: 재무, 웹개발">
       </div>
 
+      <div class="col-md-6">
+        <label class="form-label small fw-bold">핸드폰 번호</label>
+        <input type="tel" name="연락처" class="form-control" placeholder="010-0000-0000" 
+              pattern="[0-9]{3}-[0-9]{3,4}-[0-9]{4}" title="010-0000-0000 형식으로 입력해주세요." required>
+      </div>
+
       <div class="col-12"><label class="form-label small fw-bold">보유 자격증 (콤마로 구분)</label><textarea name="자격증" class="form-control" rows="2"></textarea></div>
       
       <div class="col-12 d-grid gap-2 mt-4">
@@ -171,7 +203,7 @@
   }
 
   // 등록 제출 함수 (데이터 전송 로직)
-    function submitRegistration() {
+  function submitRegistration() {
     const form = document.getElementById('regForm');
     const name = form.이름.value.trim();
     const year = form.졸업년도.value.trim();
@@ -193,11 +225,12 @@
         성별: form.성별.value,
         담임: form.담임.value,
         희망분야: form.희망분야.value,
-        자격증: form.자격증.value
+        자격증: form.자격증.value,
+        연락처: form.연락처.value.trim()
     };
 
     // 알려주신 배포 URL
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxsx1y2m4QVvaRbdmGOnQXBB-lTWNgL2aO7X-MI4tNwlaS6-5isbKTu1PDY5N4YxhmL/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycby2Hfb-hb73gmANWD4R2kdczZxW1HivQAB1Pzhs9z2TztdNDaXAZkstk5zDbo81SI0X/exec";
 
     // 로컬에서도 작동하는 fetch 방식
     fetch(GAS_URL, {
