@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시험일 시간표</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #00ffcc;
+            --bg: #000000;
+            --card: rgba(255, 255, 255, 0.06);
+            --text: #ffffff;
+            --muted: rgba(255, 255, 255, 0.65);
+            --break-bg: rgba(0, 255, 204, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .wrap {
+            height: 100%;
+            max-height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            /* 좁은 가로·긴 세로 iframe: vw보다 vh·최소 px로 가독성 확보 */
+            padding: clamp(10px, 2.5vh, 24px) clamp(8px, 2.5vw, 16px) clamp(8px, 1.8vh, 20px);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(6px, 1.2vh, 14px);
+        }
+
+        header {
+            flex-shrink: 0;
+            border-left: 4px solid var(--accent);
+            padding: clamp(8px, 1.6vh, 14px) clamp(8px, 1.6vh, 14px) clamp(8px, 1.6vh, 14px)
+                clamp(10px, 2vw, 16px);
+            background: var(--card);
+            border-radius: 0 10px 10px 0;
+        }
+
+        header h1 {
+            font-size: clamp(0.85rem, 3.4vh, 1.35rem);
+            font-weight: 900;
+            color: var(--accent);
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+        }
+
+        header .sub {
+            font-size: clamp(0.72rem, 2.5vh, 1.05rem);
+            color: var(--muted);
+            font-weight: 600;
+            margin-top: clamp(4px, 0.8vh, 8px);
+        }
+
+        .list {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(5px, 1vh, 12px);
+            overflow: hidden;
+        }
+
+        .block {
+            background: var(--card);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: clamp(8px, 1.5vh, 16px) clamp(8px, 2vw, 14px);
+            flex-shrink: 0;
+        }
+
+        /* 1·2교시: 남는 높이만 균등 분배 (고정 min-height는 합산 시 뷰포트 초과 유발) */
+        .block--period {
+            flex: 1 1 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .block .time {
+            font-size: clamp(0.78rem, 2.9vh, 1.2rem);
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: clamp(4px, 0.8vh, 10px);
+        }
+
+        .block .title-line {
+            font-size: clamp(0.74rem, 2.5vh, 1.05rem);
+            font-weight: 600;
+            line-height: 1.4;
+            word-break: keep-all;
+        }
+
+        .block .detail {
+            margin-top: clamp(6px, 1.2vh, 14px);
+            font-size: clamp(0.7rem, 2.35vh, 1rem);
+            color: var(--muted);
+            font-weight: 500;
+            line-height: 1.55;
+            word-break: keep-all;
+        }
+
+        .block--period .detail {
+            font-size: clamp(0.72rem, 2.5vh, 1.05rem);
+            color: rgba(255, 255, 255, 0.88);
+            font-weight: 600;
+        }
+
+        .block--after {
+            flex-shrink: 0;
+            margin-top: clamp(4px, 0.8vh, 10px);
+        }
+
+        .block--after .title-line {
+            font-size: clamp(0.72rem, 2.35vh, 1rem);
+            line-height: 1.5;
+        }
+
+        .break-row {
+            text-align: center;
+            font-size: clamp(0.68rem, 2.2vh, 0.98rem);
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--break-bg);
+            border-radius: 8px;
+            padding: clamp(6px, 1.2vh, 14px) 6px;
+            flex-shrink: 0;
+            border: 1px solid rgba(0, 255, 204, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>시험일 · 오늘 시간표</h1>
+            <p class="sub">1차 정기시험 1일차</p>
+        </header>
+
+        <div class="list">
+            <section class="block">
+                <p class="time">09:30 ~ 09:50</p>
+                <p class="title-line">부정행위 예방교육 및 휴대폰/전자기기 수거</p>
+            </section>
+
+            <div class="break-row">20분 쉬는 시간</div>
+
+            <section class="block block--period">
+                <p class="time">10:10 ~ 11:00 · 1교시</p>
+                <p class="title-line">과목별 수업</p>
+                <div class="detail">
+                    1학년: 공통국어1<br>
+                    2학년 뷰티디자인과, 부사관과: 자기주도학습<br>
+                    2학년 금융경영과, 회계정보과, 창업마케팅과, AI게임콘텐츠과, 소프트웨어갭라과: 문학<br>
+                    3학년: 자기주도학습
+                </div>
+            </section>
+
+            <div class="break-row">20분 쉬는 시간</div>
+
+            <section class="block block--period">
+                <p class="time">11:20 ~ 12:10 · 2교시</p>
+                <p class="title-line">과목별 수업</p>
+                <div class="detail">
+                    1학년: 통합사회1<br>
+                    2학년: 한국사1<br>
+                    3학년: 통합사회
+                </div>
+            </section>
+
+            <section class="block block--after">
+                <p class="time">알림</p>
+                <p class="title-line">
+                    2교시 시험 종료 후 급식 순서에 따라 급식 후 종례 실시하며, 종례 후 귀가
+                </p>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
