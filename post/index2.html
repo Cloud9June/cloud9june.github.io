@@ -34,6 +34,7 @@
       <!-- ✅ 학과 선택 셀렉트 -->
       <select id="deptSelect" class="dept-select">
         <option value="">학과 선택</option>
+        <option value="학과체험">학과체험</option>
         <option value="뷰티스마트케어과">뷰티스마트케어과</option>
         <option value="부사관과">부사관과</option>
         <option value="글로벌경영과">글로벌경영과</option>
@@ -41,7 +42,6 @@
         <option value="창업마케팅과">창업마케팅과</option>
         <option value="AI게임콘텐츠과">AI게임콘텐츠과</option>
         <option value="소프트웨어개발과">소프트웨어개발과</option>
-        <option value="학과체험">학과체험</option>
       </select>
     </div>
   </header>
@@ -50,6 +50,7 @@
     <section id="mobileMenu" class="mobile-menu-area">
       <p class="menu-notice">알고 싶은 학과를 선택해 주세요!</p>
       <div class="menu-grid">
+        <button type="button" class="menu-item" data-dept="학과체험">학과체험</button>
         <button type="button" class="menu-item" data-dept="뷰티스마트케어과">뷰티스마트케어과</button>
         <button type="button" class="menu-item" data-dept="부사관과">부사관과</button>
         <button type="button" class="menu-item" data-dept="글로벌경영과">글로벌경영과</button>
@@ -57,12 +58,12 @@
         <button type="button" class="menu-item" data-dept="창업마케팅과">창업마케팅과</button>
         <button type="button" class="menu-item" data-dept="AI게임콘텐츠과">AI게임콘텐츠과</button>
         <button type="button" class="menu-item" data-dept="소프트웨어개발과">소프트웨어개발과</button>
-        <button type="button" class="menu-item" data-dept="학과체험">학과체험</button>
       </div>
     </section>
 
     <!-- 학과별 피드 보드 -->
     <section class="board" id="mainBoard">
+      <section class="column 학과체험"><h2>학과체험</h2></section>
       <section class="column 뷰티스마트케어과"><h2>뷰티스마트케어과</h2></section>
       <section class="column 부사관과"><h2>부사관과</h2></section>
       <section class="column 글로벌경영과"><h2>글로벌경영과</h2></section>
@@ -70,7 +71,6 @@
       <section class="column 창업마케팅과"><h2>창업마케팅과</h2></section>
       <section class="column AI게임콘텐츠과"><h2>AI게임콘텐츠과</h2></section>
       <section class="column 소프트웨어개발과"><h2>소프트웨어개발과</h2></section>
-      <section class="column 학과체험"><h2>학과체험</h2></section>
     </section>
   </main>
 
@@ -84,6 +84,7 @@
         <label>학과 선택</label>
         <select id="dept" required>
           <option value="">선택</option>
+          <option value="학과체험">학과체험</option>
           <option value="뷰티스마트케어과">뷰티스마트케어과</option>
           <option value="부사관과">부사관과</option>
           <option value="글로벌경영과">글로벌경영과</option>
@@ -91,7 +92,6 @@
           <option value="창업마케팅과">창업마케팅과</option>
           <option value="AI게임콘텐츠과">AI게임콘텐츠과</option>
           <option value="소프트웨어개발과">소프트웨어개발과</option>
-          <option value="학과체험">학과체험</option>
         </select>
 
         <label>제목</label>
