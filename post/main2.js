@@ -71,48 +71,58 @@ Quill.register(DividerBlot);
 
 // ✅ Quill 에디터 초기화
 let quill;
-window.addEventListener("DOMContentLoaded", () => {
+function initQuill() {
+  if (quill) return; // 이미 초기화된 경우 중복 방지
+
   const editorContainer = document.getElementById("quillEditor");
-  if (editorContainer) {
-    quill = new Quill("#quillEditor", {
-      theme: "snow",
-      placeholder: "내용을 입력하세요...",
-      modules: {
-        toolbar: {
-          container: [
-            ["bold", "italic", "underline", "strike"],
-            [{ color: [] }, { background: [] }],
-            // ["blockquote", "code-block"],
-            [{ list: "ordered" }, { list: "bullet" }],
-            ["link"],
-            ["hr"],
-          ],
-          handlers: {
-            // ✅ 구분선 버튼 동작 정의
-            hr: function () {
-              const range = this.quill.getSelection(true);
-              this.quill.insertEmbed(range.index, "hr", true, Quill.sources.USER);
-              this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
-            },
+  if (!editorContainer) return;
+
+  quill = new Quill("#quillEditor", {
+    theme: "snow",
+    placeholder: "내용을 입력하세요...",
+    modules: {
+      toolbar: {
+        container: [
+          ["bold", "italic", "underline", "strike"],
+          [{ color: [] }, { background: [] }],
+          // ["blockquote", "code-block"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["link"],
+          ["hr"],
+        ],
+        handlers: {
+          // ✅ 구분선 버튼 동작 정의
+          hr: function () {
+            const range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, "hr", true, Quill.sources.USER);
+            this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
           },
         },
       },
-    });
-    const hrButton = document.querySelector(".ql-hr");
-    if (hrButton) {
-      hrButton.innerHTML = "_"; // 수평선 느낌 아이콘
-      // hrButton.title = "구분선 넣기";
-      hrButton.style.fontSize = "16px";
-      hrButton.style.fontWeight = "700";
-      hrButton.style.color = "#333";
-      hrButton.style.minWidth = "28px";
-      hrButton.style.textAlign = "center";
-      hrButton.style.opacity = "1";
-      hrButton.style.transition = "background 0.2s";
-      hrButton.style.cursor = "pointer";
-    }
+    },
+  });
+
+  const hrButton = document.querySelector(".ql-hr");
+  if (hrButton) {
+    hrButton.innerHTML = "_"; // 수평선 느낌 아이콘
+    // hrButton.title = "구분선 넣기";
+    hrButton.style.fontSize = "16px";
+    hrButton.style.fontWeight = "700";
+    hrButton.style.color = "#333";
+    hrButton.style.minWidth = "28px";
+    hrButton.style.textAlign = "center";
+    hrButton.style.opacity = "1";
+    hrButton.style.transition = "background 0.2s";
+    hrButton.style.cursor = "pointer";
   }
-});
+}
+
+// DOMContentLoaded 타이밍이 달라져도 항상 에디터가 준비되게 처리
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", initQuill);
+} else {
+  initQuill();
+}
 
 
 // ✅ Cropper.js 기반 이미지 선택 + 크롭
@@ -327,7 +337,9 @@ openPostModal.addEventListener("click", () => {
   modalTitle.textContent = "게시글 작성";
   submitBtn.textContent = "등록";
   form.reset();
-  quill.root.innerHTML = ""; // ✅ 에디터 초기화
+  // 모듈 로딩 타이밍에 따라 quill이 아직 없을 수 있어 방어 처리
+  initQuill();
+  if (quill) quill.root.innerHTML = ""; // ✅ 에디터 초기화
   uploadedImageUrl = "";
   previewImage.src = "";
   previewImage.style.display = "none";
@@ -344,6 +356,8 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const dept = form.dept.value;
   const title = form.title.value.trim();
+  initQuill();
+  if (!quill) return alert("⚠️ 에디터를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
   const content = quill.root.innerHTML.trim(); // ✅ Quill 내용
   const user = auth.currentUser;
   const editId = form.dataset.editId || null;

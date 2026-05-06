@@ -99,6 +99,7 @@ button:active {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0; /* 그리드 축소 시 특정 컬럼만 안 줄어드는 현상 방지 */
 }
 
 .column h2 {
@@ -195,6 +196,14 @@ button:active {
   color: #444;
   line-height: 1.5;
   margin: 0;
+  overflow-wrap: anywhere; /* 긴 텍스트/URL이 컬럼 폭을 밀어내지 않게 처리 */
+}
+.card-content .content img,
+.card-content .content video,
+.card-content .content iframe,
+.card-content .content table {
+  max-width: 100%;
+  height: auto;
 }
 .card-content .content p {
   margin: 3px;
@@ -202,6 +211,35 @@ button:active {
 .card-content .content ul {
   margin-top: 2px;
   padding-left: 20px;
+}
+
+/*
+ * 카드 본문은 .ql-editor 밖이라 기본 테마 스타일이 안 먹음.
+ * 다른 화면(테스트 작성 등)으로 저장된 Quill 크기 클래스가 피드에도 같은 비율로 보이도록 함 — 에디터 툴바와 무관.
+ */
+.card-content .content .ql-size-sm {
+  font-size: 0.875em;
+}
+.card-content .content .ql-size-up1 {
+  font-size: 1.08em;
+}
+.card-content .content .ql-size-up2 {
+  font-size: 1.18em;
+}
+.card-content .content .ql-size-up3 {
+  font-size: 1.32em;
+}
+.card-content .content .ql-size-up4 {
+  font-size: 1.48em;
+}
+.card-content .content .ql-size-small {
+  font-size: 0.75em;
+}
+.card-content .content .ql-size-large {
+  font-size: 1.5em;
+}
+.card-content .content .ql-size-huge {
+  font-size: 2.5em;
 }
 
 .author {
