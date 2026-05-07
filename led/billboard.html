@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seongil High School Live Billboard</title>
+    <style>
+        :root {
+            --primary: #ffd400; /* 학교 상징색 (노랑) */
+            --bg: #0a0a0a;
+            --text: #ffffff;
+            --sub-text: #aaaaaa; /* 아랫줄(상세내용) 색상 */
+            --box-height: 140px; 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #000;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 메인보드 프레임 */
+        .news-board {
+            width: 100%;
+            height: var(--box-height);
+            background: var(--bg);
+            display: flex;
+            border-top: 4px solid var(--primary);
+            border-bottom: 4px solid var(--primary);
+            box-shadow: 0 0 30px rgba(255, 212, 0, 0.2);
+            position: relative;
+        }
+
+        /* 왼쪽 로고 영역 */
+        .head-label {
+            background: var(--primary);
+            width: 15%;
+            min-width: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #000;
+            font-weight: 900;
+            z-index: 10;
+        }
+
+        .head-label p { font-size: 0.75rem; letter-spacing: 2px; margin-bottom: -2px; }
+        .head-label h2 { font-size: 2.2rem; line-height: 0.9; }
+
+        /* 뉴스 슬라이드 영역 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            background: linear-gradient(90deg, #111 0%, #050505 100%);
+        }
+
+        .news-column {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            border-right: 1px solid #222;
+            position: relative;
+        }
+
+        .news-column:last-child { border-right: none; }
+
+        /* 슬라이드 트랙 */
+        .slide-track {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            will-change: transform;
+        }
+
+        /* 트랙 애니메이션 (12초 주기, 엇박자) */
+        .track-1 { animation: slide-vertical 12s cubic-bezier(0.85, 0, 0.15, 1) infinite; }
+        .track-2 { animation: slide-vertical 12s cubic-bezier(0.85, 0, 0.15, 1) -3s infinite; }
+
+        /* 뉴스 박스 내부 스타일 */
+        .news-box {
+            height: var(--box-height);
+            padding: 0 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .category {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+        }
+
+        .category::before {
+            content: '';
+            display: inline-block;
+            width: 8px; height: 2px;
+            background: var(--primary);
+            margin-right: 8px;
+        }
+
+        .title-main {
+            color: var(--text);
+            font-size: 1.55rem;
+            font-weight: 800;
+            line-height: 1.2;
+            word-break: keep-all;
+        }
+
+        .title-sub {
+            color: var(--sub-text);
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 4px;
+            line-height: 1.2;
+            word-break: keep-all;
+        }
+
+        /* 우측 상태창 패널 */
+        .status-panel {
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            border-left: 1px solid #222;
+            position: relative;
+        }
+
+        .on-air {
+            font-size: 0.7rem;
+            font-weight: 900;
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 1px;
+        }
+
+        .on-air::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: #ff4d4d;
+            border-radius: 50%;
+            animation: blink 0.8s infinite;
+        }
+
+        #date {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #clock { 
+            font-size: 1.3rem; 
+            color: #eee; 
+            font-weight: bold; 
+            font-family: 'Courier New', monospace; 
+        }
+
+        @keyframes slide-vertical {
+            0%, 20% { transform: translateY(0); }
+            25%, 45% { transform: translateY(calc(var(--box-height) * -1)); }
+            50%, 70% { transform: translateY(calc(var(--box-height) * -2)); }
+            75%, 95% { transform: translateY(calc(var(--box-height) * -3)); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="news-board">
+        <div class="head-label">
+            <p>SEONGIL</p>
+            <h2>NEWS</h2>
+        </div>
+
+        <div class="content-area">
+            <div class="news-column">
+                <div class="slide-track track-1" id="track1"></div>
+            </div>
+            <div class="news-column">
+                <div class="slide-track track-2" id="track2"></div>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <div class="on-air">ON AIR</div>
+            <div id="date">00/00</div>
+            <div id="clock">00:00:00</div>
+        </div>
+    </div>
+
+    <script>
+        // [설정] 구글 시트 ID
+        const SHEET_ID = '1xdq_C0GPMbI6KmjZp0qrX9S7XUR7VBBhgviXqRUzjCU';
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+        async function fetchNews() {
+            try {
+                const response = await fetch(URL);
+                const text = await response.text();
+                const jsonData = JSON.parse(text.substring(47, text.length - 2));
+                
+                // 1. 첫 번째 행(제목행)을 제외하고 데이터만 가져옴
+                const rows = jsonData.table.rows.slice(1);
+
+                let leftGroup = [];
+                let rightGroup = [];
+
+                rows.forEach((row) => {
+                    // A열: 카테고리, B열: 내용, C열: 위치
+                    const category = row.c[0] ? row.c[0].v : 'NOTICE';
+                    const fullContent = row.c[1] ? row.c[1].v : '';
+                    const side = row.c[2] ? String(row.c[2].v).trim() : '왼쪽';
+                    
+                    if(!fullContent) return;
+
+                    // 2. 내용 줄바꿈(\n) 처리: 첫 줄은 제목, 둘째 줄부터는 서브제목
+                    const contentParts = fullContent.split('\n');
+                    const mainTitle = contentParts[0];
+                    const subTitle = contentParts.slice(1).join(' ');
+
+                    const html = `
+                        <div class="news-box">
+                            <div class="category">${category}</div>
+                            <div class="title-main">${mainTitle}</div>
+                            ${subTitle ? `<div class="title-sub">${subTitle}</div>` : ''}
+                        </div>`;
+                    
+                    // 3. C열 값에 따른 수동 위치 배정
+                    if (side === '왼쪽' || side.toLowerCase() === 'left') {
+                        leftGroup.push(html);
+                    } else {
+                        rightGroup.push(html);
+                    }
+                });
+
+                // 트랙 렌더링 함수
+                const renderTrack = (element, dataArray, defaultText) => {
+                    if (dataArray.length === 0) {
+                        element.innerHTML = `<div class="news-box"><div class="title-main">${defaultText}</div></div>`;
+                        return;
+                    }
+                    let finalHtml = dataArray.join('');
+                    // 무한 롤링을 위해 데이터 복제
+                    while (finalHtml.split('news-box').length < 10) {
+                        finalHtml += dataArray.join('');
+                    }
+                    element.innerHTML = finalHtml;
+                };
+
+                renderTrack(document.getElementById('track1'), leftGroup, "새로운 소식을 확인하세요");
+                renderTrack(document.getElementById('track2'), rightGroup, "성일정보고 Live News");
+
+            } catch (error) {
+                console.error('데이터 로드 에러:', error);
+            }
+        }
+
+        // 시계 및 날짜 업데이트 함수
+        function updateClock() {
+            const now = new Date();
+            
+            // 날짜 (월/일)
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('date').textContent = `${month}/${day}`;
+
+            // 시간 (시:분:초)
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // 초기 실행 및 인터벌 설정
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        fetchNews();
+        setInterval(fetchNews, 60000); // 1분마다 시트 갱신
+    </script>
+</body>
+</html>
