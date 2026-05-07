@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성일정보고 완전 랜덤 조 편성</title>
+    <style>
+        :root { --primary: #2563eb; --g3-clr: #ef4444; --g2-clr: #f59e0b; --g1-clr: #10b981; }
+        body { font-family: 'Pretendard', sans-serif; background: #f8fafc; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 1000px; width: 100%; }
+        .status-box { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
+        .next-student { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+        .controls { display: flex; gap: 10px; }
+        button { padding: 12px 25px; font-size: 1rem; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .btn-main { background: var(--primary); color: white; }
+        .btn-main:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-main:disabled { background: #cbd5e1; transform: none; cursor: not-allowed; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .group-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 6px solid #cbd5e1; }
+        .member-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; animation: pop 0.3s ease; }
+        .badge { font-size: 0.7rem; padding: 3px 7px; border-radius: 5px; color: white; font-weight: bold; }
+        .bg-3 { background: var(--g3-clr); } .bg-2 { background: var(--g2-clr); } .bg-1 { background: var(--g1-clr); }
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align: center;">전학년 완전 랜덤 조 편성</h2>
+    <div class="status-box">
+        <div>
+            <div id="targetDisplay" class="next-student">모든 학년 배정 준비 완료</div>
+            <div id="remainStats" style="font-size: 0.9rem; color: #64748b;">1학년도 모든 조에 배정될 수 있습니다.</div>
+        </div>
+        <div class="controls">
+            <button id="drawBtn" class="btn-main" onclick="assignNext()">학생 배정</button>
+            <button onclick="location.reload()">리셋</button>
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- 모든 조의 최대 정원을 5명으로 넉넉하게 설정 -->
+        <div class="group-card"><h3>1조 (<span id="count-0">0</span>/5)</h3><div id="group-0"></div></div>
+        <div class="group-card"><h3>2조 (<span id="count-1">0</span>/5)</h3><div id="group-1"></div></div>
+        <div class="group-card"><h3>3조 (<span id="count-2">0</span>/5)</h3><div id="group-2"></div></div>
+        <div class="group-card"><h3>4조 (<span id="count-3">0</span>/5)</h3><div id="group-3"></div></div>
+    </div>
+</div>
+
+<script>
+    const students = [
+        { g: 3, n: "31101 강지원" }, { g: 3, n: "31206 마영진" }, { g: 3, n: "31209 박영민" }, 
+        { g: 3, n: "31211 안승우" }, { g: 3, n: "31215 이재훈" },
+        { g: 2, n: "21003 김서준" }, { g: 2, n: "21103 김솔민" }, { g: 2, n: "21105 김태웅" },
+        { g: 2, n: "21112 이지우" }, { g: 2, n: "21113 장준성" }, { g: 2, n: "21114 정민준" },
+        { g: 2, n: "21115 정주원" }, { g: 2, n: "21116 정준영" }, { g: 2, n: "21119 한동관" },
+        { g: 2, n: "21209 이현준" }, { g: 2, n: "21216 최이환" },
+        { g: 1, n: "11219 전동준" }, { g: 1, n: "11221 최진규" }
+    ];
+
+    let groups = [
+        { id: 0, max: 5, members: [], gCounts: {3:0, 2:0, 1:0} },
+        { id: 1, max: 5, members: [], gCounts: {3:0, 2:0, 1:0} },
+        { id: 2, max: 5, members: [], gCounts: {3:0, 2:0, 1:0} },
+        { id: 3, max: 5, members: [], gCounts: {3:0, 2:0, 1:0} }
+    ];
+
+    let queue = [];
+    let currentIndex = 0;
+
+    function init() {
+        const g3 = students.filter(s => s.g === 3).sort(() => Math.random() - 0.5);
+        const g2 = students.filter(s => s.g === 2).sort(() => Math.random() - 0.5);
+        const g1 = students.filter(s => s.g === 1).sort(() => Math.random() - 0.5);
+
+        // 3학년 슬롯 섞기 (한 조는 무조건 2명, 나머지는 1명씩)
+        const doubleIdx = Math.floor(Math.random() * 4);
+        const g3Slots = [0, 1, 2, 3, doubleIdx].sort(() => Math.random() - 0.5);
+        const finalG3 = g3.map((s, i) => ({...s, targetGroup: g3Slots[i]}));
+        
+        queue = [...finalG3, ...g2, ...g1];
+        updateUI();
+    }
+
+    function assignNext() {
+        if (currentIndex >= queue.length) return;
+        const student = queue[currentIndex];
+        let targetGroup;
+
+        if (student.g === 3) {
+            targetGroup = groups[student.targetGroup];
+        } else {
+            // 빈자리가 있는 조들을 찾음
+            let possibleGroups = groups.filter(g => g.members.length < g.max);
+            
+            if (student.g === 2) {
+                // 2학년 배정 시: 3학년 2명인 조는 2학년 자리를 최대 2개로 제한 (총원 4명 방지)
+                // 하지만 1학년의 유연성을 위해 여기서는 "전체 정원" 위주로 체크합니다.
+                possibleGroups = possibleGroups.filter(g => {
+                    const limit2 = (g.gCounts[3] >= 2) ? 2 : 3;
+                    return g.gCounts[2] < limit2;
+                });
+            }
+            
+            // 가능한 조가 없을 경우 예외 처리
+            if (possibleGroups.length === 0) possibleGroups = groups.filter(g => g.members.length < g.max);
+            
+            targetGroup = possibleGroups[Math.floor(Math.random() * possibleGroups.length)];
+        }
+        
+        targetGroup.members.push(student);
+        targetGroup.gCounts[student.g]++;
+        
+        const listDiv = document.getElementById(`group-${targetGroup.id}`);
+        const item = document.createElement('div');
+        item.className = 'member-item';
+        item.innerHTML = `<span>${student.n}</span><span class="badge bg-${student.g}">${student.g}학년</span>`;
+        listDiv.appendChild(item);
+        document.getElementById(`count-${targetGroup.id}`).innerText = targetGroup.members.length;
+
+        currentIndex++;
+        updateUI();
+    }
+
+    function updateUI() {
+        const target = document.getElementById('targetDisplay');
+        const stats = document.getElementById('remainStats');
+        if (currentIndex < queue.length) {
+            target.innerText = `다음 배정: ${queue[currentIndex].n}`;
+            stats.innerText = `남은 인원: ${queue.length - currentIndex}명`;
+        } else {
+            target.innerText = "배정 완료! 🎉";
+            document.getElementById('drawBtn').disabled = true;
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
