@@ -89,4 +89,51 @@ const QUILL_SIZE_WHITELIST = ["small", "large", "huge", ...QUILL_FONT_SIZES];
   window.Quill = PatchedQuill;
 })();
 
+function startMobileIntro() {
+  const isMobile = window.innerWidth <= 768;
+  const introArea = document.getElementById("mobileIntro");
+  const mobileMenu = document.getElementById("mobileMenu");
+
+  if (!isMobile || !introArea) return;
+
+  // 인트로 시작
+  introArea.style.display = "block";
+  if (mobileMenu) mobileMenu.style.display = "none";
+
+  const slides = document.querySelectorAll(".intro-slide");
+  let currentSlide = 0;
+
+  // 1.2초마다 사진 교체 (총 4장 = 약 5~6초 소요)
+  const slideInterval = setInterval(() => {
+    slides[currentSlide].classList.remove("active");
+    currentSlide++;
+
+    if (currentSlide < slides.length) {
+      slides[currentSlide].classList.add("active");
+    } else {
+      clearInterval(slideInterval);
+      finishIntro();
+    }
+  }, 1200);
+
+  function finishIntro() {
+    // 위로 스윽 사라지는 애니메이션 (선택 사항)
+    introArea.style.transition = "transform 0.8s ease-in-out, opacity 0.5s";
+    introArea.style.transform = "translateY(-100%)";
+    introArea.style.opacity = "0";
+
+    setTimeout(() => {
+      introArea.style.display = "none";
+      if (mobileMenu) {
+        mobileMenu.style.display = "block";
+        // 메뉴판이 나타날 때 부드럽게 보이게 하기
+        mobileMenu.style.animation = "fadeIn 0.5s";
+      }
+    }, 800);
+  }
+}
+
+// 스크립트 하단 실행부
+window.addEventListener("load", startMobileIntro);
+
 import("./main2.js");
