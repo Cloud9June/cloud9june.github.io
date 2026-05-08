@@ -556,8 +556,28 @@ window.addEventListener("scroll", () => {
 });
 
 // ✅ 맨 위로 버튼 제어
+// ✅ 기존 scrollTopBtn 관련 코드를 아래 내용으로 교체하세요.
+
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 
+/**
+ * 환경에 따른 버튼 텍스트 및 기능 제어 함수
+ */
+function updateScrollBtn() {
+  const isMobile = window.innerWidth <= 768;
+  
+  if (isMobile) {
+    scrollTopBtn.innerHTML = '<i class="fa-solid fa-house"></i>';
+  } else {
+    scrollTopBtn.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+  }
+}
+
+// 초기 실행 및 화면 크기 변경 시 대응
+updateScrollBtn();
+window.addEventListener("resize", updateScrollBtn);
+
+// 스크롤 시 버튼 노출 여부
 window.addEventListener("scroll", () => {
   if (window.scrollY > 200) {
     scrollTopBtn.classList.add("show");
@@ -566,8 +586,39 @@ window.addEventListener("scroll", () => {
   }
 });
 
+// 버튼 클릭 이벤트
 scrollTopBtn.addEventListener("click", () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const isMobile = window.innerWidth <= 768;
+
+  if (isMobile) {
+    // 📱 스마트폰 모드: 홈 화면(학과 메뉴판)으로 리셋
+    const mobileMenu = document.getElementById("mobileMenu");
+    
+    // 1. 모든 학과 섹션 숨기기
+    document.querySelectorAll(".column").forEach((col) => {
+      col.classList.remove("active");
+    });
+
+    // 2. 모바일 메뉴판 다시 보여주기
+    if (mobileMenu) {
+      mobileMenu.style.display = "block";
+    }
+
+    // 3. 셀렉트 박스 선택 해제
+    if (deptSelect) {
+      deptSelect.value = "";
+    }
+
+    // 4. 최상단으로 이동
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    history.pushState(null, "", " "); // 주소창 깔끔하게 비우기
+    goBackToHome();
+    
+  } else {
+    // 💻 데스크탑/태블릿 모드: 단순히 위로 스크롤
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 });
 
 
@@ -594,7 +645,7 @@ if (deptSelect) {
 /* main.js 하단에 추가 또는 수정 */
 
 // ✅ 학과 전환 함수 (모바일/PC 공통)
-function switchToDept(deptName) {
+function switchToDept(deptName, pushState = true) {
   const isMobile = window.innerWidth <= 768;
   const targetSection = document.querySelector(`.${deptName}`);
   const mobileMenu = document.getElementById("mobileMenu");
@@ -602,30 +653,51 @@ function switchToDept(deptName) {
   if (!targetSection) return;
 
   if (isMobile) {
-    // 1. 모바일 메뉴 숨기기
+    // [추가] 히스토리에 상태 저장 (뒤로 가기 버튼 활성화용)
+    // pushState가 true일 때만 기록 (뒤로 가기로 이동 시 중복 기록 방지)
+    if (pushState) {
+      history.pushState({ page: 'dept', name: deptName }, "", `#${deptName}`);
+    }
+
     if (mobileMenu) mobileMenu.style.display = "none";
-
-    // 2. 모든 컬럼 숨기고 선택한 것만 active
-    document.querySelectorAll(".column").forEach((col) => {
-      col.classList.remove("active");
-    });
+    document.querySelectorAll(".column").forEach((col) => col.classList.remove("active"));
     targetSection.classList.add("active");
-
-    // 3. 최상단으로 스크롤
     window.scrollTo({ top: 0, behavior: "smooth" });
-    
-    // 4. 셀렉트 박스 값도 동기화
     if(deptSelect) deptSelect.value = deptName;
 
   } else {
-    // 5. PC 환경: 기존처럼 스크롤만 이동
+    // PC 환경 로직 유지
     const headerHeight = document.querySelector("header").offsetHeight;
     const elementTop = targetSection.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({
-      top: elementTop - headerHeight - 10,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: elementTop - headerHeight - 10, behavior: "smooth" });
   }
+}
+
+// 브라우저 뒤로 가기 버튼 감지 로직
+window.addEventListener("popstate", (event) => {
+  const isMobile = window.innerWidth <= 768;
+  if (!isMobile) return;
+
+  // 히스토리에 데이터가 있거나, URL에 해시(#)가 있다면
+  if (event.state && event.state.page === 'dept') {
+    // 특정 학과 상태로 복원 (필요 시)
+    switchToDept(event.state.name, false);
+  } else {
+    // 데이터가 없으면 '홈(학과 선택 화면)'으로 간주하여 리셋
+    goBackToHome();
+  }
+});
+
+function goBackToHome() {
+  const mobileMenu = document.getElementById("mobileMenu");
+  if (mobileMenu) mobileMenu.style.display = "block";
+  
+  document.querySelectorAll(".column").forEach((col) => {
+    col.classList.remove("active");
+  });
+
+  if (deptSelect) deptSelect.value = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // ✅ 1. 모바일 메뉴판 버튼 클릭 이벤트 등록
