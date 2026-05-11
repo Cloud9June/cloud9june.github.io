@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>성일정보고 학사일정</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+    <iframe id="myIframe" allow="telephone=yes; clipboard-write"></iframe>
+
+    <script>
+        (function() {
+            // 1. 구글 앱스 스크립트 배포 주소 (기존 주소에서 /exec 까지만)
+            var gasUrl = "https://script.google.com/macros/s/AKfycbzCIV8MSOAtMT1yWTojFLL9w4Y8ty1Ga8lRMwSXZF5imWZp0tB1MeaGNqEHS4x74M8L/exec";
+            
+            // 2. 현재 부모 페이지(calandar.html)가 받은 쿼리 스트링 (?mode=input 등) 가져오기
+            var queryString = window.location.search;
+            
+            // 3. iframe의 src에 파라미터를 붙여서 할당
+            var finalUrl = gasUrl + queryString;
+            document.getElementById('myIframe').src = finalUrl;
+        })();
+    </script>
+
+</body>
+</html>

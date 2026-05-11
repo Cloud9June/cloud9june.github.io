@@ -71,58 +71,48 @@ Quill.register(DividerBlot);
 
 // ✅ Quill 에디터 초기화
 let quill;
-function initQuill() {
-  if (quill) return; // 이미 초기화된 경우 중복 방지
-
+window.addEventListener("DOMContentLoaded", () => {
   const editorContainer = document.getElementById("quillEditor");
-  if (!editorContainer) return;
-
-  quill = new Quill("#quillEditor", {
-    theme: "snow",
-    placeholder: "내용을 입력하세요...",
-    modules: {
-      toolbar: {
-        container: [
-          ["bold", "italic", "underline", "strike"],
-          [{ color: [] }, { background: [] }],
-          // ["blockquote", "code-block"],
-          [{ list: "ordered" }, { list: "bullet" }],
-          ["link"],
-          ["hr"],
-        ],
-        handlers: {
-          // ✅ 구분선 버튼 동작 정의
-          hr: function () {
-            const range = this.quill.getSelection(true);
-            this.quill.insertEmbed(range.index, "hr", true, Quill.sources.USER);
-            this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+  if (editorContainer) {
+    quill = new Quill("#quillEditor", {
+      theme: "snow",
+      placeholder: "내용을 입력하세요...",
+      modules: {
+        toolbar: {
+          container: [
+            ["bold", "italic", "underline", "strike"],
+            [{ color: [] }, { background: [] }],
+            // ["blockquote", "code-block"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link"],
+            ["hr"],
+          ],
+          handlers: {
+            // ✅ 구분선 버튼 동작 정의
+            hr: function () {
+              const range = this.quill.getSelection(true);
+              this.quill.insertEmbed(range.index, "hr", true, Quill.sources.USER);
+              this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+            },
           },
         },
       },
-    },
-  });
-
-  const hrButton = document.querySelector(".ql-hr");
-  if (hrButton) {
-    hrButton.innerHTML = "_"; // 수평선 느낌 아이콘
-    // hrButton.title = "구분선 넣기";
-    hrButton.style.fontSize = "16px";
-    hrButton.style.fontWeight = "700";
-    hrButton.style.color = "#333";
-    hrButton.style.minWidth = "28px";
-    hrButton.style.textAlign = "center";
-    hrButton.style.opacity = "1";
-    hrButton.style.transition = "background 0.2s";
-    hrButton.style.cursor = "pointer";
+    });
+    const hrButton = document.querySelector(".ql-hr");
+    if (hrButton) {
+      hrButton.innerHTML = "_"; // 수평선 느낌 아이콘
+      // hrButton.title = "구분선 넣기";
+      hrButton.style.fontSize = "16px";
+      hrButton.style.fontWeight = "700";
+      hrButton.style.color = "#333";
+      hrButton.style.minWidth = "28px";
+      hrButton.style.textAlign = "center";
+      hrButton.style.opacity = "1";
+      hrButton.style.transition = "background 0.2s";
+      hrButton.style.cursor = "pointer";
+    }
   }
-}
-
-// DOMContentLoaded 타이밍이 달라져도 항상 에디터가 준비되게 처리
-if (document.readyState === "loading") {
-  window.addEventListener("DOMContentLoaded", initQuill);
-} else {
-  initQuill();
-}
+});
 
 
 // ✅ Cropper.js 기반 이미지 선택 + 크롭
@@ -337,9 +327,7 @@ openPostModal.addEventListener("click", () => {
   modalTitle.textContent = "게시글 작성";
   submitBtn.textContent = "등록";
   form.reset();
-  // 모듈 로딩 타이밍에 따라 quill이 아직 없을 수 있어 방어 처리
-  initQuill();
-  if (quill) quill.root.innerHTML = ""; // ✅ 에디터 초기화
+  quill.root.innerHTML = ""; // ✅ 에디터 초기화
   uploadedImageUrl = "";
   previewImage.src = "";
   previewImage.style.display = "none";
@@ -356,8 +344,6 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const dept = form.dept.value;
   const title = form.title.value.trim();
-  initQuill();
-  if (!quill) return alert("⚠️ 에디터를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
   const content = quill.root.innerHTML.trim(); // ✅ Quill 내용
   const user = auth.currentUser;
   const editId = form.dataset.editId || null;
@@ -556,28 +542,8 @@ window.addEventListener("scroll", () => {
 });
 
 // ✅ 맨 위로 버튼 제어
-// ✅ 기존 scrollTopBtn 관련 코드를 아래 내용으로 교체하세요.
-
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 
-/**
- * 환경에 따른 버튼 텍스트 및 기능 제어 함수
- */
-function updateScrollBtn() {
-  const isMobile = window.innerWidth <= 768;
-  
-  if (isMobile) {
-    scrollTopBtn.innerHTML = '<i class="fa-solid fa-house"></i>';
-  } else {
-    scrollTopBtn.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
-  }
-}
-
-// 초기 실행 및 화면 크기 변경 시 대응
-updateScrollBtn();
-window.addEventListener("resize", updateScrollBtn);
-
-// 스크롤 시 버튼 노출 여부
 window.addEventListener("scroll", () => {
   if (window.scrollY > 200) {
     scrollTopBtn.classList.add("show");
@@ -586,39 +552,8 @@ window.addEventListener("scroll", () => {
   }
 });
 
-// 버튼 클릭 이벤트
 scrollTopBtn.addEventListener("click", () => {
-  const isMobile = window.innerWidth <= 768;
-
-  if (isMobile) {
-    // 📱 스마트폰 모드: 홈 화면(학과 메뉴판)으로 리셋
-    const mobileMenu = document.getElementById("mobileMenu");
-    
-    // 1. 모든 학과 섹션 숨기기
-    document.querySelectorAll(".column").forEach((col) => {
-      col.classList.remove("active");
-    });
-
-    // 2. 모바일 메뉴판 다시 보여주기
-    if (mobileMenu) {
-      mobileMenu.style.display = "block";
-    }
-
-    // 3. 셀렉트 박스 선택 해제
-    if (deptSelect) {
-      deptSelect.value = "";
-    }
-
-    // 4. 최상단으로 이동
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    history.pushState(null, "", " "); // 주소창 깔끔하게 비우기
-    goBackToHome();
-    
-  } else {
-    // 💻 데스크탑/태블릿 모드: 단순히 위로 스크롤
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 
@@ -641,219 +576,3 @@ if (deptSelect) {
     }
   });
 }
-
-/* main.js 하단에 추가 또는 수정 */
-
-// ✅ 학과 전환 함수 (모바일/PC 공통)
-function switchToDept(deptName, pushState = true) {
-  const isMobile = window.innerWidth <= 768;
-  const targetSection = document.querySelector(`.${deptName}`);
-  const mobileMenu = document.getElementById("mobileMenu");
-
-  if (!targetSection) return;
-
-  if (isMobile) {
-    // [추가] 히스토리에 상태 저장 (뒤로 가기 버튼 활성화용)
-    // pushState가 true일 때만 기록 (뒤로 가기로 이동 시 중복 기록 방지)
-    if (pushState) {
-      history.pushState({ page: 'dept', name: deptName }, "", `#${deptName}`);
-    }
-
-    if (mobileMenu) mobileMenu.style.display = "none";
-    document.querySelectorAll(".column").forEach((col) => col.classList.remove("active"));
-    targetSection.classList.add("active");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    if(deptSelect) deptSelect.value = deptName;
-
-  } else {
-    // PC 환경 로직 유지
-    const headerHeight = document.querySelector("header").offsetHeight;
-    const elementTop = targetSection.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: elementTop - headerHeight - 10, behavior: "smooth" });
-  }
-}
-
-// 브라우저 뒤로 가기 버튼 감지 로직
-window.addEventListener("popstate", (event) => {
-  const isMobile = window.innerWidth <= 768;
-  if (!isMobile) return;
-
-  // 히스토리에 데이터가 있거나, URL에 해시(#)가 있다면
-  if (event.state && event.state.page === 'dept') {
-    // 특정 학과 상태로 복원 (필요 시)
-    switchToDept(event.state.name, false);
-  } else {
-    // 데이터가 없으면 '홈(학과 선택 화면)'으로 간주하여 리셋
-    goBackToHome();
-  }
-});
-
-function goBackToHome() {
-  const mobileMenu = document.getElementById("mobileMenu");
-  if (mobileMenu) mobileMenu.style.display = "block";
-  
-  document.querySelectorAll(".column").forEach((col) => {
-    col.classList.remove("active");
-  });
-
-  if (deptSelect) deptSelect.value = "";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// ✅ 1. 모바일 메뉴판 버튼 클릭 이벤트 등록
-document.querySelectorAll(".menu-item").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const dept = btn.dataset.dept;
-    switchToDept(dept);
-  });
-});
-
-// ✅ 2. 기존 셀렉트박스(deptSelect) 이벤트 수정
-if (deptSelect) {
-  deptSelect.addEventListener("change", (e) => {
-    const value = e.target.value;
-    if (value) {
-      switchToDept(value);
-    } else {
-      // '학과 선택' 클릭 시 모바일에서는 다시 메뉴판 보여주기
-      if (window.innerWidth <= 768) {
-        document.getElementById("mobileMenu").style.display = "block";
-        document.querySelectorAll(".column").forEach(col => col.classList.remove("active"));
-      }
-    }
-  });
-}
-
-const OriginalCropper = window.Cropper;
-
-if (OriginalCropper) {
-  class RelaxedCropper extends OriginalCropper {
-    constructor(element, options = {}) {
-      super(element, { ...options, aspectRatio: 16 / 9 });
-    }
-  }
-
-  const originalGetCroppedCanvas = OriginalCropper.prototype.getCroppedCanvas;
-  RelaxedCropper.prototype.getCroppedCanvas = function (options = {}) {
-    if (options && options.width === 1000 && options.height === 400) {
-      return originalGetCroppedCanvas.call(this, {
-        ...options,
-        width: 1600,
-        height: 900,
-      });
-    }
-    return originalGetCroppedCanvas.call(this, options);
-  };
-
-  window.Cropper = RelaxedCropper;
-}
-
-// 게시글 에디터(Quill) 글자 크기 — Quill `formats/size` (6단계: 작게1 + Normal + 크게4)
-const QUILL_FONT_SIZES = ["sm", false, "up1", "up2", "up3", "up4"];
-// 예전 게시글(small/large/huge) 편집 시 포맷이 지워지지 않게 whitelist에만 유지 — 메뉴에는 안 넣음
-const QUILL_SIZE_WHITELIST = ["small", "large", "huge", ...QUILL_FONT_SIZES];
-
-(function setupQuillFontSize() {
-  if (typeof Quill === "undefined") return;
-
-  let SizeStyle;
-  try {
-    SizeStyle = Quill.import("formats/size");
-  } catch {
-    return;
-  }
-  if (!SizeStyle) return;
-
-  SizeStyle.whitelist = QUILL_SIZE_WHITELIST;
-  Quill.register(SizeStyle, true);
-
-  const OriginalQuill = Quill;
-
-  function mergeToolbarOptions(options) {
-    if (!options || !options.modules?.toolbar?.container || !Array.isArray(options.modules.toolbar.container)) {
-      return options;
-    }
-
-    const { container } = options.modules.toolbar;
-    const hasSize = container.some((row) =>
-      Array.isArray(row) &&
-      row.some((cell) => cell && typeof cell === "object" && Object.prototype.hasOwnProperty.call(cell, "size")),
-    );
-    if (hasSize) return options;
-
-    const newContainer = [...options.modules.toolbar.container];
-    newContainer.splice(2, 0, [{ size: QUILL_FONT_SIZES }]);
-
-    return {
-      ...options,
-      modules: {
-        ...options.modules,
-        toolbar: {
-          ...options.modules.toolbar,
-          container: newContainer,
-        },
-      },
-    };
-  }
-
-  function PatchedQuill(selector, options) {
-    return new OriginalQuill(selector, mergeToolbarOptions(options ? { ...options } : options));
-  }
-
-  PatchedQuill.import = OriginalQuill.import.bind(OriginalQuill);
-  PatchedQuill.register = OriginalQuill.register.bind(OriginalQuill);
-  PatchedQuill.find = OriginalQuill.find.bind(OriginalQuill);
-  PatchedQuill.sources = OriginalQuill.sources;
-  if (OriginalQuill.debug !== undefined) PatchedQuill.debug = OriginalQuill.debug;
-  if (OriginalQuill.imports) PatchedQuill.imports = OriginalQuill.imports;
-  PatchedQuill.prototype = OriginalQuill.prototype;
-
-  window.Quill = PatchedQuill;
-})();
-
-function startMobileIntro() {
-  const isMobile = window.innerWidth <= 768;
-  const introArea = document.getElementById("mobileIntro");
-  const mobileMenu = document.getElementById("mobileMenu");
-
-  if (!isMobile || !introArea) return;
-
-  // 인트로 시작
-  introArea.style.display = "block";
-  if (mobileMenu) mobileMenu.style.display = "none";
-
-  const slides = document.querySelectorAll(".intro-slide");
-  let currentSlide = 0;
-
-  // 1.2초마다 사진 교체 (총 4장 = 약 5~6초 소요)
-  const slideInterval = setInterval(() => {
-    slides[currentSlide].classList.remove("active");
-    currentSlide++;
-
-    if (currentSlide < slides.length) {
-      slides[currentSlide].classList.add("active");
-    } else {
-      clearInterval(slideInterval);
-      finishIntro();
-    }
-  }, 1200);
-
-  function finishIntro() {
-    // 위로 스윽 사라지는 애니메이션 (선택 사항)
-    introArea.style.transition = "transform 0.8s ease-in-out, opacity 0.5s";
-    introArea.style.transform = "translateY(-100%)";
-    introArea.style.opacity = "0";
-
-    setTimeout(() => {
-      introArea.style.display = "none";
-      if (mobileMenu) {
-        mobileMenu.style.display = "block";
-        // 메뉴판이 나타날 때 부드럽게 보이게 하기
-        mobileMenu.style.animation = "fadeIn 0.5s";
-      }
-    }, 800);
-  }
-}
-
-// 스크립트 하단 실행부
-window.addEventListener("load", startMobileIntro);
