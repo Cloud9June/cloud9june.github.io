@@ -131,6 +131,17 @@
         .label.is-tomorrow-label {
             color: var(--accent-color) !important;
         }
+
+        /* 하단 인포 박스의 span(제목) 색상 변경을 위한 클래스 */
+        .info-box span.is-tomorrow-text {
+            color: var(--accent-color) !important;
+        }
+
+        /* 칼로리 태그 배경색 변경을 위한 클래스 */
+        .calorie-tag.is-tomorrow-bg {
+            background: var(--accent-color) !important;
+            color: #fff; /* 핑크색 배경에는 흰색 글씨가 더 잘 보입니다 */
+        }
     </style>
 </head>
 <body>
@@ -158,7 +169,7 @@
 
         async function getMeal() {
             const now = new Date();
-            const isTomorrowMode = now.getHours() >= 14; // 오후 2시 기준
+            const isTomorrowMode = now.getHours() >= 14;
 
             if (isTomorrowMode) {
                 now.setDate(now.getDate() + 1);
@@ -172,25 +183,33 @@
             const dateElement = document.getElementById('date');
             const labelElement = document.querySelector('.label');
             const cardElement = document.querySelector('.main-card');
+            const calorieElement = document.getElementById('calorie');
+            const infoSpans = document.querySelectorAll('.info-box span');
 
-            // --- 날짜 및 디자인 업데이트 ---
+            // --- 테마 일괄 변경 로직 ---
             if (isTomorrowMode) {
-                // 내일 모드 활성화
+                // 내일 모드 (핑크 테마)
                 labelElement.innerText = "TOMORROW'S LUNCH MENU";
                 labelElement.classList.add('is-tomorrow-label');
-                cardElement.classList.add('is-tomorrow'); // 여기서 왼쪽 테두리 색상이 바뀝니다.
+                cardElement.classList.add('is-tomorrow');
+                calorieElement.classList.add('is-tomorrow-bg');
+                
+                // 하단 TIME, SCHOOL 등의 글자색 변경
+                infoSpans.forEach(span => span.classList.add('is-tomorrow-text'));
                 
                 dateElement.innerHTML = `<span class="tomorrow-text" style="display:inline-block;">내일 뭐 먹지? 😋</span>${year}년 ${month}월 ${day}일`;
             } else {
-                // 오늘 모드 (기본)
+                // 오늘 모드 (민트 테마)
                 labelElement.innerText = "TODAY'S LUNCH MENU";
                 labelElement.classList.remove('is-tomorrow-label');
-                cardElement.classList.remove('is-tomorrow'); // 다시 민트색(--primary-color)으로 복구
+                cardElement.classList.remove('is-tomorrow');
+                calorieElement.classList.remove('is-tomorrow-bg');
+                
+                infoSpans.forEach(span => span.classList.remove('is-tomorrow-text'));
                 
                 dateElement.innerText = `${year}년 ${month}월 ${day}일`;
             }
 
-            // API 호출 및 데이터 처리 (기존과 동일)
             const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${key}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${yyyymmdd}`;
 
             try {
@@ -207,7 +226,7 @@
 
                     document.getElementById('menu').innerText = cleanMenu;
                     document.getElementById('calorie').innerText = row.CAL_INFO;
-                    document.getElementById('calorie').style.display = 'block';
+                    document.getElementById('calorie').style.display = 'block'; // 칼로리 다시 표시
                 } else {
                     document.getElementById('menu').innerText = isTomorrowMode 
                         ? "내일은 식단 정보가 없습니다. 🍱" 
