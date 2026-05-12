@@ -7,16 +7,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
     <style>
         body { background-color: #fff5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .carnation-container { background-color: #ffffff; width: 100%; max-width: 350px; padding: 30px; border: 2px solid #ffb7b7; border-radius: 20px; box-shadow: 0 10px 30px rgba(255,183,183,0.3); position: relative; }
+        .carnation-container { background-color: #ffffff; width: 100%; max-width: 380px; padding: 30px; border: 2px solid #ffb7b7; border-radius: 20px; box-shadow: 0 10px 30px rgba(255,183,183,0.3); position: relative; }
         .icon { text-align: center; font-size: 3rem; margin-bottom: 10px; }
         h2 { font-family: 'Nanum Pen Script', cursive; font-size: 2.2rem; color: #d32f2f; margin: 0; text-align: center; }
         p { text-align: center; color: #888; font-family: 'Nanum Pen Script', cursive; font-size: 1.2rem; margin-bottom: 20px; }
         .input-group { margin-top: 15px; }
-        label { display: block; font-family: 'Nanum Pen Script', cursive; font-size: 1.2rem; margin-bottom: 5px; color: #d32f2f; }
+        label { display: block; font-family: 'Nanum Pen Script', cursive; font-size: 1.3rem; margin-bottom: 5px; color: #d32f2f; }
         input, textarea { width: 100%; border: 1px solid #ffe0e0; background: #fffafa; border-radius: 10px; line-height: 1.5em; font-family: 'Nanum Pen Script', cursive; font-size: 1.5rem; color: #444; outline: none; padding: 10px; box-sizing: border-box; }
         input:focus, textarea:focus { border-color: #ffb7b7; background: #fff; }
         button { margin-top: 25px; width: 100%; padding: 12px; background-color: #ff5252; color: white; border: none; border-radius: 50px; font-family: 'Nanum Pen Script', cursive; font-size: 1.6rem; cursor: pointer; transition: 0.3s; }
         button:hover { background-color: #d32f2f; }
+        button:disabled { background-color: #ccc; cursor: default; }
     </style>
 </head>
 <body>
@@ -24,30 +25,63 @@
     <div class="icon">🌺</div>
     <h2>선생님, 감사합니다!</h2>
     <p>스승의 날을 맞아 마음을 전해보세요.</p>
+
+    <!-- 받는 사람 추가 -->
     <div class="input-group">
-        <label>보내는 학생 (반/이름)</label>
-        <input type="text" id="name" maxlength="12" placeholder="예: 3반 홍길동" autocomplete="off">
+        <label>받는 선생님</label>
+        <input type="text" id="target" maxlength="15" placeholder="예: 김사랑 선생님" autocomplete="off">
     </div>
+
+    <!-- 보내는 사람 -->
+    <div class="input-group">
+        <label>보내는 학생 (학년/반/이름)</label>
+        <input type="text" id="name" maxlength="15" placeholder="예: 6학년 1반 홍길동" autocomplete="off">
+    </div>
+
+    <!-- 내용 -->
     <div class="input-group">
         <label>감사 메시지 (최대 70자)</label>
-        <textarea id="content" rows="4" maxlength="70" placeholder="선생님께 드릴 따뜻한 말을 남겨주세요"></textarea>
+        <textarea id="content" rows="3" maxlength="70" placeholder="따뜻한 마음을 담아주세요"></textarea>
     </div>
+
     <button onclick="send()">🌺 마음 전송하기</button>
 </div>
 
 <script>
-    // 기존에 사용하시던 API URL을 그대로 사용하시면 됩니다.
-    const API_URL = "https://script.google.com/macros/s/AKfycbzoOWfqu9pNc_0qda7GPpu_xCiDJn5mVAseNjYHROH--FsvKB11X-2bPxgyysds-kdz/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbxTnrJqRT3kuJlC3OQMCmqIW8Ns9uPGcA2xrjDDpreLYiZL-wc5GcnDiR9aCYSw_gMF/exec"; 
+
     function send() {
+        const target = document.getElementById('target').value;
         const name = document.getElementById('name').value;
         const content = document.getElementById('content').value;
         const btn = document.querySelector('button');
-        if(!name || !content) { alert("내용을 입력해주세요!"); return; }
-        btn.disabled = true; btn.innerText = "전송 중...";
-        fetch(API_URL, { method: "POST", body: JSON.stringify({ name: name, content: content }) })
-        .then(res => res.json()).then(() => {
-            alert("선생님께 마음이 전달되었습니다!"); location.reload();
-        }).catch(() => { alert("오류 발생"); btn.disabled = false; });
+
+        if(!target || !name || !content) { 
+            alert("모든 항목을 입력해주세요!"); 
+            return; 
+        }
+
+        btn.disabled = true; 
+        btn.innerText = "전송 중...";
+
+        fetch(API_URL, { 
+            method: "POST", 
+            body: JSON.stringify({ 
+                target: target, // 받는 사람 추가
+                name: name, 
+                content: content 
+            }) 
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert("선생님께 마음이 전달되었습니다!"); 
+            location.reload();
+        })
+        .catch(err => { 
+            alert("오류 발생: " + err); 
+            btn.disabled = false; 
+            btn.innerText = "🌺 마음 전송하기";
+        });
     }
 </script>
 </body>

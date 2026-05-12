@@ -14,7 +14,6 @@
             width: 100vw; height: 100vh;
         }
 
-        /* 메인 컨테이너 */
         #main-wrapper {
             width: 100%; height: 100%;
             position: relative;
@@ -24,7 +23,6 @@
             background-position: center;
         }
 
-        /* 메모지가 담기는 캔버스 (전체 페이드 아웃용) */
         #canvas {
             width: 100%; height: 100%;
             position: absolute;
@@ -33,58 +31,41 @@
             z-index: 10;
         }
 
-        /* 메모지 스타일 - 크기를 살짝 줄여 600개를 수용함 */
         .memo {
             position: absolute;
-            width: 120px; height: 120px; 
-            padding: 10px;
+            /* 📏 메모 크기 수정 (여기서 조절하세요) */
+            width: 250px; 
+            height: 250px; 
+            padding: 15px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center; border-radius: 12px;
-            background-color: rgba(255, 255, 255, 0.85);
+            background-color: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(2px);
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             transform: scale(0);
             opacity: 0;
             transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.6s;
-            will-change: transform, opacity; /* 하드웨어 가속 */
+            will-change: transform, opacity;
         }
 
         .memo.show { transform: scale(1) rotate(var(--r)); opacity: 1; }
 
-        /* 🌟 별빛 스타일 */
-        .star {
-            position: absolute;
-            color: #fff;
-            pointer-events: none;
-            z-index: 9999;
-            text-shadow: 0 0 5px #fff, 0 0 10px #ffd700, 0 0 20px #ffaa00;
-            display: flex; justify-content: center; align-items: center;
-        }
+        /* 💙 폰트 사이즈 수정 (여기서 조절하세요) */
+        .target { font-size: 1.3rem; color: #1e88e5; font-weight: bold; margin-bottom: 8px; }
+        .content { font-size: 1.5rem; color: #333; line-height: 1.3; word-break: break-all; margin-bottom: 8px; }
+        .author { font-size: 1.1rem; color: #5d4037; font-weight: bold; border-top: 1px dashed rgba(0,0,0,0.1); width: 100%; padding-top: 6px; }
 
-        @keyframes star-twinkle {
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
-            100% { transform: scale(0) rotate(360deg); opacity: 0; }
-        }
+        .c1 { background-color: rgba(255, 224, 230, 0.95); } 
+        .c2 { background-color: rgba(255, 243, 191, 0.95); } 
+        .c3 { background-color: rgba(209, 250, 229, 0.95); } 
+        .c4 { background-color: rgba(224, 242, 254, 0.95); } 
+        .c5 { background-color: rgba(243, 232, 255, 0.95); } 
 
-        .content { font-size: 1.1rem; color: #333; line-height: 1.2; word-break: break-all; margin-bottom: 4px; }
-        .author { font-size: 0.9rem; color: #5d4037; font-weight: bold; }
+        .star { position: absolute; color: #fff; pointer-events: none; z-index: 9999; text-shadow: 0 0 5px #fff, 0 0 10px #ffd700, 0 0 20px #ffaa00; display: flex; justify-content: center; align-items: center; }
+        @keyframes star-twinkle { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 50% { transform: scale(1.5) rotate(180deg); opacity: 1; } 100% { transform: scale(0) rotate(360deg); opacity: 0; } }
 
-        .c1 { background-color: rgba(255, 209, 220, 0.92); } 
-        .c2 { background-color: rgba(255, 249, 196, 0.92); } 
-        .c3 { background-color: rgba(220, 237, 200, 0.92); } 
-
-        /* 중앙 감사 메시지 - 캔버스 외부에 배치하여 페이드 아웃 영향 안받게 함 */
-        #final-message {
-            position: absolute; top: 40%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.5);
-            font-size: 6rem; color: #d32f2f; text-align: center;
-            opacity: 0; pointer-events: none; z-index: 100;
-            text-shadow: 2px 2px 20px rgba(255,255,255,1);
-            transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            white-space: nowrap;
-        }
+        #final-message { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-size: 6.5rem; color: #d32f2f; text-align: center; opacity: 0; pointer-events: none; z-index: 100; text-shadow: 2px 2px 20px rgba(255,255,255,1); transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); white-space: nowrap; }
         #final-message.active { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     </style>
 </head>
@@ -96,48 +77,38 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzoOWfqu9pNc_0qda7GPpu_xCiDJn5mVAseNjYHROH--FsvKB11X-2bPxgyysds-kdz/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxTnrJqRT3kuJlC3OQMCmqIW8Ns9uPGcA2xrjDDpreLYiZL-wc5GcnDiR9aCYSw_gMF/exec";
     const canvas = document.getElementById('canvas');
     const finalMsg = document.getElementById('final-message');
     let messages = [];
     let currentIndex = 0;
-    const colors = ['c1', 'c2', 'c3'];
+    const colors = ['c1', 'c2', 'c3', 'c4', 'c5'];
 
     async function fetchMessages() {
         try {
             const res = await fetch(API_URL);
             messages = await res.json();
             startEvent();
-        } catch (e) { 
-            console.error("데이터 로드 실패", e); 
-            setTimeout(fetchMessages, 5000);
-        }
+        } catch (e) { console.error("데이터 로드 실패", e); setTimeout(fetchMessages, 5000); }
     }
 
     function createStars() {
-        const starCount = 150; // 별 개수
+        const starCount = 180;
         for (let i = 0; i < starCount; i++) {
             const star = document.createElement('div');
             star.className = 'star';
             star.innerText = '★';
-            const fontSize = Math.random() * 10 + 10 + 'px';
-            star.style.fontSize = fontSize;
+            star.style.fontSize = Math.random() * 10 + 10 + 'px';
             star.style.left = Math.random() * 100 + 'vw';
             star.style.top = Math.random() * 100 + 'vh';
-            const duration = Math.random() * 1.5 + 1 + 's';
-            const delay = Math.random() * 2 + 's';
-            star.style.animation = `star-twinkle ${duration} infinite ${delay} ease-in-out`;
-            document.body.appendChild(star); // 캔버스 밖 body에 추가
+            star.style.animation = `star-twinkle ${Math.random() * 1.5 + 1}s infinite ${Math.random() * 2}s ease-in-out`;
+            document.body.appendChild(star);
         }
     }
 
-    function removeStars() {
-        const stars = document.querySelectorAll('.star');
-        stars.forEach(s => s.remove());
-    }
+    function removeStars() { document.querySelectorAll('.star').forEach(s => s.remove()); }
 
     function spawnMemo() {
-        // 모든 메시지를 다 보여줬을 때
         if (currentIndex >= messages.length) {
             createStars();
             setTimeout(clearCanvas, 5000); 
@@ -146,50 +117,46 @@
 
         const item = messages[currentIndex];
         const memo = document.createElement('div');
-        const rotate = (Math.random() * 30 - 15).toFixed(2);
+        const rotate = (Math.random() * 20 - 10).toFixed(2); // 회전 반경을 줄여서 잘림 방지
         
-        // 위치 설정 (하단 학생 일러스트 영역 제외)
-        const posX = Math.random() * (window.innerWidth - 150) + 75;
-        const posY = Math.random() * (window.innerHeight * 0.6) + 50; 
+        // 📐 메모 크기 정보 (CSS 설정값과 동일하게 맞추세요)
+        const memoWidth = 250;
+        const memoHeight = 250;
+
+        // 🛡️ 화면 밖으로 나가지 않도록 좌표 범위 제한
+        // 가로: 0 ~ (화면너비 - 메모너비)
+        const posX = Math.random() * (window.innerWidth - memoWidth);
+        // 세로: 0 ~ (화면높이의 55% - 메모높이)
+        const posY = Math.random() * (window.innerHeight * 0.55 - memoHeight); 
 
         memo.className = `memo ${colors[currentIndex % colors.length]}`;
-        memo.style.left = `${posX}px`;
-        memo.style.top = `${posY}px`;
+        // 안전 범위 내에서 좌표 설정 (음수가 되지 않도록 Math.max 사용)
+        memo.style.left = `${Math.max(10, posX)}px`; 
+        memo.style.top = `${Math.max(10, posY)}px`;
         memo.style.setProperty('--r', `${rotate}deg`);
         
+        const targetName = item.target ? `${item.target}` : "선생님께";
+
         memo.innerHTML = `
+            <div class="target">${targetName}</div>
             <div class="content">${item.content}</div>
-            <div class="author">${item.name}</div>
+            <div class="author">From. ${item.name}</div>
         `;
 
         canvas.appendChild(memo);
-        
-        // 브라우저 렌더링 최적화를 위해 requestAnimationFrame 사용 고려 가능하지만, 
-        // 다수 객체이므로 짧은 setTimeout으로 순차 노출
         setTimeout(() => memo.classList.add('show'), 50);
 
         currentIndex++;
-
-        // 인원수가 많으므로 생성 속도를 빠르게 조절 (600명 기준 약 30~60초 소요)
-        const speed = messages.length > 500 ? 50 : 120;
+        const speed = messages.length > 500 ? 3000 : 3000;
         setTimeout(spawnMemo, speed);
     }
 
     function clearCanvas() {
-        // 1. 캔버스 전체 페이드 아웃 (개별 메모 삭제보다 훨씬 빠름)
         canvas.style.opacity = "0";
-
-        // 2. 별빛 유지하며 감사 문구 등장
-        setTimeout(() => {
-            finalMsg.classList.add('active');
-        }, 1000);
-
-        // 3. 루프 리셋 및 데이터 새로고침
+        setTimeout(() => finalMsg.classList.add('active'), 1000);
         setTimeout(() => {
             finalMsg.classList.remove('active');
             removeStars();
-            
-            // 문구가 완전히 사라진 후 캔버스 비우기 및 복구
             setTimeout(() => {
                 canvas.innerHTML = '';
                 canvas.style.opacity = "1";
@@ -201,14 +168,11 @@
 
     function startEvent() {
         if (messages.length > 0) {
-            // 초기화 후 시작
             canvas.innerHTML = '';
             canvas.style.opacity = "1";
             currentIndex = 0;
             spawnMemo();
-        } else {
-            setTimeout(fetchMessages, 5000);
-        }
+        } else { setTimeout(fetchMessages, 5000); }
     }
 
     window.onload = fetchMessages;
