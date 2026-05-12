@@ -110,6 +110,23 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* 내일 급식일 때 날짜 옆에 붙을 강조 태그 */
+        .tomorrow-badge {
+            background-color: var(--accent-color); /* 핑크색 계열 */
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 8px;
+            vertical-align: middle;
+            display: none; /* 기본은 숨김 */
+        }
+
+        /* 내일 모드일 때 메인 카드에 강조 테두리 효과 (선택사항) */
+        .is-tomorrow {
+            border-left-color: var(--accent-color) !important;
+        }
     </style>
 </head>
 <body>
@@ -137,13 +154,32 @@
 
         async function getMeal() {
             const now = new Date();
+            const isTomorrowMode = now.getHours() >= 14; // 오후 2시 이후인가?
+
+            if (isTomorrowMode) {
+                now.setDate(now.getDate() + 1);
+            }
+
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const yyyymmdd = `${year}${month}${day}`;
 
-            // 날짜 표시 업데이트
-            document.getElementById('date').innerText = `${year}년 ${month}월 ${day}일`;
+            // 날짜 및 강조 효과 업데이트
+            const dateElement = document.getElementById('date');
+            const cardElement = document.querySelector('.main-card');
+            
+            if (isTomorrowMode) {
+                // 내일 급식 모드일 때
+                dateElement.innerHTML = `<span class="tomorrow-badge" style="display:inline-block;">TOMORROW</span>${year}년 ${month}월 ${day}일`;
+                dateElement.style.color = "var(--accent-color)"; // 날짜 글자색 변경
+                cardElement.classList.add('is-tomorrow'); // 왼쪽 테두리 색상 변경
+            } else {
+                // 오늘 급식 모드일 때
+                dateElement.innerText = `${year}년 ${month}월 ${day}일`;
+                dateElement.style.color = ""; // 기본 색상
+                cardElement.classList.remove('is-tomorrow');
+            }
 
             const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${key}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${yyyymmdd}`;
 
@@ -153,22 +189,21 @@
 
                 if (data.mealServiceDietInfo) {
                     const row = data.mealServiceDietInfo[1].row[0];
-                    
-                    // 메뉴 가공: (숫자) 제거 및 <br/>을 공백으로 변경
                     let cleanMenu = row.DDISH_NM
-                        .replace(/[0-9.]/g, '') // 숫자와 마침표 제거
-                        .replace(/\(\)/g, '')   // 빈 괄호 제거
-                        .split('<br/>')         // 줄바꿈 기준으로 나누기
-                        .join(' · ');           // 중간에 점 찍기
+                        .replace(/[0-9.]/g, '')
+                        .replace(/\(\)/g, '')
+                        .split('<br/>')
+                        .join(' · ');
 
                     document.getElementById('menu').innerText = cleanMenu;
                     document.getElementById('calorie').innerText = row.CAL_INFO;
+                    document.getElementById('calorie').style.display = 'block';
                 } else {
-                    document.getElementById('menu').innerText = "오늘은 급식 정보가 없습니다. 😎";
+                    document.getElementById('menu').innerText = "급식 정보가 없습니다. 😎";
                     document.getElementById('calorie').style.display = 'none';
                 }
             } catch (error) {
-                document.getElementById('menu').innerText = "데이터를 가져오지 못했습니다.";
+                document.getElementById('menu').innerText = "데이터 로딩 실패";
                 console.error(error);
             }
         }
@@ -182,6 +217,7 @@
         // 실행
         getMeal();
         setInterval(updateTime, 1000);
+        setInterval(getMeal, 1800000);
     </script>
 </body>
 </html>
