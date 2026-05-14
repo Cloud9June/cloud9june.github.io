@@ -14,13 +14,11 @@
         h1 { color: #d32f2f; margin-bottom: 20px; font-size: 3rem; }
         .controls { background: #fff5f5; padding: 25px; border-radius: 15px; display: inline-block; border: 1px solid #ffcdd2; }
         
-        /* 입력창 및 선택창 스타일 유지 */
-        input, select { font-family: 'Nanum Pen Script', cursive; font-size: 1.6rem; padding: 8px 15px; border: 2px solid #ffb7b7; border-radius: 8px; outline: none; margin: 0 5px; }
-        input { width: 250px; }
-        select { background-color: white; cursor: pointer; }
+        /* 스타일 절대 유지: 선택창 디자인 */
+        select { font-family: 'Nanum Pen Script', cursive; font-size: 1.6rem; padding: 8px 15px; border: 2px solid #ffb7b7; border-radius: 8px; outline: none; margin: 0 5px; background-color: white; cursor: pointer; }
+        #teacherSelect { width: 300px; border-color: #1e88e5; } /* 목록 선택창은 살짝 더 넓게 */
 
         button { font-family: 'Nanum Pen Script', cursive; font-size: 1.6rem; padding: 8px 25px; cursor: pointer; border: none; border-radius: 8px; margin-left: 10px; transition: 0.3s; }
-        .btn-search { background-color: #1e88e5; color: white; }
         .btn-save { background-color: #ff5252; color: white; }
         button:hover { opacity: 0.8; transform: translateY(-2px); }
 
@@ -38,7 +36,6 @@
             background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
-            /* 초기 폰트는 기존과 동일하게 설정 */
             font-family: 'Nanum Pen Script', cursive;
         }
 
@@ -70,9 +67,11 @@
     <div class="header-section">
         <h1>💌 스승의 날 마음 보관함</h1>
         <div class="controls">
-            <input type="text" id="teacherName" placeholder="선생님 성함을 입력하세요">
+            <!-- 선생님 성함 입력창을 목록 선택창으로 교체 -->
+            <select id="teacherSelect" onchange="filterMessages()">
+                <option value="">선생님을 선택해주세요</option>
+            </select>
             
-            <!-- 글꼴 선택 추가 -->
             <select id="fontSelector" onchange="changeFont()">
                 <option value="'Nanum Pen Script', cursive">기본 손글씨체</option>
                 <option value="'Nanum Gothic', sans-serif">깔끔한 고딕체</option>
@@ -80,14 +79,12 @@
                 <option value="'Jua', sans-serif">둥근 주아체</option>
             </select>
 
-            <button class="btn-search" onclick="filterMessages()">메시지 찾기</button>
             <button class="btn-save" onclick="saveAsJpg()">이미지로 간직하기</button>
         </div>
     </div>
 
-    <!-- 이미지가 찍힐 영역 -->
     <div id="capture-area">
-        <p class="empty-msg">선생님 성함을 입력하고 <br> '메시지 찾기'를 눌러주세요! 🌺</p>
+        <p class="empty-msg">선생님 성함을 선택하여 <br> 마음을 확인하세요! 🌺</p>
     </div>
 
 <script>
@@ -99,16 +96,35 @@
         try {
             const res = await fetch(API_URL);
             allMessages = await res.json();
+            updateTeacherList(); // 데이터 로딩 후 목록 생성
         } catch (e) { console.error("데이터 로드 실패", e); }
     }
 
-    // 폰트 변경 함수 추가
+    // 이름에서 괄호 내용을 제거하는 함수 (김찬희(여) -> 김찬희)
+    function cleanName(name) {
+        return name.replace(/\(.*\)/, "").replace(/\s+/g, " ").trim();
+    }
+
+    // 중복 없는 선생님 목록 생성 및 가나다 정렬
+    function updateTeacherList() {
+        const select = document.getElementById('teacherSelect');
+        // target 필드 추출 -> 중복 제거 -> 가나다순 정렬
+        const teacherNames = [...new Set(allMessages.map(m => m.target.trim()))].sort();
+        
+        teacherNames.forEach(name => {
+            if(!name) return;
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name; // 목록에는 구분용 이름 그대로 표시
+            select.appendChild(opt);
+        });
+    }
+
     function changeFont() {
         const selectedFont = document.getElementById('fontSelector').value;
         const area = document.getElementById('capture-area');
         area.style.fontFamily = selectedFont;
         
-        // 펜 글씨체가 아닐 때는 가독성을 위해 자중 조절 (선택사항)
         if(selectedFont.includes('Nanum Gothic') || selectedFont.includes('Gowun Batang')) {
             area.style.fontWeight = "bold";
         } else {
@@ -117,41 +133,35 @@
     }
 
     function filterMessages() {
-        const inputName = document.getElementById('teacherName').value.trim();
+        const selectedName = document.getElementById('teacherSelect').value;
         const area = document.getElementById('capture-area');
         
-        if(!inputName) { 
-            alert("성함을 입력해주세요!"); 
+        if(!selectedName) { 
+            area.innerHTML = '<p class="empty-msg">선생님 성함을 선택하여 <br> 마음을 확인하세요! 🌺</p>';
             return; 
         }
 
-        const searchKeyword = inputName + " 선생님";
-
-        const myMessages = allMessages.filter(m => 
-            m.target && m.target.trim() === searchKeyword
-        );
+        const myMessages = allMessages.filter(m => m.target.trim() === selectedName);
         
         area.innerHTML = '';
-        if(myMessages.length === 0) {
-            area.innerHTML = `<p class="empty-msg">'${searchKeyword}'님께 온 메시지가 없네요. ㅠㅠ</p>`;
-            return;
-        }
-
         myMessages.forEach((m, i) => {
             const div = document.createElement('div');
             div.className = `memo-item ${colors[i % colors.length]}`;
             div.innerHTML = `
-                <div class="target">${m.target}</div>
+                <div class="target">${cleanName(m.target)}</div>
                 <div class="content">${m.content}</div>
                 <div class="author">From. ${m.name}</div>
             `;
             area.appendChild(div);
         });
+
+        changeFont(); // 메시지 재생성 후 현재 설정된 폰트 적용
     }
 
     function saveAsJpg() {
         const area = document.getElementById('capture-area');
-        const teacherName = document.getElementById('teacherName').value || "선생님";
+        const rawName = document.getElementById('teacherSelect').value || "선생님";
+        const finalName = cleanName(rawName);
         
         if(document.querySelectorAll('.memo-item').length === 0) {
             alert("저장할 메시지가 없습니다!");
@@ -161,10 +171,10 @@
         html2canvas(area, {
             useCORS: true,
             backgroundColor: "#fff9f9",
-            scale: 2 // 저장 시 고해상도로 저장 (글자가 더 선명해집니다)
+            scale: 2
         }).then(canvas => {
             const link = document.createElement('a');
-            link.download = `${teacherName}선생님_스승의날_보관함.jpg`;
+            link.download = `${finalName}_스승의날_보관함.jpg`;
             link.href = canvas.toDataURL("image/jpeg", 0.9);
             link.click();
         });
