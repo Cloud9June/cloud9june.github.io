@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>선생님 전용 메시지 보관함</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <!-- 폰트 추가: 나눔펜, 나눔고딕, 고운바탕, 주아체 -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Nanum+Gothic:wght@400;700&family=Gowun+Batang:wght@400;700&family=Jua&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Nanum Pen Script', cursive; background-color: #fdfcf0; margin: 0; padding: 0; text-align: center; }
@@ -12,13 +13,18 @@
         .header-section { padding: 5px 0 20px 0; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h1 { color: #d32f2f; margin-bottom: 20px; font-size: 3rem; }
         .controls { background: #fff5f5; padding: 25px; border-radius: 15px; display: inline-block; border: 1px solid #ffcdd2; }
-        input { font-family: 'Nanum Pen Script', cursive; font-size: 1.6rem; padding: 8px 15px; border: 2px solid #ffb7b7; border-radius: 8px; outline: none; width: 250px; }
+        
+        /* 입력창 및 선택창 스타일 유지 */
+        input, select { font-family: 'Nanum Pen Script', cursive; font-size: 1.6rem; padding: 8px 15px; border: 2px solid #ffb7b7; border-radius: 8px; outline: none; margin: 0 5px; }
+        input { width: 250px; }
+        select { background-color: white; cursor: pointer; }
+
         button { font-family: 'Nanum Pen Script', cursive; font-size: 1.6rem; padding: 8px 25px; cursor: pointer; border: none; border-radius: 8px; margin-left: 10px; transition: 0.3s; }
         .btn-search { background-color: #1e88e5; color: white; }
         .btn-save { background-color: #ff5252; color: white; }
         button:hover { opacity: 0.8; transform: translateY(-2px); }
 
-        /* 📸 저장될 영역: 카네이션 배경 적용 */
+        /* 📸 저장될 영역: 기존 스타일 유지 */
         #capture-area { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
@@ -26,16 +32,17 @@
             padding: 60px 40px; 
             min-height: 600px;
             position: relative;
-            /* 카네이션 배경 이미지 설정 */
             background-color: #fff9f9;
             background-image: linear-gradient(rgba(255, 249, 249, 0.65), rgba(255, 249, 249, 0.65)), 
                               url('images/flower.png');
-            background-size: 100% 100%; /* 패턴 크기 조절 */
+            background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
+            /* 초기 폰트는 기존과 동일하게 설정 */
+            font-family: 'Nanum Pen Script', cursive;
         }
 
-        /* 개별 메모지 스타일 */
+        /* 개별 메모지 스타일 유지 */
         .memo-item {
             width: 220px; height: 220px; padding: 20px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -49,7 +56,6 @@
         .content { font-size: 1.6rem; color: #333; line-height: 1.3; flex-grow: 1; display: flex; align-items: center; word-break: break-all; }
         .author { font-size: 1.2rem; color: #5d4037; border-top: 1px dashed rgba(0,0,0,0.1); width: 100%; padding-top: 8px; margin-top: 10px; }
 
-        /* 파스텔 색상 */
         .c1 { background-color: rgba(255, 224, 230, 0.95); } 
         .c2 { background-color: rgba(255, 243, 191, 0.95); } 
         .c3 { background-color: rgba(209, 250, 229, 0.95); } 
@@ -65,6 +71,15 @@
         <h1>💌 스승의 날 마음 보관함</h1>
         <div class="controls">
             <input type="text" id="teacherName" placeholder="선생님 성함을 입력하세요">
+            
+            <!-- 글꼴 선택 추가 -->
+            <select id="fontSelector" onchange="changeFont()">
+                <option value="'Nanum Pen Script', cursive">기본 손글씨체</option>
+                <option value="'Nanum Gothic', sans-serif">깔끔한 고딕체</option>
+                <option value="'Gowun Batang', serif">정갈한 바탕체</option>
+                <option value="'Jua', sans-serif">둥근 주아체</option>
+            </select>
+
             <button class="btn-search" onclick="filterMessages()">메시지 찾기</button>
             <button class="btn-save" onclick="saveAsJpg()">이미지로 간직하기</button>
         </div>
@@ -76,7 +91,6 @@
     </div>
 
 <script>
-    // 기존 API_URL 사용
     const API_URL = "https://script.google.com/macros/s/AKfycbyfblCa3JSYO9HyVSSkBQ_UW5MZWqjoB5tpUnVpFiicfW6sx60u9BeoFLzbatq_Npzn/exec";
     let allMessages = [];
     const colors = ['c1', 'c2', 'c3', 'c4', 'c5'];
@@ -88,17 +102,38 @@
         } catch (e) { console.error("데이터 로드 실패", e); }
     }
 
-    function filterMessages() {
-        const name = document.getElementById('teacherName').value.trim();
+    // 폰트 변경 함수 추가
+    function changeFont() {
+        const selectedFont = document.getElementById('fontSelector').value;
         const area = document.getElementById('capture-area');
-        if(!name) { alert("성함을 입력해주세요!"); return; }
+        area.style.fontFamily = selectedFont;
+        
+        // 펜 글씨체가 아닐 때는 가독성을 위해 자중 조절 (선택사항)
+        if(selectedFont.includes('Nanum Gothic') || selectedFont.includes('Gowun Batang')) {
+            area.style.fontWeight = "bold";
+        } else {
+            area.style.fontWeight = "normal";
+        }
+    }
 
-        // target 필드에 검색어 포함 여부 확인
-        const myMessages = allMessages.filter(m => m.target && m.target.includes(name));
+    function filterMessages() {
+        const inputName = document.getElementById('teacherName').value.trim();
+        const area = document.getElementById('capture-area');
+        
+        if(!inputName) { 
+            alert("성함을 입력해주세요!"); 
+            return; 
+        }
+
+        const searchKeyword = inputName + " 선생님";
+
+        const myMessages = allMessages.filter(m => 
+            m.target && m.target.trim() === searchKeyword
+        );
         
         area.innerHTML = '';
         if(myMessages.length === 0) {
-            area.innerHTML = '<p class="empty-msg">도착한 메시지가 아직 없네요. ㅠㅠ</p>';
+            area.innerHTML = `<p class="empty-msg">'${searchKeyword}'님께 온 메시지가 없네요. ㅠㅠ</p>`;
             return;
         }
 
@@ -114,7 +149,6 @@
         });
     }
 
-    // JPG 저장 기능 (배경까지 깔끔하게 캡처)
     function saveAsJpg() {
         const area = document.getElementById('capture-area');
         const teacherName = document.getElementById('teacherName').value || "선생님";
@@ -124,10 +158,10 @@
             return;
         }
 
-        // 캡처 시 배경이 잘 나오도록 설정
         html2canvas(area, {
-            useCORS: true, // 외부 이미지 로드 허용
-            backgroundColor: "#fff9f9"
+            useCORS: true,
+            backgroundColor: "#fff9f9",
+            scale: 2 // 저장 시 고해상도로 저장 (글자가 더 선명해집니다)
         }).then(canvas => {
             const link = document.createElement('a');
             link.download = `${teacherName}선생님_스승의날_보관함.jpg`;

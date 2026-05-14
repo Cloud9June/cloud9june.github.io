@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sungil Informateion High School Live Billboard</title>
+    <title>Sungil Information High School Live Billboard</title>
+    <!-- 아이콘 폰트 (Font Awesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #ffd400; /* 학교 상징색 (노랑) */
@@ -162,10 +164,26 @@
             animation: blink 0.8s infinite;
         }
 
+        /* 날씨 스타일 (왼쪽 노란 영역용) */
+        .weather-mini {
+            margin-top: 12px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Courier New', monospace;
+            font-weight: 700; /* 캡처처럼 두껍게 설정 */
+            letter-spacing: -0.5px; /* 글자 사이를 아주 살짝 좁히면 더 비슷해집니다 */
+        }
+        .weather-mini i { font-size: 1.1rem; }
+
+        /* 기존 날짜 스타일 살짝 수정 */
         #date {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 2px;
+            font-size: 0.85rem;
+            color: #333;
+            margin-top: 15px;
             font-family: 'Courier New', monospace;
         }
 
@@ -193,6 +211,7 @@
         <div class="head-label">
             <p>SUNGIL</p>
             <h2>NEWS</h2>
+            <div id="date">0000/00/00</div>
         </div>
 
         <div class="content-area">
@@ -206,8 +225,9 @@
 
         <div class="status-panel">
             <div class="on-air">ON AIR</div>
-            <div id="date">00/00</div>
+            <!-- <div id="date">00/00</div> -->
             <div id="clock">00:00:00</div>
+            <div id="todayWeather" class="weather-mini">--°C · LOADING</div>
         </div>
     </div>
 
@@ -283,9 +303,10 @@
             const now = new Date();
             
             // 날짜 (월/일)
+            const year = String(now.getFullYear()).padStart(4, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
-            document.getElementById('date').textContent = `${month}/${day}`;
+            document.getElementById('date').textContent = `${year}/${month}/${day}`;
 
             // 시간 (시:분:초)
             const hours = String(now.getHours()).padStart(2, '0');
@@ -294,10 +315,58 @@
             document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
         }
 
+        async function fetchWeather() {
+            const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
+            const nx = 62, ny = 124; // 성남 좌표
+
+            try {
+                let kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+                let base_date = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, "0")}${String(kst.getDate()).padStart(2, "0")}`;
+                const baseTimes = ["0200","0500","0800","1100","1400","1700","2000","2300"];
+                const hh = kst.getHours() * 100 + kst.getMinutes();
+                let base_time = baseTimes.findLast(t => hh >= parseInt(t)) || "2300";
+
+                // API 호출 (단기예보)
+                const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${SERVICE_KEY}&numOfRows=50&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                const items = data?.response?.body?.items?.item;
+
+                if (items) {
+                    const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+                    const hhNow = String(kst.getHours()).padStart(2, "0") + "00";
+
+                    const sky = items.find(i => i.fcstTime === hhNow && i.category === "SKY")?.fcstValue;
+                    const pty = items.find(i => i.fcstTime === hhNow && i.category === "PTY")?.fcstValue;
+                    const tmp = items.find(i => i.fcstTime === hhNow && i.category === "TMP")?.fcstValue;
+
+                    // 영문 날씨 텍스트 변환 로직
+                    let weatherText = "CLEAR";
+                    if (pty > 0) {
+                        if (pty == 1 || pty == 4) weatherText = "RAIN";
+                        else if (pty == 2 || pty == 3) weatherText = "SNOW";
+                    } else {
+                        if (sky == 1) weatherText = "SUNNY";
+                        else if (sky == 3) weatherText = "CLOUDY";
+                        else if (sky == 4) weatherText = "OVERCAST";
+                    }
+
+                    // 출력: 예) 27°C · SUNNY
+                    document.getElementById("todayWeather").innerHTML = `${tmp}°C · ${weatherText}`;
+                }
+            } catch (e) {
+                console.log("날씨 로드 실패");
+            }
+        }
+
         // 초기 실행 및 인터벌 설정
         updateClock();
         setInterval(updateClock, 1000);
         
+        fetchWeather(); 
+        setInterval(fetchWeather, 1800000);
+
         fetchNews();
         setInterval(fetchNews, 60000); // 1분마다 시트 갱신
     </script>
