@@ -22,55 +22,56 @@
             font-family: 'Malgun Gothic', sans-serif;
         }
 
-        /* [수정] 왼쪽에 세로로 두 줄 글씨가 들어갈 타이틀 바 */
+        /* 왼쪽에 세로로 두 줄 글씨가 들어갈 타이틀 바 */
         .side-title-bar {
-            width: 12vw; /* 두 줄이 들어가므로 폭을 8vw -> 12vw로 살짝 넓힘 */
+            width: 10vw; 
             height: 100%;
-            background: linear-gradient(135deg, #1e1b4b, #311042); /* 축제 느낌의 화려하고 깊은 퍼플-네이비 그라데이션 */
+            background: linear-gradient(135deg, #1e1b4b, #311042); /* 딥 퍼플-네이비 그라데이션 */
             display: flex;
-            flex-direction: row-reverse; /* 세로 두 줄일 때 오른쪽 줄이 먼저 읽히도록 설정 */
+            flex-direction: row-reverse; /* 세로 두 줄 우측부터 정렬 */
             justify-content: center;
             align-items: center;
-            gap: 20px; /* 두 줄 사이의 간격 */
-            border-right: 3px solid #4c1d95;
-            box-shadow: 8px 0 20px rgba(0, 0, 0, 0.7);
+            gap: 15px; 
+            border-right: 1px solid #2e1052; /* 타이틀 바 경계선도 최소화 */
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.7);
             z-index: 10;
             padding: 0 10px;
         }
 
-        /* 메인 큰 글씨 스타일 (성일정보고) */
+        /* 메인 큰 글씨 스타일 */
         .main-title {
             color: #ffffff;
-            font-size: 3.2rem; /* 비디오월 전용 대형 크기 */
+            font-size: 2.8rem; 
             font-weight: 900;
-            letter-spacing: 1.2rem;
+            letter-spacing: 1rem;
             writing-mode: vertical-rl;
             text-orientation: upright;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(139, 92, 246, 0.4);
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), 0 0 15px rgba(139, 92, 246, 0.4);
         }
 
-        /* 서브 슬로건 글씨 스타일 (세련된 문구) */
+        /* 서브 슬로건 글씨 스타일 */
         .sub-title {
-            color: #a78bfa; /* 메인 글씨와 구분되도록 은은하고 세련된 연보라 톤 */
-            font-size: 1.6rem; /* 서브에 맞는 적당한 크기 */
+            color: #a78bfa;
+            font-size: 1.4rem; 
             font-weight: 600;
-            letter-spacing: 0.6rem;
+            letter-spacing: 0.5rem;
             writing-mode: vertical-rl;
             text-orientation: upright;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
             opacity: 0.9;
         }
 
-        /* 이미지들을 정렬할 우측 그리드 컨테이너 */
+        /* 우측 그리드 컨테이너 */
         .promo-container {
-            flex: 1; /* 타이틀 바 빼고 남은 공간 전체 사용 */
+            flex: 1;
             height: 100%;
-            padding: 15px;
+            padding: 30px; /* 외곽 여백으로 여유 공간 확보 */
             display: grid;
-            grid-template-columns: repeat(8, 1fr); /* 8열 구조 */
-            gap: 12px;
+            grid-template-columns: repeat(9, 1fr); /* 9열 구조 */
+            gap: 15px; 
             justify-content: center;
             align-content: center;
+            position: relative;
         }
 
         /* 개별 이미지 카드 설정 */
@@ -80,14 +81,42 @@
             height: 100%;
             overflow: hidden;
             border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background-color: #000;
+            /* 부드러운 확대/축소를 위한 트랜지션 */
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s ease;
+            z-index: 1; 
         }
 
         .promo-item img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* 포스터 잘림 방지 */
+            object-fit: contain; 
             display: block;
+        }
+
+        /* [수정] 자기 자리에서 확대될 때 테두리(border) 제거 */
+        .promo-item.highlight {
+            transform: scale(1.3); /* 1.3배 확대 */
+            z-index: 50; /* 최상위 레이어로 띄움 */
+            /* 테두리 대신 그림자를 조금 더 깊게 주어 입체감 부여 */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        /* 주변 포스터들을 어둡게 가려줄 오버레이 설정 */
+        .promo-item::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* 딤 효과 강도 */
+            z-index: 2; 
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* 한 포스터가 하이라이트 되면, 나머지 포스터들에만 딤 오버레이 적용 */
+        .promo-container.active-dim .promo-item:not(.highlight)::after {
+            opacity: 1;
         }
     </style>
 </head>
@@ -95,10 +124,10 @@
 
     <div class="side-title-bar">
         <div class="main-title">성일정보고</div>
-        <div class="sub-title">우리의 순간, 우리의 축제!</div>
+        <div class="sub-title">우리의 순간, 우리의 축제</div>
     </div>
 
-    <div class="promo-container">
+    <div class="promo-container" id="gridContainer">
         <div class="promo-item"><img src="posters/1.jpg" alt="부스 홍보물 1"></div>
         <div class="promo-item"><img src="posters/2.jpg" alt="부스 홍보물 2"></div>
         <div class="promo-item"><img src="posters/3.jpg" alt="부스 홍보물 3"></div>
@@ -134,5 +163,32 @@
         <div class="promo-item"><img src="posters/33.jpg" alt="부스 홍보물 33"></div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById("gridContainer");
+            const items = document.querySelectorAll(".promo-item");
+            let currentIndex = 0;
+            const viewTime = 4000; // 포스터가 커져 있는 시간 (4초)
+
+            function startHighlightLoop() {
+                setInterval(() => {
+                    // 1. 초기화
+                    items.forEach(item => item.classList.remove("highlight"));
+                    container.classList.remove("active-dim");
+
+                    // 2. 부드러운 전환을 위해 아주 미세한 텀(0.05초) 후 다음 포스터 줌인
+                    setTimeout(() => {
+                        container.classList.add("active-dim");
+                        items[currentIndex].classList.add("highlight");
+                        
+                        currentIndex = (currentIndex + 1) % items.length;
+                    }, 50);
+
+                }, viewTime);
+            }
+
+            setTimeout(startHighlightLoop, 1000);
+        });
+    </script>
 </body>
 </html>
