@@ -22,20 +22,29 @@
             font-family: 'Malgun Gothic', sans-serif;
         }
 
-        /* 왼쪽에 세로로 두 줄 글씨가 들어갈 타이틀 바 */
+        /* [수정] 왼쪽에 세로 글씨와 하단 QR 코드가 들어갈 타이틀 바 */
         .side-title-bar {
             width: 10vw; 
             height: 100%;
             background: linear-gradient(135deg, #1e1b4b, #311042); /* 딥 퍼플-네이비 그라데이션 */
             display: flex;
-            flex-direction: row-reverse; /* 세로 두 줄 우측부터 정렬 */
-            justify-content: center;
+            flex-direction: column; /* 세로 글씨 그룹과 QR 박스를 위아래로 배치 */
+            justify-content: space-between; /* 위쪽 텍스트와 아래쪽 QR 공간 분할 */
             align-items: center;
-            gap: 15px; 
-            border-right: 1px solid #2e1052; /* 타이틀 바 경계선도 최소화 */
+            border-right: 1px solid #2e1052; 
             box-shadow: 5px 0 15px rgba(0, 0, 0, 0.7);
             z-index: 10;
-            padding: 0 10px;
+            padding: 40px 10px; /* 상하 여백 확보 */
+        }
+
+        /* 세로 두 줄 글씨를 묶어주는 컨테이너 */
+        .title-text-group {
+            display: flex;
+            flex-direction: row-reverse; /* 우측 줄(대제목)이 먼저 읽히도록 설정 */
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex: 1; /* QR 코드 영역을 아래로 밀어내기 위해 공간 확보 */
         }
 
         /* 메인 큰 글씨 스타일 */
@@ -61,13 +70,54 @@
             opacity: 0.9;
         }
 
+        /* [추가] 하단 QR 코드 감싸는 박스 스타일 */
+        .qr-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .qr-box {
+            width: 50%; /* 사이드바 가로폭에 맞춰 자동 조절 */
+            aspect-ratio: 1 / 1;
+            background-color: #ffffff; /* QR이 선명하게 인식되도록 흰색 배경 필수 */
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .qr-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* QR코드 밑 안내 멘트 문구 */
+        .qr-caption {
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: -0.5px;
+            opacity: 0.85;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            white-space: nowrap; /* 글씨가 좁아서 밑으로 깨지는 현상 방지 */
+        }
+
         /* 우측 그리드 컨테이너 */
         .promo-container {
             flex: 1;
             height: 100%;
-            padding: 30px; /* 외곽 여백으로 여유 공간 확보 */
+            padding: 30px; 
             display: grid;
-            grid-template-columns: repeat(12, 1fr); /* 9열 구조 */
+            grid-template-columns: repeat(12, 1fr); /* 12열 구조 */
             gap: 15px; 
             justify-content: center;
             align-content: center;
@@ -79,18 +129,11 @@
             position: relative;
             width: 100%;
             height: 100%;
-            
-            /* 포스터가 커질 때 원본 비율 마진이 박스에 잘리지 않도록 유연하게 설정 */
             overflow: visible; 
-            
             border-radius: 6px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             background-color: #000;
-            
-            /* 평소 크기 고정 scale(1) */
             transform: scale(1) translate(0px, 0px); 
-            
-            /* 이동과 복귀 모션 밸런스를 맞춘 트랜지션 */
             transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.8s ease, z-index 0.3s ease;
             z-index: 1; 
         }
@@ -98,14 +141,14 @@
         .promo-item img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* 평소 정렬 상태에서 원본 형태 그대로 보존 */
+            object-fit: contain; 
             display: block;
             border-radius: 6px;
         }
 
         /* 중앙으로 이동하면서 1.5배 대형 확대 */
         .promo-item.highlight {
-            z-index: 100; /* 최상위 레이어로 인상 */
+            z-index: 100; 
             transform: translate(var(--move-x), var(--move-y)) scale(1.5) !important;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(139, 92, 246, 0.4);
         }
@@ -115,7 +158,7 @@
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.65); /* 딤 효과 강도 */
+            background: rgba(0, 0, 0, 0.65); 
             z-index: 2; 
             opacity: 0;
             transition: opacity 0.6s ease;
@@ -123,7 +166,6 @@
             border-radius: 6px;
         }
 
-        /* 한 포스터가 하이라이트 되면, 나머지 포스터들에만 딤 오버레이 적용 */
         .promo-container.active-dim .promo-item:not(.highlight)::after {
             opacity: 1;
         }
@@ -132,8 +174,17 @@
 <body>
 
     <div class="side-title-bar">
-        <div class="main-title">성일정보고</div>
-        <div class="sub-title">우리의 순간, 우리의 축제</div>
+        <div class="title-text-group">
+            <div class="main-title">성일정보고</div>
+            <div class="sub-title">우리의 순간, 우리의 축제</div>
+        </div>
+        
+        <div class="qr-wrapper">
+            <div class="qr-box">
+                <img src="posters/qr.jpg" alt="모바일 페이지 QR코드">
+            </div>
+            <div class="qr-caption">QR 코드로 모바일 페이지 접속</div>
+        </div>
     </div>
 
     <div class="promo-container" id="gridContainer">
@@ -176,37 +227,29 @@
         document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById("gridContainer");
             const items = document.querySelectorAll(".promo-item");
-            const viewTime = 4500; // 팝업 유지 시간 (4.5초)
+            const viewTime = 4500; 
 
-            let randomSequence = []; // 무작위 인덱스 순서를 담을 배열
-            let sequenceIndex = 0;   // 현재 랜덤 배열 내에서의 진행 순서
+            let randomSequence = []; 
+            let sequenceIndex = 0;   
 
-            // 피셔-예이츠 기반의 중복 없는 셔플 함수
             function createRandomSequence() {
-                // 1. 0부터 32까지 인덱스 배열 생성
                 let indices = Array.from({ length: items.length }, (_, i) => i);
-                
-                // 2. 무작위로 완전히 뒤섞기
                 for (let i = indices.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [indices[i], indices[j]] = [indices[j], indices[i]];
                 }
-                
                 randomSequence = indices;
-                sequenceIndex = 0; // 한 사이클 완료 후 초기화
+                sequenceIndex = 0; 
             }
 
             function playHighlight() {
-                // [체크] 한 사이클(33개)을 다 돌았다면 순서를 새로 무작위로 섞음
                 if (sequenceIndex >= randomSequence.length) {
                     createRandomSequence();
                 }
 
-                // 이번 차례에 띄울 랜덤 포스터 인덱스 추출
                 const currentPosterIndex = randomSequence[sequenceIndex];
                 const target = items[currentPosterIndex];
 
-                // 1. 모든 아이템 상태 초기화 (제자리 복귀)
                 items.forEach(item => {
                     item.classList.remove("highlight");
                     item.style.setProperty('--move-x', '0px');
@@ -214,35 +257,28 @@
                 });
                 container.classList.remove("active-dim");
 
-                // 2. 미세한 텀(0.1초)을 두고 계산된 타겟을 화면 중앙으로 팝업
                 setTimeout(() => {
-                    // 우측 그리드 영역(container)의 중심 좌표 계산
                     const containerRect = container.getBoundingClientRect();
                     const containerCenterX = containerRect.left + containerRect.width / 2;
                     const containerCenterY = containerRect.top + containerRect.height / 2;
 
-                    // 선택된 포스터의 원래 자리 중심 좌표 계산
                     const targetRect = target.getBoundingClientRect();
                     const targetCenterX = targetRect.left + targetRect.width / 2;
                     const targetCenterY = targetRect.top + targetRect.height / 2;
 
-                    // 정중앙 이동 거리(X, Y) 연산
                     const moveX = containerCenterX - targetCenterX;
                     const moveY = containerCenterY - targetCenterY;
 
-                    // CSS 프로퍼티 변수로 동적 연산 좌표값 바인딩
                     target.style.setProperty('--move-x', `${moveX}px`);
                     target.style.setProperty('--move-y', `${moveY}px`);
                     
                     container.classList.add("active-dim");
                     target.classList.add("highlight");
 
-                    // 다음 포스터 순서로 전진
                     sequenceIndex++;
                 }, 100); 
             }
 
-            // 첫 가동 시 즉시 랜덤 배열을 한 세트 만들어 루프 가동
             createRandomSequence();
             playHighlight();
             setInterval(playHighlight, viewTime);
