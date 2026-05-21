@@ -67,7 +67,7 @@
             height: 100%;
             padding: 30px; /* 외곽 여백으로 여유 공간 확보 */
             display: grid;
-            grid-template-columns: repeat(9, 1fr); /* 9열 구조 */
+            grid-template-columns: repeat(12, 1fr); /* 9열 구조 */
             gap: 15px; 
             justify-content: center;
             align-content: center;
@@ -79,39 +79,48 @@
             position: relative;
             width: 100%;
             height: 100%;
-            overflow: hidden;
+            
+            /* 포스터가 커질 때 원본 비율 마진이 박스에 잘리지 않도록 유연하게 설정 */
+            overflow: visible; 
+            
             border-radius: 6px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             background-color: #000;
-            /* 부드러운 확대/축소를 위한 트랜지션 */
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s ease;
+            
+            /* 평소 크기 고정 scale(1) */
+            transform: scale(1) translate(0px, 0px); 
+            
+            /* 이동과 복귀 모션 밸런스를 맞춘 트랜지션 */
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.8s ease, z-index 0.3s ease;
             z-index: 1; 
         }
 
         .promo-item img {
             width: 100%;
             height: 100%;
-            object-fit: contain; 
+            object-fit: contain; /* 평소 정렬 상태에서 원본 형태 그대로 보존 */
             display: block;
+            border-radius: 6px;
         }
 
-        /* [수정] 자기 자리에서 확대될 때 테두리(border) 제거 */
+        /* 중앙으로 이동하면서 1.5배 대형 확대 */
         .promo-item.highlight {
-            transform: scale(1.3); /* 1.3배 확대 */
-            z-index: 50; /* 최상위 레이어로 띄움 */
-            /* 테두리 대신 그림자를 조금 더 깊게 주어 입체감 부여 */
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(139, 92, 246, 0.3);
+            z-index: 100; /* 최상위 레이어로 인상 */
+            transform: translate(var(--move-x), var(--move-y)) scale(1.5) !important;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(139, 92, 246, 0.4);
         }
 
-        /* 주변 포스터들을 어둡게 가려줄 오버레이 설정 */
+        /* 주변 포스터들을 차분하게 가려줄 오버레이 설정 */
         .promo-item::after {
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); /* 딤 효과 강도 */
+            background: rgba(0, 0, 0, 0.65); /* 딤 효과 강도 */
             z-index: 2; 
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+            border-radius: 6px;
         }
 
         /* 한 포스터가 하이라이트 되면, 나머지 포스터들에만 딤 오버레이 적용 */
@@ -167,27 +176,76 @@
         document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById("gridContainer");
             const items = document.querySelectorAll(".promo-item");
-            let currentIndex = 0;
-            const viewTime = 4000; // 포스터가 커져 있는 시간 (4초)
+            const viewTime = 4500; // 팝업 유지 시간 (4.5초)
 
-            function startHighlightLoop() {
-                setInterval(() => {
-                    // 1. 초기화
-                    items.forEach(item => item.classList.remove("highlight"));
-                    container.classList.remove("active-dim");
+            let randomSequence = []; // 무작위 인덱스 순서를 담을 배열
+            let sequenceIndex = 0;   // 현재 랜덤 배열 내에서의 진행 순서
 
-                    // 2. 부드러운 전환을 위해 아주 미세한 텀(0.05초) 후 다음 포스터 줌인
-                    setTimeout(() => {
-                        container.classList.add("active-dim");
-                        items[currentIndex].classList.add("highlight");
-                        
-                        currentIndex = (currentIndex + 1) % items.length;
-                    }, 50);
-
-                }, viewTime);
+            // 피셔-예이츠 기반의 중복 없는 셔플 함수
+            function createRandomSequence() {
+                // 1. 0부터 32까지 인덱스 배열 생성
+                let indices = Array.from({ length: items.length }, (_, i) => i);
+                
+                // 2. 무작위로 완전히 뒤섞기
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+                
+                randomSequence = indices;
+                sequenceIndex = 0; // 한 사이클 완료 후 초기화
             }
 
-            setTimeout(startHighlightLoop, 1000);
+            function playHighlight() {
+                // [체크] 한 사이클(33개)을 다 돌았다면 순서를 새로 무작위로 섞음
+                if (sequenceIndex >= randomSequence.length) {
+                    createRandomSequence();
+                }
+
+                // 이번 차례에 띄울 랜덤 포스터 인덱스 추출
+                const currentPosterIndex = randomSequence[sequenceIndex];
+                const target = items[currentPosterIndex];
+
+                // 1. 모든 아이템 상태 초기화 (제자리 복귀)
+                items.forEach(item => {
+                    item.classList.remove("highlight");
+                    item.style.setProperty('--move-x', '0px');
+                    item.style.setProperty('--move-y', '0px');
+                });
+                container.classList.remove("active-dim");
+
+                // 2. 미세한 텀(0.1초)을 두고 계산된 타겟을 화면 중앙으로 팝업
+                setTimeout(() => {
+                    // 우측 그리드 영역(container)의 중심 좌표 계산
+                    const containerRect = container.getBoundingClientRect();
+                    const containerCenterX = containerRect.left + containerRect.width / 2;
+                    const containerCenterY = containerRect.top + containerRect.height / 2;
+
+                    // 선택된 포스터의 원래 자리 중심 좌표 계산
+                    const targetRect = target.getBoundingClientRect();
+                    const targetCenterX = targetRect.left + targetRect.width / 2;
+                    const targetCenterY = targetRect.top + targetRect.height / 2;
+
+                    // 정중앙 이동 거리(X, Y) 연산
+                    const moveX = containerCenterX - targetCenterX;
+                    const moveY = containerCenterY - targetCenterY;
+
+                    // CSS 프로퍼티 변수로 동적 연산 좌표값 바인딩
+                    target.style.setProperty('--move-x', `${moveX}px`);
+                    target.style.setProperty('--move-y', `${moveY}px`);
+                    
+                    container.classList.add("active-dim");
+                    target.classList.add("highlight");
+
+                    // 다음 포스터 순서로 전진
+                    sequenceIndex++;
+                }, 100); 
+            }
+
+            // 첫 가동 시 즉시 랜덤 배열을 한 세트 만들어 루프 가동
+            createRandomSequence();
+            playHighlight();
+            setInterval(playHighlight, viewTime);
         });
     </script>
 </body>
