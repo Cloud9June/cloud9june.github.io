@@ -55,20 +55,25 @@
                 srcdoc="
                 <style>
                     html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
+                    
+                    /* 1. 이미지를 감싸는 부모 박스도 화면에 꽉 차게 설정 */
                     .poster-wrap { width:100%; height:100%; position:relative; overflow:hidden; }
                     
-                    /* 이미지 기본 설정 (우측 100% 위치에 대기) */
+                    /* 2. [★ 중요] 이미지가 칸 크기를 절대 넘어가지 못하도록 수정 */
                     .poster-wrap img { 
-                        width:100%; height:100%; object-fit:cover; 
-                        position:absolute; top:0; left:0; 
+                        width: 100%;          /* 칸 너비에 100% 맞춤 */
+                        height: 100%;         /* 칸 높이에 100% 맞춤 */
+                        object-fit: contain;    /* 비율을 유지하면서 칸에 꽉 차게 자름 (꽉 채우기) */
+                        /* 만약 사진 전체가 잘림 없이 다 나와야 한다면 cover 대신 contain 사용 */
+                        
+                        position:absolute;
+                        top:0; 
+                        left:0; 
                         transform: translateX(100%); 
                         transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); 
                     }
                     
-                    /* 활성화된 이미지 (제자리로 슬라이드 진입) */
                     .poster-wrap img.active { transform: translateX(0); z-index: 2; }
-                    
-                    /* 퇴장하는 이미지 (좌측 -100% 위치로 슬라이드 퇴장) */
                     .poster-wrap img.exit { transform: translateX(-100%); z-index: 1; }
                 </style>
                 <div class='poster-wrap' id='meal-slider'>
