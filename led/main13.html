@@ -3,117 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>비디오월 5분할 레이아웃</title>
+    <title>비디오월 분할 레이아웃</title>
     <link rel="stylesheet" href="style8.css">
 </head>
 <body>
     <div class="container">
         
-        <div class="item notice">
-            <iframe
-                srcdoc="
-                <style>
-                    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
-                    .poster-wrap { width:100%; height:100%; display:flex; justify-content:center; align-items:center; gap:8px; overflow:hidden; }
-                    .img-box { width:48%; height:100%; position:relative; overflow:hidden; }
-                    .img-box img { width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:0; transition:opacity 1s ease-in-out; }
-                    .img-box img.active { opacity:1; z-index:1; }
-                </style>
-                <div class='poster-wrap'>
-                    <div class='img-box' id='box1'>
-                        <img src='images/model1.jpg' alt='모델 사진 1' class='active'>
-                        <img src='images/model3.jpg' alt='모델 사진 3'>
-                    </div>
-                    <div class='img-box' id='box2'>
-                        <img src='images/model2.jpg' alt='모델 사진 2' class='active'>
-                        <img src='images/model4.jpg' alt='모델 사진 4'>
-                    </div>
-                </div>
-                <script>
-                    function setupSlider(boxId, delayTime) {
-                        const box = document.getElementById(boxId);
-                        const imgs = box.getElementsByTagName('img');
-                        let currentIndex = 0;
-                        setTimeout(() => {
-                            setInterval(() => {
-                                imgs[currentIndex].classList.remove('active');
-                                currentIndex = (currentIndex + 1) % imgs.length;
-                                imgs[currentIndex].classList.add('active');
-                            }, 10000);
-                        }, delayTime);
-                    }
-                    setupSlider('box1', 0);
-                    setupSlider('box2', 1500);
-                </script>
-                "
-                frameborder="0"
-            ></iframe>
+        <div class="item slide-area1">
+            <iframe src="slide1.html" frameborder="0"></iframe>
         </div>
 
-        <div class="item meal">
-            <iframe
-                srcdoc="
-                <style>
-                    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
-                    
-                    /* 1. 이미지를 감싸는 부모 박스도 화면에 꽉 차게 설정 */
-                    .poster-wrap { width:100%; height:100%; position:relative; overflow:hidden; }
-                    
-                    /* 2. [★ 중요] 이미지가 칸 크기를 절대 넘어가지 못하도록 수정 */
-                    .poster-wrap img { 
-                        width: 100%;          /* 칸 너비에 100% 맞춤 */
-                        height: 100%;         /* 칸 높이에 100% 맞춤 */
-                        object-fit: fill;    /* 비율을 유지하면서 칸에 꽉 차게 자름 (꽉 채우기) */
-                        /* 만약 사진 전체가 잘림 없이 다 나와야 한다면 cover 대신 contain 사용 */
-                        
-                        position:absolute; 
-                        top:0; 
-                        left:0; 
-                        transform: translateX(100%); 
-                        transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); 
-                    }
-                    
-                    .poster-wrap img.active { transform: translateX(0); z-index: 2; }
-                    .poster-wrap img.exit { transform: translateX(-100%); z-index: 1; }
-                </style>
-                <div class='poster-wrap' id='meal-slider'>
-                    <img src='posters/global1.png' alt='해외연수 사진 1' class='active'>
-                    <img src='posters/global2.png' alt='해외연수 사진 2'>
-                </div>
-                <script>
-                    function setupSingleSlider(sliderId) {
-                        const slider = document.getElementById(sliderId);
-                        const imgs = slider.getElementsByTagName('img');
-                        let currentIndex = 0;
-
-                        setInterval(() => {
-                            // 1. 현재 활성화된 이미지를 'exit'(퇴장) 상태로 변경
-                            const prevIndex = currentIndex;
-                            imgs[prevIndex].classList.remove('active');
-                            imgs[prevIndex].classList.add('exit');
-
-                            // 2. 다음 이미지 계산 및 'active'(진입) 상태로 변경
-                            currentIndex = (currentIndex + 1) % imgs.length;
-                            imgs[currentIndex].classList.remove('exit'); 
-                            imgs[currentIndex].classList.add('active');
-
-                            // 3. 퇴장이 끝난 이미지 클래스 정리 (0.8초 뒤)
-                            setTimeout(() => {
-                                imgs[prevIndex].classList.remove('exit');
-                            }, 800);
-
-                        }, 10000); // 10초마다 이미지 교체
-                    }
-
-                    // 슬라이더 실행
-                    setupSingleSlider('meal-slider');
-                </script>
-                "
-                frameborder="0"
-            ></iframe>
+        <div class="item slide-area2">
+            <iframe src="slide2.html" frameborder="0"></iframe>
         </div>
         
-        <div class="item calendar">
+        <div class="item calendar-area">
             <div class="calendar-split">
                 <iframe class="billboard-frame" src="billboard.html" frameborder="0"></iframe>
                 <iframe
@@ -124,65 +28,10 @@
             </div>
         </div>
         
-        <div class="item youtube">
-            <iframe
-                srcdoc="
-                <style>
-                    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
-                    .poster-wrap { width:100%; height:100%; display:flex; justify-content:center; align-items:center; gap:8px; overflow:hidden; }
-                    .img-box { width:48%; height:100%; position:relative; overflow:hidden; }
-                    .img-box img { 
-                        width:100%; height:100%; object-fit:cover; 
-                        position:absolute; top:0; left:0; 
-                        transform: translateX(100%); 
-                        transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); 
-                    }
-                    .img-box img.active { transform: translateX(0); z-index: 2; }
-                    .img-box img.exit { transform: translateX(-100%); z-index: 1; }
-                </style>
-                <div class='poster-wrap'>
-                    <div class='img-box' id='box1'>
-                        <img src='posters/1.jpg' alt='모델 사진 1' class='active'>
-                        <img src='posters/3.jpg' alt='모델 사진 3'>
-                        <img src='posters/5.jpg' alt='모델 사진 3'>
-                        <img src='posters/7.jpg' alt='모델 사진 3'>
-                        <img src='posters/9.jpg' alt='모델 사진 3'>
-                    </div>
-                    <div class='img-box' id='box2'>
-                        <img src='posters/2.jpg' alt='모델 사진 2' class='active'>
-                        <img src='posters/4.jpg' alt='모델 사진 4'>
-                        <img src='posters/6.jpg' alt='모델 사진 4'>
-                        <img src='posters/8.jpg' alt='모델 사진 4'>
-                        <img src='posters/10.jpg' alt='모델 사진 4'>
-                    </div>
-                </div>
-                <script>
-                    function setupSlider(boxId, delayTime) {
-                        const box = document.getElementById(boxId);
-                        const imgs = box.getElementsByTagName('img');
-                        let currentIndex = 0;
-                        setTimeout(() => {
-                            setInterval(() => {
-                                const prevIndex = currentIndex;
-                                imgs[prevIndex].classList.remove('active');
-                                imgs[prevIndex].classList.add('exit');
-                                currentIndex = (currentIndex + 1) % imgs.length;
-                                imgs[currentIndex].classList.remove('exit'); 
-                                imgs[currentIndex].classList.add('active');
-                                setTimeout(() => {
-                                    imgs[prevIndex].classList.remove('exit');
-                                }, 800);
-                            }, 10000);
-                        }, delayTime);
-                    }
-                    setupSlider('box1', 0);
-                    setupSlider('box2', 1500);
-                </script>
-                "
-                frameborder="0"
-            ></iframe>
+        <div class="item slide-area3">
+            <iframe src="slide3.html" frameborder="0"></iframe>
         </div>
 
-        </div>
+    </div>
 </body>
 </html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
+        .poster-wrap { width:100%; height:100%; position:relative; overflow:hidden; }
+        
+        /* translate3d 및 will-change를 적용하여 GPU 최적화 */
+        .poster-wrap img { 
+            width: 100%;
+            height: 100%;
+            object-fit: fill; 
+            position:absolute; 
+            top:0; 
+            left:0; 
+            transform: translate3d(100%, 0, 0); 
+            will-change: transform;
+            transition: transform 0.8s ease; 
+        }
+        .poster-wrap img.active { transform: translate3d(0, 0, 0); z-index: 2; }
+        .poster-wrap img.exit { transform: translate3d(-100%, 0, 0); z-index: 1; }
+    </style>
+</head>
+<body>
+    <div class='poster-wrap' id='meal-slider'>
+        <img src='posters/global1.png' alt='해외연수 사진 1' class='active'>
+        <img src='posters/global2.png' alt='해외연수 사진 2'>
+    </div>
+    <script>
+        function setupSingleSlider(sliderId) {
+            const slider = document.getElementById(sliderId);
+            const imgs = slider.getElementsByTagName('img');
+            let currentIndex = 0;
+
+            setInterval(() => {
+                const prevIndex = currentIndex;
+                imgs[prevIndex].classList.remove('active');
+                imgs[prevIndex].classList.add('exit');
+
+                currentIndex = (currentIndex + 1) % imgs.length;
+                imgs[currentIndex].classList.remove('exit'); 
+                imgs[currentIndex].classList.add('active');
+
+                setTimeout(() => {
+                    imgs[prevIndex].classList.remove('exit');
+                }, 800);
+            }, 10000);
+        }
+        setupSingleSlider('meal-slider');
+    </script>
+</body>
+</html>
