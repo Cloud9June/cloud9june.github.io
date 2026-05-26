@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 성일 한마음대축전 & 성일제</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        :root {
+            --bg-color: #0b0b0f;
+            --card-bg: #16161e;
+            --accent-color: #8b5cf6; /* 트렌디한 네온 퍼플 */
+            --accent-glow: rgba(139, 92, 246, 0.15);
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+            --glass-bg: rgba(22, 22, 30, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Pretendard Variable", Pretendard, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            width: 100vw;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto; 
+            color: var(--text-main);
+            padding-bottom: 30px;
+        }
+
+        /* 1. 상단 앱 헤더 (글래스모피즘 블러 효과) */
+        .mobile-header {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 16px 16px 14px 16px;
+            text-align: center;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+            z-index: 500;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .mobile-header h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 14px;
+        }
+
+        /* 2. 요즘 스타일 모던 세그먼트형 탭 메뉴 (Pill Style) */
+        .tab-menu-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 25px;
+            display: flex;
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 0;
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 21px;
+            z-index: 2;
+            transition: color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 활성화 상태 인디케이터 백그라운드 효과 */
+        .tab-btn.active {
+            color: var(--text-main);
+            background: var(--accent-color);
+            box-shadow: 0 4px 12px var(--accent-glow);
+            font-weight: 700;
+        }
+
+        /* 3. 콘텐츠 구역 공통 및 부드러운 페이드인 애니메이션 */
+        .content-section {
+            padding: 20px 16px;
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* -------------------------------------------
+           [디자인 개편] 1. 축제 부스 (사진첩 앱 감성 갤러리)
+        ------------------------------------------- */
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; /* 여백을 스퀘어하게 조절 */
+            width: 100%;
+        }
+
+        .gallery-item {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1.3; 
+            background-color: var(--card-bg);
+            border-radius: 8px; /* 요즘 스타일 라운딩 */
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .gallery-item:active { 
+            transform: scale(0.96); 
+        }
+        
+        .gallery-item img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+        }
+
+        /* 대형 확대 팝업 모달 */
+        .fullscreen-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(5, 5, 8, 0.98); 
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .fullscreen-modal.active { opacity: 1; pointer-events: auto; }
+        .fullscreen-modal img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        .fullscreen-modal.active img { transform: scale(1); }
+        .close-btn { position: absolute; top: 24px; right: 24px; color: #ffffff; font-size: 2rem; font-weight: 300; z-index: 1010; width: 44px; height: 44px; display: flex; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.08); border-radius: 50%; backdrop-filter: blur(5px); }
+
+        /* -------------------------------------------
+           [디자인 개편] 2. 축제 공연 (앱 피드형 인터페이스)
+        ------------------------------------------- */
+        /* 메인 정보 요약 네온 카드 */
+        .info-card {
+            background: linear-gradient(145deg, #16161e, #1c1c24);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 12px 8px;
+            font-size: 0.95rem;
+        }
+
+        .info-label { color: var(--sub-accent); font-weight: 700; }
+        .info-value { color: var(--text-main); font-weight: 500; }
+
+        /* 모던 알림장 에티켓 박스 */
+        .etiquette-box {
+            background-color: rgba(239, 68, 68, 0.06);
+            border-left: 3px solid #ef4444;
+            padding: 12px;
+            margin-top: 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.82rem;
+            color: #fca5a5;
+            line-height: 1.5;
+        }
+
+        /* 스트리밍 타임라인 스타일 섹션 헤더 */
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 28px 0 14px 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background-color: var(--accent-color);
+            border-radius: 2px;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        /* 힙한 공연 피드 리스트 */
+        .program-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .program-item {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: background-color 0.2s ease;
+        }
+
+        .program-item:active {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .program-num {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--sub-accent);
+            width: 24px;
+        }
+
+        .program-name {
+            flex: 1;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--text-main);
+            padding-left: 4px;
+        }
+
+        /* 라벨 배지 시스템 싹 리뉴얼 */
+        .program-school {
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: -0.3px;
+        }
+
+        .school-info { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .school-high { background-color: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .school-both { background-color: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .school-out { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+    </style>
+</head>
+<body>
+
+    <header class="mobile-header">
+        <h1>2026 성일 한마음대축전 & 성일제</h1>
+        <div class="tab-menu-container">
+            <button class="tab-btn active" id="btn-concert" onclick="switchTab('concert')">축제 공연</button>
+            <button class="tab-btn" id="btn-booth" onclick="switchTab('booth')">축제 부스</button>
+        </div>
+    </header>
+
+    <div id="concertSection" class="content-section active">
+        <div class="info-card">
+            <div class="info-grid">
+                <div class="info-label">행사</div>
+                <div class="info-value">한마음대축전 및 성일제 가이드북</div>
+                
+                <div class="info-label">일시</div>
+                <div class="info-value">2026. 05. 21 (목) PM 1:30 ~ 17:00</div>
+                
+                <div class="info-label">장소</div>
+                <div class="info-value">성남실내체육관</div>
+            </div>
+            
+            <div class="etiquette-box">
+                ⚠️ <b>안전 가이드라인</b><br>
+                1. 지정석 준수 및 자리 이탈 금지 | 2. 체육관 내 청결 유지 | 3. 진행에 적극 협조하기<br>
+                ※ 본 무대는 전/후반전으로 구성되며 중간에 20분의 정비 시간이 있습니다.
+            </div>
+        </div>
+
+        <h2 class="section-title">전반전 무대 라인업</h2>
+        <div class="program-list">
+            <div class="program-item"><div class="program-num">01</div><div class="program-name">미라클 나인</div><span class="program-school school-high">성일고</span></div>
+            <div class="program-item"><div class="program-num">02</div><div class="program-name">EDEN</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">03</div><div class="program-name">악마의 래핑</div><span class="program-school school-high">성일고</span></div>
+            <div class="program-item"><div class="program-num">04</div><div class="program-name">창마과 트와이스</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">05</div><div class="program-name">오진대</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">06</div><div class="program-name">섹시킹 프미나</div><span class="program-school school-high">성일고</span></div>
+            <div class="program-item"><div class="program-num">07</div><div class="program-name">진리 정의 애국</div><span class="program-school school-high">성일고</span></div>
+            <div class="program-item"><div class="program-num">08</div><div class="program-name">SPR 홍보동아리</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">09</div><div class="program-name">DREAM</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">10</div><div class="program-name">야르티스</div><span class="program-school school-high">성일고</span></div>
+        </div>
+
+        <h2 class="section-title">후반전 무대 라인업</h2>
+        <div class="program-list">
+            <div class="program-item"><div class="program-num">01</div><div class="program-name">ZEST</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">02</div><div class="program-name">OKASHII</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">03</div><div class="program-name">야차</div><span class="program-school school-high">성일고</span></div>
+            <div class="program-item"><div class="program-num">04</div><div class="program-name">우리집 정수기</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">05</div><div class="program-name">잘못된 만남</div><span class="program-school school-both">성일정보고&성일고</span></div>
+            <div class="program-item"><div class="program-num">06</div><div class="program-name">트리케라톱스</div><span class="program-school school-high">성일고</span></div>
+            <div class="program-item"><div class="program-num">07</div><div class="program-name">스몰 뱅</div><span class="program-school school-high">성일고</span></div>
+            <div class="program-item"><div class="program-num">08</div><div class="program-name">회계 사이에 피어난 금융</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">09</div><div class="program-name">LET ME DANCE(LMD)</div><span class="program-school school-info">성일정보고</span></div>
+            <div class="program-item"><div class="program-num">10</div><div class="program-name">찬조팀</div><span class="program-school school-out">외부 초청</span></div>
+        </div>
+    </div>
+
+    <div id="boothSection" class="content-section">
+        <div class="gallery-container">
+            <div class="gallery-item"><img src="posters/1.jpg" alt="부스 1"></div>
+            <div class="gallery-item"><img src="posters/2.jpg" alt="부스 2"></div>
+            <div class="gallery-item"><img src="posters/3.jpg" alt="부스 3"></div>
+            <div class="gallery-item"><img src="posters/4.jpg" alt="부스 4"></div>
+            <div class="gallery-item"><img src="posters/5.jpg" alt="부스 5"></div>
+            <div class="gallery-item"><img src="posters/6.jpg" alt="부스 6"></div>
+            <div class="gallery-item"><img src="posters/7.jpg" alt="부스 7"></div>
+            <div class="gallery-item"><img src="posters/8.jpg" alt="부스 8"></div>
+            <div class="gallery-item"><img src="posters/9.jpg" alt="부스 9"></div>
+            <div class="gallery-item"><img src="posters/10.jpg" alt="부스 10"></div>
+            <div class="gallery-item"><img src="posters/11.png" alt="부스 11"></div>
+            <div class="gallery-item"><img src="posters/12.png" alt="부스 12"></div>
+            <div class="gallery-item"><img src="posters/13.png" alt="부스 13"></div>
+            <div class="gallery-item"><img src="posters/14.png" alt="부스 14"></div>
+            <div class="gallery-item"><img src="posters/15.png" alt="부스 15"></div>
+            <div class="gallery-item"><img src="posters/16.png" alt="부스 16"></div>
+            <div class="gallery-item"><img src="posters/17.png" alt="부스 17"></div>
+            <div class="gallery-item"><img src="posters/18.png" alt="부스 18"></div>
+            <div class="gallery-item"><img src="posters/19.jpg" alt="부스 19"></div>
+            <div class="gallery-item"><img src="posters/20.jpg" alt="부스 20"></div>
+            <div class="gallery-item"><img src="posters/21.png" alt="부스 21"></div>
+            <div class="gallery-item"><img src="posters/22.png" alt="부스 22"></div>
+            <div class="gallery-item"><img src="posters/23.png" alt="부스 23"></div>
+            <div class="gallery-item"><img src="posters/24.png" alt="부스 24"></div>
+            <div class="gallery-item"><img src="posters/25.png" alt="부스 25"></div>
+            <div class="gallery-item"><img src="posters/26.png" alt="부스 26"></div>
+            <div class="gallery-item"><img src="posters/27.png" alt="부스 27"></div>
+            <div class="gallery-item"><img src="posters/28.png" alt="부스 28"></div>
+            <div class="gallery-item"><img src="posters/29.png" alt="부스 29"></div>
+            <div class="gallery-item"><img src="posters/30.png" alt="부스 30"></div>
+            <div class="gallery-item"><img src="posters/31.jpg" alt="부스 31"></div>
+            <div class="gallery-item"><img src="posters/32.png" alt="부스 32"></div>
+            <div class="gallery-item"><img src="posters/33.jpg" alt="부스 33"></div>
+        </div>
+    </div>
+
+    <div class="fullscreen-modal" id="photoModal">
+        <div class="close-btn">&times;</div>
+        <img src="" id="modalImg" alt="확대 이미지">
+    </div>
+
+    <script>
+        // 1. 세그먼트 스위칭 최적화 함수
+        function switchTab(tabName) {
+            const buttons = document.querySelectorAll('.tab-btn');
+            const sections = document.querySelectorAll('.content-section');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            sections.forEach(sec => sec.classList.remove('active'));
+
+            if (tabName === 'booth') {
+                document.getElementById('btn-booth').classList.add('active');
+                document.getElementById('boothSection').classList.add('active');
+            } else {
+                document.getElementById('btn-concert').classList.add('active');
+                document.getElementById('concertSection').classList.add('active');
+            }
+            // 전환할 때 모바일 시점 부드럽게 최상단 복원
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 2. 모달 제어 시스템
+        document.addEventListener("DOMContentLoaded", () => {
+            const items = document.querySelectorAll(".gallery-item");
+            const modal = document.getElementById("photoModal");
+            const modalImg = document.getElementById("modalImg");
+
+            items.forEach(item => {
+                item.addEventListener("click", () => {
+                    const originSrc = item.querySelector("img").getAttribute("src");
+                    modalImg.setAttribute("src", originSrc);
+                    modal.classList.add("active");
+                });
+            });
+
+            modal.addEventListener("click", () => {
+                modal.classList.remove("active");
+                setTimeout(() => { modalImg.setAttribute("src", ""); }, 300);
+            });
+        });
+    </script>
+</body>
+</html>

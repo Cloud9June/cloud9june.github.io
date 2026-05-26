@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비디오월 5분할 레이아웃</title>
+    <link rel="stylesheet" href="style7.css">
+</head>
+<body>
+    <div class="container">
+        
+        <div class="item notice">
+            <iframe
+                srcdoc="
+                <style>
+                    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
+                    .poster-wrap { width:100%; height:100%; display:flex; justify-content:center; align-items:center; gap:8px; overflow:hidden; }
+                    .img-box { width:48%; height:100%; position:relative; overflow:hidden; }
+                    .img-box img { width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:0; transition:opacity 1s ease-in-out; }
+                    .img-box img.active { opacity:1; z-index:1; }
+                </style>
+                <div class='poster-wrap'>
+                    <div class='img-box' id='box1'>
+                        <img src='images/model1.jpg' alt='모델 사진 1' class='active'>
+                        <img src='images/model3.jpg' alt='모델 사진 3'>
+                    </div>
+                    <div class='img-box' id='box2'>
+                        <img src='images/model2.jpg' alt='모델 사진 2' class='active'>
+                        <img src='images/model4.jpg' alt='모델 사진 4'>
+                    </div>
+                </div>
+                <script>
+                    function setupSlider(boxId, delayTime) {
+                        const box = document.getElementById(boxId);
+                        const imgs = box.getElementsByTagName('img');
+                        let currentIndex = 0;
+
+                        // 지정된 딜레이(시차) 후에 10초 주기로 반복 실행
+                        setTimeout(() => {
+                            setInterval(() => {
+                                imgs[currentIndex].classList.remove('active');
+                                currentIndex = (currentIndex + 1) % imgs.length;
+                                imgs[currentIndex].classList.add('active');
+                            }, 10000); // 10초마다 변경
+                        }, delayTime);
+                    }
+
+                    // 첫 번째 사진(왼쪽)은 즉시(0초 딜레이) 10초 타이머 시작
+                    setupSlider('box1', 0);
+                    // 두 번째 사진(오른쪽)은 1.5초 후에 10초 타이머 시작 (순차적 변경 효과)
+                    setupSlider('box2', 1500);
+                </script>
+                "
+                frameborder="0"
+            ></iframe>
+        </div>
+
+        <div class="item meal">
+            <iframe src="https://script.google.com/macros/s/AKfycbw7Z6eFhWCEM9apuZvw8s1uV1SlA23ddJndMV5pwsq4KOGS55CF6BVBG1gUFGTx51R-/exec" frameborder="0"></iframe>
+        </div>
+        
+        <div class="item calendar">
+            <div class="calendar-split">
+                <iframe class="billboard-frame" src="billboard.html" frameborder="0"></iframe>
+                <iframe
+                    class="calendar-main"
+                    src="https://script.google.com/macros/s/AKfycbwPfGaxe__C6EY_-6hfGwBt1e0f864RWV5qSsLPDQlWLS9R0VB5la7BEclodrTGOR_0/exec"
+                    frameborder="0"
+                ></iframe>
+            </div>
+        </div>
+        
+        <div class="item youtube">
+            <iframe
+                srcdoc="
+                <style>
+                    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
+                    .poster-wrap { width:100%; height:100%; display:flex; justify-content:center; align-items:center; gap:8px; overflow:hidden; }
+                    
+                    /* 이미지 박스 기본 설정 */
+                    .img-box { width:48%; height:100%; position:relative; overflow:hidden; }
+                    
+                    /* 모든 이미지는 기본적으로 오른쪽 바깥(100%)에 숨겨둠 */
+                    .img-box img { 
+                        width:100%; height:100%; object-fit:cover; 
+                        position:absolute; top:0; left:0; 
+                        transform: translateX(100%); 
+                        transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); 
+                    }
+                    
+                    /* 활성화된 이미지는 제자리(0)로 이동 */
+                    .img-box img.active { transform: translateX(0); z-index: 2; }
+                    
+                    /* 나가는 이미지는 왼쪽 바깥(-100%)으로 이동하며 자연스럽게 퇴장 */
+                    .img-box img.exit { transform: translateX(-100%); z-index: 1; }
+                </style>
+                <div class='poster-wrap'>
+                    <div class='img-box' id='box1'>
+                        <img src='posters/1.jpg' alt='모델 사진 1' class='active'>
+                        <img src='posters/3.jpg' alt='모델 사진 3'>
+                        <img src='posters/5.jpg' alt='모델 사진 3'>
+                        <img src='posters/7.jpg' alt='모델 사진 3'>
+                        <img src='posters/9.jpg' alt='모델 사진 3'>
+                    </div>
+
+                    <div class='img-box' id='box2'>
+                        <img src='posters/2.jpg' alt='모델 사진 2' class='active'>
+                        <img src='posters/4.jpg' alt='모델 사진 4'>
+                        <img src='posters/6.jpg' alt='모델 사진 4'>
+                        <img src='posters/8.jpg' alt='모델 사진 4'>
+                        <img src='posters/10.jpg' alt='모델 사진 4'>
+                    </div>
+                </div>
+                <script>
+                    function setupSlider(boxId, delayTime) {
+                        const box = document.getElementById(boxId);
+                        const imgs = box.getElementsByTagName('img');
+                        let currentIndex = 0;
+
+                        setTimeout(() => {
+                            setInterval(() => {
+                                // 1. 현재 활성화된 이미지를 'exit'(퇴장) 상태로 변경
+                                const prevIndex = currentIndex;
+                                imgs[prevIndex].classList.remove('active');
+                                imgs[prevIndex].classList.add('exit');
+
+                                // 2. 다음 이미지 번호 계산 및 'active'(진입) 상태로 변경
+                                currentIndex = (currentIndex + 1) % imgs.length;
+                                // 다음 이미지가 우측에서 대기할 수 있도록 미리 exit 클래스 제거
+                                imgs[currentIndex].classList.remove('exit'); 
+                                imgs[currentIndex].classList.add('active');
+
+                                // 3. 완전히 퇴장한 이미지는 애니메이션이 끝난 후(0.8초 뒤) 다음 대기를 위해 원래 위치(우측)로 리셋
+                                setTimeout(() => {
+                                    imgs[prevIndex].classList.remove('exit');
+                                }, 800);
+
+                            }, 10000); // 10초마다 변경
+                        }, delayTime);
+                    }
+
+                    // 왼쪽 박스는 즉시 시작, 오른쪽 박스는 1.5초(1500ms) 후 시작
+                    setupSlider('box1', 0);
+                    setupSlider('box2', 1500);
+                </script>
+                "
+                frameborder="0"
+            ></iframe>
+        </div>
+        <div class="item d-day">
+            <iframe src="food.html" frameborder="0"></iframe>
+        </div>
+    </div>
+</body>
+</html>
