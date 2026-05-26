@@ -63,10 +63,10 @@
                     .poster-wrap img { 
                         width: 100%;          /* 칸 너비에 100% 맞춤 */
                         height: 100%;         /* 칸 높이에 100% 맞춤 */
-                        object-fit: contain;    /* 비율을 유지하면서 칸에 꽉 차게 자름 (꽉 채우기) */
+                        object-fit: fill;    /* 비율을 유지하면서 칸에 꽉 차게 자름 (꽉 채우기) */
                         /* 만약 사진 전체가 잘림 없이 다 나와야 한다면 cover 대신 contain 사용 */
                         
-                        position:absolute;
+                        position:absolute; 
                         top:0; 
                         left:0; 
                         transform: translateX(100%); 
