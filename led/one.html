@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신입생 100일 축하 비디오월</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    
+    <style>
+        /* 기본 스타일 초기화 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0d0e12;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 📺 비디오월 A4 비율 컨테이너 (1 : 1.414) */
+        .video-wall-container {
+            width: 100vh; /* 화면 높이에 맞춰 꽉 차게 설정 */
+            max-width: 100vw;
+            aspect-ratio: 1 / 1.414; /* 정확한 A4 비율 */
+            background: linear-gradient(135deg, #1f1c2c, #928dab);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 공통 씬(Scene) 스타일 */
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* --- Scene 1: 오프닝 타이포그래피 --- */
+        .scene-1 {
+            background: radial-gradient(circle, #2c3e50, #000000);
+        }
+        .intro-text {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            color: #e0e0e0;
+        }
+        .counter-wrapper {
+            font-size: 8rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff7b00, #ffae00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- Scene 2: 포토 슬라이드 --- */
+        .scene-2 {
+            background: #111;
+        }
+        .photo-grid {
+            position: relative;
+            width: 90%;
+            height: 70%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 폴라로이드 감성 사진 스타일 */
+        .polaroid {
+            position: absolute;
+            width: 75%;
+            background: white;
+            padding: 1rem 1rem 3rem 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.9) rotate(-5deg);
+            opacity: 0;
+        }
+        .polaroid img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            background-color: #eee; /* 이미지 없을 때 대체 배경 */
+        }
+        .photo-caption {
+            font-size: 1.5rem;
+            color: #222;
+            font-weight: bold;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .scene-2-subtitle {
+            margin-top: 2rem;
+            font-size: 1.6rem;
+            font-weight: 400;
+            line-height: 1.5;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* --- Scene 3: 응원 롤링 페이퍼 --- */
+        .scene-3 {
+            background: linear-gradient(to bottom, #1a1c29, #11121a);
+            justify-content: flex-start;
+            padding-top: 5rem;
+        }
+        .scene-3 h2 {
+            font-size: 2.2rem;
+            margin-bottom: 3rem;
+            background: linear-gradient(to right, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .rolling-container {
+            width: 100%;
+            height: 70%;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-stream {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        /* 글래스모피즘 카드 스타일 */
+        .message-card {
+            width: 90%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: left;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+        .message-content {
+            font-size: 1.3rem;
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+            color: #f0f0f0;
+        }
+        .message-sender {
+            font-size: 1.1rem;
+            color: #00ffcc;
+            font-weight: bold;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="video-wall-container">
+        
+        <div class="scene scene-1">
+            <div class="intro-text" id="typing-text"></div>
+            <div class="counter-wrapper"><span id="count">0</span>일</div>
+        </div>
+
+        <div class="scene scene-2">
+            <div class="photo-grid">
+                <div class="polaroid" id="photo1">
+                    <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600" alt="입학식">
+                    <div class="photo-caption">🌸 설레던 입학식날</div>
+                </div>
+                <div class="polaroid" id="photo2">
+                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600" alt="수업시간">
+                    <div class="photo-caption">✍️ 열정 가득한 교실</div>
+                </div>
+                <div class="polaroid" id="photo3">
+                    <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600" alt="친구들">
+                    <div class="photo-caption">🍱 함께해서 즐거운 급식 시간</div>
+                </div>
+            </div>
+            <div class="scene-2-subtitle">바쁘게 지나간 우리들의 100일의 순간들</div>
+        </div>
+
+        <div class="scene scene-3">
+            <h2>선배·선생님이 전하는 응원 💌</h2>
+            <div class="rolling-container">
+                <div class="card-stream" id="stream">
+                    
+                    <div class="message-card">
+                        <div class="message-content">"얘들아, 100일 동안 고등학교 적응하느라 고생 많았어. 지금처럼만 건강하게 자라다오!"</div>
+                        <div class="message-sender">- 1학년 부장 선생님 -</div>
+                    </div>
+                    
+                    <div class="message-card">
+                        <div class="message-content">"처음엔 모든 게 낯설고 힘들지? 조금만 힘내! 멋진 선배들이 늘 뒤에서 응원하고 있을게. 파이팅!"</div>
+                        <div class="message-sender">- 학생회장 선배 -</div>
+                    </div>
+
+                    <div class="message-card">
+                        <div class="message-content">"수행평가 많다고 너무 지치지 마! 너희들은 생각보다 훨씬 잘하고 있어. 성일고 1학년 최고👍"</div>
+                        <div class="message-sender">- 수학 담당 선생님 -</div>
+                    </div>
+
+                    <div class="message-card">
+                        <div class="message-content">"동아리 활동할 때 너희들의 열정을 봤어. 앞으로 남은 고교 생활도 멋지게 채워나가자!"</div>
+                        <div class="message-sender">- 방송부 선배 -</div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // GSAP 타이핑 플러그인 등록
+        gsap.registerPlugin(TextPlugin);
+
+        // 메인 타임라인 생성 (인터랙션 없이 무한 루프 재생)
+        const mainTimeline = gsap.timeline({ repeat: -1 });
+
+        // 카운팅 기능을 위한 임시 객체
+        let countObj = { value: 0 };
+
+        /* --------------------------------------------------
+           SCENE 1 애니메이션 연출 (총 약 7초)
+        -------------------------------------------------- */
+        mainTimeline
+            // 씬 1 등장
+            .to(".scene-1", { opacity: 1, duration: 1 })
+            // 텍스트 한 글자씩 타이핑 효과
+            .to("#typing-text", { 
+                text: "낯설던 교문, 어색했던 교복...<br>우리가 숨 가쁘게 달려온 시간.", 
+                duration: 2.5, 
+                ease: "none" 
+            })
+            // 숫자 0에서 100까지 카운팅 및 커지는 효과
+            .to(countObj, {
+                value: 100,
+                duration: 2,
+                ease: "power2.out",
+                onUpdate: function() {
+                    document.getElementById("count").innerText = Math.floor(countObj.value);
+                }
+            }, "-=0.5")
+            .to(".counter-wrapper", { scale: 1.1, duration: 0.5, yoyo: true, repeat: 1 }, "-=1")
+            // 씬 1 퇴장
+            .to(".scene-1", { opacity: 0, duration: 1, delay: 1.5 });
+
+        /* --------------------------------------------------
+           SCENE 2 애니메이션 연출 (총 약 9초)
+        -------------------------------------------------- */
+        mainTimeline
+            // 씬 2 등장
+            .to(".scene-2", { opacity: 1, duration: 1 })
+            // 첫 번째 사진 툭 떨어짐 + 살짝 회전
+            .to("#photo1", { opacity: 1, scale: 1, rotation: -3, duration: 0.8, ease: "back.out(1.7)" })
+            // 두 번째 사진 오버랩되면서 등장
+            .to("#photo2", { opacity: 1, scale: 1, rotation: 5, duration: 0.8, ease: "back.out(1.7)" }, "+=0.8")
+            // 세 번째 사진 오버랩되면서 등장
+            .to("#photo3", { opacity: 1, scale: 1, rotation: -1, duration: 0.8, ease: "back.out(1.7)" }, "+=0.8")
+            // 전체 자막 강조 효과
+            .to(".scene-2-subtitle", { scale: 1.05, duration: 1, yoyo: true, repeat: 1 }, "+=0.5")
+            // 씬 2 퇴장 (사진들 초기화 포함)
+            .to(".scene-2", { opacity: 0, duration: 1, delay: 1 })
+            .set(".polaroid", { opacity: 0, scale: 0.9 }); // 루프를 위해 상태 초기화
+
+        /* --------------------------------------------------
+           SCENE 3 애니메이션 연출 (총 약 10초)
+        -------------------------------------------------- */
+        // 무한 롤링을 위해 스트림 박스 높이값 계산
+        const stream = document.getElementById("stream");
+        
+        mainTimeline
+            // 씬 3 등장
+            .to(".scene-3", { opacity: 1, duration: 1 })
+            // 카드가 아래에서 위로 천천히 올라가는 무비 크레딧 효과
+            .fromTo("#stream", 
+                { y: "100%" }, 
+                { y: "-100%", duration: 8, ease: "none" }
+            )
+            // 씬 3 퇴장
+            .to(".scene-3", { opacity: 0, duration: 1 })
+            // 다음 루프를 위해 카운터 변수 초기화
+            .set(countObj, { value: 0 });
+
+    </script>
+</body>
+</html>
