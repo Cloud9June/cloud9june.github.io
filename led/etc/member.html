@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>최근 3년 특전부사관 합격 졸업생 명단</title>
+    <style>
+        /* 기본 여백 초기화 및 블랙 배경 설정 */
+        html, body { 
+            margin: 0; 
+            padding: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            font-family: 'Malgun Gothic', sans-serif; 
+            background: #000; 
+        } 
+        
+        /* 전체 화면 중앙에 명단 컨테이너를 배치 */
+        .poster-wrap { 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: #000; 
+        } 
+        
+        /* 명단 컨테이너: 단독 페이지에 맞춰 너비 조정 및 중앙 정렬 */
+        .list-container { 
+            width: 95%;          /* 화면 좌우 여백을 고려한 적절한 너비 */
+            max-width: 800px;    /* 너무 퍼지지 않도록 최대 너비 제한 */
+            height: 98%; 
+            box-sizing: border-box;
+            background: #000; 
+            overflow: hidden; 
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* 세로 기준 가운데 정렬 */
+            gap: 16px;               /* 테이블 간 간격을 여유 있게 조정 */
+        }
+
+        /* 메인 타이틀 스타일 */
+        .list-container h3 {
+            font-size: 24px;     /* 단독 화면에 맞춰 타이틀 크기 확대 */
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 기수별 테이블 스타일 */
+        .group-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 16px;     /* 가독성을 위해 폰트 크기 업그레이드 */
+            text-align: center; 
+        }
+        
+        /* 기수 제목 (헤더) */
+        .group-table th { 
+            background: #121212; 
+            color: #ffffff; 
+            border: 2px solid #333; 
+            padding: 6px 0;      /* 상하 패딩을 늘려 시원하게 배치 */
+            font-weight: bold; 
+            letter-spacing: 0.5px;
+        }
+        
+        /* 본문 셀 스타일 */
+        .group-table td { 
+            border: 2px solid #222; 
+            padding: 10px 0;      /* 셀 가독성을 높이기 위해 패딩 조정 */
+            line-height: 1.3; 
+        }
+        
+        .group-table td.num { 
+            color: #666; 
+            width: 12%; 
+            font-size: 11px; 
+        }
+        
+        .group-table td.name { 
+            font-weight: bold; 
+            color: #ffffff; 
+            width: 44%; 
+            letter-spacing: 2px; /* 이름 글자 간격 조정 */
+        }
+        
+        .group-table td.dept { 
+            color: #aaaaaa; 
+            width: 44%; 
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="poster-wrap">
+        <div class="list-container">
+
+            <h3>최근 3년 특전부사관 합격 졸업생</h3>
+            
+            <table class="group-table">
+                <tr><th colspan="3">부사관과 4기 (2024년 졸업)</th></tr>
+                <tr><td class="num">1</td><td class="name">김O수</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">2</td><td class="name">김O환</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">3</td><td class="name">이O진</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">4</td><td class="name">이O우</td><td class="dept">특전부사관</td></tr>
+            </table>
+
+            <table class="group-table">
+                <tr><th colspan="3">부사관과 5기 (2025년 졸업)</th></tr>
+                <tr><td class="num">1</td><td class="name">안O용</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">2</td><td class="name">이O빈</td><td class="dept">특전부사관</td></tr>
+            </table>
+
+            <table class="group-table">
+                <tr><th colspan="3">부사관 동아리 14기 (2025년 졸업)</th></tr>
+                <tr><td class="num">1</td><td class="name">김O혁</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">2</td><td class="name">황O은</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">3</td><td class="name">강O현</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">4</td><td class="name">박O석</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">5</td><td class="name">박O영</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">6</td><td class="name">노O정</td><td class="dept">특전부사관</td></tr>
+            </table>
+
+            <table class="group-table">
+                <tr><th colspan="3">부사관과 6기 (2026년 졸업)</th></tr>
+                <tr><td class="num">1</td><td class="name">강O하</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">2</td><td class="name">김O빈</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">3</td><td class="name">장O우</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">4</td><td class="name">허O우</td><td class="dept">특전부사관</td></tr>
+                <tr><td class="num">5</td><td class="name">허O우</td><td class="dept">특전부사관</td></tr>
+            </table>
+
+            <table class="group-table">
+                <tr><th colspan="3">부사관 동아리 15기 (2026년 졸업)</th></tr>
+                <tr><td class="num">1</td><td class="name">이O민</td><td class="dept">특전부사관</td></tr>
+            </table>
+
+        </div>
+    </div>
+
+</body>
+</html>

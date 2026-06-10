@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>신입생 100일 축하 비디오월</title>
+    <title>새내기 100일 축하 편지 비디오월</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
     
@@ -17,8 +17,8 @@
         }
 
         body {
-            background-color: #0d0e12;
-            color: #ffffff;
+            background-color: #f8fafc; /* 밝고 깨끗한 배경 */
+            color: #334155; /* 부드러운 다크 그레이 */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -31,10 +31,11 @@
             width: 100vh; /* 화면 높이에 맞춰 꽉 차게 설정 */
             max-width: 100vw;
             aspect-ratio: 1 / 1.414; /* 정확한 A4 비율 */
-            background: linear-gradient(135deg, #1f1c2c, #928dab);
+            background: linear-gradient(135deg, #e0f7fa, #fce4ec); /* 상큼한 파스텔 핑크&블루 */
             position: relative;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
         }
 
         /* 공통 씬(Scene) 스타일 */
@@ -49,122 +50,134 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
+            padding: 3rem;
             text-align: center;
         }
 
-        /* --- Scene 1: 오프닝 타이포그래피 --- */
+        /* --- 🌸 Scene 1: 오프닝 --- */
         .scene-1 {
-            background: radial-gradient(circle, #2c3e50, #000000);
+            background: linear-gradient(135deg, #fff9c4, #e3f2fd);
         }
         .intro-text {
-            font-size: 1.8rem;
-            line-height: 1.6;
-            font-weight: 300;
-            margin-bottom: 2rem;
-            color: #e0e0e0;
+            font-size: 2rem;
+            line-height: 1.7;
+            font-weight: 600;
+            margin-bottom: 3rem;
+            color: #5c6bc0;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.03);
         }
         .counter-wrapper {
-            font-size: 8rem;
+            font-size: 9rem;
             font-weight: 900;
-            background: linear-gradient(45deg, #ff7b00, #ffae00);
+            background: linear-gradient(45deg, #ff8a80, #ffd740);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 4px 6px rgba(255,138,128,0.3));
         }
 
-        /* --- Scene 2: 포토 슬라이드 --- */
+        /* --- 📸 Scene 2: 포토 슬라이드 --- */
         .scene-2 {
-            background: #111;
+            background: linear-gradient(135deg, #f1f8e9, #f3e5f5);
+            justify-content: flex-start;
+            padding-top: 5rem;
+        }
+        .scene-2-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #475569;
+            margin-bottom: 2.5rem;
+            background: linear-gradient(to right, #0284c7, #db2777);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .photo-grid {
             position: relative;
             width: 90%;
-            height: 70%;
+            height: 60%;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-bottom: 1.5rem;
         }
-        /* 폴라로이드 감성 사진 스타일 */
         .polaroid {
             position: absolute;
-            width: 75%;
+            width: 80%;
             background: white;
-            padding: 1rem 1rem 3rem 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transform: scale(0.9) rotate(-5deg);
+            padding: 1rem 1rem 3.5rem 1rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.06);
+            border: 4px solid #fff;
+            border-radius: 4px;
+            transform: scale(0.9);
             opacity: 0;
         }
         .polaroid img {
             width: 100%;
             aspect-ratio: 4/3;
             object-fit: cover;
-            background-color: #eee; /* 이미지 없을 때 대체 배경 */
+            border-radius: 2px;
         }
         .photo-caption {
-            font-size: 1.5rem;
-            color: #222;
-            font-weight: bold;
-            margin-top: 1rem;
+            font-size: 1.6rem;
+            color: #374151;
+            font-weight: 700;
+            margin-top: 1.2rem;
             text-align: center;
         }
         .scene-2-subtitle {
-            margin-top: 2rem;
             font-size: 1.6rem;
-            font-weight: 400;
+            font-weight: 600;
+            color: #6b7280;
             line-height: 1.5;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* --- Scene 3: 응원 롤링 페이퍼 --- */
+        /* --- 💌 Scene 3: 축하 편지 (타이핑 연출) --- */
         .scene-3 {
-            background: linear-gradient(to bottom, #1a1c29, #11121a);
-            justify-content: flex-start;
+            background: linear-gradient(135deg, #e0f2f1, #e1f5fe);
+            justify-content: center;
             padding-top: 5rem;
         }
-        .scene-3 h2 {
+        .letter-title {
             font-size: 2.2rem;
-            margin-bottom: 3rem;
-            background: linear-gradient(to right, #fff, #888);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            color: #00796b;
+            margin-bottom: 2rem;
+            letter-spacing: -0.5px;
         }
-        .rolling-container {
-            width: 100%;
+        .letter-container {
+            width: 90%;
             height: 70%;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: left;
             position: relative;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-        }
-        .card-stream {
-            position: absolute;
-            width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            align-items: center;
+            justify-content: flex-start;
         }
-        /* 글래스모피즘 카드 스타일 */
-        .message-card {
-            width: 90%;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 1.5rem;
-            text-align: left;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        /* 편지 한 줄 스타일 */
+        .letter-line {
+            font-size: 1.6rem;
+            line-height: 1.9;
+            font-weight: 500;
+            margin-bottom: 1.2rem;
+            color: #374151;
+            opacity: 0; /* 초기엔 투명 */
         }
-        .message-content {
-            font-size: 1.3rem;
-            line-height: 1.5;
-            margin-bottom: 0.8rem;
-            color: #f0f0f0;
+        /* 강조 */
+        .highlight {
+            color: #f57c00;
+            font-weight: 700;
         }
-        .message-sender {
-            font-size: 1.1rem;
-            color: #00ffcc;
-            font-weight: bold;
+        .last-line {
             text-align: right;
+            font-weight: 700;
+            margin-top: 2rem;
+            color: #0277bd;
         }
     </style>
 </head>
@@ -178,126 +191,131 @@
         </div>
 
         <div class="scene scene-2">
+            <div class="scene-2-title">우리가 함께한 100일의 기적 ✨</div>
             <div class="photo-grid">
                 <div class="polaroid" id="photo1">
                     <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600" alt="입학식">
-                    <div class="photo-caption">🌸 설레던 입학식날</div>
+                    <div class="photo-caption">🌸 설레던 첫 입학식날</div>
                 </div>
                 <div class="polaroid" id="photo2">
                     <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600" alt="수업시간">
-                    <div class="photo-caption">✍️ 열정 가득한 교실</div>
+                    <div class="photo-caption">✍️ 열정 가득했던 교실</div>
                 </div>
                 <div class="polaroid" id="photo3">
                     <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600" alt="친구들">
-                    <div class="photo-caption">🍱 함께해서 즐거운 급식 시간</div>
+                    <div class="photo-caption">🍱 함께라 즐거운 급식 시간</div>
                 </div>
             </div>
-            <div class="scene-2-subtitle">바쁘게 지나간 우리들의 100일의 순간들</div>
+            <div class="scene-2-subtitle">바쁘게 지나간 설렘 가득한 순간들</div>
         </div>
 
         <div class="scene scene-3">
-            <h2>선배·선생님이 전하는 응원 💌</h2>
-            <div class="rolling-container">
-                <div class="card-stream" id="stream">
-                    
-                    <div class="message-card">
-                        <div class="message-content">"얘들아, 100일 동안 고등학교 적응하느라 고생 많았어. 지금처럼만 건강하게 자라다오!"</div>
-                        <div class="message-sender">- 1학년 부장 선생님 -</div>
-                    </div>
-                    
-                    <div class="message-card">
-                        <div class="message-content">"처음엔 모든 게 낯설고 힘들지? 조금만 힘내! 멋진 선배들이 늘 뒤에서 응원하고 있을게. 파이팅!"</div>
-                        <div class="message-sender">- 학생회장 선배 -</div>
-                    </div>
-
-                    <div class="message-card">
-                        <div class="message-content">"수행평가 많다고 너무 지치지 마! 너희들은 생각보다 훨씬 잘하고 있어. 성일고 1학년 최고👍"</div>
-                        <div class="message-sender">- 수학 담당 선생님 -</div>
-                    </div>
-
-                    <div class="message-card">
-                        <div class="message-content">"동아리 활동할 때 너희들의 열정을 봤어. 앞으로 남은 고교 생활도 멋지게 채워나가자!"</div>
-                        <div class="message-sender">- 방송부 선배 -</div>
-                    </div>
-                    
+            <div class="letter-title">우리가 전하는 진심의 편지 💌</div>
+            <div class="letter-container" id="letter-container">
                 </div>
-            </div>
         </div>
 
     </div>
 
     <script>
-        // GSAP 타이핑 플러그인 등록
         gsap.registerPlugin(TextPlugin);
 
-        // 메인 타임라인 생성 (인터랙션 없이 무한 루프 재생)
         const mainTimeline = gsap.timeline({ repeat: -1 });
-
-        // 카운팅 기능을 위한 임시 객체
         let countObj = { value: 0 };
+        let isFirstRun = true;
+
+        // 하나의 편지 내용 (멀리서도 한눈에 보이게 한 줄씩 구성)
+        const letterContent = [
+            "사랑스러운 신입생 여러분, 100일을 진심으로 축하합니다.",
+            "낯선 학교생활에 적응하느라 정말 고생 많았어요.",
+            "때로는 수행평가에 지치고, 때로는 고민에 잠 못 이뤘겠지만,",
+            "여러분은 그 모든 순간을 멋지게 이겨냈습니다.",
+            "그 시간 속에서 여러분은 눈부시게 성장했습니다.",
+            "선생님들과 선배들은 <span class='highlight'>여러분의 모든 시작</span>을",
+            "<span class='highlight'>언제나 응원하고 함께할 것입니다.</span>",
+            "파릇파릇한 여러분의 고교 생활이 더 빛나길 바랍니다.",
+            "축하하고, 사랑합니다.",
+            "<span class='last-line'>- 학교 구성원 일동 -</span>"
+        ];
 
         /* --------------------------------------------------
-           SCENE 1 애니메이션 연출 (총 약 7초)
+           SCENE 1 애니메이션
         -------------------------------------------------- */
         mainTimeline
-            // 씬 1 등장
-            .to(".scene-1", { opacity: 1, duration: 1 })
-            // 텍스트 한 글자씩 타이핑 효과
+            .to(".scene-1", { opacity: 1, duration: 1.2 })
             .to("#typing-text", { 
                 text: "낯설던 교문, 어색했던 교복...<br>우리가 숨 가쁘게 달려온 시간.", 
-                duration: 2.5, 
+                duration: 2.8, 
                 ease: "none" 
             })
-            // 숫자 0에서 100까지 카운팅 및 커지는 효과
             .to(countObj, {
                 value: 100,
-                duration: 2,
+                duration: 2.2,
                 ease: "power2.out",
+                onStart: function() {
+                    if (!isFirstRun) countObj.value = 100;
+                },
                 onUpdate: function() {
                     document.getElementById("count").innerText = Math.floor(countObj.value);
                 }
             }, "-=0.5")
-            .to(".counter-wrapper", { scale: 1.1, duration: 0.5, yoyo: true, repeat: 1 }, "-=1")
-            // 씬 1 퇴장
-            .to(".scene-1", { opacity: 0, duration: 1, delay: 1.5 });
+            .to(".counter-wrapper", { scale: 1.1, duration: 0.6, yoyo: true, repeat: 1 }, "-=1")
+            .to(".scene-1", { opacity: 0, duration: 1.2, delay: 2 });
 
         /* --------------------------------------------------
-           SCENE 2 애니메이션 연출 (총 약 9초)
+           SCENE 2 애니메이션
         -------------------------------------------------- */
         mainTimeline
-            // 씬 2 등장
-            .to(".scene-2", { opacity: 1, duration: 1 })
-            // 첫 번째 사진 툭 떨어짐 + 살짝 회전
-            .to("#photo1", { opacity: 1, scale: 1, rotation: -3, duration: 0.8, ease: "back.out(1.7)" })
-            // 두 번째 사진 오버랩되면서 등장
-            .to("#photo2", { opacity: 1, scale: 1, rotation: 5, duration: 0.8, ease: "back.out(1.7)" }, "+=0.8")
-            // 세 번째 사진 오버랩되면서 등장
-            .to("#photo3", { opacity: 1, scale: 1, rotation: -1, duration: 0.8, ease: "back.out(1.7)" }, "+=0.8")
-            // 전체 자막 강조 효과
-            .to(".scene-2-subtitle", { scale: 1.05, duration: 1, yoyo: true, repeat: 1 }, "+=0.5")
-            // 씬 2 퇴장 (사진들 초기화 포함)
-            .to(".scene-2", { opacity: 0, duration: 1, delay: 1 })
-            .set(".polaroid", { opacity: 0, scale: 0.9 }); // 루프를 위해 상태 초기화
+            .to(".scene-2", { opacity: 1, duration: 1.2 })
+            .to("#photo1", { opacity: 1, scale: 1, rotation: -4, duration: 0.9, ease: "back.out(1.5)" })
+            .to("#photo2", { opacity: 1, scale: 1, rotation: 4, duration: 0.9, ease: "back.out(1.5)" }, "+=0.7")
+            .to("#photo3", { opacity: 1, scale: 1, rotation: -1, duration: 0.9, ease: "back.out(1.5)" }, "+=0.7")
+            .to(".scene-2-subtitle", { scale: 1.03, duration: 1.2, yoyo: true, repeat: 1 }, "+=0.5")
+            .to(".scene-2", { opacity: 0, duration: 1.2, delay: 2 })
+            .set(".polaroid", { opacity: 0, scale: 0.9 }); 
 
         /* --------------------------------------------------
-           SCENE 3 애니메이션 연출 (총 약 10초)
+           SCENE 3 애니메이션 (하나의 긴 편지 타이핑)
         -------------------------------------------------- */
-        // 무한 롤링을 위해 스트림 박스 높이값 계산
-        const stream = document.getElementById("stream");
-        
-        mainTimeline
-            // 씬 3 등장
-            .to(".scene-3", { opacity: 1, duration: 1 })
-            // 카드가 아래에서 위로 천천히 올라가는 무비 크레딧 효과
-            .fromTo("#stream", 
-                { y: "100%" }, 
-                { y: "-100%", duration: 8, ease: "none" }
-            )
-            // 씬 3 퇴장
-            .to(".scene-3", { opacity: 0, duration: 1 })
-            // 다음 루프를 위해 카운터 변수 초기화
-            .set(countObj, { value: 0 });
+        const container = document.getElementById("letter-container");
+        let letterTL = gsap.timeline(); // 편지만을 위한 내부 타임라인
 
+        // 편지 내용을 HTML 엘리먼트로 변환하여 추가 (숨김 상태)
+        letterContent.forEach((text, index) => {
+            const line = document.createElement("p");
+            line.className = "letter-line";
+            line.innerHTML = index === 0 ? text : text; // HTML 태그 허용
+            line.id = `line-${index}`;
+            container.appendChild(line);
+        });
+
+        mainTimeline
+            .to(".scene-3", { opacity: 1, duration: 1.2 })
+            // 편지 타이핑 연출
+            .call(() => {
+                letterTL.clear(); // 루프 시작 시 편지 타임라인 초기화
+                // 모든 줄 초기화
+                gsap.set(".letter-line", { opacity: 0, y: 15 });
+
+                // 각 줄을 순차적으로 타이핑 & 등장
+                letterContent.forEach((text, index) => {
+                    letterTL
+                        // 다음 줄 등장 (부드러운 페이드인 + 위로 올라옴)
+                        .to(`#line-${index}`, { opacity: 1, y: 0, duration: 1.2, ease: "power2.out" })
+                        // 읽을 시간 확보
+                        .to({}, { duration: 2.2 }); 
+
+                    // 줄이 너무 많아지면 이전 줄을 흐리게 처리 (가독성 유지)
+                    if (index > 4) {
+                        letterTL.to(`#line-${index - 5}`, { opacity: 0.2, duration: 0.8, ease: "power1.inOut" }, "-=1.5");
+                    }
+                });
+            })
+            // 편지 타이핑 동안 대기 (전체 편지 길이에 맞춰 조절 필요)
+            .to({}, { duration: letterContent.length * 4.2 }) // 편지 전체 진행 시간 대기
+            .to(".scene-3", { opacity: 0, duration: 1.2 })
+            // 마지막 라운드 플래그 업데이트
+            .call(() => { isFirstRun = false; });
     </script>
 </body>
 </html>
