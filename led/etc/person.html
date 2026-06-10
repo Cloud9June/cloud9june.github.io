@@ -20,21 +20,39 @@
             font-family: sans-serif;
         }
 
-        /* 전체 화면을 좌우로 정확히 이등분 */
-        .container {
+        /* 전체를 감싸는 메인 래퍼: 위아래로 크게 분할 */
+        .main-wrapper {
             display: flex;
+            flex-direction: column;
             width: 100%;
             height: 100%;
         }
 
-        /* 왼쪽 영역: 증명사진 (전체 화면의 50% 차지) */
+        /* 상단 영역 (기존 레이아웃): 전체 높이의 70% 차지 */
+        .top-section {
+            display: flex;
+            flex: 7; /* 하단과 높이 비율 조정 (예: 7대3) */
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* 하단 영역 (추가된 레이아웃): 전체 높이의 30% 차지 */
+        .bottom-section {
+            display: flex;
+            flex: 3; /* 하단 영역 높이 비율 */
+            width: 100%;
+            overflow: hidden;
+            /* 위아래 구분을 위해 얇은 선을 추가했습니다. 원치 않으시면 지워주세요. */
+            border-top: 1px solid #333; 
+        }
+
+        /* --- 상단: 기존 레이아웃 스타일 --- */
         .left-side {
             flex: 1;
             height: 100%;
             overflow: hidden;
         }
 
-        /* 비율을 유지하며 왼쪽 영역에 꽉 차게 설정 */
         .id-photo {
             width: 100%;
             height: 100%;
@@ -42,7 +60,6 @@
             object-position: 50% 20%;
         }
 
-        /* 오른쪽 영역: 전체 화면의 50% 차지하며 상하로 배치 */
         .right-side {
             flex: 1;
             display: flex;
@@ -50,42 +67,77 @@
             height: 100%;
         }
 
-        /* 오른쪽 상하 영역을 정확히 50%씩 고정 분할 (높이 고정) */
         .content-box {
-            flex: 1; /* 상하 각각 50%씩 균등 배분 */
-            height: 50%; /* 높이 고정 */
+            flex: 1;
+            height: 50%;
             width: 100%;
-            padding: 20px; /* 이미지 주변 여백 (원치 않으시면 0으로 변경 가능) */
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: auto; /* 이미지 세로가 고정된 칸보다 길어지면 박스 안에서 스크롤 */
+            overflow: auto;
         }
 
-        /* 가로 100% 채우고 세로는 비율대로 조절 */
+        /* --- 하단: 새로 추가된 가로 2단 스타일 --- */
+        .bottom-box {
+            flex: 1; /* 가로로 정확히 50%씩 차지 */
+            height: 100%;
+            padding: 0; /* 여백이 필요 없으면 0으로 변경 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        /* 하단 오른쪽 사진 구분선 (선택 사항) */
+        .bottom-box:last-child {
+            border-left: 1px solid #333;
+        }
+
+        /* 공통 이미지 스타일 */
         .responsive-img {
-            width: 40%;
+            width: 60%;
             height: auto;
             display: block;
+        }
+
+        /* 하단 영역 사진을 꽉 채우고 싶을 때 사용하는 클래스 */
+        .bottom-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="left-side">
-            <img src="../images/3star_4.png" alt="증명사진" class="id-photo">
+    <div class="main-wrapper">
+        
+        <div class="top-section">
+            <div class="left-side">
+                <img src="../images/3star_4.png" alt="증명사진" class="id-photo">
+            </div>
+
+            <div class="right-side">
+                <div class="content-box">
+                    <img src="../images/3star_3.svg" alt="우상단 이미지" class="responsive-img">
+                </div>
+                <div class="content-box">
+                    <img src="../images/3star_2.svg" alt="우하단 이미지" class="responsive-img">
+                </div>
+            </div>
         </div>
 
-        <div class="right-side">
-            <div class="content-box">
-                <img src="../images/3star_3.svg" alt="우상단 이미지" class="responsive-img">
+        <div class="bottom-section">
+            <div class="bottom-box">
+                <img src="../images/3star_5.png" alt="하단 왼쪽 이미지" class="bottom-img">
             </div>
             
-            <div class="content-box">
-                <img src="../images/3star_2.svg" alt="우하단 이미지" class="responsive-img">
+            <div class="bottom-box">
+                <img src="../images/3star_6.jpg" alt="하단 오른쪽 이미지" class="bottom-img">
             </div>
         </div>
+
     </div>
 
 </body>
