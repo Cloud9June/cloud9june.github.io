@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100일 축하 워드 클라우드</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            overflow: hidden;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas id="cloud-canvas"></canvas>
+    </div>
+
+    <script>
+        const studentNames = [
+            "HONG JIAEN", "MAGPARANGALAN JOHN AUSTIN", 
+            "강민우", "강유나", "강재람", "고민찬", "고승범", "고승완", "고영원", "고예진", "공유빈", "구회훈", 
+            "권민성", "권아경", "권용민", "권용준", "길강민", "김가람", "김가을", "김건욱", "김규리", "김나희", 
+            "김단아", "김도원", "김도현", "김도현", "김령하", "김명진", "김문현", "김미연", "김민규", "김민기", 
+            "김민성", "김민준", "김민준", "김민준", "김민지", "김보성", "김봄", "김사랑", "김서희", "김선국", 
+            "김성현", "김수겸", "김승현", "김시언", "김시우", "김시후", "김연균", "김영민", "김예담", "김온휴", 
+            "김용희", "김원진", "김유빈", "김윤제", "김인엽", "김정효", "김제이", "김준범", "김준서", "김준희", 
+            "김지율", "김지호", "김진영", "김태양", "김태우", "김현빈", "김현진", "김형서", "김혜인", "김호빈", 
+            "김환석", "김효린", "남채원", "노종승", "문경량", "문다빈", "문아영", "문준서", "민서연", "박가온", 
+            "박도률", "박미영", "박미정", "박민채", "박보영", "박상천", "박소윤", "박소은", "박소현", "박수정", 
+            "박승연", "박시환", "박시후", "박예은", "박정교", "박주영", "박주한", "박주호", "박준우", "박준호", 
+            "박지수", "박지훈", "박하람", "박하윤", "배서준", "백찬영", "백하윤", "서영준", "서예준", "서지원", 
+            "선효정", "손민준", "손승기", "손주아", "송민경", "송재현", "송지율", "신규민", "신동찬", "심재홍", 
+            "안다인", "안민지", "안예준", "안은서", "안은서", "안지수", "안황현", "양서진", "양아연", "엄세은", 
+            "연지솔", "오유정", "오유주", "오하은", "우나린", "우성진", "유수빈", "유수빈", "유시우", "유시원", 
+            "유지호", "윤동욱", "윤예서", "이강준", "이동언", "이명진", "이민나", "이민서", "이민주", "이서인", 
+            "이서진", "이성재", "이성찬", "이세영", "이송은", "이수빈", "이수현", "이승민", "이승빈", "이승제", 
+            "이시찬", "이시현", "이예은", "이예지", "이유찬", "이윤서", "이은지", "이조안", "이준서", "이준우", 
+            "이지상", "이지애", "이지우", "이지하", "이지혁", "이진선", "이진혁", "이초희", "이혁민", "이현아", 
+            "이혜은", "이효주", "임단우", "임소희", "임예원", "임주연", "임지솔", "임태범", "임태희", "임현우", 
+            "장서윤", "장석민", "장해권", "전기한", "전동준", "전상민", "전성우", "전아민", "전은진", "정아라", 
+            "정운찬", "정유진", "정인", "정주연", "정찬희", "정현호", "조민성", "조수혁", "조승협", "조은서", 
+            "조정우", "조태연", "조하람", "조하율", "주하람", "주효선", "진승민", "차재원", "채다은", "천세빈", 
+            "천현우", "최가은", "최단비", "최민서", "최수아", "최수호", "최승채", "최아린", "최아인", "최연후", 
+            "최영광", "최인서", "최일성", "최재훈", "최주희", "최진규", "하준우", "한규상", "한다빈", "한리오", 
+            "한상욱", "한서영", "한주아", "한채원", "한하람", "한희승", "허진우", "현지우", "홍다은", "홍여준", "황민준"
+        ];
+
+        const canvas = document.getElementById('cloud-canvas');
+
+        function generateWordsList() {
+            const list = [];
+            list.push(["성일정보고 1학년", 85]);
+            list.push(["입학 100일 축하해🎉", 100]);
+
+            studentNames.forEach(name => {
+                // 이름을 더 꽉 차게 보이도록 기본 폰트 사이즈를 상향 조정 (16~28)
+                const randomSize = Math.floor(Math.random() * 13) + 16;
+                list.push([name, randomSize]);
+            });
+            return list;
+        }
+
+        function drawWordCloud() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // 매 렌더링마다 이름 크기와 배치를 다르게 하기 위해 리스트 새로 생성
+            const currentList = generateWordsList();
+
+            WordCloud(canvas, {
+                list: currentList,
+                fontFamily: "'Pretendard', 'Malgun Gothic', sans-serif",
+                fontWeight: 'bold',
+                color: function () {
+                    const colors = ['#FFB6C1', '#FFD700', '#87CEFA', '#98FB98', '#FFA07A', '#DDA0DD', '#F0E68C', '#FFFFFF'];
+                    return colors[Math.floor(Math.random() * colors.length)];
+                },
+                backgroundColor: 'transparent',
+                // 변경 포인트 1: 모양을 사각형으로 지정하여 모서리 빈 공간 최소화
+                shape: 'square', 
+                // 변경 포인트 2: 그리드 크기를 줄여서 단어들이 더 촘촘하게 붙도록 유도
+                gridSize: 8, 
+                minSize: 10,
+                shrinkToFit: true,
+                drawOutOfBound: false
+            });
+        }
+
+        // 최초 1회 실행
+        drawWordCloud();
+
+        // 변경 포인트 3: 1분(60000 밀리초)마다 drawWordCloud 함수 반복 실행
+        setInterval(drawWordCloud, 60000);
+
+        // 창 크기 변경 시 대응 (디바운스 유지)
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(drawWordCloud, 200);
+        });
+    </script>
+</body>
+</html>

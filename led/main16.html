@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비디오월 5분할 레이아웃</title>
+    <link rel="stylesheet" href="style10.css">
+</head>
+<body>
+    <div class="container">
+        <div class="item notice">
+            <iframe src="etc/names.html" frameborder="0" style="width: 100%; height: 100%;"></iframe>
+        </div>
+        
+        <div class="item meal">
+            <img src="images/100days.png" alt="100일 기념" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        </div>
+        
+        <div class="item calendar">
+            <div class="calendar-split">
+                <iframe class="billboard-frame" src="billboard.html" frameborder="0"></iframe>
+                <iframe
+                    class="calendar-main"
+                    src="https://script.google.com/macros/s/AKfycbwPfGaxe__C6EY_-6hfGwBt1e0f864RWV5qSsLPDQlWLS9R0VB5la7BEclodrTGOR_0/exec"
+                    frameborder="0"
+                ></iframe>
+            </div>
+        </div>
+        
+        <div class="item d-day">
+            <iframe src="food.html" frameborder="0" style="width: 100%; height: 100%;"></iframe>
+        </div>
+    </div>
+</body>
+</html>
