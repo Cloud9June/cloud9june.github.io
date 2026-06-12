@@ -3,32 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>비디오월 5분할 레이아웃</title>
-    <link rel="stylesheet" href="style7.css">
+    <title>비디오월 4분할 레이아웃</title>
+    <link rel="stylesheet" href="style11.css">
 </head>
 <body>
     <div class="container">
-        <div class="item meal">
+        
+        <div class="item notice">
             <iframe
-                srcdoc="<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;} .poster-wrap{width:100%;height:100%;display:flex;justify-content:center;align-items:center;gap:8px;background:#000;overflow:hidden;} .poster-wrap img{width:48%;height:100%;object-fit:contain;display:block;} .poster-wrap img.star3 {object-fit:cover;}</style><div class='poster-wrap'><img src='images/3star_3.svg' alt='공지 포스터 1'><img class='star3' src='images/3star_4.png' alt='공지 포스터 2'></div>"
+                srcdoc="<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;} .poster-wrap{width:100%;height:100%;display:flex;justify-content:center;align-items:center;gap:8px;background:#000;overflow:hidden;} .poster-wrap img{width:48%;height:100%;object-fit:cover;display:block;}</style><div class='poster-wrap'><img src='images/model1.jpg' alt='공지 포스터 1'><img src='images/model2.jpg' alt='공지 포스터 2'></div>"
                 frameborder="0"
             ></iframe>
         </div>
-        <div class="item notice">
-            <iframe src="https://script.google.com/macros/s/AKfycbw7Z6eFhWCEM9apuZvw8s1uV1SlA23ddJndMV5pwsq4KOGS55CF6BVBG1gUFGTx51R-/exec" frameborder="0"></iframe>
-        </div>
+
         <div class="item calendar">
             <div class="calendar-split">
-                <iframe 
-    class="billboard-frame" 
-    srcdoc="<style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
-        img { width: 100%; height: 100%; object-fit: fill; display: block; }
-    </style>
-    <img src='images/3star_1.jpg' alt='전광판 이미지'>"
-    frameborder="0"
-    style="width: 100%; height: 100%; display: block;"
-></iframe>
+                <iframe class="billboard-frame" src="billboard.html" frameborder="0"></iframe>
                 <iframe
                     class="calendar-main"
                     src="https://script.google.com/macros/s/AKfycbwPfGaxe__C6EY_-6hfGwBt1e0f864RWV5qSsLPDQlWLS9R0VB5la7BEclodrTGOR_0/exec"
@@ -36,111 +26,18 @@
                 ></iframe>
             </div>
         </div>
-        <div class="item d-day">
-            <iframe
-    srcdoc="<style>
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background: #000; } 
-        .poster-wrap { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 16px; background: #000; overflow: hidden; } 
-        
-        /* 왼쪽 이미지 영역 */
-        .poster-wrap img { width: 46%; height: 100%; object-fit: contain; display: block; } 
-        
-        /* 오른쪽 명단 영역 */
-        .list-container { 
-            width: 46%; 
-            height: 94%; 
-            box-sizing: border-box;
-            background: #000; 
-            overflow: hidden; 
-            
-            display: flex;
-            flex-direction: column;
-            /* 기존 flex-start에서 center로 변경하여 세로 가운데 정렬 */
-            justify-content: center; 
-            /* 중앙 정렬 시 테이블 간 적당한 균형을 위해 간격을 8px로 조정 */
-            gap: 8px; 
-        }
 
-        .list-container h3 {
-            font-size: 13px;
-            color: #ffffff;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        
-        /* 기수별 테이블 스타일 */
-        .group-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }
-        
-        /* 기수 제목 */
-        .group-table th { 
-            background: #121212; 
-            color: #ffffff; 
-            border: 1px solid #333; 
-            padding: 2px 0; 
-            font-weight: bold; 
-            font-size: 11px; 
-            letter-spacing: 0.5px;
-        }
-        
-        /* 본문 셀 스타일 */
-        .group-table td { border: 1px solid #222; padding: 1px 0; line-height: 1.2; }
-        .group-table td.num { color: #666; width: 12%; font-size: 10px; }
-        .group-table td.name { font-weight: bold; color: #ffffff; width: 44%; letter-spacing: 1px; }
-        .group-table td.dept { color: #aaaaaa; width: 44%; font-size: 10.5px; }
-    </style>
-    <div class='poster-wrap'>
-        <img src='images/3star_2.svg' alt='유튜브 포스터 1'>
-        
-        <div class='list-container'>
-
-            <h3>최근 3년 특전부사관 합격 졸업생</h3>
-            
-            <table class='group-table'>
-                <tr><th colspan='3'>부사관과 4기 (2024년 졸업)</th></tr>
-                <tr><td class='num'>1</td><td class='name'>김O수</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>2</td><td class='name'>김O환</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>3</td><td class='name'>이O진</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>4</td><td class='name'>이O우</td><td class='dept'>특전부사관</td></tr>
-            </table>
-
-            <table class='group-table'>
-                <tr><th colspan='3'>부사관과 5기 (2025년 졸업)</th></tr>
-                <tr><td class='num'>1</td><td class='name'>안O용</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>2</td><td class='name'>이O빈</td><td class='dept'>특전부사관</td></tr>
-            </table>
-
-            <table class='group-table'>
-                <tr><th colspan='3'>부사관 동아리 14기 (2025년 졸업)</th></tr>
-                <tr><td class='num'>1</td><td class='name'>김O혁</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>2</td><td class='name'>황O은</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>3</td><td class='name'>강O현</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>4</td><td class='name'>박O석</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>5</td><td class='name'>박O영</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>6</td><td class='name'>노O정</td><td class='dept'>특전부사관</td></tr>
-            </table>
-
-            <table class='group-table'>
-                <tr><th colspan='3'>부사관과 6기 (2026년 졸업)</th></tr>
-                <tr><td class='num'>1</td><td class='name'>강O하</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>2</td><td class='name'>김O빈</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>3</td><td class='name'>장O우</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>4</td><td class='name'>허O우</td><td class='dept'>특전부사관</td></tr>
-                <tr><td class='num'>5</td><td class='name'>허O우</td><td class='dept'>특전부사관</td></tr>
-            </table>
-
-            <table class='group-table'>
-                <tr><th colspan='3'>부사관 동아리 15기 (2026년 졸업)</th></tr>
-                <tr><td class='num'>1</td><td class='name'>이O민</td><td class='dept'>특전부사관</td></tr>
-            </table>
-
-        </div>
-    </div>"
-    frameborder="0"
-></iframe>
-        </div>
         <div class="item youtube">
-            <iframe src="food.html" frameborder="0"></iframe>
+            <iframe
+                srcdoc="<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;} .poster-wrap{width:100%;height:100%;display:flex;justify-content:center;align-items:center;gap:8px;background:#000;overflow:hidden;} .poster-wrap img{width:48%;height:100%;object-fit:cover;display:block;}</style><div class='poster-wrap'><img src='images/model3.jpg' alt='유튜브 포스터 1'><img src='images/model4.jpg' alt='유튜브 포스터 2'></div>"
+                frameborder="0"
+            ></iframe>
         </div>
-    </div>
+
+        <div class="item meal">
+            <img src="images/middle.jpg" alt="100일 기념" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        </div>
+
+        </div>
 </body>
 </html>
