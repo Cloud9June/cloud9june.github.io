@@ -3,152 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <title>급식 신청 로그인</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
   <style>
-    /* 🎨 meal.html 테마 컬러 규격과 동일하게 세팅 */
-    :root {
-      --primary: #1976d2;
-      --primary-hover: #1565c0;
-      --text-main: #334155;
-      --text-muted: #64748b;
-    }
-
     body {
       margin: 0;
-      font-family: 'Pretendard', sans-serif;
+      font-family: 'Arial', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background-color: #f1f5f9; /* meal.html과 동일한 부드러운 중성톤 배경 */
-      padding: 16px;
-      box-sizing: border-box;
+      background: #fff; /* 배경은 흰색 유지 */
     }
-
-    /* 🖥️ 데스크톱 기준 기본 로그인 박스 디자인 */
     .login-box {
-      background: #ffffff;
-      padding: 40px 32px;
-      border-radius: 16px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      background: #f9f9f9; /* 박스 배경만 살짝 회색톤 */
+      padding: 40px 50px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
       text-align: center;
-      max-width: 380px;
-      width: 100%;
-      box-sizing: border-box;
-      border: 1px solid #e2e8f0;
-      transition: all 0.3s ease;
+      animation: fadeIn 0.6s ease-in-out;
+      border: 1px solid #e0e0e0;
     }
-
     .login-box h2 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      color: #0f172a;
-      font-size: 1.5em;
-      font-weight: 700;
+      margin-bottom: 20px;
+      color: #2d3436;
     }
-
-    .subtitle {
-      color: var(--text-muted);
-      font-size: 0.95em;
-      margin-bottom: 32px;
-      line-height: 1.4;
-    }
-
-    /* 🍏 크롬/사파리 공통 모던 입체형 버튼 세팅 */
     button {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      
-      background-color: var(--primary);
+      background-color: #0984e3;
       color: white;
       border: none;
-      padding: 14px 20px; /* 데스크톱 기본 패딩 */
-      border-radius: 10px;
+      padding: 12px 20px;
+      border-radius: 8px;
       font-size: 16px;
-      font-weight: 600;
       cursor: pointer;
-      width: 100%;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      box-shadow: 0 4px 6px -1px rgba(25, 118, 210, 0.2);
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
     }
-
     button:hover {
-      background-color: var(--primary-hover);
-      transform: translateY(-1px);
+      background-color: #74b9ff;
+      transform: scale(1.05);
     }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    /* 구글 대문자 G 심볼 마크 디자인 */
-    .google-icon {
-      font-family: sans-serif;
-      font-weight: 900;
-      background: #fff;
-      color: var(--primary);
-      width: 22px;
-      height: 22px;
-      border-radius: 5px;
-      display: inline-block;
-      line-height: 22px;
-      font-size: 15px;
-    }
-
-    /* 📱 스마트폰 디바이스 전용 미디어 쿼리 반응형 브레이크포인트 */
-    @media (max-width: 768px) {
-      body {
-        background-color: #ffffff; /* 모바일 환경에서는 앱처럼 흰색 전체 배경으로 몰입감 유도 */
-        align-items: flex-end;     /* 모바일 엄지손가락 터치 동선을 고려해 박스를 하단 배치 */
-      }
-
-      .login-box {
-        border: none;
-        box-shadow: none;
-        padding: 24px 8px 40px; /* 모바일 하단 여백 확보 및 패딩 최적화 */
-        max-width: 100%;
-      }
-
-      .login-box h2 {
-        font-size: 1.6em; /* 모바일 가독성을 위해 타이틀 확대 */
-      }
-
-      .subtitle {
-        font-size: 1em;
-        margin-bottom: 40px;
-      }
-
-      /* 🚨 요청사항 반영: 모바일에서 버튼 영역을 확장하여 터치 미스 방지 */
-      button {
-        padding: 18px 24px; /* 높이(Top/Bottom)를 대폭 확장하여 광활한 터치 영역 확보 */
-        font-size: 17px;    /* 모바일 가시성을 위해 폰트 크기 업 */
-        border-radius: 12px; /* 디자인 콘셉트에 맞게 곡률 증가 */
-        box-shadow: 0 10px 15px -3px rgba(25, 118, 210, 0.25); /* 모바일 입체감 증가 */
-      }
-
-      .google-icon {
-        width: 24px;
-        height: 24px;
-        line-height: 24px;
-        font-size: 16px;
-      }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithPopup, 
-      GoogleAuthProvider,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
@@ -159,24 +58,12 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-
-    // 백그라운드 로그인 세션 영속성 검증 가드
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const email = user.email || "";
-        if (email.endsWith("@sungil-i.kr") || email.endsWith("@sungil.kr")) {
-          window.location.href = "meal.html";
-        }
-      }
-    });
 
     window.googleLogin = () => {
       signInWithPopup(auth, provider)
         .then((result) => {
           const user = result.user;
-          const email = user.email || "";
-          
+          const email = user.email;
           if (email.endsWith("@sungil-i.kr") || email.endsWith("@sungil.kr")) {
             alert(`${user.displayName}님 환영합니다!`);
             window.location.href = "meal.html";
@@ -186,24 +73,15 @@
           }
         })
         .catch((error) => {
-          console.error("로그인 에러:", error);
-          if (error.code === 'auth/popup-blocked') {
-            alert("브라우저의 팝업 차단을 해제하시거나, 사파리/크롬 앱에서 직접 실행해 주세요.");
-          } else {
-            alert("로그인 실패: " + error.message);
-          }
+          alert("로그인 실패: " + error.message);
         });
     };
   </script>
 </head>
 <body>
   <div class="login-box">
-    <h2>📌 교직원 급식 시스템</h2>
-    <div class="subtitle">성일정보고등학교 구글 계정으로<br>안전하게 로그인하세요.</div>
-    <button id="loginBtn" onclick="googleLogin()">
-      <span class="google-icon">G</span>
-      Google 계정으로 로그인
-    </button>
+    <h2>📌 교사용 급식 신청 로그인</h2>
+    <button onclick="googleLogin()">Google 계정으로 로그인</button>
   </div>
 </body>
 </html>
