@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <title>급식 신청 로그인</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      font-family: 'Arial', sans-serif;
+      font-family: 'Pretendard', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #fff; /* 배경은 흰색 유지 */
+      background: #fff; /* 배경 흰색 유지 */
     }
     .login-box {
       background: #f9f9f9; /* 박스 배경만 살짝 회색톤 */
@@ -21,28 +23,68 @@
       text-align: center;
       animation: fadeIn 0.6s ease-in-out;
       border: 1px solid #e0e0e0;
+      max-width: 400px;
+      width: 100%;
+      box-sizing: border-box;
     }
     .login-box h2 {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       color: #2d3436;
+      font-size: 1.5em;
+      font-weight: 700;
     }
+    
+    /* 🍏 아이폰 사파리/크롬 대응 기본 서식 초기화 및 모던 버튼 스타일 지정 */
     button {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      
       background-color: #0984e3;
       color: white;
       border: none;
       padding: 12px 20px;
       border-radius: 8px;
       font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
     }
     button:hover {
       background-color: #74b9ff;
-      transform: scale(1.05);
+      transform: scale(1.02);
     }
+    
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 📱 스마트폰 디바이스 전용 미디어 쿼리 반응형 구간 */
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+      .login-box {
+        padding: 32px 24px;
+        border-radius: 12px;
+      }
+      .login-box h2 {
+        font-size: 1.35em;
+      }
+      
+      /* 🚨 요청사항 반영: 모바일 환경에서만 터치가 용이하도록 버튼 사이즈 업그레이드 */
+      button {
+        padding: 18px 24px; /* 위아래 패딩을 대폭 늘려 터치 존 확장 */
+        font-size: 18px;    /* 폰트 크기를 키워 시인성 확보 */
+        border-radius: 10px;
+      }
     }
   </style>
   <script type="module">
@@ -58,6 +100,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' }); // 팝업 시 항상 계정 선택창 강제 유도
 
     window.googleLogin = () => {
       signInWithPopup(auth, provider)

@@ -6,7 +6,6 @@
   <title>급식 신청</title>
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
   <style>
-    /* 기본 초기화 및 부드러운 중성톤 배경 세팅 */
     :root {
       --primary: #1976d2;
       --primary-hover: #1565c0;
@@ -29,7 +28,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* 상단 레이아웃 바 헤더 */
     .app-container {
       max-width: 960px;
       margin: 0 auto;
@@ -52,9 +50,15 @@
       text-align: left;
     }
 
-    /* 관리자 이동 단추 */
+    /* 우측 상단 컨트롤 헤더 그룹 바 */
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     #adminButton {
-      padding: 8px 16px;
+      padding: 10px 14px;
       background: #334155;
       color: #fff;
       border-radius: 8px;
@@ -64,11 +68,22 @@
       display: none;
       transition: background 0.2s;
     }
-    #adminButton:hover {
-      background: #1e293b;
-    }
+    #adminButton:hover { background: #1e293b; }
 
-    /* 플랫하고 둥근 탭 스타일의 월 버튼 영역 */
+    /* 💡 신규 추가된 로그아웃 단추 디자인 서식 */
+    #logoutButton {
+      padding: 8px 14px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #logoutButton:hover { background: #dc2626; }
+
     #monthButtons {
       display: flex;
       flex-wrap: wrap;
@@ -86,26 +101,30 @@
       padding: 10px 0;
       border: none;
       border-radius: 8px;
-      background: transparent;
-      color: var(--text-main);
-      font-weight: 600;
-      font-size: 0.95em;
+      background: #f1f5f9;
+      color: #94a3b8; /* 선택 불가능 상태는 연하게 고정 */
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
     }
+    #monthButtons button.allowed-month {
+      color: #334155;
+      font-weight: 700;
+    }
     #monthButtons button:hover:not(.disabled):not(.active) {
-      background: var(--gray-bg);
+      background: #e2e8f0;
     }
     #monthButtons button.active {
-      background: var(--primary);
-      color: #fff;
+      background: var(--primary) !important;
+      color: #fff !important;
+      font-weight: 700;
     }
     #monthButtons button.disabled {
-      color: #cbd5e1;
+      color: #cbd5e1 !important;
+      background: #f8fafc !important;
       cursor: not-allowed;
     }
 
-    /* 메인 캘린더 아레나 카드 */
     #calendarArea {
       display: none;
       background: #fff;
@@ -123,7 +142,6 @@
       text-align: left;
     }
 
-    /* 세련된 알림 얼럿 컴포넌트 */
     #editBanner {
       border-radius: 10px;
       font-size: 0.95em;
@@ -134,7 +152,6 @@
       border: 1px solid transparent;
     }
 
-    /* 🖥️ 데스크톱 표준 그리드 달력 레이아웃 */
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -155,7 +172,6 @@
       box-sizing: border-box;
     }
 
-    /* 요일 표시 셀 */
     .calendar .weekday {
       min-height: auto;
       height: 32px;
@@ -173,7 +189,7 @@
     .day-head {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       width: 100%;
     }
     .date-text { font-weight: 700; font-size: 1.05em; color: #1e293b; white-space: nowrap; }
@@ -191,7 +207,6 @@
       text-overflow: ellipsis;
     }
 
-    /* 커스텀 선택 메커니즘 (기본 체크박스 디자인 완전 대체) */
     .pick-area {
       margin-top: auto;
       display: flex;
@@ -208,17 +223,13 @@
       user-select: none;
       transition: all 0.15s ease;
     }
-    .pick-area input[type="checkbox"] {
-      display: none; /* 실제 체크박스는 백그라운드에 완전히 숨김 */
-    }
+    .pick-area input[type="checkbox"] { display: none; }
 
-    /* 일반 활성 상태에서 마우스 오버 시 */
     .calendar .cell:not(.disabled):hover {
       border-color: #cbd5e1;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
 
-    /* 🔵 신청가능(status-1)일 때 체크 활성화 인터랙션 효과 */
     .calendar .cell.selected-active {
       border-color: var(--primary);
       background-color: var(--primary-light);
@@ -228,7 +239,6 @@
       color: #fff;
     }
 
-    /* 🟠 조회전용(status-2)일 때 체크 내역 표시 효과 */
     .calendar .cell.selected-readonly {
       border-color: var(--readonly);
       background-color: var(--readonly-light);
@@ -238,14 +248,12 @@
       color: #fff;
     }
 
-    /* 주말 및 미실시 비활성 셀 스타일 */
     .calendar .disabled {
       background: #f1f5f9 !important;
       border-color: var(--border-color) !important;
     }
     .calendar .disabled .date-text { color: #94a3b8; }
 
-    /* 하단 플랫 액션 버튼 레이아웃 */
     .buttons {
       display: flex;
       justify-content: flex-end;
@@ -273,11 +281,8 @@
       color: #fff;
       box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
     }
-    #saveBtn:hover {
-      background: var(--primary-hover);
-    }
+    #saveBtn:hover { background: var(--primary-hover); }
 
-    /* 토스트 메시지 창 */
     #toast {
       visibility: hidden;
       min-width: 250px;
@@ -297,35 +302,22 @@
       opacity: 0;
       transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
     }
-    #toast.show {
-      visibility: visible;
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
+    #toast.show { visibility: visible; opacity: 1; transform: translate(-50%, 0); }
 
-    /* 📱 스마트폰/패드 디바이스 전용 미디어 쿼리 반응형 브레이크포인트 */
     @media (max-width: 768px) {
       .app-container { padding: 16px 12px 40px; }
-      h1 { font-size: 1.3em; }
+      h1 { font-size: 1.2em; }
       
       #monthButtons button {
-        flex: 1 1 calc(25% - 8px); /* 4열로 컴팩트하게 축소 */
+        flex: 1 1 calc(25% - 8px);
         font-size: 0.9em;
         padding: 8px 0;
       }
 
-      /* 🚨 중요: 모바일에서는 전통적인 7열 격자를 파괴하고 '1열 리스트' 형태로 재정렬 */
-      .calendar {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
+      .calendar { grid-template-columns: 1fr; gap: 10px; }
+      .calendar .weekday { display: none; }
+      .calendar div[style*="visibility: hidden"] { display: none !important; }
 
-      /* 평일 일/월/화/수 요일 헤더 셀은 모바일 목록에서 완전히 숨김 */
-      .calendar .weekday {
-        display: none;
-      }
-
-      /* 리스트 형태로 정렬된 카드형 디자인 정의 */
       .calendar .cell {
         min-height: auto;
         height: 56px;
@@ -336,56 +328,17 @@
         background: #fff;
       }
 
-      .day-head {
-        width: auto;
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .date-text {
-        font-size: 1.1em;
-        min-width: 35px;
-        text-align: left;
-      }
-
-      .note-badge {
-        margin-top: 0;
-      }
-
-      /* 리스트 우측에 고정 배치될 세련된 버튼 형태의 선택 영역 구현 */
-      .pick-area {
-        margin-top: 0;
-        width: 90px;
-        height: 34px;
-        font-size: 0.9em;
-      }
+      .day-head { width: auto; flex-direction: row; align-items: center; gap: 12px; }
+      .date-text { font-size: 1.1em; min-width: 35px; text-align: left; }
+      .note-badge { margin-top: 0; }
+      .pick-area { margin-top: 0; width: 90px; height: 34px; font-size: 0.9em; }
       
       .buttons {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: #fff;
-        padding: 12px 16px;
-        margin-top: 0;
-        box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
-        z-index: 999;
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: #fff; padding: 12px 16px; margin-top: 0;
+        box-shadow: 0 -4px 10px rgba(0,0,0,0.06); z-index: 999;
       }
-      .buttons button {
-        flex: 1;
-        padding: 13px 0;
-        font-size: 0.9em;
-      }
-
-      .calendar .weekday {
-        display: none;
-      }
-
-      /* 💡 이 속성을 새로 추가해 줍니다 */
-      .calendar div[style*="visibility: hidden"] {
-        display: none !important; /* 모바일 리스트 뷰에서는 시작 요일 공백 셀을 아예 없앰 */
-      }
+      .buttons button { flex: 1; padding: 13px 0; font-size: 0.9em; }
     }
   </style>
 </head>
@@ -393,7 +346,10 @@
   <div class="app-container">
     <header>
       <h1 id="welcomeText">급식 신청</h1>
-      <a id="adminButton" href="admin.html">관리자 페이지</a>
+      <div class="header-actions">
+        <a id="adminButton" href="admin.html">관리자 페이지</a>
+        <button id="logoutButton" onclick="handleLogout()">로그아웃</button>
+      </div>
     </header>
 
     <div id="monthButtons"></div>
@@ -435,7 +391,6 @@
     let currentUser = null;
     let selectedMonth = null;
     let currentMonthStatus = 3; 
-    let isMobileMode = window.innerWidth <= 768;
 
     async function isAdmin(email) {
       if (!email) return false;
@@ -470,6 +425,14 @@
       await loadAllowedMonths();
     });
 
+    // 💡 로그아웃 연동 처리 함수 추가 구현
+    window.handleLogout = async () => {
+      if (confirm("로그아웃 하시겠습니까?")) {
+        await auth.signOut();
+        window.location.href = "index.html";
+      }
+    };
+
     async function loadAllowedMonths() {
       const container = document.getElementById("monthButtons");
       container.style.visibility = "hidden";
@@ -483,6 +446,7 @@
       const frag = document.createDocumentFragment();
       snaps.forEach((snap, idx) => {
         const m = idx + 1;
+        
         let status = 3; 
         if (snap.exists()) {
           status = snap.data().status !== undefined ? Number(snap.data().status) : (snap.data().active ? 1 : 3);
@@ -492,8 +456,7 @@
         btn.textContent = `${m}월`;
 
         if (status === 1 || status === 2) {
-          // 💡 선택 가능한 달에는 고유의 진한 글씨색 클래스를 부여합니다.
-          btn.classList.add("allowed-month");
+          btn.classList.add("allowed-month"); // 선택 가능 클래스 고정
           btn.onclick = () => selectMonth(m, btn, status);
         } else {
           btn.disabled = true;
@@ -546,6 +509,7 @@
         const hole = document.createElement("div");
         hole.className = "cell";
         hole.style.visibility = "hidden";
+        if (window.innerWidth <= 768) hole.style.display = "none";
         calendar.appendChild(hole);
       }
 
@@ -554,7 +518,7 @@
         const isWeekend = (date.getDay() === 0 || date.getDay() === 6);
         const cell = document.createElement("div");
         cell.className = "cell";
-        cell.id = `cell-${d}`; // 카드 상태 제어용 ID 부여
+        cell.id = `cell-${d}`;
 
         const headRow = document.createElement("div");
         headRow.className = "day-head";
@@ -562,7 +526,6 @@
         const dateSpan = document.createElement("span");
         dateSpan.className = "date-text";
         
-        // 모바일 스크립트 대응을 위해 요일 텍스트를 함께 표기 (예: 1일 (월))
         const dowText = weekdays[date.getDay()];
         dateSpan.innerHTML = window.innerWidth <= 768 ? `${d}일 <span style="font-size:0.8em; color:var(--text-muted); font-weight:500;">(${dowText})</span>` : `${d}일`;
         headRow.appendChild(dateSpan);
@@ -585,14 +548,9 @@
           checkbox.type = "checkbox";
           checkbox.value = d;
 
-          if (currentMonthStatus === 2) {
-            checkbox.disabled = true;
-          }
+          if (currentMonthStatus === 2) checkbox.disabled = true;
 
-          // 카드 내부 영역 어디를 터치해도 체크박스가 작동하도록 연동 처리
-          checkbox.onchange = () => {
-            updateCellHighlight(d, checkbox.checked);
-          };
+          checkbox.onchange = () => { updateCellHighlight(d, checkbox.checked); };
 
           const txt = document.createElement("span");
           txt.id = `txt-${d}`;
@@ -602,7 +560,6 @@
           pick.appendChild(txt);
           cell.appendChild(pick);
           
-          // 사용성 개선: 카드 전체 영역 클릭 시 작동 인터랙션 구현
           if (currentMonthStatus === 1) {
             cell.style.cursor = "pointer";
             cell.onclick = (e) => {
@@ -617,7 +574,6 @@
       }
     }
 
-    // 카드 하이라이트 배경색 실시간 토글 함수
     function updateCellHighlight(day, isChecked) {
       const cell = document.getElementById(`cell-${day}`);
       const txt = document.getElementById(`txt-${day}`);
@@ -644,6 +600,7 @@
       selectedMonth = month;
       currentMonthStatus = status; 
       
+      // 💡 멀티 클래스 폰트 굵기 유실 방지를 위한 active 토글 보정 완료
       document.querySelectorAll("#monthButtons button").forEach(b => b.classList.remove("active"));
       button.classList.add("active");
       document.getElementById("calendarArea").style.display = "block";
@@ -663,7 +620,6 @@
         editBanner.style.color = "var(--readonly)";
         editBanner.style.borderColor = "#ffe0b2";
         editBanner.innerHTML = `🔒 <b>조회 모드</b> — 급식 신청이 마감되었습니다. (내역 조회만 가능)`;
-        
         document.querySelector(".buttons").style.display = "none";
       } else {
         editBanner.style.background = "#f0fdf4";
@@ -754,22 +710,15 @@
       await selectMonth(selectedMonth, document.querySelector("#monthButtons .active"), currentMonthStatus);
     };
 
-    // 모바일 리사이즈 대응 요일 리렌더링 트리거
+    // 💡 달력 중복 렌더링을 차단하는 모드 스위칭 리사이즈 최적화 가드 장치
+    let isMobileMode = window.innerWidth <= 768;
     window.addEventListener('resize', () => {
       if (!selectedMonth) return;
-
-      // 현재 브라우저가 모바일 영역인지 데스크톱 영역인지 판별
       const currentMode = window.innerWidth <= 768;
-
-      // ⭐️ 중요: 모바일 ➡️ 데스크톱 혹은 데스크톱 ➡️ 모바일로 '경계선'을 완전히 넘어갔을 때만 단 한 번 리렌더링 수행!
       if (currentMode !== isMobileMode) {
-        isMobileMode = currentMode; // 상태 갱신
-        
-        // 달력 내부를 완전히 초기화한 후 깨끗한 상태에서 재생성
+        isMobileMode = currentMode;
         const calendar = document.getElementById("calendar");
         if (calendar) calendar.innerHTML = ""; 
-        
-        // 달력 다시 그리기 트리거
         generateCalendar(selectedMonth);
       }
     });
