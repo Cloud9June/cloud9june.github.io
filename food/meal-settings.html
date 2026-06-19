@@ -10,8 +10,13 @@
     h2 + p { color:#444; text-decoration: underline; }
     .select-wrapper { display:flex; gap:10px; margin-bottom:20px; align-items:center; flex-wrap:wrap; }
     .month-grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; margin-top:20px; }
-    .month-grid button { padding:10px; border-radius:8px; font-size:1em; background:#eee; cursor:pointer; border:1px solid #e3e3e3; }
-    .month-grid button.active { background:#1976d2; color:#fff; }
+    .month-grid button { padding:10px; border-radius:8px; font-size:1em; background:#eee; cursor:pointer; border:1px solid #e3e3e3; color: #333; transition: all 0.2s; }
+    
+    /* 3단계 고유 상태값별 버턴 테마 디자인 */
+    .month-grid button.status-1 { background:#1976d2; color:#fff; font-weight: bold; }   /* 1: 신청가능 (Blue) */
+    .month-grid button.status-2 { background:#f57c00; color:#fff; font-weight: bold; }   /* 2: 조회전용 (Orange) */
+    .month-grid button.status-3 { background:#eee; color:#333; }                         /* 3: 미오픈 (Gray) */
+    
     .calendar { display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; max-width:900px; margin:20px auto; contain:content; }
     .calendar div { padding:10px 6px; height:68px; background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.06); border:1px solid #ddd; }
     .calendar .weekday { font-weight:700; background:#f3f4f6; color:#374151; height:36px; text-align:center; display:flex; align-items:center; justify-content:center; }
@@ -25,7 +30,7 @@
 </head>
 <body>
   <h2>1. 급식 신청 가능 월 설정</h2>
-  <p>급식 신청 가능한 연도와 월을 지정할 수 있습니다.</p>
+  <p>급식 신청 가능한 연도와 월의 권한 상태를 지정할 수 있습니다. (클릭 시 순환: 미오픈 ➡️ 신청중 ➡️ 조회전용)</p>
 
   <div class="select-wrapper">
     <label for="yearSelect">연도 선택:</label>
@@ -57,12 +62,9 @@
   <div class="calendar" id="blockCalendar"></div>
 
   <script type="module">
-    /* ---------------- Firebase ---------------- */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, enableIndexedDbPersistence
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
@@ -72,9 +74,8 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
-    enableIndexedDbPersistence(db).catch(()=>{ /* 멀티탭 충돌 시 무시 */ });
+    enableIndexedDbPersistence(db).catch(()=>{});
 
-    /* ---------------- Gate (login → domain → admin) ---------------- */
     async function gateAdmin() {
       const user = await new Promise(resolve => {
         const un = onAuthStateChanged(auth, u => { un(); resolve(u); });
@@ -92,7 +93,6 @@
       return email;
     }
 
-    /* ---------------- DOM ---------------- */
     const now = new Date();
     const currentYear = now.getFullYear();
 
@@ -108,7 +108,6 @@
     const nextBtn = document.getElementById("nextMonth");
     const syncHint = document.getElementById("syncHint");
 
-    /* ---------------- Utils ---------------- */
     function debounce(fn, ms=300){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
     function populateYearOptions(selectEl) {
       selectEl.innerHTML = "";
@@ -120,26 +119,34 @@
       }
     }
 
-    /* ---------------- Month actives: cache-first ---------------- */
-    function drawMonthButtons(year, activeMonths = []) {
+    function drawMonthButtons(year, settingsMap = {}) {
       monthGrid.innerHTML = "";
-      const set = new Set(activeMonths);
       for (let m=1; m<=12; m++){
         const btn = document.createElement("button");
         btn.textContent = `${m}월`;
-        if (set.has(m)) btn.classList.add("active");
+        
+        let currentStatus = Number(settingsMap[m] || 3); 
+        btn.classList.add(`status-${currentStatus}`);
 
-        // 낙관적 업데이트 + 캐시 갱신
         btn.onclick = async () => {
-          const willActive = !btn.classList.contains("active");
-          btn.classList.toggle("active");
+          let nextStatus = 3;
+          
+          if (currentStatus === 3) nextStatus = 1;
+          else if (currentStatus === 1) nextStatus = 2;
+          else nextStatus = 3;
+          
+          btn.className = `status-${nextStatus}`;
+          currentStatus = nextStatus;
+
           const key = `settings:${year}`;
-          const arr = JSON.parse(localStorage.getItem(key) || "[]");
-          const s = new Set(arr);
-          willActive ? s.add(m) : s.delete(m);
-          localStorage.setItem(key, JSON.stringify([...s]));
-          // 서버 반영
-          await setDoc(doc(db,"mealSettings",`${year}-${m}`), { active: willActive });
+          const localData = JSON.parse(localStorage.getItem(key) || "{}");
+          localData[m] = nextStatus;
+          localStorage.setItem(key, JSON.stringify(localData));
+          
+          await setDoc(doc(db,"mealSettings",`${year}-${m}`), { 
+            status: nextStatus,
+            active: (nextStatus === 1 || nextStatus === 2)
+          }, { merge: true });
         };
 
         monthGrid.appendChild(btn);
@@ -151,21 +158,26 @@
       const cacheKey = `settings:${y}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
-        drawMonthButtons(y, JSON.parse(cached));   // 즉시
+        drawMonthButtons(y, JSON.parse(cached));
       } else {
-        drawMonthButtons(y, []);                    // 골격 먼저
+        drawMonthButtons(y, {});
       }
 
-      // 서버 최신값으로 갱신
       const snaps = await Promise.all(
         Array.from({length:12}, (_,i)=> getDoc(doc(db,"mealSettings",`${y}-${i+1}`)))
       );
-      const actives = snaps.map((s,i)=> s.exists() && s.data().active ? (i+1) : null).filter(Boolean);
-      localStorage.setItem(cacheKey, JSON.stringify(actives));
-      drawMonthButtons(y, actives);                 // 조용히 업데이트
+      const settingsMap = {};
+      snaps.forEach((s, i) => {
+        if (s.exists()) {
+          settingsMap[i+1] = s.data().status !== undefined ? Number(s.data().status) : (s.data().active ? 1 : 3);
+        } else {
+          settingsMap[i+1] = 3;
+        }
+      });
+      localStorage.setItem(cacheKey, JSON.stringify(settingsMap));
+      drawMonthButtons(y, settingsMap);
     }
 
-    /* ---------------- Blocked days: cache-first ---------------- */
     function buildCalendarUI({year, month, blocked, notes, onChange}) {
       blockCalendar.innerHTML = "";
       const frag = document.createDocumentFragment();
@@ -203,7 +215,7 @@
 
         const noteInput = document.createElement("input");
         noteInput.type="text"; noteInput.className="note-input";
-        noteInput.placeholder="메모를 입력하세요 (예: 급식미실시일)";
+        noteInput.placeholder="메모를 입력하세요";
         noteInput.value = notes[d] ?? "급식미실시일";
         noteInput.style.display = checkbox.checked ? "block" : "none";
         if (checkbox.checked) cell.classList.add("disabled");
@@ -239,24 +251,19 @@
       const month = parseInt(blockMonth.value);
       const docId = `${year}-${String(month).padStart(2,'0')}`;
       const blockRef = doc(db, "blockedDays", docId);
-
-      // 캐시 키
       const cacheKey = `blocked:${docId}`;
 
-      // 🔧 저장 함수들을 먼저 정의하고(순서 중요!)
       async function saveOnce(nextBlocked, nextNotes){
         localStorage.setItem(cacheKey, JSON.stringify({blocked: nextBlocked, notes: nextNotes}));
-        await setDoc(blockRef, { days: nextBlocked, notes: nextNotes }); // 전체 동기화
+        await setDoc(blockRef, { days: nextBlocked, notes: nextNotes });
       }
       const saveDebounced = debounce(saveOnce, 300);
 
-      // 캐시 먼저 읽어 UI 그림
       let blocked = [], notes = {};
       const cached = localStorage.getItem(cacheKey);
       if (cached) ({blocked, notes} = JSON.parse(cached));
-      buildCalendarUI({ year, month, blocked, notes, onChange: saveDebounced }); // ✅ 이제 정의 후 전달
+      buildCalendarUI({ year, month, blocked, notes, onChange: saveDebounced });
 
-      // 서버 최신값으로 갱신
       syncHint.style.display = "inline";
       const snap = await getDoc(blockRef);
       if (snap.exists()){
@@ -268,15 +275,11 @@
       syncHint.style.display = "none";
     }
 
-
-    /* ---------------- Teacher year ---------------- */
     async function loadTeacherYear() {
-      // 캐시 먼저
       const cacheKey = "teacherYear";
       const cached = localStorage.getItem(cacheKey);
       if (cached) teacherYearSelect.value = JSON.parse(cached);
 
-      // 서버 갱신
       const snap = await getDoc(doc(db,"mealConfig","teacherYear"));
       const y = snap.exists() ? (snap.data().year ?? currentYear) : currentYear;
       teacherYearSelect.value = y;
@@ -289,7 +292,6 @@
       alert("교사 신청용 연도가 저장되었습니다.");
     };
 
-    /* ---------------- Events ---------------- */
     yearSelect.addEventListener("change", ()=> renderMonthButtons().catch(console.error));
     blockYear.addEventListener("change", ()=> renderBlockedCalendar().catch(console.error));
     blockMonth.addEventListener("change", ()=> renderBlockedCalendar().catch(console.error));
@@ -304,14 +306,12 @@
       renderBlockedCalendar().catch(console.error);
     };
 
-    /* ---------------- Init (after gate) ---------------- */
     (async function start(){
       try {
         await gateAdmin();
         populateYearOptions(yearSelect);
         populateYearOptions(blockYear);
 
-        // 월 select 미리 채우기
         blockMonth.innerHTML = "";
         for (let m=1; m<=12; m++){
           const opt=document.createElement("option"); opt.value=m; opt.textContent=`${m}월`; blockMonth.appendChild(opt);
@@ -319,7 +319,6 @@
         blockYear.value = currentYear;
         blockMonth.value = now.getMonth()+1;
 
-        // 캐시 즉시 렌더 → 서버 갱신
         await Promise.all([
           renderMonthButtons(),
           renderBlockedCalendar(),

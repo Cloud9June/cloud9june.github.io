@@ -6,158 +6,409 @@
   <title>급식 신청</title>
   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
   <style>
+    /* 기본 초기화 및 부드러운 중성톤 배경 세팅 */
+    :root {
+      --primary: #1976d2;
+      --primary-hover: #1565c0;
+      --primary-light: #e3f2fd;
+      --readonly: #f57c00;
+      --readonly-light: #fff3e0;
+      --gray-bg: #f8fafc;
+      --border-color: #e2e8f0;
+      --text-main: #334155;
+      --text-muted: #64748b;
+    }
+
     body {
       font-family: 'Pretendard', sans-serif;
-      background: #f5f5f5;
+      background-color: #f1f5f9;
+      color: var(--text-main);
       margin: 0;
-      padding: 20px;
-      text-align: center;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
     }
-    h1 { font-size: 1.8em; margin-bottom: 20px; }
+
+    /* 상단 레이아웃 바 헤더 */
+    .app-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      text-align: left;
+    }
+
+    /* 관리자 이동 단추 */
+    #adminButton {
+      padding: 8px 16px;
+      background: #334155;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9em;
+      font-weight: 500;
+      display: none;
+      transition: background 0.2s;
+    }
+    #adminButton:hover {
+      background: #1e293b;
+    }
+
+    /* 플랫하고 둥근 탭 스타일의 월 버튼 영역 */
+    #monthButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
 
     #monthButtons button {
-      margin: 5px; padding: 10px 16px;
-      border: none; border-radius: 6px;
-      background: #ddd; cursor: pointer;
+      flex: 1 1 calc(16.66% - 8px);
+      min-width: 65px;
+      padding: 10px 0;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
-    #monthButtons button.active { background: #1976d2; color: #fff; }
-    #monthButtons button.disabled { background: #ccc; cursor: not-allowed; }
+    #monthButtons button:hover:not(.disabled):not(.active) {
+      background: var(--gray-bg);
+    }
+    #monthButtons button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    #monthButtons button.disabled {
+      color: #cbd5e1;
+      cursor: not-allowed;
+    }
 
-    #calendarArea { display: none; margin-top: 30px; }
+    /* 메인 캘린더 아레나 카드 */
+    #calendarArea {
+      display: none;
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+    }
 
+    #calendarTitle {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    /* 세련된 알림 얼럿 컴포넌트 */
+    #editBanner {
+      border-radius: 10px;
+      font-size: 0.95em;
+      padding: 14px 16px;
+      text-align: left;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      border: 1px solid transparent;
+    }
+
+    /* 🖥️ 데스크톱 표준 그리드 달력 레이아웃 */
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      max-width: 880px;
-      margin: 20px auto;
+      gap: 8px;
+      margin-bottom: 24px;
     }
 
     .calendar .cell {
-      padding: 8px 10px;
-      height: 60px;
       background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 70px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      align-items: stretch;
-      overflow: hidden;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
     }
+
+    /* 요일 표시 셀 */
     .calendar .weekday {
-      height: 24px;
-      background: #E5E5E5;
-      color: #57648C;
-      line-height: 24px;
-      font-weight: 600;
+      min-height: auto;
+      height: 32px;
+      background: #f8fafc;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.9em;
+      align-items: center;
+      justify-content: center;
     }
-    .calendar .weekday:nth-child(1) { color: #e24666; }
-    .calendar .weekday:nth-child(7) { color: #0080ff; }
+    .calendar .weekday:nth-child(1) { color: #ef4444; }
+    .calendar .weekday:nth-child(7) { color: #3b82f6; }
 
     .day-head {
       display: flex;
+      justify-content: space-between;
       align-items: flex-start;
-      justify-content: flex-start;
-      flex-direction: column;
-      gap: 6px;
       width: 100%;
-      min-height: 22px;
-      flex: 0 0 auto;
     }
-    .date-text { font-weight: 600; color: #222; }
+    .date-text { font-weight: 700; font-size: 1.05em; color: #1e293b; white-space: nowrap; }
 
     .note-badge {
-      flex: 0 1 auto;
-      max-width: 100%;
-      margin-top: 4px;
-      padding: 2px;
-      font-size: 12px;
-      line-height: 16px;
-      border-radius: 999px;
-      background: #eef2f7;
-      color: red;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #fef2f2;
+      color: #ef4444;
+      font-weight: 600;
+      max-width: 80%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    /* 커스텀 선택 메커니즘 (기본 체크박스 디자인 완전 대체) */
     .pick-area {
-      margin-top: 6px;
+      margin-top: auto;
       display: flex;
       align-items: center;
-      gap: 6px;
-      flex: 1 1 auto;
+      justify-content: center;
+      cursor: pointer;
+      width: 100%;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--gray-bg);
+      font-size: 0.85em;
+      font-weight: 600;
+      color: var(--text-muted);
+      user-select: none;
+      transition: all 0.15s ease;
     }
-    .pick-area input[type="checkbox"] { margin: 0; }
-
-    .buttons { margin-top: 20px; }
-    .buttons button {
-      margin: 0 5px; padding: 10px 20px;
-      border: none; border-radius: 6px;
-      background: #1976d2; color: #fff; cursor: pointer;
+    .pick-area input[type="checkbox"] {
+      display: none; /* 실제 체크박스는 백그라운드에 완전히 숨김 */
     }
-    .buttons button:last-child { background: #dc143c; }
 
+    /* 일반 활성 상태에서 마우스 오버 시 */
+    .calendar .cell:not(.disabled):hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+
+    /* 🔵 신청가능(status-1)일 때 체크 활성화 인터랙션 효과 */
+    .calendar .cell.selected-active {
+      border-color: var(--primary);
+      background-color: var(--primary-light);
+    }
+    .calendar .cell.selected-active .pick-area {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* 🟠 조회전용(status-2)일 때 체크 내역 표시 효과 */
+    .calendar .cell.selected-readonly {
+      border-color: var(--readonly);
+      background-color: var(--readonly-light);
+    }
+    .calendar .cell.selected-readonly .pick-area {
+      background: var(--readonly);
+      color: #fff;
+    }
+
+    /* 주말 및 미실시 비활성 셀 스타일 */
     .calendar .disabled {
-      color: #666;
-      background: #f0f0f0;
+      background: #f1f5f9 !important;
+      border-color: var(--border-color) !important;
     }
-    .calendar .disabled .date-text { color: #999; }
+    .calendar .disabled .date-text { color: #94a3b8; }
 
-    #adminButton {
-      position: absolute; top: 20px; right: 20px;
-      padding: 8px 14px; background: #444; color: #fff;
-      border-radius: 6px; text-decoration: none; display: none;
+    /* 하단 플랫 액션 버튼 레이아웃 */
+    .buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
     }
+    .buttons button {
+      padding: 11px 22px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .buttons button:nth-child(1), .buttons button:nth-child(2) {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .buttons button:nth-child(1):hover, .buttons button:nth-child(2):hover {
+      background: #cbd5e1;
+    }
+    #saveBtn {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+    }
+    #saveBtn:hover {
+      background: var(--primary-hover);
+    }
+
+    /* 토스트 메시지 창 */
     #toast {
       visibility: hidden;
-      min-width: 280px;
-      max-width: 400px;
-      background-color: rgba(50, 50, 50, 0.9);
+      min-width: 250px;
+      background-color: #1e293b;
       color: #fff;
       text-align: center;
-      border-radius: 8px;
-      padding: 16px 20px;
+      border-radius: 10px;
+      padding: 14px 20px;
       position: fixed;
       z-index: 9999;
       left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) scale(0.9);
-      font-size: 15px;
-      line-height: 1.4;
+      bottom: 30px;
+      transform: translate(-50%, 20px);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
       opacity: 0;
-      transition: opacity 0.4s, transform 0.4s;
+      transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
     }
     #toast.show {
       visibility: visible;
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      transform: translate(-50%, 0);
+    }
+
+    /* 📱 스마트폰/패드 디바이스 전용 미디어 쿼리 반응형 브레이크포인트 */
+    @media (max-width: 768px) {
+      .app-container { padding: 16px 12px 40px; }
+      h1 { font-size: 1.3em; }
+      
+      #monthButtons button {
+        flex: 1 1 calc(25% - 8px); /* 4열로 컴팩트하게 축소 */
+        font-size: 0.9em;
+        padding: 8px 0;
+      }
+
+      /* 🚨 중요: 모바일에서는 전통적인 7열 격자를 파괴하고 '1열 리스트' 형태로 재정렬 */
+      .calendar {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      /* 평일 일/월/화/수 요일 헤더 셀은 모바일 목록에서 완전히 숨김 */
+      .calendar .weekday {
+        display: none;
+      }
+
+      /* 리스트 형태로 정렬된 카드형 디자인 정의 */
+      .calendar .cell {
+        min-height: auto;
+        height: 56px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        background: #fff;
+      }
+
+      .day-head {
+        width: auto;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .date-text {
+        font-size: 1.1em;
+        min-width: 35px;
+        text-align: left;
+      }
+
+      .note-badge {
+        margin-top: 0;
+      }
+
+      /* 리스트 우측에 고정 배치될 세련된 버튼 형태의 선택 영역 구현 */
+      .pick-area {
+        margin-top: 0;
+        width: 90px;
+        height: 34px;
+        font-size: 0.9em;
+      }
+      
+      .buttons {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        padding: 12px 16px;
+        margin-top: 0;
+        box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
+        z-index: 999;
+      }
+      .buttons button {
+        flex: 1;
+        padding: 13px 0;
+        font-size: 0.9em;
+      }
+
+      .calendar .weekday {
+        display: none;
+      }
+
+      /* 💡 이 속성을 새로 추가해 줍니다 */
+      .calendar div[style*="visibility: hidden"] {
+        display: none !important; /* 모바일 리스트 뷰에서는 시작 요일 공백 셀을 아예 없앰 */
+      }
     }
   </style>
 </head>
 <body>
-  <a id="adminButton" href="admin.html">관리자 페이지</a>
-  <h1 id="welcomeText">급식 신청</h1>
+  <div class="app-container">
+    <header>
+      <h1 id="welcomeText">급식 신청</h1>
+      <a id="adminButton" href="admin.html">관리자 페이지</a>
+    </header>
 
-  <div id="monthButtons"></div>
+    <div id="monthButtons"></div>
 
-  <div id="calendarArea">
-    <h2 id="calendarTitle"></h2>
-    <div class="calendar" id="calendar"></div>
-    
-    <div id="editBanner" style="display:none;max-width:880px;margin:10px auto 0;
-      padding:10px 14px;border-radius:8px;background:#fff8e1;color:#7a5600;
-      border:1px solid #ffe082;text-align:left;">
-      <b>수정 모드</b> — 이 달에 이미 신청한 내역이 있습니다.<br>
-      변경을 원하시면, 새롭게 체크하신 후 변경사항 저장 버튼을 누르세요.
-      <span id="lastSaved"></span>
-    </div>
-    
-    <div class="buttons">
-      <button onclick="selectAll()">전체 선택</button>
-      <button onclick="deselectAll()">전체 해제</button>
-      <button id="saveBtn" onclick="saveData()">저장하기</button>
+    <div id="calendarArea">
+      <h2 id="calendarTitle"></h2>
+      <div class="calendar" id="calendar"></div>
+      
+      <div id="editBanner"></div>
+      
+      <div class="buttons">
+        <button onclick="selectAll()">전체 선택</button>
+        <button onclick="deselectAll()">전체 해제</button>
+        <button id="saveBtn" onclick="saveData()">저장하기</button>
+      </div>
     </div>
   </div>
 
@@ -168,7 +419,6 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // ⚠️ firebaseConfig는 공개 전제(보안은 규칙으로). .env로 빌드 주입은 가능하나 런타임 공개는 정상입니다.
     const firebaseConfig = {
       apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
       authDomain: "mealmanager-cda3b.firebaseapp.com",
@@ -184,8 +434,9 @@
 
     let currentUser = null;
     let selectedMonth = null;
+    let currentMonthStatus = 3; 
+    let isMobileMode = window.innerWidth <= 768;
 
-    // 🔐 Firestore roles 컬렉션에서 관리자 여부 확인
     async function isAdmin(email) {
       if (!email) return false;
       try {
@@ -203,15 +454,13 @@
         return;
       }
 
-      // 연도 설정 불러오기
       const configSnap = await getDoc(doc(db, "mealConfig", "teacherYear"));
       if (configSnap.exists()) currentYear = configSnap.data().year;
 
       currentUser = user;
       const name = user.displayName || user.email.split("@")[0];
-      document.getElementById("welcomeText").textContent = `${name} 선생님, 급식 신청하세요.`;
+      document.getElementById("welcomeText").textContent = `${name} 선생님, 급식 신청`;
 
-      // ✅ 관리자 UI 노출은 roles 기반
       if (await isAdmin(user.email)) {
         document.getElementById("adminButton").style.display = "inline-block";
       } else {
@@ -234,13 +483,18 @@
       const frag = document.createDocumentFragment();
       snaps.forEach((snap, idx) => {
         const m = idx + 1;
-        const isActive = snap.exists() && snap.data().active === true;
+        let status = 3; 
+        if (snap.exists()) {
+          status = snap.data().status !== undefined ? Number(snap.data().status) : (snap.data().active ? 1 : 3);
+        }
 
         const btn = document.createElement("button");
         btn.textContent = `${m}월`;
 
-        if (isActive) {
-          btn.onclick = () => selectMonth(m, btn);
+        if (status === 1 || status === 2) {
+          // 💡 선택 가능한 달에는 고유의 진한 글씨색 클래스를 부여합니다.
+          btn.classList.add("allowed-month");
+          btn.onclick = () => selectMonth(m, btn, status);
         } else {
           btn.disabled = true;
           btn.classList.add("disabled");
@@ -252,7 +506,6 @@
       container.style.visibility = "visible";
     }
 
-    // blocked/notes 로더
     async function getBlockedAndNotes(year, month, db) {
       const idZero  = `${year}-${String(month).padStart(2, '0')}`;
       const idPlain = `${year}-${month}`;
@@ -263,31 +516,21 @@
         if (!snap.exists()) return null;
 
         const data = snap.data() || {};
-        const blocked = Array.isArray(data.days)
-          ? data.days.map(n => Number(n)).filter(n => Number.isFinite(n))
-          : [];
+        const blocked = Array.isArray(data.days) ? data.days.map(Number) : [];
         const rawNotes = data.notes || {};
         const notes = {};
-        Object.keys(rawNotes).forEach(k => {
-          const kk = String(k);
-          const vv = String(rawNotes[k] ?? "");
-          notes[kk] = vv;
-        });
+        Object.keys(rawNotes).forEach(k => { notes[String(k)] = String(rawNotes[k] ?? ""); });
         return { blocked, notes };
       };
-
       return (await tryRead(idZero)) || (await tryRead(idPlain)) || { blocked: [], notes: {} };
     }
 
     async function generateCalendar(month) {
-      document.getElementById("calendarTitle").textContent =
-        `${currentYear}년 ${String(month).padStart(2, '0')}월`;
-
+      document.getElementById("calendarTitle").textContent = `${currentYear}년 ${String(month).padStart(2, '0')}월`;
       const calendar = document.getElementById("calendar");
       calendar.innerHTML = "";
 
       const { blocked, notes } = await getBlockedAndNotes(currentYear, month, db);
-
       const daysInMonth = new Date(currentYear, month, 0).getDate();
       const startDay = new Date(currentYear, month - 1, 1).getDay();
 
@@ -311,22 +554,25 @@
         const isWeekend = (date.getDay() === 0 || date.getDay() === 6);
         const cell = document.createElement("div");
         cell.className = "cell";
+        cell.id = `cell-${d}`; // 카드 상태 제어용 ID 부여
 
         const headRow = document.createElement("div");
         headRow.className = "day-head";
 
         const dateSpan = document.createElement("span");
         dateSpan.className = "date-text";
-        dateSpan.textContent = `${d}일`;
+        
+        // 모바일 스크립트 대응을 위해 요일 텍스트를 함께 표기 (예: 1일 (월))
+        const dowText = weekdays[date.getDay()];
+        dateSpan.innerHTML = window.innerWidth <= 768 ? `${d}일 <span style="font-size:0.8em; color:var(--text-muted); font-weight:500;">(${dowText})</span>` : `${d}일`;
         headRow.appendChild(dateSpan);
 
         if (blocked.includes(d)) {
           const badge = document.createElement("span");
           badge.className = "note-badge";
-          badge.textContent = (notes[String(d)] || "급식미실시일");
+          badge.textContent = (notes[String(d)] || "급식미실시");
           headRow.appendChild(badge);
         }
-
         cell.appendChild(headRow);
 
         if (isWeekend || blocked.includes(d)) {
@@ -339,56 +585,114 @@
           checkbox.type = "checkbox";
           checkbox.value = d;
 
+          if (currentMonthStatus === 2) {
+            checkbox.disabled = true;
+          }
+
+          // 카드 내부 영역 어디를 터치해도 체크박스가 작동하도록 연동 처리
+          checkbox.onchange = () => {
+            updateCellHighlight(d, checkbox.checked);
+          };
+
           const txt = document.createElement("span");
-          txt.textContent = `${d}일 선택`;
+          txt.id = `txt-${d}`;
+          txt.textContent = `선택`;
 
           pick.appendChild(checkbox);
           pick.appendChild(txt);
           cell.appendChild(pick);
+          
+          // 사용성 개선: 카드 전체 영역 클릭 시 작동 인터랙션 구현
+          if (currentMonthStatus === 1) {
+            cell.style.cursor = "pointer";
+            cell.onclick = (e) => {
+              if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL' && e.target.tagName !== 'SPAN') {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+              }
+            };
+          }
         }
-
         calendar.appendChild(cell);
       }
     }
 
-    let existingDays = [];      // 이전에 저장되어 있던 날짜들
-    let isEditMode = false;     // 수정 모드 여부
+    // 카드 하이라이트 배경색 실시간 토글 함수
+    function updateCellHighlight(day, isChecked) {
+      const cell = document.getElementById(`cell-${day}`);
+      const txt = document.getElementById(`txt-${day}`);
+      if (!cell) return;
 
-    async function selectMonth(month, button) {
+      if (isChecked) {
+        if (currentMonthStatus === 1) {
+          cell.classList.add("selected-active");
+          if(txt) txt.textContent = "✓ 선택됨";
+        } else if (currentMonthStatus === 2) {
+          cell.classList.add("selected-readonly");
+          if(txt) txt.textContent = "신청됨";
+        }
+      } else {
+        cell.classList.remove("selected-active", "selected-readonly");
+        if(txt) txt.textContent = currentMonthStatus === 2 ? "미신청" : "선택";
+      }
+    }
+
+    let existingDays = [];
+    let isEditMode = false;
+
+    async function selectMonth(month, button, status) {
       selectedMonth = month;
+      currentMonthStatus = status; 
+      
       document.querySelectorAll("#monthButtons button").forEach(b => b.classList.remove("active"));
       button.classList.add("active");
       document.getElementById("calendarArea").style.display = "block";
 
-      // 1) 달력 먼저 그림
       await generateCalendar(month);
 
-      // 2) 내 기존 신청 불러와서 체크
       const ym = `${currentYear}-${String(selectedMonth).padStart(2, "0")}`;
       const safeName = (currentUser.displayName || currentUser.email.split("@")[0]).replace(/\s+/g, "");
       const docId = `${safeName}_${currentUser.uid}`;
       const snap = await getDoc(doc(db, "mealRequests", ym, "users", docId));
+
+      const editBanner = document.getElementById("editBanner");
+
+      if (currentMonthStatus === 2) {
+        editBanner.style.display = "block";
+        editBanner.style.background = "var(--readonly-light)";
+        editBanner.style.color = "var(--readonly)";
+        editBanner.style.borderColor = "#ffe0b2";
+        editBanner.innerHTML = `🔒 <b>조회 모드</b> — 급식 신청이 마감되었습니다. (내역 조회만 가능)`;
+        
+        document.querySelector(".buttons").style.display = "none";
+      } else {
+        editBanner.style.background = "#f0fdf4";
+        editBanner.style.color = "#16a34a";
+        editBanner.style.borderColor = "#bbf7d0";
+        editBanner.innerHTML = `✏️ <b>신청 모드</b> — 원하는 날짜를 터치하여 선택 후 아래 저장하기를 누르세요.`;
+        document.querySelector(".buttons").style.display = "flex";
+      }
 
       if (snap.exists()) {
         const d = snap.data() || {};
         existingDays = Array.isArray(d.days) ? d.days.map(Number) : [];
         isEditMode = true;
 
-        // 체크박스 반영
         document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => {
-          cb.checked = existingDays.includes(parseInt(cb.value, 10));
+          const val = parseInt(cb.value, 10);
+          const isChecked = existingDays.includes(val);
+          cb.checked = isChecked;
+          updateCellHighlight(val, isChecked);
         });
 
-        // 배너/버튼 문구
-        document.getElementById("editBanner").style.display = "block";
-        const ts = d.timestamp?.toDate?.() || d.timestamp || null;
-        document.getElementById("lastSaved").textContent =
-          ts ? ` (저장 시각: ${new Date(ts).toLocaleString()})` : "";
-        document.getElementById("saveBtn").textContent = "변경사항 저장";
+        if (currentMonthStatus === 1) {
+          const ts = d.timestamp?.toDate?.() || d.timestamp || null;
+          editBanner.innerHTML = `🔄 <b>수정 모드</b> — 기존 저장 내역이 있습니다. 변경 후 저장하기를 누르세요.${ts ? `<br><span style="font-size:0.85em; opacity:0.8;">(최종 저장: ${new Date(ts).toLocaleString()})</span>` : ""}`;
+          document.getElementById("saveBtn").textContent = "변경사항 저장";
+        }
       } else {
         existingDays = [];
         isEditMode = false;
-        document.getElementById("editBanner").style.display = "none";
         document.getElementById("saveBtn").textContent = "신청하기";
       }
     }
@@ -397,47 +701,41 @@
       const toast = document.getElementById("toast");
       toast.textContent = message;
       toast.className = "show";
-      setTimeout(() => {
-        toast.className = toast.className.replace("show", "");
-      }, 2500); // 2.5초 후 사라짐
+      setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2500);
     }
 
     window.selectAll = () => {
-      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => cb.checked = true);
+      if (currentMonthStatus !== 1) return;
+      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => {
+        cb.checked = true;
+        updateCellHighlight(parseInt(cb.value, 10), true);
+      });
     };
     window.deselectAll = () => {
-      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => cb.checked = false);
+      if (currentMonthStatus !== 1) return;
+      document.querySelectorAll("#calendar input[type='checkbox']").forEach(cb => {
+        cb.checked = false;
+        updateCellHighlight(parseInt(cb.value, 10), false);
+      });
     };
 
     window.saveData = async () => {
-      const checkboxes = Array.from(document.querySelectorAll("#calendar input[type='checkbox']"));
-      const days = checkboxes
-        .filter(cb => cb.checked)
-        .map(cb => parseInt(cb.value, 10))
-        .sort((a, b) => a - b);
-
-      // 수정 모드일 때 변경 없으면 안내
-      const same =
-        isEditMode &&
-        days.length === existingDays.length &&
-        days.every((v, i) => v === existingDays.sort((a, b) => a - b)[i]);
-
-      if (same) {
-        alert("변경된 내용이 없습니다.");
+      if (currentMonthStatus !== 1) {
+        alert("현재는 급식 신청/수정 기간이 아닙니다.");
         return;
       }
 
-      // 0개 선택(미신청) 확인
+      const checkboxes = Array.from(document.querySelectorAll("#calendar input[type='checkbox']"));
+      const days = checkboxes.filter(cb => cb.checked).map(cb => parseInt(cb.value, 10)).sort((a, b) => a - b);
+
+      const same = isEditMode && days.length === existingDays.length && days.every((v, i) => v === existingDays.sort((a, b) => a - b)[i]);
+      if (same) { alert("변경된 내용이 없습니다."); return; }
+
       if (days.length === 0) {
-        const ok = confirm(
-          isEditMode
-            ? "기존 신청 내역을 모두 취소합니다. 진행할까요?"
-            : "급식을 신청하지 않습니다. 맞습니까?"
-        );
+        const ok = confirm(isEditMode ? "기존 신청 내역을 모두 취소합니다. 진행할까요?" : "급식을 신청하지 않습니다. 맞습니까?");
         if (!ok) return;
       }
 
-      // 🔹 4단 구조: year-month → users → uid
       const ym = `${currentYear}-${String(selectedMonth).padStart(2, "0")}`;
       const safeName = (currentUser.displayName || currentUser.email.split("@")[0]).replace(/\s+/g, "");
       const docId = `${safeName}_${currentUser.uid}`;
@@ -452,12 +750,29 @@
       };
 
       await setDoc(ref, data, { merge: true });
-
-      showToast(isEditMode ? "변경사항이 저장되었습니다 ✅" : "신청이 완료되었습니다 🎉");
-
-      // 최신 상태 다시 반영
-      await selectMonth(selectedMonth, document.querySelector("#monthButtons .active"));
+      showToast(isEditMode ? "변경사항이 성공적으로 저장되었습니다 ✅" : "급식 신청이 완료되었습니다 🎉");
+      await selectMonth(selectedMonth, document.querySelector("#monthButtons .active"), currentMonthStatus);
     };
+
+    // 모바일 리사이즈 대응 요일 리렌더링 트리거
+    window.addEventListener('resize', () => {
+      if (!selectedMonth) return;
+
+      // 현재 브라우저가 모바일 영역인지 데스크톱 영역인지 판별
+      const currentMode = window.innerWidth <= 768;
+
+      // ⭐️ 중요: 모바일 ➡️ 데스크톱 혹은 데스크톱 ➡️ 모바일로 '경계선'을 완전히 넘어갔을 때만 단 한 번 리렌더링 수행!
+      if (currentMode !== isMobileMode) {
+        isMobileMode = currentMode; // 상태 갱신
+        
+        // 달력 내부를 완전히 초기화한 후 깨끗한 상태에서 재생성
+        const calendar = document.getElementById("calendar");
+        if (calendar) calendar.innerHTML = ""; 
+        
+        // 달력 다시 그리기 트리거
+        generateCalendar(selectedMonth);
+      }
+    });
   </script>
 </body>
 </html>
