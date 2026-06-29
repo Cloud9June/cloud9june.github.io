@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>학교 사진 슬라이더 (15장)</title>
+    <style>
+        html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
+        .poster-wrap { width:100%; height:100%; display:flex; justify-content:center; align-items:center; overflow:hidden; }
+        .img-box { width:100%; height:100%; position:relative; overflow:hidden; }
+        .img-box img { 
+            width:100%; height:100%; object-fit:fill; 
+            position:absolute; top:0; left:0; 
+            opacity:0; 
+            will-change: opacity;
+            transition: opacity 1s ease-in-out; 
+            z-index: 0;
+        }
+        .img-box img.active { opacity:1; z-index:1; }
+    </style>
+</head>
+<body>
+
+    <div class='poster-wrap'>
+        <div class='img-box' id='school-slider-box'></div>
+    </div>
+    
+    <script>
+        function initSyncedSlider(boxId, totalImages, intervalTime) {
+            const box = document.getElementById(boxId);
+            let imgHTML = '';
+
+            // 이미지 동적 생성 (15장)
+            for (let i = 1; i <= totalImages; i++) {
+                imgHTML += `<img src="images/school (${i}).jpg" alt="학교 사진 ${i}">`;
+            }
+            box.innerHTML = imgHTML;
+
+            const imgs = box.getElementsByTagName('img');
+            let lastIndex = -1;
+
+            function sync() {
+                const now = Date.now();
+                
+                // ⚠️ 중요: 학교는 15장이지만 기준 주기는 학생과 똑같이 16장 기준(128초)으로 맞춥니다.
+                const masterImageCount = 16; 
+                const totalCycleTime = masterImageCount * intervalTime;
+                const currentCycleProgress = now % totalCycleTime;
+                
+                // 현재 마스터 타임라인의 인덱스 계산 (0 ~ 15)
+                let currentIndex = Math.floor(currentCycleProgress / intervalTime);
+
+                // [동기화 핵심 예외처리] 
+                // 16번째 타이밍(인덱스 15)이 오면 학교 사진은 없으므로 1번 사진(인덱스 0)으로 강제 지정
+                if (currentIndex >= totalImages) {
+                    currentIndex = 0;
+                }
+
+                // 인덱스가 바뀔 때만 클래스 교체
+                if (currentIndex !== lastIndex) {
+                    if (lastIndex !== -1 && imgs[lastIndex]) {
+                        imgs[lastIndex].classList.remove('active');
+                    }
+                    imgs[currentIndex].classList.add('active');
+                    lastIndex = currentIndex;
+                }
+                
+                requestAnimationFrame(sync);
+            }
+            
+            sync();
+        }
+
+        // 함수 실행: 박스ID, 학교는 총 15장, 전환 속도는 똑같이 8초(8000ms)
+        initSyncedSlider('school-slider-box', 15, 8000);
+    </script>
+</body>
+</html>
