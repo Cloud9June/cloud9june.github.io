@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>넥슨 슬라이더</title>
+
+<style>
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+    }
+
+    .slider {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .slides {
+        display: flex;
+        height: 100%;
+        transition: transform 1s ease-in-out;
+    }
+
+    .slides img {
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        flex: 0 0 100%;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="slider">
+    <div class="slides" id="slides">
+        <img src="images/nexon1.png" alt="넥슨1">
+        <img src="images/nexon2.png" alt="넥슨2">
+    </div>
+</div>
+
+<script>
+    const slides = document.getElementById("slides");
+    let current = 0;
+
+    function nextSlide() {
+        current = (current + 1) % 2;
+        slides.style.transform = `translateX(-${current * 100}%)`;
+    }
+
+    setInterval(nextSlide, 30000);
+</script>
+
+</body>
+</html>
