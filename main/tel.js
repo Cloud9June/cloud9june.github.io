@@ -47,14 +47,14 @@ let msgTimer = null;
 if (searchBox) {
   searchBox.addEventListener('input', (e) => {
     const before = e.target.value;
-    e.target.value = before.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ\s]/g, '');
+    e.target.value = before.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ0-9\s]/g, '');
 
-    // 영어/숫자 등이 입력되었다가 지워진 경우
+    // 영어 등 허용되지 않는 문자가 입력되었다가 지워진 경우
     if (before !== e.target.value) {
       resultTable.style.display = "none"; // 테이블 숨김
       resultBody.innerHTML = ""; // 기존 결과 제거
 
-      msgBox.textContent = "⚠️ 교직원 내선 검색은 한글로만 입력 가능합니다.";
+      msgBox.textContent = "⚠️ 교직원 내선 검색은 한글 또는 숫자로만 입력 가능합니다.";
       msgBox.style.display = "block";
       msgBox.style.textAlign = "left";
 
@@ -84,6 +84,11 @@ function searchStaff() {
         // 숫자만 단독으로 입력된 경우 (1, 2, 3)
         if (/^[1-3]$/.test(input)) {
             return person.title.startsWith(input + "학년부");
+        }
+
+        // 숫자로만 입력된 경우 (내선번호 검색)
+        if (/^[0-9]+$/.test(input)) {
+            return person.ext.includes(input);
         }
 
         if (isChosungSearch) {
