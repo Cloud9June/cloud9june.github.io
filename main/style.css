@@ -422,7 +422,8 @@ footer {
 }
 
 .ticker-toggle {
-    display: inline-flex;
+    display: none;
+    /* display: inline-flex; */
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
@@ -948,10 +949,12 @@ footer {
 .hidden-list {
     display: none;
     margin-top: 10px;
-    padding: 5px;
+    padding: 5px 5px 5px 15px;
     background: var(--panel);
     border: 1px solid #223041;
     border-radius: 10px;
+    font-size: 15px;
+    color: dimgray;
 }
 
 .hidden-list button {
@@ -1008,6 +1011,162 @@ footer {
   font-weight: 700;
   display: inline-block;
   margin-bottom: 4px;
+}
+
+/* ==========================================
+   ☀️ 라이트 모드 (모던 화이트 톤)
+   <html data-theme="light"> 속성이 설정되면 적용
+========================================== */
+:root[data-theme="light"] {
+    --bg: #f4f6f9;
+    --panel: #ffffff;
+    --card: #ffffff;
+    --text: #1c2530;
+    --muted: #64748b;
+    --accent: #2f6fed;
+    --accent-2: #16a34a;
+    --ring: #e2e8f0;
+    --warning: #dc2626;
+    --shadow: 0 10px 25px rgba(15, 23, 42, .08);
+}
+
+[data-theme="light"] body {
+    background:
+        radial-gradient(1200px 800px at 10% -10%, #eaf1fb 0%, transparent 60%),
+        radial-gradient(900px 700px at 110% 10%, #f4f7fb 0%, transparent 60%),
+        var(--bg);
+}
+
+[data-theme="light"] #todayWeather {
+    color: var(--text);
+}
+
+[data-theme="light"] .now-time {
+    border-color: #dbe3ee;
+}
+
+[data-theme="light"] .logo {
+    background: linear-gradient(145deg, #eef3fa, #ffffff);
+    border-color: #dbe3ee;
+}
+
+[data-theme="light"] .search,
+[data-theme="light"] .pill,
+[data-theme="light"] .card,
+[data-theme="light"] .icon,
+[data-theme="light"] .ticker-toggle,
+[data-theme="light"] .accordion,
+[data-theme="light"] .quick-search,
+[data-theme="light"] .today-meal,
+[data-theme="light"] .searchT,
+[data-theme="light"] .toolbar-btn,
+[data-theme="light"] .ticker-help,
+[data-theme="light"] #lockBtn,
+[data-theme="light"] #hiddenListBtn,
+[data-theme="light"] .modal-content,
+[data-theme="light"] .hidden-list,
+[data-theme="light"] .led-ticker {
+    border-color: #dbe3ee;
+}
+
+[data-theme="light"] .icon {
+    background: #f2f5f9;
+}
+
+[data-theme="light"] .pill:hover,
+[data-theme="light"] .card:hover,
+[data-theme="light"] .ticker-toggle:hover,
+[data-theme="light"] .toolbar-btn:hover,
+[data-theme="light"] .ticker-help:hover,
+[data-theme="light"] #lockBtn:hover {
+    border-color: #b7c3d6;
+}
+
+[data-theme="light"] .card:hover {
+    box-shadow: 0 14px 30px rgba(15, 23, 42, .12);
+}
+
+[data-theme="light"] .btn,
+[data-theme="light"] .qs-btn,
+[data-theme="light"] .today-meal .meal-link,
+[data-theme="light"] .hidden-list button {
+    border-color: #d7dfea;
+    background: #f4f7fb;
+    color: #26405f;
+}
+
+[data-theme="light"] .btn:hover,
+[data-theme="light"] .qs-btn:hover,
+[data-theme="light"] .today-meal .meal-link:hover {
+    border-color: #a9bdd6;
+}
+
+[data-theme="light"] .badge {
+    border-color: #c7d2e0;
+    color: #4a5a70;
+}
+
+[data-theme="light"] .today-meal .meal-title {
+    color: #24354a;
+}
+
+[data-theme="light"] #resultTable th,
+[data-theme="light"] #resultTable td {
+    border-color: #dde4ee;
+}
+
+[data-theme="light"] #resultTable tbody tr:hover {
+    background-color: #f0f4fa;
+}
+
+[data-theme="light"] .modal {
+    background: rgba(15, 23, 42, .35);
+}
+
+[data-theme="light"] .modal-content h2 {
+    border-bottom-color: #e2e8f0;
+}
+
+[data-theme="light"] #closeDutyBtn {
+    background: #e5ebf3;
+    color: #435269;
+}
+
+[data-theme="light"] #closeDutyBtn:hover {
+    background: #d5dee9;
+}
+
+[data-theme="light"] .modal-footer > a {
+    background: var(--accent);
+    color: #fff;
+}
+
+[data-theme="light"] .modal-footer a:hover {
+    background: #2559c9;
+}
+
+[data-theme="light"] .memo-card textarea {
+    border-color: #d7dfea;
+}
+
+[data-theme="light"] .memo-card textarea:focus {
+    background: #f8fafc;
+}
+
+[data-theme="light"] .memo-btn {
+    border-color: #dbe3ee;
+}
+
+[data-theme="light"] #scheduleModal .modal-content::-webkit-scrollbar-thumb {
+    background: #c7d2e0;
+}
+
+[data-theme="light"] #scheduleModal .modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a9bdd6;
+}
+
+[data-theme="light"] #scheduleModal .schedule-item {
+    background: rgba(47, 111, 237, .06);
 }
 
 /* 스마트폰 화면(560px 이하)에서는 시계 숨김 */

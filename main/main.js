@@ -23,6 +23,28 @@ const on = (el, evt, handler, opts) => {
 // 연도
 document.getElementById('yy').textContent = new Date().getFullYear();
 
+// ===== 다크모드 / 라이트모드 전환 =====
+(function () {
+    const THEME_KEY = 'eduinfo.theme';
+    const btn = $('themeToggleBtn');
+    if (!btn) return;
+
+    function applyLabel(theme) {
+        btn.textContent = (theme === 'light') ? '🌙 다크모드' : '☀️ 라이트모드';
+    }
+
+    let theme = localStorage.getItem(THEME_KEY) || 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    applyLabel(theme);
+
+    btn.addEventListener('click', () => {
+        theme = (theme === 'light') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(THEME_KEY, theme);
+        applyLabel(theme);
+    });
+})();
+
 // 검색 & 카테고리 필터
 const q = document.getElementById('q');
 const cards = [...document.querySelectorAll('.card')];
