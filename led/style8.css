@@ -17,15 +17,19 @@ body, html {
     width: 100vw;
     height: 100vh;
     /* 가로 비율: 1:1:2 (왼쪽 구역들은 작게, 오른쪽 달력은 크게) */
-    grid-template-columns: 1fr 1fr 2fr; 
+    /* grid-template-columns: 1fr 1fr 2fr;  */
+    grid-template-columns: 2fr 1fr 1fr; 
     /* 세로 비율: 1:1 (상하 균등 분할) */
     grid-template-rows: 1fr 1fr;
     gap: 2px; /* 경계선 두께 */
     
     /* 레이아웃 지도 정의 (통합 및 명칭 변경 반영) */
-    grid-template-areas: 
+    /* grid-template-areas: 
         "slide1   slide2     calendar"
-        "slide3   slide2     calendar";
+        "slide3   slide2     calendar"; */
+    grid-template-areas: 
+        "calendar     meal     slide1"
+        "calendar     d-day    slide3";
 }
 
 /* 공통 아이템 스타일 */
@@ -65,3 +69,5 @@ body, html {
 .slide-area2    { grid-area: slide2; }
 .slide-area3    { grid-area: slide3; }
 .calendar-area  { grid-area: calendar; }
+.meal     { grid-area: meal; }
+.d-day    { grid-area: d-day; }
