@@ -1,0 +1,103 @@
+/* ==============================================================
+   비디오월 프레임 스타일
+   - 패널 사이 경계를 흰색 라인 대신, 어두운 베젤 + 컬러 악센트로 구분
+   - 라운드 코너 + 소프트 섀도우로 "떠 있는 카드" 느낌
+   - 모든 패널에 동일한 형태(좌측 세로 바)를 적용하고, 색상만 카테고리별로 다르게
+   ============================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --wall-bg: #05060a;      /* 패널 사이 베젤 색 (기존 흰색 대신 짙은 네이비 블랙) */
+    --gap: 2px;                /* 기존과 동일한 간격 유지 (크기/비율 변경 없음) */
+    --radius: 8px;             /* 좁은 간격에 맞춘 작은 라운드 */
+    --panel-border: rgba(255, 255, 255, 0.07);
+    --panel-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 스크롤 방지 */
+    background: var(--wall-bg);
+    font-family: 'Pretendard', 'Segoe UI', 'Malgun Gothic', sans-serif;
+}
+
+.container {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: var(--gap);           /* 기존 2px 그대로. 바깥 padding은 추가하지 않음(기존 크기 유지) */
+    background: var(--wall-bg);
+
+    grid-template-areas:
+        "calendar     meal     slide1"
+        "calendar     d-day    slide3";
+}
+
+/* ---------------- 공통 패널(카드) 스타일 ---------------- */
+.item {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;                 /* 내부 iframe 모서리까지 함께 둥글게 클리핑 */
+    border: 1px solid var(--panel-border);
+    box-shadow: var(--panel-shadow);
+}
+
+/* 좌측 세로 악센트 바 — 카테고리별 색으로 흰 경계선을 대체. 모든 패널에 동일한 형태, 색상만 다르게 */
+.item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent, #475569);
+    box-shadow: 0 0 12px var(--accent, transparent);
+    z-index: 5;
+}
+
+.item iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+/* ---------------- 카테고리별 악센트 컬러 ---------------- */
+.item[data-accent="calendar"] { --accent: #3b82f6; } /* 학사일정: 블루 */
+.item[data-accent="dday"]     { --accent: #a855f7; } /* D-DAY 보드: 퍼플 */
+.item[data-accent="meal"]     { --accent: #34d399; } /* 급식: 그린 */
+.item[data-accent="news"]     { --accent: #f5b301; } /* 학교소식: 앰버 */
+
+/* ---------------- 달력 영역 내부 분할 (1:7) ---------------- */
+.calendar-split {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr 7fr;
+    gap: 2px;
+    /* 흰색 대신 은은한 반투명 라인으로, 바깥 프레임 안에서 이질감 없이 구분만 되도록 */
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.calendar-split iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ---------------- 그리드 영역 매칭 ---------------- */
+.slide-area1    { grid-area: slide1; }
+.slide-area2    { grid-area: slide2; }
+.slide-area3    { grid-area: slide3; }
+.calendar-area  { grid-area: calendar; }
+.meal           { grid-area: meal; }
+.d-day          { grid-area: d-day; }
