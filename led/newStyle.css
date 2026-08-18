@@ -1,8 +1,8 @@
 /* ==============================================================
-   비디오월 프레임 스타일
-   - 패널 사이 경계를 흰색 라인 대신, 어두운 베젤 + 컬러 악센트로 구분
+   비디오월 프레임 스타일 (코너 브라켓 버전)
+   - 패널 사이 경계를 흰색 라인 대신, 어두운 베젤로 구분
    - 라운드 코너 + 소프트 섀도우로 "떠 있는 카드" 느낌
-   - 모든 패널에 동일한 형태(좌측 세로 바)를 적용하고, 색상만 카테고리별로 다르게
+   - 모든 패널 네 모서리에 동일한 카메라 뷰파인더 스타일 브라켓, 색상만 카테고리별로 다르게
    ============================================================== */
 
 * {
@@ -17,6 +17,9 @@
     --radius: 8px;             /* 좁은 간격에 맞춘 작은 라운드 */
     --panel-border: rgba(255, 255, 255, 0.07);
     --panel-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --bracket-size: 16px;      /* 브라켓 한 변의 길이 */
+    --bracket-thickness: 2px;  /* 브라켓 선 굵기 */
+    --bracket-inset: 7px;      /* 모서리에서 떨어진 거리 */
 }
 
 body, html {
@@ -53,22 +56,45 @@ body, html {
     box-shadow: var(--panel-shadow);
 }
 
-/* 좌측 세로 악센트 바 — 카테고리별 색으로 흰 경계선을 대체. 모든 패널에 동일한 형태, 색상만 다르게 */
-.item::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; bottom: 0;
-    width: 4px;
-    background: var(--accent, #475569);
-    box-shadow: 0 0 12px var(--accent, transparent);
-    z-index: 5;
-}
-
 .item iframe {
     width: 100%;
     height: 100%;
     border: none;
     display: block;
+}
+
+/* 카메라 뷰파인더 스타일 코너 브라켓 — 4개의 작은 span으로 구성, 모든 패널 동일 형태 */
+.corner {
+    position: absolute;
+    width: var(--bracket-size);
+    height: var(--bracket-size);
+    z-index: 5;
+    pointer-events: none;
+    filter: drop-shadow(0 0 4px var(--accent, transparent));
+}
+.corner.tl {
+    top: var(--bracket-inset); left: var(--bracket-inset);
+    border-top: var(--bracket-thickness) solid var(--accent, #475569);
+    border-left: var(--bracket-thickness) solid var(--accent, #475569);
+    border-radius: 3px 0 0 0;
+}
+.corner.tr {
+    top: var(--bracket-inset); right: var(--bracket-inset);
+    border-top: var(--bracket-thickness) solid var(--accent, #475569);
+    border-right: var(--bracket-thickness) solid var(--accent, #475569);
+    border-radius: 0 3px 0 0;
+}
+.corner.bl {
+    bottom: var(--bracket-inset); left: var(--bracket-inset);
+    border-bottom: var(--bracket-thickness) solid var(--accent, #475569);
+    border-left: var(--bracket-thickness) solid var(--accent, #475569);
+    border-radius: 0 0 0 3px;
+}
+.corner.br {
+    bottom: var(--bracket-inset); right: var(--bracket-inset);
+    border-bottom: var(--bracket-thickness) solid var(--accent, #475569);
+    border-right: var(--bracket-thickness) solid var(--accent, #475569);
+    border-radius: 0 0 3px 0;
 }
 
 /* ---------------- 카테고리별 악센트 컬러 ---------------- */
