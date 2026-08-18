@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sungil Information High School Live Billboard</title>
+    <!-- 시스템 전체(D-DAY 보드 등)와 동일한 폰트를 로드 — 기존엔 font-family에만 적혀있고 실제로는 로드가 안 돼서 폴백 폰트로 렌더링되고 있었음 -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 노란색 단색 배지 대신, 비디오월 프레임의 calendar 카테고리 악센트(블루)와 통일 —
+               이 페이지는 .calendar-area 슬롯 안에 끼워지므로 프레임의 좌측 바 색과도 자연스럽게 이어짐 */
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.35);
+            --bg: #05060a; /* D-DAY 보드 / 프레임과 동일한 다크 네이비 블랙 */
+            --panel: rgba(15, 23, 42, 0.55);
+            --border: rgba(59, 130, 246, 0.22);
+            --text: #eef2ff;
+            --sub-text: #94a3b8; /* 아랫줄(상세내용) 색상 */
+            --faint: #4b5567;
+            --box-height: 140px; /* JS가 로드되면 실제 슬롯 높이로 자동 갱신됨(기본값) */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            height: 100vh;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 메인보드 프레임 — 비디오월에 끼워질 때 슬롯 높이가 얼마든 항상 꽉 채우도록 100% */
+        .news-board {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(160deg, #0b1220, var(--bg));
+            display: flex;
+            border-top: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 0 26px var(--primary-glow), inset 0 0 46px rgba(59, 130, 246, 0.05);
+            position: relative;
+        }
+
+        /* 왼쪽 로고 영역 — 단색 블록 대신 유리질감 패널 + 글로우 텍스트로, D-DAY/급식 페이지와 같은 톤 */
+        .head-label {
+            position: relative;
+            background: radial-gradient(ellipse 120% 90% at 30% 0%, rgba(59, 130, 246, 0.16), transparent 70%);
+            width: 15%;
+            min-width: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid var(--border);
+            z-index: 10;
+        }
+
+        .head-label p {
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            margin-bottom: 2px;
+            color: var(--sub-text);
+            font-weight: 700;
+        }
+
+        .head-label h2 {
+            font-size: 2.2rem;
+            line-height: 0.9;
+            color: var(--primary);
+            font-weight: 900;
+            text-shadow: 0 0 16px var(--primary-glow), 0 0 34px var(--primary-glow);
+        }
+
+        /* 뉴스 슬라이드 영역 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            background: linear-gradient(90deg, #0d1424 0%, #05060a 100%);
+        }
+
+        .news-column {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            border-right: 1px solid rgba(148, 163, 184, 0.12);
+            position: relative;
+        }
+
+        .news-column:last-child { border-right: none; }
+
+        /* 슬라이드 트랙 — 실제 이동은 JS가 항목 개수에 맞춰 transform을 직접 제어(아래 startTicker 참고).
+           예전엔 4단계로 고정된 @keyframes였어서, 항목이 4개를 넘으면(예: 5번째 항목) 정지 구간 없이
+           스쳐 지나가기만 해서 세로 중앙 정렬이 아니라 어중간한 위치에서 캡처되는 문제가 있었음. */
+        .slide-track {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            will-change: transform;
+            transform: translateY(0);
+        }
+
+        /* 뉴스 박스 내부 스타일 */
+        .news-box {
+            height: var(--box-height);
+            padding: 0 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .category {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .category::before {
+            content: '';
+            display: inline-block;
+            width: 8px; height: 2px;
+            background: var(--primary);
+            margin-right: 8px;
+            box-shadow: 0 0 6px var(--primary-glow);
+        }
+
+        .title-main {
+            color: var(--text);
+            font-size: 1.55rem;
+            font-weight: 800;
+            line-height: 1.2;
+            word-break: keep-all;
+        }
+
+        .title-sub {
+            color: var(--sub-text);
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 4px;
+            line-height: 1.2;
+            word-break: keep-all;
+        }
+
+        /* 우측 상태창 패널 */
+        .status-panel {
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            position: relative;
+        }
+
+        /* ON AIR 배지는 기존 그대로 레드 유지 — 색 체계 변경 대상 아님 */
+        .on-air {
+            font-size: 0.7rem;
+            font-weight: 900;
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 1px;
+        }
+
+        .on-air::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: #ff4d4d;
+            border-radius: 50%;
+            animation: blink 0.8s infinite;
+        }
+
+        /* 날씨 스타일 */
+        .weather-mini {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Courier New', monospace;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        #date {
+            font-size: 0.85rem;
+            color: var(--faint);
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #clock {
+            font-size: 1.3rem;
+            color: var(--text);
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="news-board">
+        <div class="head-label">
+            <p>SUNGIL</p>
+            <h2>NEWS</h2>
+            <div id="date">0000/00/00</div>
+        </div>
+
+        <div class="content-area">
+            <div class="news-column">
+                <div class="slide-track track-1" id="track1"></div>
+            </div>
+            <div class="news-column">
+                <div class="slide-track track-2" id="track2"></div>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <div class="on-air">ON AIR</div>
+            <div id="clock">00:00:00</div>
+            <div id="todayWeather" class="weather-mini">--°C · LOADING</div>
+        </div>
+    </div>
+
+    <script>
+        // [설정] 구글 시트 ID
+        const SHEET_ID = '1xdq_C0GPMbI6KmjZp0qrX9S7XUR7VBBhgviXqRUzjCU';
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+        // 비디오월에 끼워졌을 때 실제로 배정된 슬롯 높이에 맞춰 --box-height를 동기화.
+        // (예전엔 140px로 고정이라, 실제 슬롯 높이가 다르면 위아래가 뜨거나 잘렸음)
+        function syncBoxHeight() {
+            const col = document.querySelector('.news-column');
+            if (!col) return;
+            const h = col.clientHeight;
+            if (h > 0) {
+                document.documentElement.style.setProperty('--box-height', h + 'px');
+            }
+        }
+
+        async function fetchNews() {
+            try {
+                const response = await fetch(URL);
+                const text = await response.text();
+                const jsonData = JSON.parse(text.substring(47, text.length - 2));
+
+                // 1. 첫 번째 행(제목행)을 제외하고 데이터만 가져옴
+                const rows = jsonData.table.rows.slice(1);
+
+                let leftGroup = [];
+                let rightGroup = [];
+
+                rows.forEach((row) => {
+                    // A열: 카테고리, B열: 내용, C열: 위치
+                    const category = row.c[0] ? row.c[0].v : 'NOTICE';
+                    const fullContent = row.c[1] ? row.c[1].v : '';
+                    const side = row.c[2] ? String(row.c[2].v).trim() : '왼쪽';
+
+                    if(!fullContent) return;
+
+                    // 2. 내용 줄바꿈(\n) 처리: 첫 줄은 제목, 둘째 줄부터는 서브제목
+                    const contentParts = fullContent.split('\n');
+                    const mainTitle = contentParts[0];
+                    const subTitle = contentParts.slice(1).join(' ');
+
+                    const html = `
+                        <div class="news-box">
+                            <div class="category">${category}</div>
+                            <div class="title-main">${mainTitle}</div>
+                            ${subTitle ? `<div class="title-sub">${subTitle}</div>` : ''}
+                        </div>`;
+
+                    // 3. C열 값에 따른 수동 위치 배정
+                    if (side === '왼쪽' || side.toLowerCase() === 'left') {
+                        leftGroup.push(html);
+                    } else {
+                        rightGroup.push(html);
+                    }
+                });
+
+                // 트랙 렌더링 함수 — 항목을 10개로 억지로 채우기 위해 복제하지 않고,
+                // 실제 고유 항목만 넣은 뒤 매끄러운 루프를 위해 첫 항목만 맨 끝에 하나 더 복제.
+                // (이전엔 4단계 고정 애니메이션 + 10개 채우기 복제 조합이라, 고유 항목이 4개를
+                //  넘으면 5번째부터는 정지 구간이 없어서 세로 중앙이 아니라 어중간하게 스쳐 보였음)
+                const renderTrack = (element, dataArray, defaultText) => {
+                    if (dataArray.length === 0) {
+                        element.innerHTML = `<div class="news-box"><div class="title-main">${defaultText}</div></div>`;
+                        element.style.transition = 'none';
+                        element.style.transform = 'translateY(0)';
+                        return 0;
+                    }
+                    let html = dataArray.join('');
+                    if (dataArray.length > 1) {
+                        html += dataArray[0]; // 마지막 -> 처음으로 자연스럽게 이어지도록 첫 항목 복제
+                    }
+                    element.innerHTML = html;
+                    element.style.transition = 'none';
+                    element.style.transform = 'translateY(0)';
+                    return dataArray.length;
+                };
+
+                const leftCount = renderTrack(document.getElementById('track1'), leftGroup, "새로운 소식을 확인하세요");
+                const rightCount = renderTrack(document.getElementById('track2'), rightGroup, "성일정보고 Live News");
+
+                // 갱신(60초마다) 때마다 이전 타이머를 정리하고 새 항목 개수 기준으로 다시 시작
+                if (track1Timer) clearInterval(track1Timer);
+                if (track2Timer) clearInterval(track2Timer);
+                if (track2StartDelay) clearTimeout(track2StartDelay);
+
+                track1Timer = startTicker(document.getElementById('track1'), leftCount);
+                // 두 트랙이 기계적으로 똑같이 움직이지 않도록 살짝 엇박자를 줌(기존의 -3s와 동일한 취지)
+                track2StartDelay = setTimeout(() => {
+                    track2Timer = startTicker(document.getElementById('track2'), rightCount);
+                }, TICK_HOLD_MS / 2);
+
+            } catch (error) {
+                console.error('데이터 로드 에러:', error);
+            }
+        }
+
+        // 항목 개수에 맞춰 한 칸씩 이동 + 정지(중앙 정렬 유지)를 반복하는 티커.
+        // count(고유 항목 수)만큼 정지 구간을 보장하므로, 항목이 몇 개든(4개든 5개든) 모두
+        // 세로 가운데에서 한 번씩 제대로 멈춰 보인다. 마지막에서 처음으로 돌아갈 땐
+        // 복제된 항목까지 슬라이드한 뒤, 화면엔 안 보이게(트랜지션 없이) 순간 리셋한다.
+        const TICK_HOLD_MS = 3000;
+        const TICK_TRANSITION_MS = 650;
+        let track1Timer = null, track2Timer = null, track2StartDelay = null;
+
+        function startTicker(trackEl, count) {
+            if (!count || count <= 1) return null;
+            let idx = 0;
+            trackEl.style.transition = `transform ${TICK_TRANSITION_MS}ms cubic-bezier(0.85, 0, 0.15, 1)`;
+            return setInterval(() => {
+                idx++;
+                trackEl.style.transform = `translateY(calc(var(--box-height) * -${idx}))`;
+
+                if (idx === count) {
+                    // 지금 보이는 건 복제해둔 '가짜 첫 항목' — 화면엔 진짜와 똑같아 보이므로,
+                    // 트랜지션이 끝난 직후 티 안 나게 0번 위치로 순간 이동시켜 무한 루프처럼 만든다.
+                    setTimeout(() => {
+                        trackEl.style.transition = 'none';
+                        idx = 0;
+                        trackEl.style.transform = 'translateY(0)';
+                        void trackEl.offsetHeight; // 강제 리플로우로 transition:none을 확실히 적용
+                        trackEl.style.transition = `transform ${TICK_TRANSITION_MS}ms cubic-bezier(0.85, 0, 0.15, 1)`;
+                    }, TICK_TRANSITION_MS + 40);
+                }
+            }, TICK_HOLD_MS);
+        }
+
+        // 시계 및 날짜 업데이트 함수
+        function updateClock() {
+            const now = new Date();
+
+            // 날짜 (월/일)
+            const year = String(now.getFullYear()).padStart(4, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('date').textContent = `${year}/${month}/${day}`;
+
+            // 시간 (시:분:초)
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        async function fetchWeather() {
+            const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
+            const nx = 62, ny = 124; // 성남 좌표
+
+            try {
+                let kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+                let base_date = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, "0")}${String(kst.getDate()).padStart(2, "0")}`;
+                const baseTimes = ["0200","0500","0800","1100","1400","1700","2000","2300"];
+                const hh = kst.getHours() * 100 + kst.getMinutes();
+                let base_time = baseTimes.findLast(t => hh >= parseInt(t)) || "2300";
+
+                // API 호출 (단기예보)
+                const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${SERVICE_KEY}&numOfRows=50&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+                const items = data?.response?.body?.items?.item;
+
+                if (items) {
+                    const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+                    const hhNow = String(kst.getHours()).padStart(2, "0") + "00";
+
+                    const sky = items.find(i => i.fcstTime === hhNow && i.category === "SKY")?.fcstValue;
+                    const pty = items.find(i => i.fcstTime === hhNow && i.category === "PTY")?.fcstValue;
+                    const tmp = items.find(i => i.fcstTime === hhNow && i.category === "TMP")?.fcstValue;
+
+                    // 영문 날씨 텍스트 변환 로직
+                    let weatherText = "CLEAR";
+                    if (pty > 0) {
+                        if (pty == 1 || pty == 4) weatherText = "RAIN";
+                        else if (pty == 2 || pty == 3) weatherText = "SNOW";
+                    } else {
+                        if (sky == 1) weatherText = "SUNNY";
+                        else if (sky == 3) weatherText = "CLOUDY";
+                        else if (sky == 4) weatherText = "OVERCAST";
+                    }
+
+                    // 출력: 예) 27°C · SUNNY
+                    document.getElementById("todayWeather").innerHTML = `${tmp}°C · ${weatherText}`;
+                }
+            } catch (e) {
+                console.log("날씨 로드 실패");
+            }
+        }
+
+        // 초기 실행 및 인터벌 설정
+        syncBoxHeight();
+        window.addEventListener('resize', syncBoxHeight);
+        window.addEventListener('load', syncBoxHeight); // 폰트 로드 등으로 레이아웃이 늦게 안정되는 경우 대비
+
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        fetchWeather();
+        setInterval(fetchWeather, 1800000);
+
+        fetchNews();
+        setInterval(fetchNews, 60000); // 1분마다 시트 갱신
+    </script>
+</body>
+</html>
