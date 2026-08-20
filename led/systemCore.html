@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>System Core</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 <style>
   :root {
     --bg: #060a12;
@@ -135,7 +135,7 @@
   .orbit-tag {
     position: absolute;
     font-family: 'Share Tech Mono', monospace;
-    font-size: clamp(0.56rem, 1.35vmin, 0.76rem);
+    font-size: clamp(0.74rem, 1.9vmin, 1.05rem); /* 원거리 시청 가독성을 위해 확대 */
     letter-spacing: 0.05em;
     color: var(--core);
     background: rgba(6, 10, 18, 0.55);
@@ -166,11 +166,11 @@
   }
 
   .core-title {
-    font-family: 'Black Han Sans', 'Rajdhani', sans-serif; /* 한글 글리프가 필요해 벽 다른 패널과 동일한 표제용 한글 폰트 사용 */
+    font-family: 'Rajdhani', sans-serif; /* 영문으로 바꾸면서 별도 한글 표제 폰트가 필요없어져 본문과 통일 — 원거리 가독성이 더 좋음 */
     font-weight: 700;
     font-size: clamp(1.5rem, 4vmin, 2.7rem);
-    letter-spacing: 0.16em; /* 한글은 라틴만큼 넓게 트래킹하면 어색해서 큰 폭으로 줄임 */
-    padding-left: 0.16em;
+    letter-spacing: 0.14em;
+    padding-left: 0.14em;
     color: var(--text);
     text-shadow: 0 0 18px var(--core-soft);
   }
@@ -270,8 +270,8 @@
 
     .core-title {
       font-size: clamp(1.4rem, 6vh, 3.1rem);
-      letter-spacing: 0.14em;
-      padding-left: 0.14em;
+      letter-spacing: 0.12em;
+      padding-left: 0.12em;
     }
     .core-sub {
       text-align: left;
@@ -334,7 +334,7 @@
 
       <div class="label-block">
         <div class="core-eyebrow">SUNGIL INFORMATION HIGH SCHOOL</div>
-        <div class="core-title">성일 시스템 코어</div>
+        <div class="core-title">SUNGIL SYSTEM CORE</div>
         <div class="core-sub" id="statusText">ALL SYSTEMS NOMINAL</div>
       </div>
     </div>
@@ -422,30 +422,46 @@
   /* ---------- orbit tags: category words flashing near the ring — implies the
      core is quietly keeping tabs on the wall's other panels (decorative only) ---------- */
   const CATEGORY_TAGS = [
-    'SCHEDULE SYNCED', '일정 확인 중', 'D-DAY 추적 중', '성과 기록 갱신',
-    '급식 정보 갱신', 'CALENDAR LINKED', '오늘의 급식 확인', '다가오는 일정',
-    'MEAL PLAN LOADED', 'ACHIEVEMENT LOG', '수상 소식 갱신', 'D-DAY UPDATED'
+    'SCHEDULE SYNCED', 'D-DAY TRACKING', 'CALENDAR LINKED', 'ACHIEVEMENT LOG',
+    'MEAL DATA SYNCED', 'EVENT QUEUED', 'MEAL PLAN LOADED', 'D-DAY UPDATED',
+    'AGENDA SYNCED', 'RECORD UPDATED'
   ];
-  const orbitSlots = ['orbitTL', 'orbitTR', 'orbitBL', 'orbitBR']
-    .map(id => document.getElementById(id))
-    .filter(Boolean);
+  // 태그 글자 크기를 키우면서, 좁은 패널에서는 같은 줄(top: TL+TR / bottom: BL+BR)
+  // 태그 두 개가 동시에 뜨면 폭이 겹칠 수 있어 — 같은 줄끼리는 동시에 보이지 않도록
+  // 잠금을 걸어둠(대각선 쌍은 위아래로 멀리 떨어져 있어 겹칠 일이 없어 그대로 둠).
+  const orbitConfig = [
+    { id: 'orbitTL', row: 'top' },
+    { id: 'orbitTR', row: 'top' },
+    { id: 'orbitBL', row: 'bottom' },
+    { id: 'orbitBR', row: 'bottom' },
+  ];
+  const rowLock = { top: false, bottom: false };
 
-  function runOrbitSlot(el, initialDelayMs) {
-    function cycle() {
+  function runOrbitSlot(el, initialDelayMs, row) {
+    function tryShow() {
+      if (rowLock[row]) {
+        setTimeout(tryShow, 400 + Math.random() * 400);
+        return;
+      }
+      rowLock[row] = true;
       el.textContent = CATEGORY_TAGS[Math.floor(Math.random() * CATEGORY_TAGS.length)];
       el.classList.add('visible');
       const holdMs = 2000 + Math.random() * 1200;
       setTimeout(() => {
         el.classList.remove('visible');
+        rowLock[row] = false;
         const gapMs = 1400 + Math.random() * 2600;
-        setTimeout(cycle, gapMs);
+        setTimeout(tryShow, gapMs);
       }, holdMs);
     }
-    setTimeout(cycle, initialDelayMs);
+    setTimeout(tryShow, initialDelayMs);
   }
 
   if (!reduceMotion) {
-    orbitSlots.forEach((el, i) => runOrbitSlot(el, i * 900 + Math.random() * 500));
+    orbitConfig.forEach(({ id, row }, i) => {
+      const el = document.getElementById(id);
+      if (el) runOrbitSlot(el, i * 900 + Math.random() * 500, row);
+    });
   }
 
   /* ---------- equalizer bars: smooth random-walk heights ---------- */
