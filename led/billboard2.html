@@ -36,7 +36,7 @@
             height: 100%;
             background: linear-gradient(160deg, #0b1220, var(--bg));
             display: flex;
-            /* border-top: 2px solid var(--primary); */
+            border-top: 2px solid var(--primary);
             border-bottom: 2px solid var(--primary);
             box-shadow: 0 0 26px var(--primary-glow), inset 0 0 46px rgba(59, 130, 246, 0.05);
             position: relative;
@@ -382,31 +382,43 @@
             document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
         }
 
+        // --- 날씨 --- food.html(급식 페이지)과 같은 설정으로 통일:
+        // 같은 좌표(nx=63,ny=124), 같은 API(초단기예보 getUltraSrtFcst),
+        // 같은 필드(T1H), 같은 base_time 계산 방식(45분 기준 이전 시간대 사용).
+        // 예전엔 단기예보(getVilageFcst, TMP, nx=62)를 썼는데 이 둘은 서로 다른 예보
+        // 모델이라 같은 시각이어도 값이 달라질 수 있었음 — 이제 두 페이지가 완전히
+        // 같은 데이터 소스를 보므로 항상 같은 값이 나옴.
+        const WEATHER_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
+        const weatherNx = 63, weatherNy = 124; // 성남시 중원구 좌표 (food.html과 동일)
+
+        function getLiveBaseDateTime() {
+            const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+            let h = now.getHours();
+            const m = now.getMinutes();
+            if (m < 45) { // 45분 이전이면 이전 시간대 데이터 요청
+                h -= 1;
+                if (h < 0) { h = 23; now.setDate(now.getDate() - 1); }
+            }
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, "0");
+            const day = String(now.getDate()).padStart(2, "0");
+            return { date: `${year}${month}${day}`, time: String(h).padStart(2, "0") + "30" };
+        }
+
         async function fetchWeather() {
-            const SERVICE_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
-            const nx = 62, ny = 124; // 성남 좌표
-
             try {
-                let kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-                let base_date = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, "0")}${String(kst.getDate()).padStart(2, "0")}`;
-                const baseTimes = ["0200","0500","0800","1100","1400","1700","2000","2300"];
-                const hh = kst.getHours() * 100 + kst.getMinutes();
-                let base_time = baseTimes.findLast(t => hh >= parseInt(t)) || "2300";
-
-                // API 호출 (단기예보)
-                const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${SERVICE_KEY}&numOfRows=50&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+                const { date, time } = getLiveBaseDateTime();
+                const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${WEATHER_KEY}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${date}&base_time=${time}&nx=${weatherNx}&ny=${weatherNy}`;
 
                 const res = await fetch(url);
                 const data = await res.json();
                 const items = data?.response?.body?.items?.item;
 
                 if (items) {
-                    const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-                    const hhNow = String(kst.getHours()).padStart(2, "0") + "00";
-
-                    const sky = items.find(i => i.fcstTime === hhNow && i.category === "SKY")?.fcstValue;
-                    const pty = items.find(i => i.fcstTime === hhNow && i.category === "PTY")?.fcstValue;
-                    const tmp = items.find(i => i.fcstTime === hhNow && i.category === "TMP")?.fcstValue;
+                    const getVal = (cat) => items.find(i => i.category === cat)?.fcstValue;
+                    const sky = getVal("SKY");
+                    const pty = getVal("PTY");
+                    const tmp = getVal("T1H");
 
                     // 영문 날씨 텍스트 변환 로직
                     let weatherText = "CLEAR";
@@ -436,7 +448,8 @@
         setInterval(updateClock, 1000);
 
         fetchWeather();
-        setInterval(fetchWeather, 1800000);
+        // 초단기예보는 1시간마다만 갱신되는 데이터라, food.html과 동일하게 갱신 주기도 1시간으로 통일
+        setInterval(fetchWeather, 3600000);
 
         fetchNews();
         setInterval(fetchNews, 60000); // 1분마다 시트 갱신

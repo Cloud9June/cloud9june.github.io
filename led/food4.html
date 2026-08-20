@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>급식 안내</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 비디오월 프레임의 급식 카테고리 색(#34d399)과 통일 — 오늘 메뉴 = 그린 */
+            --accent: #34d399;
+            --accent-glow: rgba(52, 211, 153, 0.35);
+            --accent-ink: #04120c;
+
+            --bg: #05060a;
+            --surface: rgba(30, 41, 59, 0.55);
+            --surface-strong: rgba(30, 41, 59, 0.82);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --text-faint: #64748b;
+            --row-font: 1.8rem; /* JS(fitRows)가 메뉴 개수에 맞춰 실제 값으로 갱신 */
+        }
+
+        /* 내일 메뉴 모드(14시 이후)는 핑크 계열로 톤만 전환 */
+        .page.is-tomorrow {
+            --accent: #ff0077;
+            --accent-glow: rgba(255, 0, 119, 0.35);
+            --accent-ink: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .page {
+            position: relative;
+            height: 100vh;
+            padding: 26px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 은은한 앰비언트 글로우 — 오늘/내일 색에 맞춰 자연스럽게 전환 */
+        .ambient {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background: radial-gradient(ellipse 55% 55% at 14% 12%, var(--accent-glow), transparent 70%);
+            opacity: 0.6;
+            transition: background 0.6s ease;
+        }
+
+        /* --- [빅 넘버 대시보드] ---
+           기존의 "카드 하나에 문장형 메뉴"를 완전히 버리고, 왼쪽엔 칼로리를 큰 숫자로
+           보여주는 스탯 패널, 오른쪽엔 메뉴를 개별 칩으로 나열하는 2분할 구조로 변경.
+           칼로리가 시각적 중심이 되고, 메뉴는 항목 단위 태그라 개수가 달라져도
+           자연스럽게 줄바꿈되면서 남는 공간을 채움. */
+        .board {
+            position: relative; z-index: 1; flex: 1;
+            display: flex;
+            gap: 0;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .stat {
+            flex: 0 0 32%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 30px 30px;
+            border-right: 1px solid var(--border);
+        }
+
+        .label {
+            font-size: 0.9rem; font-weight: 800; letter-spacing: 0.12em;
+            color: var(--accent); text-transform: uppercase;
+            transition: color 0.5s ease;
+        }
+
+        .date {
+            font-size: 1.05rem; color: var(--text-dim); font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .tomorrow-tag {
+            display: block;
+            color: var(--accent); font-weight: 900; margin-bottom: 4px;
+            text-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .kcal-block {
+            margin-top: 20px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .kcal-num {
+            font-family: 'Black Han Sans', sans-serif;
+            font-size: clamp(2.6rem, 6vw, 4.6rem);
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow), 0 0 26px var(--accent-glow);
+            line-height: 1;
+            transition: color 0.5s ease, text-shadow 0.5s ease;
+        }
+
+        .kcal-unit {
+            font-size: 1.05rem; color: var(--text-dim); font-weight: 700;
+        }
+
+        /* 알레르기 유발 식품 정보 — NEIS가 요리명 옆 괄호 숫자(코드)로 내려주는데
+           기존엔 그냥 다 지워버렸음. 코드 숫자 그대로는 학생들이 바로 알아보기
+           어려우니, ALLERGY_NAMES로 실제 식품명("대두", "밀"...)으로 바꿔서
+           요리명 옆에 작게 같이 보여줌. */
+        .legend {
+            margin-top: 14px;
+            font-size: 0.75rem;
+            color: var(--text-faint);
+        }
+
+        /* 메뉴 리스트 영역 — 남은 공간을 항상 꽉 채우고(flex:1), 세로 가운데 정렬.
+           항목 개수(=메뉴 분량)에 맞춰 JS(fitRows)가 --row-font를 자동 조절해서,
+           메뉴가 적으면 글자가 커져서 공간을 채우고 많으면 작아지면서도 넘치지 않음. */
+        .menu-wrap {
+            flex: 1;
+            min-width: 0;
+            padding: 22px 34px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .row {
+            position: relative;
+            font-size: var(--row-font); /* idx/name/allergy가 모두 이 값 기준 em으로 함께 스케일됨 */
+            display: flex;
+            align-items: baseline;
+            gap: 18px;
+            padding: 0.3em 0;
+        }
+
+        .row + .row::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent 75%);
+        }
+
+        .idx {
+            font-family: 'Black Han Sans', sans-serif;
+            font-size: 0.55em;
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent-glow);
+            width: 1.6em;
+            flex-shrink: 0;
+            transition: color 0.5s ease;
+        }
+
+        .name {
+            font-family: 'Black Han Sans', sans-serif;
+            color: #fff;
+            word-break: keep-all;
+        }
+
+        .allergy {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.4em;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-left: 0.5em;
+            transition: color 0.5s ease;
+        }
+
+        .row.msg {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            padding: 0;
+        }
+        .row.msg::before { display: none; }
+
+        /* 급식시간 — 원래 하단 info-bar(TIME 알약)에 있던 정보를 위쪽 스탯 패널로 이동.
+           빌보드 패널에 이미 실시간 시계가 있어 food.html에서 시계는 빼고,
+           날짜 아래에 작은 텍스트로만 급식시간을 남겨둠. */
+        .meal-time {
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: var(--text-faint);
+            font-weight: 600;
+        }
+
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="page fade-in" id="page">
+        <div class="ambient"></div>
+
+        <div class="board">
+            <div class="stat">
+                <div class="label" id="label">TODAY'S LUNCH MENU</div>
+                <div id="date" class="date">데이터 로딩 중...</div>
+                <div class="meal-time">급식시간 12:50 - 13:50</div>
+                <div class="kcal-block">
+                    <span class="kcal-num" id="calorie">-</span>
+                    <span class="kcal-unit">Kcal</span>
+                </div>
+                <div class="legend">메뉴 옆 알레르기 유발 식품 표시</div>
+            </div>
+            <div id="menu-wrap" class="menu-wrap">
+                <div class="row msg">잠시만 기다려주세요.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript 시작 ---
+        const officeCode = "J10";
+        const schoolCode = "7530167";
+        const key = "bdcd0ca692e6441a8522db4496c56216";
+
+        // NEIS 알레르기 유발 식품 번호(1~19) → 이름. 나이스 급식식단정보 API 문서 기준.
+        const ALLERGY_NAMES = {
+            1: '난류', 2: '우유', 3: '메밀', 4: '땅콩', 5: '대두', 6: '밀',
+            7: '고등어', 8: '게', 9: '새우', 10: '돼지고기', 11: '복숭아',
+            12: '토마토', 13: '아황산류', 14: '호두', 15: '닭고기', 16: '쇠고기',
+            17: '오징어', 18: '조개류', 19: '잣'
+        };
+
+        // 항목 개수(=메뉴 분량)에 맞춰 --row-font를 자동으로 맞추는 함수.
+        // .menu-wrap(고정 크기 영역)을 벗어나지 않는 선에서 가장 큰 글자 크기를 찾는다 —
+        // 메뉴가 적으면 커져서 공간을 채우고, 많으면 줄어들어서 넘치지 않는다.
+        function fitRows() {
+            const wrap = document.getElementById('menu-wrap');
+            if (!wrap) return;
+
+            const maxPx = 34;
+            const minPx = 14;
+            let fontSize = maxPx;
+            wrap.style.setProperty('--row-font', fontSize + 'px');
+
+            while (fontSize > minPx && wrap.scrollHeight > wrap.clientHeight) {
+                fontSize -= 1;
+                wrap.style.setProperty('--row-font', fontSize + 'px');
+            }
+        }
+
+        // NEIS DDISH_NM은 "요리명 (알레르기번호.번호...)" 형태로 내려옴.
+        // 요리명과 알레르기 번호를 분리해서, 번호는 버리지 않고 이름 옆에 작게 표시.
+        function parseDish(line) {
+            const codes = new Set();
+            (line.match(/\(([\d.\s]+)\)/g) || []).forEach(group => {
+                group.replace(/[()]/g, '').split('.').forEach(n => {
+                    n = n.trim();
+                    if (n) codes.add(n);
+                });
+            });
+            const name = line
+                .replace(/\([\d.\s]+\)/g, '')
+                .replace(/\*/g, '')
+                .trim();
+            return { name, codes: [...codes].sort((a, b) => a - b) };
+        }
+
+        async function getMeal() {
+            const now = new Date();
+            const isTomorrowMode = now.getHours() >= 14;
+
+            if (isTomorrowMode) {
+                now.setDate(now.getDate() + 1);
+            }
+
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const yyyymmdd = `${year}${month}${day}`;
+
+            const pageElement = document.getElementById('page');
+            const dateElement = document.getElementById('date');
+            const labelElement = document.getElementById('label');
+            const calorieElement = document.getElementById('calorie');
+            const menuWrapElement = document.getElementById('menu-wrap');
+
+            // --- 오늘/내일 테마 전환: 클래스 하나만 토글하면 CSS 변수로 색이 전부 따라감 ---
+            pageElement.classList.toggle('is-tomorrow', isTomorrowMode);
+
+            if (isTomorrowMode) {
+                labelElement.innerText = "TOMORROW'S LUNCH MENU";
+                dateElement.innerHTML = `<span class="tomorrow-tag">내일 뭐 먹지? 😋</span>${year}년 ${month}월 ${day}일`;
+            } else {
+                labelElement.innerText = "TODAY'S LUNCH MENU";
+                dateElement.innerText = `${year}년 ${month}월 ${day}일`;
+            }
+
+            const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${key}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${yyyymmdd}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.mealServiceDietInfo) {
+                    const row = data.mealServiceDietInfo[1].row[0];
+                    const dishes = row.DDISH_NM
+                        .split('<br/>')
+                        .map(parseDish)
+                        .filter(d => d.name);
+
+                    menuWrapElement.innerHTML = dishes.map((d, i) => {
+                        const names = d.codes.map(c => ALLERGY_NAMES[c] || c).join(' · ');
+                        return `
+                        <div class="row">
+                            <span class="idx">${String(i + 1).padStart(2, '0')}</span>
+                            <span class="name">${d.name}${names ? `<span class="allergy">${names}</span>` : ''}</span>
+                        </div>`;
+                    }).join('');
+
+                    // CAL_INFO엔 NEIS가 이미 "Kcal" 단위를 포함해서 내려줌(예: "783.0 Kcal") —
+                    // 옆에 별도로 붙여둔 .kcal-unit과 겹쳐서 "783.0 Kcal Kcal"처럼 두 번 나오던 것을 수정
+                    calorieElement.innerText = row.CAL_INFO.replace(/kcal/i, '').trim();
+                } else {
+                    const msg = isTomorrowMode ? "내일은 식단 정보가 없습니다. 🍱" : "오늘은 식단 정보가 없습니다. 🍱";
+                    menuWrapElement.innerHTML = `<div class="row msg">${msg}</div>`;
+                    calorieElement.innerText = '-';
+                }
+            } catch (error) {
+                menuWrapElement.innerHTML = `<div class="row msg">데이터 로딩 실패</div>`;
+                calorieElement.innerText = '-';
+                console.error(error);
+            }
+
+            // 행이 실제로 그려진 뒤 크기를 기준으로 맞춰야 하므로 다음 프레임에 실행
+            requestAnimationFrame(fitRows);
+        }
+
+        // 패널 크기가 바뀌거나(비디오월 슬롯 리사이즈) 폰트가 늦게 로드돼도 다시 맞춤
+        window.addEventListener('resize', fitRows);
+        window.addEventListener('load', fitRows);
+
+        // 실행
+        getMeal();
+        setInterval(getMeal, 1800000);
+    </script>
+</body>
+</html>
