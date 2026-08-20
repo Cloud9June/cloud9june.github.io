@@ -3,161 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium School Meal Wall</title>
+    <title>급식 안내</title>
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #00ffcc;
-            --accent-color: #ff0077;
-            --bg-dark: #000000;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --text-main: #ffffff;
+            /* 비디오월 프레임의 급식 카테고리 색(#34d399)과 통일 — 오늘 메뉴 = 그린 */
+            --accent: #34d399;
+            --accent-glow: rgba(52, 211, 153, 0.35);
+            --accent-ink: #04120c;
+
+            --bg: #05060a;
+            --surface: rgba(30, 41, 59, 0.55);
+            --surface-strong: rgba(30, 41, 59, 0.82);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --text-faint: #64748b;
+        }
+
+        /* 내일 메뉴 모드(14시 이후)는 핑크 계열로 톤만 전환 — 왼쪽 border 없이 색으로만 구분 */
+        .page.is-tomorrow {
+            --accent: #ff0077;
+            --accent-glow: rgba(255, 0, 119, 0.35);
+            --accent-ink: #ffffff;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            background-color: var(--bg-dark);
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
             color: var(--text-main);
             font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .page {
+            position: relative;
             height: 100vh;
+            padding: 26px 30px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 은은한 앰비언트 글로우 — 오늘/내일 색에 맞춰 자연스럽게 전환 */
+        .ambient {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background: radial-gradient(ellipse 55% 45% at 12% 8%, var(--accent-glow), transparent 70%);
+            opacity: 0.6;
+            transition: background 0.6s ease;
+        }
+
+        /* 메인 카드 — 좌측 border 없음(비디오월 프레임 쪽 좌측 바가 이미 구분 역할을 담당) */
+        .card {
+            position: relative; z-index: 1; flex: 1;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            padding: 30px 34px;
+            display: flex; flex-direction: column; gap: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            min-height: 0;
+        }
+
+        /* 상단(라벨/날짜/칼로리)은 텍스트 양과 무관하게 항상 같은 자리에 고정 */
+        .top-row {
+            flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+        }
+
+        .label {
+            font-size: 0.95rem; font-weight: 800; letter-spacing: 0.12em;
+            color: var(--accent); text-transform: uppercase;
+            transition: color 0.5s ease;
+        }
+
+        .date {
+            font-size: 1.25rem; color: var(--text-dim); font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .tomorrow-tag {
+            color: var(--accent); font-weight: 900; margin-right: 10px;
+            text-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .calorie-tag {
+            flex-shrink: 0;
+            font-size: 0.95rem; font-weight: 900; color: var(--accent-ink);
+            background: var(--accent);
+            padding: 7px 18px; border-radius: 999px;
+            box-shadow: 0 0 16px var(--accent-glow);
+            white-space: nowrap;
+            transition: background 0.5s ease, box-shadow 0.5s ease, color 0.5s ease;
+        }
+
+        /* 메뉴 영역 — 상단을 제외한 남은 공간을 항상 꽉 채우고(flex:1),
+           그 안에서 텍스트를 세로 가운데 정렬. 실제 글자 크기는 JS(fitMenuText)가
+           메뉴 분량에 맞춰 자동으로 키우거나 줄여서, 텍스트가 적어도 남은 공간이
+           휑하게 비지 않고 많아도 넘치지 않도록 함. */
+        .menu {
+            flex: 1;
+            min-height: 0;
+            display: flex;
             align-items: center;
             overflow: hidden;
         }
 
-        .container {
-            width: 96%;
-            height: 96%; /* 여백 최소화 */
-            display: flex;
-            flex-direction: column;
-            gap: 10px; /* 간격 축소 */
+        .menu-inner {
+            width: 100%;
+            min-width: 0;
+            font-family: 'Black Han Sans', sans-serif;
+            font-size: 3.2rem; /* JS 로드 전 기본값, 로드 후 fitMenuText가 실제 값으로 교체 */
+            line-height: 1.3;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            color: #fff;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
         }
 
-        /* 메인 카드 */
-        .main-card {
-            flex: 1; /* 고정 비율 대신 유연하게 확장 */
-            background: var(--card-bg);
-            border-left: 8px solid var(--primary-color);
-            border-radius: 15px;
-            padding: 25px; /* 패딩 축소 */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
+        .info-bar {
+            position: relative; z-index: 1;
+            display: flex; gap: 10px; height: 54px; flex-shrink: 0;
+        }
+
+        .info-pill {
+            flex: 1; min-width: 0;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 0 12px;
+            font-size: 0.85rem; color: var(--text-dim);
             backdrop-filter: blur(10px);
         }
 
-        .label {
-            font-size: 1.1rem; /* 크기 하향 */
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 5px;
+        .info-pill span {
+            color: var(--accent); font-weight: 800;
+            flex-shrink: 0;
+            transition: color 0.5s ease;
         }
 
-        .date-display {
-            font-size: 1.6rem; /* 크기 하향 */
-            margin-bottom: 15px;
-            opacity: 0.8;
+        /* 좁은 패널에서도 SCHOOL 등 긴 텍스트가 알약 밖으로 튀어나가지 않도록 말줄임 처리 */
+        .info-pill .val {
+            font-style: normal;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
         }
 
-        .menu-list {
-            font-family: 'Black Han Sans', sans-serif;
-            font-size: 3.9rem; /* 3.9rem -> 2.8rem으로 조정 (짤림 방지 핵심) */
-            line-height: 1.2;
-            word-break: keep-all;
-            color: #fff;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .calorie-tag {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            font-size: 1.1rem;
-            background: var(--primary-color);
-            color: #000;
-            padding: 3px 15px;
-            border-radius: 50px;
-            font-weight: 900;
-        }
-
-        /* 하단 바 (짤리지 않게 높이 명시적 확보) */
-        .info-bar {
-            height: 60px; /* 높이 고정으로 안정성 확보 */
-            display: flex;
-            gap: 10px;
-        }
-
-        .info-box {
-            flex: 1;
-            background: var(--card-bg);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem; /* 텍스트가 박스를 넘지 않게 조정 */
-            border: 1px solid rgba(255,255,255,0.1);
-            white-space: nowrap; /* 줄바꿈 방지 */
-        }
-
-        .info-box span { color: var(--primary-color); font-weight: bold; margin-right: 5px; }
-
-        /* 애니메이션 생략 가능 시 제거하여 리소스 절약 */
-        .fade-in { animation: fadeIn 1s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* 내일 모드일 때 메인 카드 테두리 색상 변경 */
-        .main-card.is-tomorrow {
-            border-left: 8px solid var(--accent-color) !important;
-            transition: border-color 0.5s ease; /* 색상 변경 시 부드럽게 전환 */
-        }
-
-        /* 강조 문구 스타일 */
-        .tomorrow-text {
-            color: var(--accent-color);
-            font-size: 1.4rem;
-            font-weight: 900;
-            margin-right: 12px;
-            display: none;
-            text-shadow: 0 0 10px rgba(255, 0, 119, 0.2);
-        }
-
-        /* 상단 제목(라벨) 강조 색상 */
-        .label.is-tomorrow-label {
-            color: var(--accent-color) !important;
-        }
-
-        /* 하단 인포 박스의 span(제목) 색상 변경을 위한 클래스 */
-        .info-box span.is-tomorrow-text {
-            color: var(--accent-color) !important;
-        }
-
-        /* 칼로리 태그 배경색 변경을 위한 클래스 */
-        .calorie-tag.is-tomorrow-bg {
-            background: var(--accent-color) !important;
-            color: #fff; /* 핑크색 배경에는 흰색 글씨가 더 잘 보입니다 */
-        }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="container fade-in">
-        <div class="main-card">
-            <div class="label">TODAY'S LUNCH MENU</div>
-            <div id="date" class="date-display">데이터 로딩 중...</div>
-            <div id="menu" class="menu-list">잠시만 기다려주세요.</div>
-            <div id="calorie" class="calorie-tag">- kcal</div>
+    <div class="page fade-in" id="page">
+        <div class="ambient"></div>
+
+        <div class="card">
+            <div class="top-row">
+                <div>
+                    <div class="label" id="label">TODAY'S LUNCH MENU</div>
+                    <div id="date" class="date">데이터 로딩 중...</div>
+                </div>
+                <div class="calorie-tag" id="calorie">- kcal</div>
+            </div>
+            <div id="menu" class="menu"><div id="menu-inner" class="menu-inner">잠시만 기다려주세요.</div></div>
         </div>
 
         <div class="info-bar">
-            <div class="info-box"><span>TIME</span> 12:50 - 13:50</div>
-            <div class="info-box"><span>SCHOOL</span> 성일정보고등학교</div>
-            <div class="info-box" id="time-display">00:00:00</div>
+            <div class="info-pill"><span>TIME</span><em class="val">12:50 - 13:50</em></div>
+            <div class="info-pill"><span>SCHOOL</span><em class="val">성일정보고등학교</em></div>
+            <div class="info-pill" id="time-display">00:00:00</div>
         </div>
     </div>
 
@@ -166,6 +184,25 @@
         const officeCode = "J10";
         const schoolCode = "7530167";
         const key = "bdcd0ca692e6441a8522db4496c56216";
+
+        // 메뉴 텍스트 분량에 맞춰 글자 크기를 자동으로 맞추는 함수.
+        // .menu(고정 크기 영역)를 벗어나지 않는 선에서 가장 큰 글자 크기를 찾는다 —
+        // 텍스트가 짧으면 커져서 공간을 채우고, 길면 줄어들어서 넘치지 않는다.
+        function fitMenuText() {
+            const box = document.getElementById('menu');
+            const inner = document.getElementById('menu-inner');
+            if (!box || !inner) return;
+
+            const maxPx = 72;
+            const minPx = 24;
+            let fontSize = maxPx;
+            inner.style.fontSize = fontSize + 'px';
+
+            while (fontSize > minPx && (inner.scrollHeight > box.clientHeight || inner.scrollWidth > box.clientWidth)) {
+                fontSize -= 2;
+                inner.style.fontSize = fontSize + 'px';
+            }
+        }
 
         async function getMeal() {
             const now = new Date();
@@ -180,33 +217,20 @@
             const day = String(now.getDate()).padStart(2, '0');
             const yyyymmdd = `${year}${month}${day}`;
 
+            const pageElement = document.getElementById('page');
             const dateElement = document.getElementById('date');
-            const labelElement = document.querySelector('.label');
-            const cardElement = document.querySelector('.main-card');
+            const labelElement = document.getElementById('label');
             const calorieElement = document.getElementById('calorie');
-            const infoSpans = document.querySelectorAll('.info-box span');
+            const menuInnerElement = document.getElementById('menu-inner');
 
-            // --- 테마 일괄 변경 로직 ---
+            // --- 오늘/내일 테마 전환: 클래스 하나만 토글하면 CSS 변수로 색이 전부 따라감 ---
+            pageElement.classList.toggle('is-tomorrow', isTomorrowMode);
+
             if (isTomorrowMode) {
-                // 내일 모드 (핑크 테마)
                 labelElement.innerText = "TOMORROW'S LUNCH MENU";
-                labelElement.classList.add('is-tomorrow-label');
-                cardElement.classList.add('is-tomorrow');
-                calorieElement.classList.add('is-tomorrow-bg');
-                
-                // 하단 TIME, SCHOOL 등의 글자색 변경
-                infoSpans.forEach(span => span.classList.add('is-tomorrow-text'));
-                
-                dateElement.innerHTML = `<span class="tomorrow-text" style="display:inline-block;">내일 뭐 먹지? 😋</span>${year}년 ${month}월 ${day}일`;
+                dateElement.innerHTML = `<span class="tomorrow-tag">내일 뭐 먹지? 😋</span>${year}년 ${month}월 ${day}일`;
             } else {
-                // 오늘 모드 (민트 테마)
                 labelElement.innerText = "TODAY'S LUNCH MENU";
-                labelElement.classList.remove('is-tomorrow-label');
-                cardElement.classList.remove('is-tomorrow');
-                calorieElement.classList.remove('is-tomorrow-bg');
-                
-                infoSpans.forEach(span => span.classList.remove('is-tomorrow-text'));
-                
                 dateElement.innerText = `${year}년 ${month}월 ${day}일`;
             }
 
@@ -224,19 +248,22 @@
                         .split('<br/>')
                         .join(' · ');
 
-                    document.getElementById('menu').innerText = cleanMenu;
-                    document.getElementById('calorie').innerText = row.CAL_INFO;
-                    document.getElementById('calorie').style.display = 'block'; // 칼로리 다시 표시
+                    menuInnerElement.innerText = cleanMenu;
+                    calorieElement.innerText = row.CAL_INFO;
+                    calorieElement.style.display = 'block';
                 } else {
-                    document.getElementById('menu').innerText = isTomorrowMode 
-                        ? "내일은 식단 정보가 없습니다. 🍱" 
+                    menuInnerElement.innerText = isTomorrowMode
+                        ? "내일은 식단 정보가 없습니다. 🍱"
                         : "오늘은 식단 정보가 없습니다. 🍱";
-                    document.getElementById('calorie').style.display = 'none';
+                    calorieElement.style.display = 'none';
                 }
             } catch (error) {
-                document.getElementById('menu').innerText = "데이터 로딩 실패";
+                menuInnerElement.innerText = "데이터 로딩 실패";
                 console.error(error);
             }
+
+            // 텍스트가 바뀐 뒤 실제 렌더링 크기를 기준으로 맞춰야 하므로 다음 프레임에 실행
+            requestAnimationFrame(fitMenuText);
         }
 
         // 실시간 시계 기능
@@ -244,6 +271,10 @@
             const now = new Date();
             document.getElementById('time-display').innerText = now.toLocaleTimeString();
         }
+
+        // 패널 크기가 바뀌거나(비디오월 슬롯 리사이즈) 폰트가 늦게 로드돼도 다시 맞춤
+        window.addEventListener('resize', fitMenuText);
+        window.addEventListener('load', fitMenuText);
 
         // 실행
         getMeal();
