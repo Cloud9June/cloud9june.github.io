@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>성일 아카이브</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #060a12;
+    --bg-deep: #02040a;
+    --core: #5eeaff;
+    --core-soft: rgba(94, 234, 255, 0.35);
+    --core-dim: #1c6f9c;
+    --core-line: rgba(94, 234, 255, 0.16);
+    --text: #d7f0fb;
+    --text-dim: #4d7c96;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .stage {
+    position: relative;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(ellipse 95% 80% at 50% 46%, var(--bg) 0%, var(--bg-deep) 100%);
+  }
+
+  canvas#field { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .vignette {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 62% 58% at 50% 48%, transparent 40%, rgba(2, 4, 10, 0.88) 100%);
+  }
+
+  .scanlines {
+    position: absolute; inset: 0; pointer-events: none;
+    opacity: 0.07; mix-blend-mode: overlay;
+    background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.55) 0px, rgba(255,255,255,0.55) 1px, transparent 2px, transparent 4px);
+  }
+
+  .hud-frame { position: absolute; inset: 3.2vmin; pointer-events: none; z-index: 4; }
+  .bracket { position: absolute; width: 4.6vmin; height: 4.6vmin; filter: drop-shadow(0 0 5px var(--core-soft)); }
+  /* .bracket.tl { top: 0; left: 0; border-top: 2px solid var(--core); border-left: 2px solid var(--core); }
+  .bracket.tr { top: 0; right: 0; border-top: 2px solid var(--core); border-right: 2px solid var(--core); }
+  .bracket.bl { bottom: 0; left: 0; border-bottom: 2px solid var(--core); border-left: 2px solid var(--core); }
+  .bracket.br { bottom: 0; right: 0; border-bottom: 2px solid var(--core); border-right: 2px solid var(--core); } */
+
+  /* ---------- view layers: menu / school slider / student slider — crossfade between them ---------- */
+  .view {
+    position: absolute; inset: 0;
+    opacity: 0; z-index: 1; pointer-events: none;
+    transition: opacity 1s ease-in-out;
+  }
+  .view.active { opacity: 1; z-index: 2; pointer-events: auto; }
+
+  /* ---------- menu view ---------- */
+  .menu-view {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4vmin;
+  }
+
+  .menu-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.56rem, 1.2vmin, 0.72rem);
+    letter-spacing: 0.26em; padding-left: 0.26em;
+    color: var(--text-dim); text-transform: uppercase;
+  }
+  .menu-title {
+    font-family: 'Black Han Sans', 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4.4vmin, 3rem);
+    letter-spacing: 0.14em; padding-left: 0.14em;
+    color: var(--text);
+    text-shadow: 0 0 18px var(--core-soft);
+    margin-top: 0.6vmin;
+  }
+  .menu-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.7rem, 1.4vmin, 0.95rem);
+    letter-spacing: 0.24em; padding-left: 0.24em;
+    color: var(--core);
+    opacity: 0.9;
+    margin-top: -1.2vmin;
+  }
+
+  .icon-row { display: flex; gap: 4.4vmin; }
+
+  .icon-card {
+    width: 22vmin; min-width: 182px;
+    display: flex; flex-direction: column; align-items: center; gap: 1.4vmin;
+    padding: 3.2vmin 2vmin 2.4vmin;
+    background: rgba(10, 16, 26, 0.5);
+    border: 1px solid var(--core-line);
+    border-radius: 10px;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
+  }
+  .icon-card.next {
+    border-color: var(--core);
+    box-shadow: 0 0 3vmin var(--core-soft);
+    transform: translateY(-0.4vmin);
+  }
+
+  .icon-glyph { width: 6vmin; height: 6vmin; opacity: 0.55; transition: opacity 0.5s ease; }
+  .icon-card.next .icon-glyph { opacity: 1; }
+  .icon-glyph path, .icon-glyph rect, .icon-glyph circle {
+    stroke: var(--core); fill: none; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round;
+  }
+
+  .icon-label {
+    font-family: 'Black Han Sans', 'Rajdhani', sans-serif;
+    font-size: clamp(1rem, 2vmin, 1.4rem);
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+  .icon-caption {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.56rem, 1vmin, 0.7rem);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    color: var(--text-dim);
+  }
+
+  .progress-bar {
+    width: 100%; height: 2px;
+    background: var(--core-line);
+    margin-top: 0.6vmin;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .progress-fill { width: 0%; height: 100%; background: var(--core); }
+
+  /* corner telemetry — only shown on the menu, kept off the photos */
+  .corner-readout {
+    position: absolute;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.58rem, 1vmin, 0.82rem);
+    line-height: 1.6; letter-spacing: 0.04em;
+    color: var(--text-dim);
+  }
+  .corner-readout .hi { color: var(--core); }
+  .corner-readout.tl-readout { top: 6.4vmin; left: 3.6vmin; }
+  .corner-readout.br-readout { bottom: 6.4vmin; right: 3.6vmin; text-align: right; }
+
+  /* ---------- slider views (school / student) ---------- */
+  .slider-view { background: #000; }
+  .img-box { position: absolute; inset: 0; }
+  .img-box img {
+    width: 100%; height: 100%; object-fit: fill;
+    position: absolute; top: 0; left: 0;
+    opacity: 0;
+    will-change: opacity;
+    transition: opacity 1s ease-in-out;
+    z-index: 0;
+  }
+  .img-box img.active { opacity: 1; z-index: 1; }
+
+  .slide-readout {
+    position: absolute; right: 5.8vmin; bottom: 0.6vmin; z-index: 3;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.62rem, 1.1vmin, 0.85rem);
+    letter-spacing: 0.08em;
+    color: #f5b301;
+    background: rgba(6, 10, 18, 0.55);
+    border: 1px solid var(--core-line);
+    border-radius: 3px;
+    padding: 0.35em 0.7em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .icon-card, .icon-glyph, .view { transition: opacity 0.2s linear !important; }
+    .progress-fill { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="field"></canvas>
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+    <div class="hud-frame">
+      <span class="bracket tl"></span><span class="bracket tr"></span>
+      <span class="bracket bl"></span><span class="bracket br"></span>
+    </div>
+
+    <div class="view menu-view active" id="menuView">
+      <div class="corner-readout tl-readout">ARCHIVE <span class="hi">ONLINE</span><br />NODE <span class="hi">07</span></div>
+      <div class="corner-readout br-readout">SYNC <span class="hi">OK</span><br />LOOP <span class="hi">ACTIVE</span></div>
+
+      <div class="menu-eyebrow">SUNGIL INFORMATION HIGH SCHOOL</div>
+      <div class="menu-title">성일 아카이브</div>
+      <div class="menu-sub" id="menuSub">재생 준비 중</div>
+
+      <div class="icon-row">
+        <div class="icon-card" id="cardSchool">
+          <svg class="icon-glyph" viewBox="0 0 48 48">
+            <path d="M6 42V20L24 8l18 12v22" />
+            <path d="M14 42V26h8v16" />
+            <path d="M26 42V30h8v12" />
+          </svg>
+          <div class="icon-label">학교 변천사</div>
+          <div class="icon-caption">SCHOOL ARCHIVE · 15</div>
+          <div class="progress-bar"><div class="progress-fill" id="fillSchool"></div></div>
+        </div>
+        <div class="icon-card" id="cardStudent">
+          <svg class="icon-glyph" viewBox="0 0 48 48">
+            <circle cx="16" cy="14" r="6" />
+            <circle cx="32" cy="14" r="6" />
+            <path d="M4 40c0-8 5.4-13 12-13s12 5 12 13" />
+            <path d="M20 40c0-8 5.4-13 12-13s12 5 12 13" />
+          </svg>
+          <div class="icon-label">학생 변천사</div>
+          <div class="icon-caption">STUDENT ARCHIVE · 16</div>
+          <div class="progress-bar"><div class="progress-fill" id="fillStudent"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="view slider-view" id="schoolView">
+      <div class="img-box" id="schoolBox"></div>
+      <div class="slide-readout" id="schoolReadout">학교 변천사 · 00 / 15</div>
+    </div>
+
+    <div class="view slider-view" id="studentView">
+      <div class="img-box" id="studentBox"></div>
+      <div class="slide-readout" id="studentReadout">학생 변천사 · 00 / 16</div>
+    </div>
+  </div>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const SCHOOL_COUNT = 15;
+  const STUDENT_COUNT = 16;
+  const SLIDE_INTERVAL = 8000;   // 사진 한 장당 노출 시간
+  const MENU_WAIT = 3000;        // 메뉴 화면에 머무는 시간
+
+  function buildImgs(boxEl, prefix, count) {
+    let html = '';
+    for (let i = 1; i <= count; i++) {
+      html += `<img src="images/${prefix} (${i}).jpg" alt="${prefix} ${i}">`;
+    }
+    boxEl.innerHTML = html;
+    return boxEl.getElementsByTagName('img');
+  }
+  const schoolImgs = buildImgs(document.getElementById('schoolBox'), 'school', SCHOOL_COUNT);
+  const studentImgs = buildImgs(document.getElementById('studentBox'), 'student', STUDENT_COUNT);
+
+  function setView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // 이미지를 1번부터 마지막까지 한 번만 순서대로 보여주고 끝나면 onDone 호출.
+  // (예전 slide4/slide5의 Date.now() % 주기 방식은 "서로 다른 화면끼리 계속 도는 걸
+  // 맞추기" 위한 거라 지금처럼 한 화면에서 순차 재생 후 종료하는 구조엔 안 맞아서 제거함)
+  function playSequence(imgs, count, readoutEl, label, onDone) {
+    let idx = 0;
+    function step() {
+      if (idx > 0) imgs[idx - 1].classList.remove('active');
+      imgs[idx].classList.add('active');
+      readoutEl.textContent = `${label} · ${String(idx + 1).padStart(2, '0')} / ${count}`;
+      idx++;
+      if (idx < count) {
+        setTimeout(step, SLIDE_INTERVAL);
+      } else {
+        setTimeout(() => {
+          imgs[count - 1].classList.remove('active');
+          onDone();
+        }, SLIDE_INTERVAL);
+      }
+    }
+    step();
+  }
+
+  function highlightCard(key) {
+    document.getElementById('cardSchool').classList.toggle('next', key === 'school');
+    document.getElementById('cardStudent').classList.toggle('next', key === 'student');
+
+    const fill = document.getElementById(key === 'school' ? 'fillSchool' : 'fillStudent');
+    const otherFill = document.getElementById(key === 'school' ? 'fillStudent' : 'fillSchool');
+
+    otherFill.style.transition = 'none';
+    otherFill.style.width = '0%';
+
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    void fill.offsetWidth; // 강제 리플로우 — 위에서 0%로 리셋한 뒤 다시 애니메이션 걸리게
+    fill.style.transition = reduceMotion ? 'none' : `width ${MENU_WAIT}ms linear`;
+    fill.style.width = '100%';
+  }
+
+  function showMenuThen(nextKey, cb) {
+    setView('menuView');
+    highlightCard(nextKey);
+    document.getElementById('menuSub').textContent =
+      nextKey === 'school' ? '학교 변천사 재생 준비 중' : '학생 변천사 재생 준비 중';
+    setTimeout(cb, MENU_WAIT);
+  }
+
+  function runSchool() {
+    setView('schoolView');
+    playSequence(schoolImgs, SCHOOL_COUNT, document.getElementById('schoolReadout'), '학교 변천사', () => {
+      showMenuThen('student', runStudent);
+    });
+  }
+
+  function runStudent() {
+    setView('studentView');
+    playSequence(studentImgs, STUDENT_COUNT, document.getElementById('studentReadout'), '학생 변천사', () => {
+      showMenuThen('school', runSchool);
+    });
+  }
+
+  // 시작: 메뉴에서 3초 대기 후 학교 변천사부터 → 학생 변천사 → 다시 학교... 무한 반복
+  showMenuThen('school', runSchool);
+
+  /* ---------- background particle field (System Core와 동일한 연출) ---------- */
+  const canvas = document.getElementById('field');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const N = 60;
+  const particles = Array.from({ length: N }, () => ({
+    x: Math.random(), y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.00016,
+    vy: (Math.random() - 0.5) * 0.00016,
+    r: 0.6 + Math.random() * 1.2
+  }));
+  const LINK_DIST = 0.11;
+
+  function drawField() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < N; i++) {
+      const p = particles[i];
+      if (!reduceMotion) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = 1; if (p.x > 1) p.x = 0;
+        if (p.y < 0) p.y = 1; if (p.y > 1) p.y = 0;
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < LINK_DIST) {
+          ctx.strokeStyle = `rgba(94, 234, 255, ${0.14 * (1 - d / LINK_DIST)})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x * W, a.y * H);
+          ctx.lineTo(b.x * W, b.y * H);
+          ctx.stroke();
+        }
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      const p = particles[i];
+      ctx.fillStyle = 'rgba(215, 240, 251, 0.55)';
+      ctx.beginPath();
+      ctx.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (!reduceMotion) requestAnimationFrame(drawField);
+  }
+  drawField();
+</script>
+</body>
+</html>
