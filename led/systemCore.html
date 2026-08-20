@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>System Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #060a12;
+    --bg-deep: #02040a;
+    --core: #5eeaff;
+    --core-soft: rgba(94, 234, 255, 0.35);
+    --core-soft-strong: rgba(94, 234, 255, 0.6);
+    --core-dim: #1c6f9c;
+    --core-line: rgba(94, 234, 255, 0.16);
+    --text: #d7f0fb;
+    --text-dim: #4d7c96;
+    --warn: #ffb454;
+    --warn-soft: rgba(255, 180, 84, 0.55);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .stage {
+    position: relative;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(ellipse 95% 80% at 50% 46%, var(--bg) 0%, var(--bg-deep) 100%);
+  }
+
+  canvas#field {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+  }
+
+  .vignette {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 58% 55% at 50% 48%, transparent 35%, rgba(2, 4, 10, 0.9) 100%);
+  }
+
+  .scanlines {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0.1;
+    mix-blend-mode: overlay;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.55) 0px,
+      rgba(255, 255, 255, 0.55) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+  }
+
+  /* ---------- HUD corner frame ---------- */
+  .hud-frame { position: absolute; inset: 3.2vmin; pointer-events: none; }
+
+  .bracket {
+    position: absolute;
+    width: 4.6vmin; height: 4.6vmin;
+    filter: drop-shadow(0 0 5px var(--core-soft));
+  }
+  /* .bracket.tl { top: 0; left: 0; border-top: 2px solid var(--core); border-left: 2px solid var(--core); }
+  .bracket.tr { top: 0; right: 0; border-top: 2px solid var(--core); border-right: 2px solid var(--core); }
+  .bracket.bl { bottom: 0; left: 0; border-bottom: 2px solid var(--core); border-left: 2px solid var(--core); }
+  .bracket.br { bottom: 0; right: 0; border-bottom: 2px solid var(--core); border-right: 2px solid var(--core); } */
+
+  .corner-readout {
+    position: absolute;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.62rem, 1vmin, 0.9rem);
+    line-height: 1.6;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .corner-readout .hi { color: var(--core); }
+  .corner-readout.tl-readout { top: 6.4vmin; left: 3.6vmin; }
+  .corner-readout.tr-readout { top: 6.4vmin; right: 3.6vmin; text-align: right; }
+  .corner-readout.bl-readout { bottom: 6.4vmin; left: 3.6vmin; }
+  .corner-readout.br-readout { bottom: 6.4vmin; right: 3.6vmin; text-align: right; }
+
+  /* ---------- Center console ---------- */
+  .console {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3.4vmin;
+  }
+
+  .core-wrap {
+    position: relative;
+    width: 42vmin; height: 42vmin;
+  }
+
+  .core-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+  .ring-outer { animation: spin 34s linear infinite; }
+  .ring-mid   { animation: spin-rev 22s linear infinite; }
+  .ring-ticks { animation: spin 90s linear infinite; }
+
+  .sweep {
+    position: absolute; inset: 9%;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg, transparent 296deg, var(--core-soft) 338deg, transparent 360deg);
+    animation: spin 5.5s linear infinite;
+    mix-blend-mode: screen;
+  }
+
+  .orb {
+    position: absolute; top: 50%; left: 50%;
+    width: 8.6vmin; height: 8.6vmin;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, #eefdff 0%, var(--core) 32%, rgba(94, 234, 255, 0.18) 68%, transparent 100%);
+    box-shadow: 0 0 7vmin 0.6vmin var(--core-soft);
+    animation: pulse 3.4s ease-in-out infinite;
+  }
+
+  /* ---------- orbit tags: category words that flash near the ring's empty
+     corners (inscribed circle leaves the box corners open) — purely decorative,
+     implies the core is quietly keeping tabs on the wall's other panels ---------- */
+  .orbit-tag {
+    position: absolute;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.56rem, 1.35vmin, 0.76rem);
+    letter-spacing: 0.05em;
+    color: var(--core);
+    background: rgba(6, 10, 18, 0.55);
+    border: 1px solid var(--core-line);
+    border-radius: 3px;
+    padding: 0.32em 0.6em;
+    white-space: nowrap;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+  }
+  .orbit-tag.visible { opacity: 0.92; transform: scale(1); }
+  .orbit-tag.slot-tl { top: 3%; left: 1%; }
+  .orbit-tag.slot-tr { top: 3%; right: 1%; }
+  .orbit-tag.slot-bl { bottom: 3%; left: 1%; }
+  .orbit-tag.slot-br { bottom: 3%; right: 1%; }
+
+  .label-block { display: flex; flex-direction: column; align-items: center; gap: 0.6vmin; }
+
+  .core-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.52rem, 1.1vmin, 0.68rem);
+    letter-spacing: 0.26em;
+    padding-left: 0.26em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .core-title {
+    font-family: 'Black Han Sans', 'Rajdhani', sans-serif; /* 한글 글리프가 필요해 벽 다른 패널과 동일한 표제용 한글 폰트 사용 */
+    font-weight: 700;
+    font-size: clamp(1.5rem, 4vmin, 2.7rem);
+    letter-spacing: 0.16em; /* 한글은 라틴만큼 넓게 트래킹하면 어색해서 큰 폭으로 줄임 */
+    padding-left: 0.16em;
+    color: var(--text);
+    text-shadow: 0 0 18px var(--core-soft);
+  }
+
+  .core-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.72rem, 1.5vmin, 1rem);
+    letter-spacing: 0.32em;
+    padding-left: 0.32em;
+    color: var(--core);
+    opacity: 0.9;
+    min-height: 1.4em;
+    text-align: center; /* min-width가 JS로 고정되므로, 짧은 문구가 와도 박스 안에서 중앙 정렬 */
+    transition: opacity 0.4s ease, min-width 0s;
+  }
+  .core-sub.glitch { animation: glitch 0.22s steps(2, end) 2; }
+
+  /* ---------- Telemetry strips ---------- */
+  .telemetry {
+    position: absolute; left: 0; right: 0;
+    overflow: hidden;
+    height: 7.4vmin;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 0.8vmin;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+  .telemetry-top { top: 0; padding-top: 1.6vmin; }
+  .telemetry-bottom { bottom: 0; padding-bottom: 1.6vmin; }
+
+  .marquee {
+    display: inline-flex;
+    white-space: nowrap;
+    width: max-content;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.64rem, 1.1vmin, 0.85rem);
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    animation: marquee 46s linear infinite;
+  }
+  .marquee.reverse { animation-direction: reverse; animation-duration: 58s; }
+  .marquee span.hi { color: var(--warn); }
+  .marquee .sep { color: var(--core-line); padding: 0 1.4em; }
+
+  .eq-bars {
+    align-self: center;
+    display: flex; align-items: flex-end;
+    gap: 0.5vmin;
+    height: 2.6vmin;
+  }
+  .eq-bars .bar {
+    width: 0.45vmin;
+    height: 12%;
+    background: linear-gradient(to top, var(--core-dim), var(--core));
+    border-radius: 1px;
+    transform-origin: bottom;
+    opacity: 0.85;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin-rev { to { transform: rotate(-360deg); } }
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.85; }
+  }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes glitch {
+    0% { transform: translateX(0); opacity: 0.9; }
+    50% { transform: translateX(-2px); opacity: 0.4; }
+    100% { transform: translateX(0); opacity: 0.9; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ring-outer, .ring-mid, .ring-ticks, .sweep, .orb, .marquee { animation: none !important; }
+    .core-sub.glitch { animation: none !important; }
+    .orbit-tag { transition: none !important; }
+  }
+
+  /* ---------- wide & short panel (this slot's shape): ring beside the label
+     instead of stacked above it, sized off vh since height is the scarce axis ---------- */
+  @media (min-aspect-ratio: 3/2) {
+    .console { flex-direction: row; gap: 4.4vh; }
+
+    .core-wrap { width: 62vh; height: 62vh; }
+
+    .telemetry { height: 6vh; }
+    .telemetry-top { padding-top: 1.1vh; }
+    .telemetry-bottom { padding-bottom: 1.1vh; }
+    .eq-bars { height: 2.2vh; }
+
+    .hud-frame { inset: 2.4vh 3.2vh; }
+
+    .label-block { align-items: flex-start; gap: 0.9vh; }
+
+    .core-eyebrow { font-size: clamp(0.5rem, 1.5vh, 0.7rem); }
+
+    .core-title {
+      font-size: clamp(1.4rem, 6vh, 3.1rem);
+      letter-spacing: 0.14em;
+      padding-left: 0.14em;
+    }
+    .core-sub {
+      text-align: left;
+      font-size: clamp(0.7rem, 1.9vh, 1.05rem);
+      letter-spacing: 0.24em;
+      padding-left: 0.24em;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <canvas id="field"></canvas>
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+
+    <div class="hud-frame">
+      <span class="bracket tl"></span>
+      <span class="bracket tr"></span>
+      <span class="bracket bl"></span>
+      <span class="bracket br"></span>
+    </div>
+
+    <div class="corner-readout tl-readout">
+      NODE <span class="hi">07</span><br />
+      STATUS <span class="hi">RUNNING</span>
+    </div>
+    <div class="corner-readout tr-readout">
+      MESH <span class="hi">STABLE</span><br />
+      LINK <span class="hi">ACTIVE</span>
+    </div>
+    <div class="corner-readout bl-readout">
+      BUFFER <span class="hi">98%</span><br />
+      CACHE <span class="hi">WARM</span>
+    </div>
+    <div class="corner-readout br-readout">
+      SYNC <span class="hi">OK</span><br />
+      DRIFT <span class="hi">0.00</span>
+    </div>
+
+    <div class="console">
+      <div class="core-wrap">
+        <svg viewBox="0 0 200 200" class="ring-outer">
+          <circle cx="100" cy="100" r="96" fill="none" stroke="var(--core-line)" stroke-width="1.4" stroke-dasharray="2 10" />
+        </svg>
+        <svg viewBox="0 0 200 200" class="ring-ticks">
+          <circle cx="100" cy="100" r="86" fill="none" stroke="var(--core-dim)" stroke-width="1.2" stroke-dasharray="1 7.2" opacity="0.65" />
+        </svg>
+        <svg viewBox="0 0 200 200" class="ring-mid">
+          <circle cx="100" cy="100" r="70" fill="none" stroke="var(--core)" stroke-width="1.6" stroke-dasharray="70 40 12 108" opacity="0.55" />
+        </svg>
+        <div class="sweep"></div>
+        <div class="orb"></div>
+
+        <div class="orbit-tag slot-tl" id="orbitTL"></div>
+        <div class="orbit-tag slot-tr" id="orbitTR"></div>
+        <div class="orbit-tag slot-bl" id="orbitBL"></div>
+        <div class="orbit-tag slot-br" id="orbitBR"></div>
+      </div>
+
+      <div class="label-block">
+        <div class="core-eyebrow">SUNGIL INFORMATION HIGH SCHOOL</div>
+        <div class="core-title">성일 시스템 코어</div>
+        <div class="core-sub" id="statusText">ALL SYSTEMS NOMINAL</div>
+      </div>
+    </div>
+
+    <div class="telemetry telemetry-top">
+      <div class="marquee" id="marqueeTop"></div>
+    </div>
+    <div class="telemetry telemetry-bottom">
+      <div class="eq-bars" id="eqBars"></div>
+      <div class="marquee reverse" id="marqueeBottom"></div>
+    </div>
+  </div>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- telemetry marquees (decorative only — not real data) ---------- */
+  const TOKENS = [
+    'NODE-07::SYNCED', '0x4F2A9C1E', 'BUFFER OK', 'SIGNAL LOCK', 'MESH STABLE',
+    '0x1D88E3F0', 'UPLINK ACTIVE', 'CACHE WARM', '0x77B21AC4', 'GRID NOMINAL',
+    'THREAD POOL 12/16', '0xA02F7788', 'HEARTBEAT OK', 'ROUTE OPTIMIZED', '0xE913C05D',
+    'LATENCY 03ms', 'INDEX REBUILT', '0x2C6F9A11', 'WATCHDOG ARMED', 'QUEUE DRAINED'
+  ];
+  function buildMarquee(el, seed) {
+    const list = [...TOKENS].sort(() => seed - 0.5);
+    const line = list.map(t => `<span${/^0x/.test(t) ? ' class="hi"' : ''}>${t}</span>`).join('<span class="sep">·</span>');
+    el.innerHTML = line + '<span class="sep">·</span>' + line; // duplicated for seamless 50% loop
+  }
+  buildMarquee(document.getElementById('marqueeTop'), 0.31);
+  buildMarquee(document.getElementById('marqueeBottom'), 0.77);
+
+  /* ---------- status phrase cycler ---------- */
+  const PHRASES = [
+    'ALL SYSTEMS NOMINAL', 'SCANNING CAMPUS NETWORK', 'MONITORING ACTIVE NODES',
+    'ANALYZING DATA STREAMS', 'GRID SYNCHRONIZED', 'AMBIENT INTELLIGENCE ONLINE'
+  ];
+  let phraseIdx = 0;
+  const statusEl = document.getElementById('statusText');
+
+  // 문구 길이가 바뀔 때마다 label-block 폭이 같이 바뀌면서 가운데 정렬된 .console
+  // 행 전체가 좌우로 밀려 왼쪽 코어 원까지 흔들리던 문제 — 있을 수 있는 문구 중
+  // 가장 긴 것 기준으로 폭을 고정해서, 텍스트만 바뀌고 박스 크기는 항상 그대로 유지되게 함.
+  function pinStatusWidth() {
+    const cs = getComputedStyle(statusEl);
+    const probe = document.createElement('span');
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.whiteSpace = 'nowrap';
+    probe.style.left = '-9999px';
+    probe.style.top = '0';
+    probe.style.fontFamily = cs.fontFamily;
+    probe.style.fontSize = cs.fontSize;
+    probe.style.fontWeight = cs.fontWeight;
+    probe.style.letterSpacing = cs.letterSpacing;
+    probe.style.paddingLeft = cs.paddingLeft;
+    document.body.appendChild(probe);
+    let max = 0;
+    PHRASES.forEach(p => {
+      probe.textContent = p;
+      max = Math.max(max, probe.offsetWidth);
+    });
+    document.body.removeChild(probe);
+    statusEl.style.minWidth = max + 'px';
+  }
+  pinStatusWidth();
+  window.addEventListener('resize', pinStatusWidth);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(pinStatusWidth); // 웹폰트가 늦게 로드돼 글자폭이 바뀌는 경우 보정
+  }
+
+  function cyclePhrase() {
+    phraseIdx = (phraseIdx + 1) % PHRASES.length;
+    statusEl.style.opacity = '0';
+    setTimeout(() => {
+      statusEl.textContent = PHRASES[phraseIdx];
+      statusEl.style.opacity = '0.9';
+      if (!reduceMotion && Math.random() < 0.5) {
+        statusEl.classList.add('glitch');
+        setTimeout(() => statusEl.classList.remove('glitch'), 260);
+      }
+    }, 380);
+  }
+  if (!reduceMotion) setInterval(cyclePhrase, 4600);
+
+  /* ---------- orbit tags: category words flashing near the ring — implies the
+     core is quietly keeping tabs on the wall's other panels (decorative only) ---------- */
+  const CATEGORY_TAGS = [
+    'SCHEDULE SYNCED', '일정 확인 중', 'D-DAY 추적 중', '성과 기록 갱신',
+    '급식 정보 갱신', 'CALENDAR LINKED', '오늘의 급식 확인', '다가오는 일정',
+    'MEAL PLAN LOADED', 'ACHIEVEMENT LOG', '수상 소식 갱신', 'D-DAY UPDATED'
+  ];
+  const orbitSlots = ['orbitTL', 'orbitTR', 'orbitBL', 'orbitBR']
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+
+  function runOrbitSlot(el, initialDelayMs) {
+    function cycle() {
+      el.textContent = CATEGORY_TAGS[Math.floor(Math.random() * CATEGORY_TAGS.length)];
+      el.classList.add('visible');
+      const holdMs = 2000 + Math.random() * 1200;
+      setTimeout(() => {
+        el.classList.remove('visible');
+        const gapMs = 1400 + Math.random() * 2600;
+        setTimeout(cycle, gapMs);
+      }, holdMs);
+    }
+    setTimeout(cycle, initialDelayMs);
+  }
+
+  if (!reduceMotion) {
+    orbitSlots.forEach((el, i) => runOrbitSlot(el, i * 900 + Math.random() * 500));
+  }
+
+  /* ---------- equalizer bars: smooth random-walk heights ---------- */
+  const eqWrap = document.getElementById('eqBars');
+  const BAR_COUNT = 30;
+  const bars = [];
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    eqWrap.appendChild(b);
+    bars.push({ el: b, cur: 20 + Math.random() * 20, target: 20 + Math.random() * 60 });
+  }
+  function stepEq() {
+    bars.forEach(b => {
+      b.cur += (b.target - b.cur) * 0.08;
+      if (Math.abs(b.target - b.cur) < 1.5) b.target = 8 + Math.random() * 85;
+      b.el.style.height = b.cur.toFixed(1) + '%';
+    });
+    if (!reduceMotion) requestAnimationFrame(stepEq);
+  }
+  if (reduceMotion) {
+    bars.forEach(b => { b.el.style.height = (20 + Math.random() * 40).toFixed(1) + '%'; });
+  } else {
+    requestAnimationFrame(stepEq);
+  }
+
+  /* ---------- background particle field (canvas) ---------- */
+  const canvas = document.getElementById('field');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const N = 70;
+  const particles = Array.from({ length: N }, () => ({
+    x: Math.random(), y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.00016,
+    vy: (Math.random() - 0.5) * 0.00016,
+    r: 0.6 + Math.random() * 1.2
+  }));
+  const LINK_DIST = 0.11;
+
+  function drawField() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < N; i++) {
+      const p = particles[i];
+      if (!reduceMotion) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = 1; if (p.x > 1) p.x = 0;
+        if (p.y < 0) p.y = 1; if (p.y > 1) p.y = 0;
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < LINK_DIST) {
+          ctx.strokeStyle = `rgba(94, 234, 255, ${0.14 * (1 - d / LINK_DIST)})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x * W, a.y * H);
+          ctx.lineTo(b.x * W, b.y * H);
+          ctx.stroke();
+        }
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      const p = particles[i];
+      ctx.fillStyle = 'rgba(215, 240, 251, 0.55)';
+      ctx.beginPath();
+      ctx.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (!reduceMotion) requestAnimationFrame(drawField);
+  }
+  drawField();
+</script>
+</body>
+</html>
