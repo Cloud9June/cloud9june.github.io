@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2f6fed">
+<title>성일정보고 학사일정</title>
+
+<!-- ===================================================================
+     성일정보고 학사일정 바로가기   (eduinfo.sungil-i.kr)
+     -------------------------------------------------------------------
+     화면에 아무것도 그리지 않고 곧바로 이동합니다.
+
+     ▶ 나중에 배포 주소가 바뀌면 바로 아래 APP_URL 의 따옴표 안쪽만 바꾸세요.
+       다른 곳은 손대지 않아도 됩니다.
+     =================================================================== -->
+<script>
+(function () {
+
+  /* ↓↓↓ 고칠 곳은 여기 한 줄뿐입니다 (따옴표 ' ' 는 지우지 마세요) ↓↓↓ */
+  var APP_URL = 'https://script.google.com/a/macros/sungil-i.kr/s/AKfycbwGUH7nv6wN7cLNYJhyiLFx-SP4v64Rj9zSu5n9gHhqRvugqB1BkAAsYx-rodPUE3tlZg/exec';
+  /* ↑↑↑ 고칠 곳은 여기 한 줄뿐입니다 ↑↑↑ */
+
+  // 주소가 제대로 채워졌는지 확인
+  var ok = /^https:\/\/script\.google\.com\/\S+\/exec$/.test(APP_URL) &&
+           !/[^\x00-\x7F]/.test(APP_URL);
+  if (!ok) {
+    window.__needSetup = true;
+    return;
+  }
+
+  // 짧은 주소 뒤에 붙은 파라미터를 그대로 넘긴다.
+  //   /?page=input        → 일정 입력 화면
+  //   /?date=2026-09-01   → 그 달 달력
+  var target = APP_URL;
+  var qs = window.location.search;
+  if (qs.length > 1) target += (target.indexOf('?') >= 0 ? '&' : '?') + qs.substring(1);
+
+  window.__target = target;
+
+  // <head> 안에서 실행되므로 본문이 그려지기 전에 이동합니다. 깜빡임이 없습니다.
+  // replace 를 쓰면 뒤로가기가 이 페이지로 되돌아오지 않습니다.
+  window.location.replace(target);
+})();
+</script>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f6fed'/%3E%3Crect x='13' y='18' width='38' height='33' rx='5' fill='%23fff'/%3E%3Crect x='13' y='18' width='38' height='9' rx='5' fill='%23dbe6fb'/%3E%3Ccircle cx='23' cy='36' r='3.4' fill='%232f6fed'/%3E%3Ccircle cx='34' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='45' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='23' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='34' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232f6fed'/%3E%3Crect x='13' y='18' width='38' height='33' rx='5' fill='%23fff'/%3E%3Crect x='13' y='18' width='38' height='9' rx='5' fill='%23dbe6fb'/%3E%3Ccircle cx='23' cy='36' r='3.4' fill='%232f6fed'/%3E%3Ccircle cx='34' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='45' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='23' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='34' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3C/svg%3E">
+
+<style>
+  html, body { height: 100%; margin: 0; background: #f5f6f8; }
+  /* 이동에 실패했을 때만 보이는 최소한의 안내 */
+  #fallback {
+    display: none;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic',
+                 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    color: #1f2933;
+    text-align: center;
+  }
+  #fallback.on { display: flex; }
+  #fallback .box {
+    max-width: 380px;
+    background: #fff;
+    border: 1px solid #e2e6ec;
+    border-radius: 12px;
+    padding: 28px 24px;
+  }
+  #fallback h1 { font-size: 16px; margin: 0 0 8px; }
+  #fallback p { font-size: 13px; color: #6b7684; margin: 0 0 18px; line-height: 1.6; }
+  #fallback a {
+    display: inline-block;
+    padding: 9px 18px;
+    background: #2f6fed;
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+  }
+  #fallback code {
+    font-size: 12px;
+    background: #f1f4f9;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div id="fallback">
+  <div class="box">
+    <h1 id="fbTitle">학사일정</h1>
+    <p id="fbMsg">페이지를 여는 중입니다…</p>
+    <a id="fbLink" href="#">바로 열기</a>
+  </div>
+</div>
+
+<noscript>
+  <div style="max-width:380px;margin:60px auto;padding:20px;border:1px solid #f0cfcf;
+              border-radius:10px;background:#fdf1f1;color:#a33;text-align:center;
+              font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:13px">
+    브라우저의 자바스크립트가 꺼져 있습니다.<br>학사일정을 사용하려면 켜 주세요.
+  </div>
+</noscript>
+
+<script>
+(function () {
+  var box = document.getElementById('fallback');
+
+  // 1) 주소를 아직 안 넣은 경우 — 설정 안내
+  if (window.__needSetup) {
+    document.getElementById('fbTitle').textContent = '설정이 필요합니다';
+    document.getElementById('fbMsg').innerHTML =
+      '이 파일 위쪽의 <code>APP_URL</code> 값을<br>실제 배포 주소로 바꿔 주세요.';
+    document.getElementById('fbLink').style.display = 'none';
+    box.classList.add('on');
+    return;
+  }
+
+  // 2) 4초가 지나도 이동하지 않았다면(확장프로그램·차단 등) 수동 링크를 보여준다
+  setTimeout(function () {
+    document.getElementById('fbMsg').textContent =
+      '자동으로 열리지 않았습니다. 아래 버튼을 눌러 주세요.';
+    document.getElementById('fbLink').href = window.__target || '#';
+    box.classList.add('on');
+  }, 4000);
+})();
+</script>
+</body>
+</html>
