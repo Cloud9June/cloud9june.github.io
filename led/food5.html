@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>급식 안내 (임시 수동입력판)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 비디오월 프레임의 급식 카테고리 색(#34d399)과 통일 — 오늘 메뉴 = 그린 */
+            --accent: #34d399;
+            --accent-glow: rgba(52, 211, 153, 0.35);
+            --accent-ink: #04120c;
+
+            --bg: #05060a;
+            --surface: rgba(30, 41, 59, 0.55);
+            --surface-strong: rgba(30, 41, 59, 0.82);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --text-faint: #64748b;
+            --row-font: 1.8rem; /* JS(fitRows)가 메뉴 개수에 맞춰 실제 값으로 갱신 */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .page {
+            position: relative;
+            height: 100vh;
+            padding: 26px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 은은한 앰비언트 글로우 — 오늘/내일 색에 맞춰 자연스럽게 전환 */
+        .ambient {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background: radial-gradient(ellipse 55% 55% at 14% 12%, var(--accent-glow), transparent 70%);
+            opacity: 0.6;
+            transition: background 0.6s ease;
+        }
+
+        .board {
+            position: relative; z-index: 1; flex: 1;
+            display: flex;
+            gap: 0;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .stat {
+            flex: 0 0 32%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 30px 30px;
+            border-right: 1px solid var(--border);
+        }
+
+        .label {
+            font-size: 0.9rem; font-weight: 800; letter-spacing: 0.12em;
+            color: var(--accent); text-transform: uppercase;
+            transition: color 0.5s ease;
+        }
+
+        .date {
+            font-size: 1.05rem; color: var(--text-dim); font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .kcal-block {
+            margin-top: 20px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .kcal-num {
+            font-family: 'Black Han Sans', sans-serif;
+            font-size: clamp(2.6rem, 6vw, 4.6rem);
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow), 0 0 26px var(--accent-glow);
+            line-height: 1;
+            transition: color 0.5s ease, text-shadow 0.5s ease;
+        }
+
+        .kcal-unit {
+            font-size: 1.05rem; color: var(--text-dim); font-weight: 700;
+        }
+
+        .legend {
+            margin-top: 14px;
+            font-size: 0.75rem;
+            color: var(--text-faint);
+        }
+
+        .menu-wrap {
+            flex: 1;
+            min-width: 0;
+            padding: 22px 34px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .row {
+            position: relative;
+            font-size: var(--row-font);
+            display: flex;
+            align-items: baseline;
+            gap: 18px;
+            padding: 0.3em 0;
+        }
+
+        .row + .row::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent 75%);
+        }
+
+        .idx {
+            font-family: 'Black Han Sans', sans-serif;
+            font-size: 0.55em;
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent-glow);
+            width: 1.6em;
+            flex-shrink: 0;
+            transition: color 0.5s ease;
+        }
+
+        .name {
+            font-family: 'Black Han Sans', sans-serif;
+            color: #fff;
+            word-break: keep-all;
+        }
+
+        .allergy {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.4em;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-left: 0.5em;
+            transition: color 0.5s ease;
+        }
+
+        .row.msg {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            padding: 0;
+        }
+        .row.msg::before { display: none; }
+
+        .meal-time {
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: var(--text-faint);
+            font-weight: 600;
+        }
+
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="page fade-in" id="page">
+        <div class="ambient"></div>
+
+        <div class="board">
+            <div class="stat">
+                <div class="label" id="label">TODAY'S LUNCH MENU</div>
+                <div id="date" class="date">데이터 로딩 중...</div>
+                <div class="meal-time">급식시간 12:50 - 13:50</div>
+                <div class="kcal-block">
+                    <span class="kcal-num" id="calorie">-</span>
+                    <span class="kcal-unit">Kcal</span>
+                </div>
+                <div class="legend">메뉴 옆 알레르기 유발 식품 표시</div>
+            </div>
+            <div id="menu-wrap" class="menu-wrap">
+                <div class="row msg">잠시만 기다려주세요.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // ★★★ 여기만 수정하면 됩니다 (나이스 장애로 인한 임시 수동입력판) ★★★
+        //
+        // 오늘 급식만 표시합니다(내일 메뉴 전환 없음).
+        // dishes 문자열 형식은 나이스 급식표와 동일합니다:
+        //   "요리명 (알레르기번호.알레르기번호...)"
+        //   예) "돈까스 (1.5.6.10.13)"  → 괄호 안 숫자는 자동으로 알레르기 식품명으로 바뀝니다.
+        //   알레르기 표시가 없는 메뉴는 괄호 없이 그냥 "쌀밥" 처럼 적으면 됩니다.
+        //
+        // calorie는 숫자만 적어도 되고 "931.1 Kcal"처럼 적어도 됩니다(자동으로 정리됩니다).
+        // ============================================================
+        const TODAY_MENU = {
+            calorie: "931.1",
+            dishes: [
+                "혼합잡곡밥 (5)",
+                "쑥갓어묵국 (1.2.5.6.9)",
+                "숙주나물무침",
+                "치즈불닭 (2.5.6.13.15)",
+                "배추김치 (9)",
+                "타코야끼 (1.2.5.6.7.13.18)"
+            ]
+        };
+        // ============================================================
+        // ★★★ 여기까지만 수정하면 됩니다 ★★★
+        // ============================================================
+
+        // NEIS 알레르기 유발 식품 번호(1~19) → 이름
+        const ALLERGY_NAMES = {
+            1: '난류', 2: '우유', 3: '메밀', 4: '땅콩', 5: '대두', 6: '밀',
+            7: '고등어', 8: '게', 9: '새우', 10: '돼지고기', 11: '복숭아',
+            12: '토마토', 13: '아황산류', 14: '호두', 15: '닭고기', 16: '쇠고기',
+            17: '오징어', 18: '조개류', 19: '잣'
+        };
+
+        function fitRows() {
+            const wrap = document.getElementById('menu-wrap');
+            if (!wrap) return;
+
+            const maxPx = 34;
+            const minPx = 14;
+            let fontSize = maxPx;
+            wrap.style.setProperty('--row-font', fontSize + 'px');
+
+            while (fontSize > minPx && wrap.scrollHeight > wrap.clientHeight) {
+                fontSize -= 1;
+                wrap.style.setProperty('--row-font', fontSize + 'px');
+            }
+        }
+
+        // "요리명 (알레르기번호.번호...)" 형태를 요리명 / 알레르기번호 배열로 분리
+        function parseDish(line) {
+            const codes = new Set();
+            (line.match(/\(([\d.\s]+)\)/g) || []).forEach(group => {
+                group.replace(/[()]/g, '').split('.').forEach(n => {
+                    n = n.trim();
+                    if (n) codes.add(n);
+                });
+            });
+            const name = line
+                .replace(/\([\d.\s]+\)/g, '')
+                .replace(/\*/g, '')
+                .trim();
+            return { name, codes: [...codes].sort((a, b) => a - b) };
+        }
+
+        function getMeal() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+
+            const dateElement = document.getElementById('date');
+            const labelElement = document.getElementById('label');
+            const calorieElement = document.getElementById('calorie');
+            const menuWrapElement = document.getElementById('menu-wrap');
+
+            labelElement.innerText = "TODAY'S LUNCH MENU";
+            dateElement.innerText = `${year}년 ${month}월 ${day}일`;
+
+            const entry = TODAY_MENU;
+
+            if (entry && entry.dishes && entry.dishes.length) {
+                const dishes = entry.dishes.map(parseDish).filter(d => d.name);
+
+                menuWrapElement.innerHTML = dishes.map((d, i) => {
+                    const names = d.codes.map(c => ALLERGY_NAMES[c] || c).join(' · ');
+                    return `
+                    <div class="row">
+                        <span class="idx">${String(i + 1).padStart(2, '0')}</span>
+                        <span class="name">${d.name}${names ? `<span class="allergy">${names}</span>` : ''}</span>
+                    </div>`;
+                }).join('');
+
+                const calText = String(entry.calorie ?? '-').replace(/kcal/i, '').trim();
+                calorieElement.innerText = calText;
+            } else {
+                menuWrapElement.innerHTML = `<div class="row msg">오늘 식단이 아직 입력되지 않았습니다. 🍱</div>`;
+                calorieElement.innerText = '-';
+            }
+
+            requestAnimationFrame(fitRows);
+        }
+
+        window.addEventListener('resize', fitRows);
+        window.addEventListener('load', fitRows);
+
+        // 실행 (나이스 API 호출 없이 위 TODAY_MENU 값만 사용합니다. 내일 메뉴 전환 없음)
+        getMeal();
+        setInterval(getMeal, 1800000);
+    </script>
+</body>
+</html>
