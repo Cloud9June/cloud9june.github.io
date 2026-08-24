@@ -42,15 +42,23 @@
   var params = window.location.search;
   var isSetup = /[?&]setup=1(&|$)/.test(params);
 
+  // 홈 화면 아이콘으로 실행된 상태(standalone)인지 확인.
+  // 홈 화면에 추가할 때 저장된 주소가 ?setup=1 이 붙은 그대로이기 때문에,
+  // 아이콘을 눌러 다시 열 때도 매번 이 페이지로 들어온다. 하지만 그때는
+  // 이미 "설치가 끝난 뒤 실행"이므로 안내를 또 보여줄 필요 없이 바로 넘어가면 된다.
+  var isStandalone = (window.navigator && window.navigator.standalone === true) ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
   var target = APP_URL;
   var qs = params.replace(/[?&]setup=1/, '');
   if (qs.length > 1) target += (target.indexOf('?') >= 0 ? '&' : '?') + qs.substring(1);
 
   window.__target = target;
 
-  if (isSetup) {
-    // 홈 화면 추가 전용 모드: 자동 이동을 하지 않아야 브라우저가
-    // 이 페이지의 아이콘·이름·설치 정보(manifest)를 제대로 읽어갈 시간이 생긴다.
+  if (isSetup && !isStandalone) {
+    // 홈 화면 추가 "설정" 단계(일반 브라우저 탭에서 열었을 때): 자동 이동을 하지
+    // 않아야 브라우저가 이 페이지의 아이콘·이름·설치 정보(manifest)를 제대로 읽어갈
+    // 시간이 생긴다.
     window.__setupMode = true;
     return;
   }
