@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#2f6fed">
+<!-- 홈 화면에 추가했을 때 '앱처럼' 열리도록 + 홈 화면 아이콘 밑 이름은 짧게 -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="학사일정">
 <title>성일정보고 학사일정</title>
 
 <!-- ===================================================================
@@ -19,10 +24,10 @@
 (function () {
 
   /* ↓↓↓ 고칠 곳은 여기 한 줄뿐입니다 (따옴표 ' ' 는 지우지 마세요) ↓↓↓ */
-  var APP_URL = 'https://script.google.com/a/macros/sungil-i.kr/s/AKfycbxnDWgrNiBchO5kwTtt7Q7CSs2yO9P0K0s9Z8z5Bf7caoTsLXiv3H5TYQBEcvuqe1kh/exec';
+  var APP_URL = 'https://script.google.com/a/macros/sungil-i.kr/s/AKfycbzNRHk0L3zpyRTpcNruIsyFUoxZ6PcrewLSWHjZi0QRw6HV-MQxzAC2InOfzaT3837vUQ/exec';
   /* ↑↑↑ 고칠 곳은 여기 한 줄뿐입니다 ↑↑↑ */
 
-  // 주소가 제대로 채워졌는지 확인!!
+  // 주소가 제대로 채워졌는지 확인
   var ok = /^https:\/\/script\.google\.com\/\S+\/exec$/.test(APP_URL) &&
            !/[^\x00-\x7F]/.test(APP_URL);
   if (!ok) {
@@ -45,8 +50,9 @@
 })();
 </script>
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f6fed'/%3E%3Crect x='13' y='18' width='38' height='33' rx='5' fill='%23fff'/%3E%3Crect x='13' y='18' width='38' height='9' rx='5' fill='%23dbe6fb'/%3E%3Ccircle cx='23' cy='36' r='3.4' fill='%232f6fed'/%3E%3Ccircle cx='34' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='45' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='23' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='34' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232f6fed'/%3E%3Crect x='13' y='18' width='38' height='33' rx='5' fill='%23fff'/%3E%3Crect x='13' y='18' width='38' height='9' rx='5' fill='%23dbe6fb'/%3E%3Ccircle cx='23' cy='36' r='3.4' fill='%232f6fed'/%3E%3Ccircle cx='34' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='45' cy='36' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='23' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3Ccircle cx='34' cy='45' r='3.4' fill='%23b8c6e0'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAAYFBMVEX////+///+/v/9/v/+/f38/f/6/P/6+//5+//2+v/09/7y9v7u9P7r8v7q8f7p8f7p8P7o8P7q7fre6f3L2/u2wu1RfeU2dO0xcO0wcO0wb+0vb+0ub+3WRUVDZdMlaOyVXRwfAAAEjklEQVR42u3c2XarIBQAUIdIRTFCIwaMXfz/X17UaJ1SjQpNes95pAvcQSqDiHN7w3AADWhAAxrQgAY0oAENaEADGtCABjSgAQ3o30ELHXsurLNLy2gplI5yM1uUVf6t7G1oWapch1Qb1ULJKr8qpT20LK/8oiPLt6mFyrMqP79uU2+r6ZKzS1Zdd5Nam/UP1vkZL63VtL4oq2squ/AtVSVLfmnys223agtaqrpx1JEr+Xz2vMvOlbSELkXWQ4tNreMemSjNokUbxXWAfjr66GvRJRtAC6m+o0VnGr0h8ktXQC9VioPR4qbKPOdtXFgbGd8QWZf90qXlealu4ki00OSMYBzdI+ki7tLWB46/83dpmGSaLQ5Dy6ozwFHa1Q87d8E2xVz+NMJVZyWPQcub4iTqX8lMMBYRrm7yEHSheEiNk2s2DbkqjkALxRFLz1YiZYivaNfOiq4As7O1YHhFd+UsjhOuF0LtoSm5LA/9nOXGEVqsaF3V4XIDWUAXliv6XtXFLrTlFr2yVS+iuX0034kuyiy2jY6zfc1DWm/Sq54fgAY0oAENaEADGtCABjSgTaITlloNluxHExQiqxEishsdOdYj2o2OHc8u2XNiQAMa0IAG9P+E9oavOrHf/uFj+HozaNODYXrYprujgjxzaJSMXmImqPlDTEcvN3GTjkcvRylpfmZAHhR0PNpLxqNUmtSIaLKETWsEotPF57okMi3IM4QOpyNrWlcpmbxmpHFzAyYZ6l+Jpq8laWgIjenMu4b6DsyM5GcrVEfw068HNKABDehXRtMGvf45bR0dzPQJaL5G6zsw01OmpCrNn96aNDA19ogYHW2EaXpldB6pWW1zPDJS03vHh0cFURaZG+VFJOkHaS+FhulJfB/++fEwnbSdNX5QkJnxtN+P/ii4n+49SPdXFASTgI2C0zDeAX2ain4BjXA/Prr0IOynh157/ehzsDP280FByCA6ILQfevZ0f7pG58EfaBI29fz5NY7TqX5QDwuiXUHHo93xY1f31l7z2B13FVXHN2f+4nWTmWwxYsS1ON0K53tEGlXor5mIdHnB+WWnW/PoT53+wqM8QAMa0IB+Z/TTnQt/gc7lLbvx4wZMHkltDZg2DE1Pvz803T8JOMF0609PbFetCLzWEsJosSZ5h8WaaPTh2YZlMTy7LJaaWxZDdP0CZPTsAiSyvtQLi+qABjSg/waa2Efv3GtalFdmf+sEW/pedeEjSqkyxzewSYU93qTiO9nSSSXLn6u6wQ/bgT6O3w4UuHz3N7a546/YeIWG6d8br/CDjVfhw41XvpPv/sb2Sj2rswDPY3s/wa7ahxPYRAfO7o/dq4cec317Zt9l+48VqFt14Noy6//6Aw5waBoIsqT2kHPIURn1WVF6fmqlPXurzKvQheK+nj0brm1XT8p9ruQxx780B+1UFWE09AUOPGjndj/SCJutaXzskUaVulAqz3lmLHieK1UcenhUxRbKcIijj+lqmrbReOIMOjjXFNCABjSgAQ1oQAMa0IAGNKABDWhAAxrQgAY0oAENaEC/WPwDVBUAj2PXprIAAAAASUVORK5CYII=">
+<!-- 아이폰 홈 화면 아이콘: iOS 는 apple-touch-icon 에 SVG 를 잘 못 읽어서 PNG 로 넣습니다 -->
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAAYFBMVEX////+///+/v/9/v/+/f38/f/6/P/6+//5+//2+v/09/7y9v7u9P7r8v7q8f7p8f7p8P7o8P7q7fre6f3L2/u2wu1RfeU2dO0xcO0wcO0wb+0vb+0ub+3WRUVDZdMlaOyVXRwfAAAEjklEQVR42u3c2XarIBQAUIdIRTFCIwaMXfz/X17UaJ1SjQpNes95pAvcQSqDiHN7w3AADWhAAxrQgAY0oAENaEADGtCABjSgAQ3o30ELHXsurLNLy2gplI5yM1uUVf6t7G1oWapch1Qb1ULJKr8qpT20LK/8oiPLt6mFyrMqP79uU2+r6ZKzS1Zdd5Nam/UP1vkZL63VtL4oq2squ/AtVSVLfmnys223agtaqrpx1JEr+Xz2vMvOlbSELkXWQ4tNreMemSjNokUbxXWAfjr66GvRJRtAC6m+o0VnGr0h8ktXQC9VioPR4qbKPOdtXFgbGd8QWZf90qXlealu4ki00OSMYBzdI+ki7tLWB46/83dpmGSaLQ5Dy6ozwFHa1Q87d8E2xVz+NMJVZyWPQcub4iTqX8lMMBYRrm7yEHSheEiNk2s2DbkqjkALxRFLz1YiZYivaNfOiq4As7O1YHhFd+UsjhOuF0LtoSm5LA/9nOXGEVqsaF3V4XIDWUAXliv6XtXFLrTlFr2yVS+iuX0034kuyiy2jY6zfc1DWm/Sq54fgAY0oAENaEADGtCABjSgTaITlloNluxHExQiqxEishsdOdYj2o2OHc8u2XNiQAMa0IAG9P+E9oavOrHf/uFj+HozaNODYXrYprujgjxzaJSMXmImqPlDTEcvN3GTjkcvRylpfmZAHhR0PNpLxqNUmtSIaLKETWsEotPF57okMi3IM4QOpyNrWlcpmbxmpHFzAyYZ6l+Jpq8laWgIjenMu4b6DsyM5GcrVEfw068HNKABDehXRtMGvf45bR0dzPQJaL5G6zsw01OmpCrNn96aNDA19ogYHW2EaXpldB6pWW1zPDJS03vHh0cFURaZG+VFJOkHaS+FhulJfB/++fEwnbSdNX5QkJnxtN+P/ii4n+49SPdXFASTgI2C0zDeAX2ain4BjXA/Prr0IOynh157/ehzsDP280FByCA6ILQfevZ0f7pG58EfaBI29fz5NY7TqX5QDwuiXUHHo93xY1f31l7z2B13FVXHN2f+4nWTmWwxYsS1ON0K53tEGlXor5mIdHnB+WWnW/PoT53+wqM8QAMa0IB+Z/TTnQt/gc7lLbvx4wZMHkltDZg2DE1Pvz803T8JOMF0609PbFetCLzWEsJosSZ5h8WaaPTh2YZlMTy7LJaaWxZDdP0CZPTsAiSyvtQLi+qABjSg/waa2Efv3GtalFdmf+sEW/pedeEjSqkyxzewSYU93qTiO9nSSSXLn6u6wQ/bgT6O3w4UuHz3N7a546/YeIWG6d8br/CDjVfhw41XvpPv/sb2Sj2rswDPY3s/wa7ahxPYRAfO7o/dq4cec317Zt9l+48VqFt14Noy6//6Aw5waBoIsqT2kHPIURn1WVF6fmqlPXurzKvQheK+nj0brm1XT8p9ruQxx780B+1UFWE09AUOPGjndj/SCJutaXzskUaVulAqz3lmLHieK1UcenhUxRbKcIijj+lqmrbReOIMOjjXFNCABjSgAQ1oQAMa0IAGNKABDWhAAxrQgAY0oAENaEC/WPwDVBUAj2PXprIAAAAASUVORK5CYII=">
 
 <style>
   html, body { height: 100%; margin: 0; background: #f5f6f8; }
