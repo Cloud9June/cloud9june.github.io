@@ -191,13 +191,13 @@
     for (let i = 0; i < count; i++){
       const p = document.createElement('div');
       p.className = 'petal';
-      const size = 1 + Math.random()*2.9; // 1~1.9 배율
+      const size = 1 + Math.random()*3.9; // 1~1.9 배율
       p.style.width = (1.5 * size) + 'vh';
       p.style.height = (1.15 * size) + 'vh';
       p.style.left = (Math.random()*100) + '%';
       const sway = (2.4 + Math.random()*3) * (Math.random() < 0.5 ? -1 : 1);
       p.style.setProperty('--sway', sway + 'vh');
-      const dur = 10 + Math.random()*8; // 10~18초, 느긋하게
+      const dur = 18 + Math.random()*8; // 10~18초, 느긋하게
       p.style.animationDuration = dur + 's';
       p.style.animationDelay = (-Math.random()*dur) + 's'; // 음수 지연으로 처음부터 골고루 퍼져 보이게
       p.style.opacity = 0.75 + Math.random()*0.25;
