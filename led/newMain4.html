@@ -73,23 +73,29 @@
   .shine::before{
     content:"";
     position:absolute;
-    top:-60%; left:-45%;
-    width:26%; height:220%;
+    top:-70%; left:-55%;
+    width:40%; height:240%;
     background: linear-gradient(
-      75deg,
+      78deg,
       transparent 0%,
-      rgba(255,255,255,0) 30%,
-      rgba(255,255,255,0.75) 50%,
-      rgba(255,255,255,0) 70%,
+      rgba(255,246,220,0) 25%,
+      rgba(255,246,220,0.55) 50%,
+      rgba(255,246,220,0) 75%,
       transparent 100%
     );
-    animation: sweep 5.5s cubic-bezier(.2,.7,.3,1) infinite;
-    animation-delay: 0.8s;
+    animation: sweep 14s ease-in-out infinite;
+    animation-delay: 1s;
   }
+  /* 아침 햇살처럼 천천히 은은하게 나타났다가, 쭉 나아가다 살짝 뒤로 물러났다가
+     다시 끝까지 흘러가는 식으로 — 한 방향으로 훅 지나가지 않고 살아있는 느낌으로 */
   @keyframes sweep{
-    0%   { left:-45%; }
-    28%  { left:130%; }
-    100% { left:130%; }
+    0%   { left:-55%;  opacity:0;    }
+    12%  {              opacity:0.85; }
+    38%  { left:32%;   opacity:1;    }
+    54%  { left:10%;   opacity:0.65; }
+    80%  { left:78%;   opacity:1;    }
+    96%  { left:130%;  opacity:0.35; }
+    100% { left:130%;  opacity:0;    }
   }
 
   /* ---- 반짝임 효과 2: 작은 별빛 스파클이 여기저기서 반짝 ---- */
