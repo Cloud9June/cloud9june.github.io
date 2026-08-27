@@ -4,10 +4,12 @@
 ------------------------------------------
  ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
  ⦿ 최초 작성 : 2025-09-20
- ⦿ 수정 내역 : 
+ ⦿ 수정 내역 :
     - 2025-09-22 카드 숨김 기능 추가
     - 2025-09-22 메모장 모듈 추가
     - 2025-10-15 오늘일정 버튼 및 모달 추가
+    - 2026-08-27 관리자 일정 기능 제거, 성일일정 바로가기 버튼 추가
+    - 2026-08-27 오늘일정 버튼 및 모달 제거
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -63,8 +65,7 @@
             <div class="ticker-left">
                 <button class="ticker-toggle" id="tickerToggle" type="button">📢 학교 알림 전광판 열기</button>
                 <button class="toolbar-btn" id="dutyBtn" type="button">📋 일일근무</button>
-                <button class="toolbar-btn" id="scheduleBtn" type="button">🗓️ 오늘일정</button>
-                <button class="toolbar-btn" id="managerBtn" type="button">🧑‍💼 관리자 일정<span class="beta-badge">BETA</span></button>
+                <a class="toolbar-btn" id="sungilCalBtn" href="https://eduinfo.sungil-i.kr/cal" target="_blank" rel="noopener">📅 성일일정</a>
                 <button class="toolbar-btn" id="approvalBtn" type="button">🗂️ 결재선 조회<span class="beta-badge">BETA</span></button>
                 <button class="ticker-help" id="helpBtn" type="button">❓ 도움말</button>
             </div>
@@ -79,7 +80,7 @@
                 <div class="led-ticker-track" id="ledTrack"></div>
             </div>
         </div>
-        
+
         <div id="hiddenList" class="hidden-list"></div>
 
         <!-- 근무자 모달 -->
@@ -90,36 +91,10 @@
             <div id="modal-duty"></div>
             <div class="modal-footer">
             <button id="closeDutyBtn">닫기</button>
-            <a href="https://docs.google.com/spreadsheets/d/1fooMUmUyiABOSiesvtd9FoD2Fs8jRq1VB_T9nYSkOCo/edit?gid=0#gid=0" 
+            <a href="https://docs.google.com/spreadsheets/d/1fooMUmUyiABOSiesvtd9FoD2Fs8jRq1VB_T9nYSkOCo/edit?gid=0#gid=0"
                 target="_blank" rel="noopener">현황 시트</a>
             </div>
         </div>
-        </div>
-
-        <!-- 오늘일정 모달 -->
-        <div id="scheduleModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeSchedule">&times;</span>
-            <h2>오늘 일정 <span id="schedule-date">📋</span></h2>
-            <div id="modal-schedule"></div>
-            <div class="modal-footer">
-            <button id="closeScheduleBtn">닫기</button>
-            <a href="https://docs.google.com/spreadsheets/d/15aPh23KINviKP735WgZ2d9-vlM2O1XF8_KHKmeG0DIs/edit?gid=425691571#gid=425691571"
-                target="_blank" rel="noopener">학사달력</a>
-            </div>
-        </div>
-        </div>
-
-        <!-- 관리자 근태 모달 -->
-        <div id="managerModal" class="modal">
-            <div class="modal-content">
-                <span class="close" id="closeManager">&times;</span>
-                <h2>관리자 근태 현황 <span id="manager-date">🧑‍💼</span></h2>
-                <div id="modal-manager"></div>
-                <div class="modal-footer">
-                <button id="closeManagerBtn">닫기</button>
-                </div>
-            </div>
         </div>
 
         <!-- 복무결재선 모달 -->
@@ -299,7 +274,7 @@
                 </div>
                 <div class="meta"><span class="badge">공식</span><span class="badge">외부</span></div>
             </article>
-            
+
             <!-- 에듀테크 사이트 -->
             <article class="card card4" data-key="card4" data-tags="에듀테크 AI 퀴즈 수업지원" data-cat="class">
                 <button class="hide-btn" onclick="hideCard('card4')">✖</button>
@@ -333,7 +308,7 @@
                     <a class="btn" href="https://keep.google.com/" target="_blank" rel="noopener">킵</a>
                     <a class="btn" href="https://mail.google.com/" target="_blank" rel="noopener">메일</a>
                     <a class="btn" href="https://slides.google.com/" target="_blank" rel="noopener">슬라이드</a>
-                    <a class="btn" href="https://docs.google.com/" target="_blank" rel="noopener">독스</a>                    
+                    <a class="btn" href="https://docs.google.com/" target="_blank" rel="noopener">독스</a>
                     <a class="btn" href="https://calendar.google.com/" target="_blank" rel="noopener">캘린더</a>
                 </div>
                 <div class="meta"><span class="badge">구글</span></div>
@@ -351,7 +326,7 @@
                         target="_blank" rel="noopener">수업교환 신청</a>
                     <a class="btn"
                         href="https://docs.google.com/spreadsheets/d/1w5uKOCGuPWReUkNF-57tv2Gf81N1UatY7P92EYKnJYo/edit?gid=425433205#gid=425433205"
-                        target="_blank" rel="noopener">수업교환 일지(확인)</a>    
+                        target="_blank" rel="noopener">수업교환 일지(확인)</a>
                 </div>
                 <div class="meta"><span class="badge">수업</span></div>
             </article>
@@ -515,7 +490,7 @@
             © <span id="yy"></span> 성일정보고등학교 교육정보부
         </footer>
     </div>
-    
+
     <script src="./main/approval-data.js"></script>
     <script src="./main/main.js"></script>
 </body>

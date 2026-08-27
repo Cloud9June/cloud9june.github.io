@@ -4,10 +4,12 @@
 ------------------------------------------
  ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
  ⦿ 최초 작성 : 2025-09-15
- ⦿ 수정 내역 : 
+ ⦿ 수정 내역 :
     - 2025-09-22 메모장 관련 스타일 추가
     - 2025-09-22 카드 숨김 관련 스타일 추가
     - 2025-10-15 오늘일정 관련 스타일 추가
+    - 2026-08-27 관리자 근태 카드 스타일 제거
+    - 2026-08-27 오늘일정 관련 스타일 제거
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -686,6 +688,9 @@ footer {
     cursor: pointer;
     transition: all .2s ease;
     font-size: 13px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
 }
 
 .toolbar-btn:hover,
@@ -714,7 +719,7 @@ footer {
     /* background: var(--accent);
     color: #fff;
     transform: scale(1.05); */
-}  
+}
 
 /* 모달 공통 */
 .modal {
@@ -975,45 +980,6 @@ footer {
     padding-left: 10px;
 }
 
-/* 오늘일정 모달 가로 크기 확장 */
-#scheduleModal .modal-content {
-  width: 700px;
-  max-width: 95%;
-  max-height: 80vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-#scheduleModal .modal-content::-webkit-scrollbar {
-  width: 8px;
-}
-#scheduleModal .modal-content::-webkit-scrollbar-thumb {
-  background: #2a3a4f;
-  border-radius: 10px;
-}
-#scheduleModal .modal-content::-webkit-scrollbar-thumb:hover {
-  background: #3b4d61;
-}
-
-/* 부서 블록 스타일 */
-#scheduleModal .schedule-item {
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border-left: 3px solid var(--accent);
-  background: rgba(76, 201, 240, 0.06);
-  border-radius: 6px;
-  line-height: 1.6;
-  font-size: 14px;
-  text-align: left;
-}
-
-#scheduleModal .schedule-item strong {
-  color: var(--accent);
-  font-weight: 700;
-  display: inline-block;
-  margin-bottom: 4px;
-}
-
 /* ==========================================
    ☀️ 라이트 모드 (모던 화이트 톤)
    <html data-theme="light"> 속성이 설정되면 적용
@@ -1158,18 +1124,6 @@ footer {
     border-color: #dbe3ee;
 }
 
-[data-theme="light"] #scheduleModal .modal-content::-webkit-scrollbar-thumb {
-    background: #c7d2e0;
-}
-
-[data-theme="light"] #scheduleModal .modal-content::-webkit-scrollbar-thumb:hover {
-    background: #a9bdd6;
-}
-
-[data-theme="light"] #scheduleModal .schedule-item {
-    background: rgba(47, 111, 237, .06);
-}
-
 /* 스마트폰 화면(560px 이하)에서는 시계 숨김 */
 @media (max-width:680px) {
     .now {
@@ -1201,44 +1155,6 @@ footer {
         padding: 1px 4px;
         margin-left: 2px;
     }
-}
-
-/* 관리자 근태 카드 */
-.manager-item {
-  margin-bottom: 10px;
-  padding: 10px 12px;
-  border-left: 3px solid var(--accent);
-  background: rgba(76, 201, 240, 0.06);
-  border-radius: 6px;
-  font-size: 14px;
-  text-align: left;
-}
-
-.manager-item.status-warn {
-  border-left-color: #e0b100;
-  background: rgba(224, 177, 0, 0.08);
-}
-
-.manager-item.status-out {
-  border-left-color: var(--warning);
-  background: rgba(255, 107, 107, 0.08);
-}
-
-.manager-item .m-name {
-  font-weight: 700;
-  margin-right: 8px;
-}
-
-.manager-item .m-status {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.manager-item .m-detail {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--muted);
-  white-space: pre-line;
 }
 
 /* 복무결재선 모달 */

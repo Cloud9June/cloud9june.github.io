@@ -4,10 +4,12 @@
 ------------------------------------------
  ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
  ⦿ 최초 작성 : 2025-09-15
- ⦿ 수정 내역 : 
+ ⦿ 수정 내역 :
     - 2025-09-22 카드 숨김/복원 기능 추가
     - 2025-09-22 메모장 모달 CRUD 기능 구현
     - 2025-10-15 오늘일정 기능 구현
+    - 2026-08-27 관리자 일정(근태) 기능 제거, 성일일정 바로가기 버튼으로 대체
+    - 2026-08-27 오늘일정 기능 제거
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -779,127 +781,6 @@ async function loadDuty() {
 }
 loadDuty();
 
-const scheduleBtn = document.getElementById("scheduleBtn");
-const scheduleModal = document.getElementById("scheduleModal");
-const closeSchedule = document.getElementById("closeSchedule");
-const closeScheduleBtn = document.getElementById("closeScheduleBtn");
-
-// 오늘일정 버튼 클릭 → 모달 열기
-scheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "flex";
-  loadSchedule(); // 데이터 로드
-});
-
-// 닫기 버튼
-closeSchedule.addEventListener("click", () => {
-  scheduleModal.style.display = "none";
-});
-closeScheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "none";
-});
-
-async function loadSchedule() {
-  // ✅ 오늘일정 시트의 CSV 주소
-  const url = "https://docs.google.com/spreadsheets/d/1PsddTQqOyLU62EqyRrZFFXnoowL1-m09dUa-tLqCJcE/export?format=csv&gid=0";
-
-  try {
-    const res = await fetch(url);
-    let text = await res.text();
-
-    // 🔹 CSV 전처리 (BOM, 따옴표, 불필요한 문자 제거)
-    text = text
-      .replace(/^\uFEFF/, "")      // BOM 제거
-      .replace(/^"+|"+$/g, "")     // 맨 앞/뒤 큰따옴표 제거
-      .replace(/""+/g, '"')        // 중복 따옴표 정리
-      .replace(/\r/g, "")          // 캐리지리턴 제거
-      .trim();
-
-    // 🔹 줄 단위 분리
-    const lines = text.split("\n");
-    const title = lines[0]?.trim() || "오늘의 일정";
-    const desc = lines.slice(1).join("\n").trim();
-
-    // ✅ [부서] 단위로 구간 묶기
-    const blocks = [];
-    let currentDept = null;
-    let currentContent = [];
-
-    const allLines = desc.split("\n");
-    for (let line of allLines) {
-      // 🔸 첫 줄 특수문자/BOM/따옴표 제거
-      line = line.replace(/^[\uFEFF"']+/, "").trim();
-
-      const deptMatch = line.match(/^\[([^\]]+)\]\s*(.*)/);
-      if (deptMatch) {
-        // 새로운 [부서] 등장 시 이전 블록 저장
-        if (currentDept) {
-          blocks.push({
-            dept: currentDept,
-            content: currentContent.join("<br>")
-          });
-        }
-        currentDept = deptMatch[1];
-        currentContent = [deptMatch[2]];
-      } else if (currentDept) {
-        // 부서 구간 내부의 추가 줄
-        currentContent.push(line);
-      }
-    }
-
-    // 마지막 블록 저장
-    if (currentDept) {
-      blocks.push({
-        dept: currentDept,
-        content: currentContent.join("<br>")
-      });
-    }
-
-    // ✅ HTML 변환 (CSS 기반)
-    const formattedDesc = blocks
-      .map(
-        b => `
-        <div class="schedule-item">
-          <strong class="schedule-dept">[${b.dept}]</strong><br>
-          <div class="schedule-content">${b.content}</div>
-        </div>`
-      )
-      .join("");
-
-    // ✅ 모달 HTML 구성
-    const html = `
-      <table class="duty-table schedule-table">
-        <tbody>
-          <tr>
-            <td class="schedule-wrapper">${formattedDesc}</td>
-          </tr>
-        </tbody>
-      </table>
-    `;
-
-    document.getElementById("modal-schedule").innerHTML = html;
-  } catch (e) {
-    console.error("오늘일정 불러오기 실패:", e);
-    document.getElementById("modal-schedule").innerHTML =
-      "<p style='color:var(--warning);text-align:center;'>불러오기에 실패했습니다.</p>";
-  }
-}
-
-scheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "flex";
-  loadSchedule(); // 클릭 시 최신 데이터 불러오기
-});
-
-closeScheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "none";
-});
-
-// 배경 클릭 시 닫기
-window.addEventListener("click", (e) => {
-  if (e.target === scheduleModal) {
-    scheduleModal.style.display = "none";
-  }
-});
-
 // // 메모 카드
 // const memoArea = document.getElementById("memoArea");
 
@@ -1009,7 +890,7 @@ function openModal(index = null) {
     // 기존 메모 수정
     memoTitleInput.value = memos[index].title;
     memoContentInput.value = memos[index].content;
-    saveMemoBtn.textContent = "수정"; 
+    saveMemoBtn.textContent = "수정";
     deleteMemoBtn.style.display = "inline-block"; // 수정 모드일 땐 삭제 보이기
   }
   modal.style.display = "flex";
@@ -1101,63 +982,10 @@ window.addEventListener("DOMContentLoaded", () => {
   renderHiddenList();
 });
 
-// ===== 관리자 근태 모달 =====
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx34CBLcYACJ3n_fZinK41MqY96K-RezuXHAG9HSeJjOjHwcDXXKIUbzuBEQ8FgUP4IlA/exec";
-
-const managerBtn = document.getElementById('managerBtn');
-const managerModal = document.getElementById('managerModal');
-const closeManager = document.getElementById('closeManager');
-const closeManagerBtn = document.getElementById('closeManagerBtn');
-const modalManager = document.getElementById('modal-manager');
-const managerDate = document.getElementById('manager-date');
-
-if (managerBtn) {
-  managerBtn.addEventListener('click', () => {
-    managerModal.style.display = 'flex';
-    modalManager.innerHTML = '불러오는 중...';
-    loadManagerStatus();
-  });
-}
-[closeManager, closeManagerBtn].forEach(el => {
-  if (el) el.addEventListener('click', () => managerModal.style.display = 'none');
-});
-window.addEventListener('click', (e) => {
-  if (e.target === managerModal) managerModal.style.display = 'none';
-});
-
+// ===== 공통 유틸: HTML 이스케이프 =====
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-async function loadManagerStatus() {
-  try {
-    const res = await fetch(`${WEBAPP_URL}?type=json`);
-    if (!res.ok) throw new Error('네트워크 오류');
-    const data = await res.json();
-
-    managerDate.textContent = data.date || '';
-
-    const html = data.data.map(m => {
-      const [icon, ...rest] = m.status.split(' ');
-      const label = rest.join(' ');
-      let cls = '';
-      if (icon === '🟡') cls = 'status-warn';
-      if (icon === '🔴') cls = 'status-out';
-
-      return `
-        <div class="manager-item ${cls}">
-          <span class="m-name">${icon} ${escapeHtml(m.name)}</span>
-          <span class="m-status">${escapeHtml(label)}</span>
-          <div class="m-detail">${escapeHtml(m.detail) || '기록된 일정이 없습니다.'}</div>
-        </div>
-      `;
-    }).join('');
-
-    modalManager.innerHTML = html;
-  } catch (err) {
-    modalManager.innerHTML = `<p style="color:var(--warning)">데이터를 불러오지 못했습니다: ${err.message}</p>`;
-  }
 }
 
 const approvalBtn = document.getElementById('approvalBtn');
