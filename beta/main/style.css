@@ -898,7 +898,7 @@ footer {
 }
 .memo-list {
     display: flex;
-    flex-direction: wrap;
+    flex-wrap: wrap;
     gap: 6px;
     margin: 10px 0;
 }

@@ -551,8 +551,14 @@ setInterval(fetchWeather, 30 * 60 * 1000); // 30분마다 갱신
             return;
         }
 
-        const url = prompt("URL을 입력하세요 (http:// 또는 https:// 포함):");
+        const url = (prompt("URL을 입력하세요 (http:// 또는 https:// 포함):") || "").trim();
         if (!url) return;
+
+        // 🔒 http/https 링크만 허용 (javascript: 등 위험한 스킴 차단)
+        if (!/^https?:\/\//i.test(url)) {
+            alert("http:// 또는 https:// 로 시작하는 URL만 입력할 수 있습니다.");
+            return;
+        }
 
         const links = getLinks();
         links.push({ name, url });
@@ -656,6 +662,7 @@ const closeHelp = document.getElementById("closeHelp");
 
 const dutyBtn = document.getElementById("dutyBtn");
 const dutyModal = document.getElementById("dutyModal");
+const closeDuty = document.getElementById("closeDuty");
 const closeDutyBtn = document.getElementById("closeDutyBtn");
 
 const memoModal = document.getElementById("memoModal");
@@ -688,96 +695,148 @@ window.addEventListener("click", (e) => {
     }
 });
 
+// 따옴표로 감싼 콤마(,)를 포함한 셀도 안전하게 나누는 간단한 CSV 파서
+// (예: "홍길동, 김철수" 처럼 값 안에 콤마가 있어도 열이 밀리지 않도록 처리)
+function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQuotes) {
+            if (ch === '"') {
+                if (text[i + 1] === '"') { field += '"'; i++; }
+                else inQuotes = false;
+            } else {
+                field += ch;
+            }
+        } else if (ch === '"') {
+            inQuotes = true;
+        } else if (ch === ',') {
+            row.push(field);
+            field = "";
+        } else if (ch === '\n') {
+            row.push(field);
+            rows.push(row);
+            row = [];
+            field = "";
+        } else if (ch === '\r') {
+            // 캐리지리턴은 무시 (\r\n 대응)
+        } else {
+            field += ch;
+        }
+    }
+    // 마지막 줄 처리
+    if (field.length > 0 || row.length > 0) {
+        row.push(field);
+        rows.push(row);
+    }
+    return rows;
+}
+
 async function loadDuty() {
     const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3jc-6ORNFCO2KGxiAJdvZ87JLAyTDgOxEEd2atN4q38jWjGAdBbT4q1LaIMnz2q68-8K9i1JR0yNs/pub?gid=0&single=true&output=csv";
-    const res = await fetch(url);
-    const text = await res.text();
-    const rows = text.trim().split("\n").map(r => r.split(","));
 
-    // 오늘 데이터 ------------------
-    let today = rows[0][0];
-    let jubun = rows[3][4];
-    let gyotong = rows[3][4];
-    let jubunGyotong = (jubun === gyotong) ? jubun : `${jubun}, ${gyotong}`;
-    let gupsikA = [rows[3][7], rows[4][7]].filter(v => v).join(", ");
-    let gupsikB = [rows[6][7], rows[7][7]].filter(v => v).join(", ");
-    // let yaja = [rows[3][1], rows[4][1], rows[5][1], rows[6][1], rows[7][1]].filter(v => v).join(", ");
-    let basic = rows[3][1];
-    let ncs = rows[4][1];
-    let army1 = rows[5][1];
-    let army2 = rows[6][1];
-    let gongmuwon = rows[7][1];
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const rows = parseCsv(text.trim());
 
-    // 내일 데이터 ------------------
-    let tomorrow = rows[11][0];
-    let jubun2 = rows[14][4];
-    let gyotong2 = rows[14][4];
-    let jubunGyotong2 = (jubun2 === gyotong2) ? jubun2 : `${jubun2}, ${gyotong2}`;
-    let gupsikA2 = [rows[14][7], rows[15][7]].filter(v => v).join(", ");
-    let gupsikB2 = [rows[17][7], rows[18][7]].filter(v => v).join(", ");
-    // let yaja2 = [rows[3][1], rows[4][1], rows[5][1], rows[6][1], rows[7][1]].filter(v => v).join(", ");
-    let basic2 = rows[14][1];
-    let ncs2 = rows[15][1];
-    let army1_2 = rows[16][1];
-    let army2_2 = rows[17][1];
-    let gongmuwon2 = rows[18][1];
+        // 시트 구조가 예상과 다르면(행이 부족하면) 바로 에러 처리
+        if (rows.length < 19) throw new Error("시트 데이터가 예상보다 짧습니다.");
 
-    // ✅ 표 구조로 HTML 생성
-    let html = `
-    <table class="duty-table">
-        <thead>
-        <tr>
-            <th></th>
-            <th>${today}</th>
-            <th>${tomorrow}</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>주번/교통</td>
-            <td>${jubunGyotong}</td>
-            <td>${jubunGyotong2}</td>
-        </tr>
-        <tr>
-            <td>급식A</td>
-            <td>${gupsikA}</td>
-            <td>${gupsikA2}</td>
-        </tr>
-        <tr>
-            <td>급식B</td>
-            <td>${gupsikB}</td>
-            <td>${gupsikB2}</td>
-        </tr>
-        <tr>
-            <td>야자[일반]</td>
-            <td>${basic}</td>
-            <td>${basic2}</td>
-        </tr>
-        <tr>
-            <td>야자[NCS]</td>
-            <td>${ncs}</td>
-            <td>${ncs2}</td>
-        </tr>
-        <tr>
-            <td>야자[부사관1]</td>
-            <td>${army1}</td>
-            <td>${army1_2}</td>
-        </tr>
-        <tr>
-            <td>야자[부사관2]</td>
-            <td>${army2}</td>
-            <td>${army2_2}</td>
-        </tr>
-        <tr>
-            <td>야자[공무원]</td>
-            <td>${gongmuwon}</td>
-            <td>${gongmuwon2}</td>
-        </tr>
-        </tbody>
-    </table>
-    `;
+        const cell = (r, c) => (rows[r] && rows[r][c] !== undefined) ? rows[r][c] : "";
 
-    document.getElementById("modal-duty").innerHTML = html;
+        // 오늘 데이터 ------------------
+        let today = cell(0, 0);
+        let jubun = cell(3, 4);
+        let gyotong = cell(3, 4);
+        let jubunGyotong = (jubun === gyotong) ? jubun : `${jubun}, ${gyotong}`;
+        let gupsikA = [cell(3, 7), cell(4, 7)].filter(v => v).join(", ");
+        let gupsikB = [cell(6, 7), cell(7, 7)].filter(v => v).join(", ");
+        let basic = cell(3, 1);
+        let ncs = cell(4, 1);
+        let army1 = cell(5, 1);
+        let army2 = cell(6, 1);
+        let gongmuwon = cell(7, 1);
+
+        // 내일 데이터 ------------------
+        let tomorrow = cell(11, 0);
+        let jubun2 = cell(14, 4);
+        let gyotong2 = cell(14, 4);
+        let jubunGyotong2 = (jubun2 === gyotong2) ? jubun2 : `${jubun2}, ${gyotong2}`;
+        let gupsikA2 = [cell(14, 7), cell(15, 7)].filter(v => v).join(", ");
+        let gupsikB2 = [cell(17, 7), cell(18, 7)].filter(v => v).join(", ");
+        let basic2 = cell(14, 1);
+        let ncs2 = cell(15, 1);
+        let army1_2 = cell(16, 1);
+        let army2_2 = cell(17, 1);
+        let gongmuwon2 = cell(18, 1);
+
+        // ✅ 표 구조로 HTML 생성 (시트 값은 escapeHtml로 이스케이프하여 삽입)
+        let html = `
+        <table class="duty-table">
+            <thead>
+            <tr>
+                <th></th>
+                <th>${escapeHtml(today)}</th>
+                <th>${escapeHtml(tomorrow)}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>주번/교통</td>
+                <td>${escapeHtml(jubunGyotong)}</td>
+                <td>${escapeHtml(jubunGyotong2)}</td>
+            </tr>
+            <tr>
+                <td>급식A</td>
+                <td>${escapeHtml(gupsikA)}</td>
+                <td>${escapeHtml(gupsikA2)}</td>
+            </tr>
+            <tr>
+                <td>급식B</td>
+                <td>${escapeHtml(gupsikB)}</td>
+                <td>${escapeHtml(gupsikB2)}</td>
+            </tr>
+            <tr>
+                <td>야자[일반]</td>
+                <td>${escapeHtml(basic)}</td>
+                <td>${escapeHtml(basic2)}</td>
+            </tr>
+            <tr>
+                <td>야자[NCS]</td>
+                <td>${escapeHtml(ncs)}</td>
+                <td>${escapeHtml(ncs2)}</td>
+            </tr>
+            <tr>
+                <td>야자[부사관1]</td>
+                <td>${escapeHtml(army1)}</td>
+                <td>${escapeHtml(army1_2)}</td>
+            </tr>
+            <tr>
+                <td>야자[부사관2]</td>
+                <td>${escapeHtml(army2)}</td>
+                <td>${escapeHtml(army2_2)}</td>
+            </tr>
+            <tr>
+                <td>야자[공무원]</td>
+                <td>${escapeHtml(gongmuwon)}</td>
+                <td>${escapeHtml(gongmuwon2)}</td>
+            </tr>
+            </tbody>
+        </table>
+        `;
+
+        document.getElementById("modal-duty").innerHTML = html;
+    } catch (e) {
+        console.error("근무자 정보 불러오기 실패:", e);
+        document.getElementById("modal-duty").innerHTML =
+            "<p style='color:var(--warning);text-align:center;'>근무자 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>";
+    }
 }
 loadDuty();
 
@@ -817,21 +876,6 @@ function renderMemos() {
   });
 }
 renderMemos();
-
-// 모달 열기 (새 메모 or 수정)
-function openModal(index = null) {
-  editingIndex = index;
-  if (index === null) {
-    // 새 메모
-    memoTitleInput.value = "";
-    memoContentInput.value = "";
-  } else {
-    // 기존 메모 수정
-    memoTitleInput.value = memos[index].title;
-    memoContentInput.value = memos[index].content;
-  }
-  modal.style.display = "flex";
-}
 
 // 모달 닫기
 // closeModal.onclick = () => {
@@ -885,6 +929,7 @@ function openModal(index = null) {
     // 새 메모
     memoTitleInput.value = "";
     memoContentInput.value = "";
+    saveMemoBtn.textContent = "저장"; // 이전에 수정 모드였다면 라벨 복구
     deleteMemoBtn.style.display = "none"; // 새 메모일 땐 삭제 숨김
   } else {
     // 기존 메모 수정
