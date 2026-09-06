@@ -4,10 +4,12 @@
 ------------------------------------------
  ⦿ 제작자 : 성일정보고등학교 교육정보부장 김형준
  ⦿ 최초 작성 : 2025-09-15
- ⦿ 수정 내역 : 
+ ⦿ 수정 내역 :
     - 2025-09-22 카드 숨김/복원 기능 추가
     - 2025-09-22 메모장 모달 CRUD 기능 구현
     - 2025-10-15 오늘일정 기능 구현
+    - 2026-08-27 관리자 일정(근태) 기능 제거, 성일일정 바로가기 버튼으로 대체
+    - 2026-08-27 오늘일정 기능 제거
 ------------------------------------------
  본 소스는 성일정보고 내부 업무 지원용으로 작성되었으며
  무단 사용 및 외부 배포를 금합니다.
@@ -549,8 +551,14 @@ setInterval(fetchWeather, 30 * 60 * 1000); // 30분마다 갱신
             return;
         }
 
-        const url = prompt("URL을 입력하세요 (http:// 또는 https:// 포함):");
+        const url = (prompt("URL을 입력하세요 (http:// 또는 https:// 포함):") || "").trim();
         if (!url) return;
+
+        // 🔒 http/https 링크만 허용 (javascript: 등 위험한 스킴 차단)
+        if (!/^https?:\/\//i.test(url)) {
+            alert("http:// 또는 https:// 로 시작하는 URL만 입력할 수 있습니다.");
+            return;
+        }
 
         const links = getLinks();
         links.push({ name, url });
@@ -654,6 +662,7 @@ const closeHelp = document.getElementById("closeHelp");
 
 const dutyBtn = document.getElementById("dutyBtn");
 const dutyModal = document.getElementById("dutyModal");
+const closeDuty = document.getElementById("closeDuty");
 const closeDutyBtn = document.getElementById("closeDutyBtn");
 
 const memoModal = document.getElementById("memoModal");
@@ -686,219 +695,150 @@ window.addEventListener("click", (e) => {
     }
 });
 
+// 따옴표로 감싼 콤마(,)를 포함한 셀도 안전하게 나누는 간단한 CSV 파서
+// (예: "홍길동, 김철수" 처럼 값 안에 콤마가 있어도 열이 밀리지 않도록 처리)
+function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQuotes) {
+            if (ch === '"') {
+                if (text[i + 1] === '"') { field += '"'; i++; }
+                else inQuotes = false;
+            } else {
+                field += ch;
+            }
+        } else if (ch === '"') {
+            inQuotes = true;
+        } else if (ch === ',') {
+            row.push(field);
+            field = "";
+        } else if (ch === '\n') {
+            row.push(field);
+            rows.push(row);
+            row = [];
+            field = "";
+        } else if (ch === '\r') {
+            // 캐리지리턴은 무시 (\r\n 대응)
+        } else {
+            field += ch;
+        }
+    }
+    // 마지막 줄 처리
+    if (field.length > 0 || row.length > 0) {
+        row.push(field);
+        rows.push(row);
+    }
+    return rows;
+}
+
 async function loadDuty() {
     const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3jc-6ORNFCO2KGxiAJdvZ87JLAyTDgOxEEd2atN4q38jWjGAdBbT4q1LaIMnz2q68-8K9i1JR0yNs/pub?gid=0&single=true&output=csv";
-    const res = await fetch(url);
-    const text = await res.text();
-    const rows = text.trim().split("\n").map(r => r.split(","));
 
-    // 오늘 데이터 ------------------
-    let today = rows[0][0];
-    let jubun = rows[3][4];
-    let gyotong = rows[3][4];
-    let jubunGyotong = (jubun === gyotong) ? jubun : `${jubun}, ${gyotong}`;
-    let gupsikA = [rows[3][7], rows[4][7]].filter(v => v).join(", ");
-    let gupsikB = [rows[6][7], rows[7][7]].filter(v => v).join(", ");
-    // let yaja = [rows[3][1], rows[4][1], rows[5][1], rows[6][1], rows[7][1]].filter(v => v).join(", ");
-    let basic = rows[3][1];
-    let ncs = rows[4][1];
-    let army1 = rows[5][1];
-    let army2 = rows[6][1];
-    let gongmuwon = rows[7][1];
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const rows = parseCsv(text.trim());
 
-    // 내일 데이터 ------------------
-    let tomorrow = rows[11][0];
-    let jubun2 = rows[14][4];
-    let gyotong2 = rows[14][4];
-    let jubunGyotong2 = (jubun2 === gyotong2) ? jubun2 : `${jubun2}, ${gyotong2}`;
-    let gupsikA2 = [rows[14][7], rows[15][7]].filter(v => v).join(", ");
-    let gupsikB2 = [rows[17][7], rows[18][7]].filter(v => v).join(", ");
-    // let yaja2 = [rows[3][1], rows[4][1], rows[5][1], rows[6][1], rows[7][1]].filter(v => v).join(", ");
-    let basic2 = rows[14][1];
-    let ncs2 = rows[15][1];
-    let army1_2 = rows[16][1];
-    let army2_2 = rows[17][1];
-    let gongmuwon2 = rows[18][1];
+        // 시트 구조가 예상과 다르면(행이 부족하면) 바로 에러 처리
+        if (rows.length < 19) throw new Error("시트 데이터가 예상보다 짧습니다.");
 
-    // ✅ 표 구조로 HTML 생성
-    let html = `
-    <table class="duty-table">
-        <thead>
-        <tr>
-            <th></th>
-            <th>${today}</th>
-            <th>${tomorrow}</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>주번/교통</td>
-            <td>${jubunGyotong}</td>
-            <td>${jubunGyotong2}</td>
-        </tr>
-        <tr>
-            <td>급식A</td>
-            <td>${gupsikA}</td>
-            <td>${gupsikA2}</td>
-        </tr>
-        <tr>
-            <td>급식B</td>
-            <td>${gupsikB}</td>
-            <td>${gupsikB2}</td>
-        </tr>
-        <tr>
-            <td>야자[일반]</td>
-            <td>${basic}</td>
-            <td>${basic2}</td>
-        </tr>
-        <tr>
-            <td>야자[NCS]</td>
-            <td>${ncs}</td>
-            <td>${ncs2}</td>
-        </tr>
-        <tr>
-            <td>야자[부사관1]</td>
-            <td>${army1}</td>
-            <td>${army1_2}</td>
-        </tr>
-        <tr>
-            <td>야자[부사관2]</td>
-            <td>${army2}</td>
-            <td>${army2_2}</td>
-        </tr>
-        <tr>
-            <td>야자[공무원]</td>
-            <td>${gongmuwon}</td>
-            <td>${gongmuwon2}</td>
-        </tr>
-        </tbody>
-    </table>
-    `;
+        const cell = (r, c) => (rows[r] && rows[r][c] !== undefined) ? rows[r][c] : "";
 
-    document.getElementById("modal-duty").innerHTML = html;
+        // 오늘 데이터 ------------------
+        let today = cell(0, 0);
+        let jubun = cell(3, 4);
+        let gyotong = cell(3, 4);
+        let jubunGyotong = (jubun === gyotong) ? jubun : `${jubun}, ${gyotong}`;
+        let gupsikA = [cell(3, 7), cell(4, 7)].filter(v => v).join(", ");
+        let gupsikB = [cell(6, 7), cell(7, 7)].filter(v => v).join(", ");
+        let basic = cell(3, 1);
+        let ncs = cell(4, 1);
+        let army1 = cell(5, 1);
+        let army2 = cell(6, 1);
+        let gongmuwon = cell(7, 1);
+
+        // 내일 데이터 ------------------
+        let tomorrow = cell(11, 0);
+        let jubun2 = cell(14, 4);
+        let gyotong2 = cell(14, 4);
+        let jubunGyotong2 = (jubun2 === gyotong2) ? jubun2 : `${jubun2}, ${gyotong2}`;
+        let gupsikA2 = [cell(14, 7), cell(15, 7)].filter(v => v).join(", ");
+        let gupsikB2 = [cell(17, 7), cell(18, 7)].filter(v => v).join(", ");
+        let basic2 = cell(14, 1);
+        let ncs2 = cell(15, 1);
+        let army1_2 = cell(16, 1);
+        let army2_2 = cell(17, 1);
+        let gongmuwon2 = cell(18, 1);
+
+        // ✅ 표 구조로 HTML 생성 (시트 값은 escapeHtml로 이스케이프하여 삽입)
+        let html = `
+        <table class="duty-table">
+            <thead>
+            <tr>
+                <th></th>
+                <th>${escapeHtml(today)}</th>
+                <th>${escapeHtml(tomorrow)}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>주번/교통</td>
+                <td>${escapeHtml(jubunGyotong)}</td>
+                <td>${escapeHtml(jubunGyotong2)}</td>
+            </tr>
+            <tr>
+                <td>급식A</td>
+                <td>${escapeHtml(gupsikA)}</td>
+                <td>${escapeHtml(gupsikA2)}</td>
+            </tr>
+            <tr>
+                <td>급식B</td>
+                <td>${escapeHtml(gupsikB)}</td>
+                <td>${escapeHtml(gupsikB2)}</td>
+            </tr>
+            <tr>
+                <td>야자[일반]</td>
+                <td>${escapeHtml(basic)}</td>
+                <td>${escapeHtml(basic2)}</td>
+            </tr>
+            <tr>
+                <td>야자[NCS]</td>
+                <td>${escapeHtml(ncs)}</td>
+                <td>${escapeHtml(ncs2)}</td>
+            </tr>
+            <tr>
+                <td>야자[부사관1]</td>
+                <td>${escapeHtml(army1)}</td>
+                <td>${escapeHtml(army1_2)}</td>
+            </tr>
+            <tr>
+                <td>야자[부사관2]</td>
+                <td>${escapeHtml(army2)}</td>
+                <td>${escapeHtml(army2_2)}</td>
+            </tr>
+            <tr>
+                <td>야자[공무원]</td>
+                <td>${escapeHtml(gongmuwon)}</td>
+                <td>${escapeHtml(gongmuwon2)}</td>
+            </tr>
+            </tbody>
+        </table>
+        `;
+
+        document.getElementById("modal-duty").innerHTML = html;
+    } catch (e) {
+        console.error("근무자 정보 불러오기 실패:", e);
+        document.getElementById("modal-duty").innerHTML =
+            "<p style='color:var(--warning);text-align:center;'>근무자 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>";
+    }
 }
 loadDuty();
-
-const scheduleBtn = document.getElementById("scheduleBtn");
-const scheduleModal = document.getElementById("scheduleModal");
-const closeSchedule = document.getElementById("closeSchedule");
-const closeScheduleBtn = document.getElementById("closeScheduleBtn");
-
-// 오늘일정 버튼 클릭 → 모달 열기
-scheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "flex";
-  loadSchedule(); // 데이터 로드
-});
-
-// 닫기 버튼
-closeSchedule.addEventListener("click", () => {
-  scheduleModal.style.display = "none";
-});
-closeScheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "none";
-});
-
-async function loadSchedule() {
-  // ✅ 오늘일정 시트의 CSV 주소
-  const url = "https://docs.google.com/spreadsheets/d/1PsddTQqOyLU62EqyRrZFFXnoowL1-m09dUa-tLqCJcE/export?format=csv&gid=0";
-
-  try {
-    const res = await fetch(url);
-    let text = await res.text();
-
-    // 🔹 CSV 전처리 (BOM, 따옴표, 불필요한 문자 제거)
-    text = text
-      .replace(/^\uFEFF/, "")      // BOM 제거
-      .replace(/^"+|"+$/g, "")     // 맨 앞/뒤 큰따옴표 제거
-      .replace(/""+/g, '"')        // 중복 따옴표 정리
-      .replace(/\r/g, "")          // 캐리지리턴 제거
-      .trim();
-
-    // 🔹 줄 단위 분리
-    const lines = text.split("\n");
-    const title = lines[0]?.trim() || "오늘의 일정";
-    const desc = lines.slice(1).join("\n").trim();
-
-    // ✅ [부서] 단위로 구간 묶기
-    const blocks = [];
-    let currentDept = null;
-    let currentContent = [];
-
-    const allLines = desc.split("\n");
-    for (let line of allLines) {
-      // 🔸 첫 줄 특수문자/BOM/따옴표 제거
-      line = line.replace(/^[\uFEFF"']+/, "").trim();
-
-      const deptMatch = line.match(/^\[([^\]]+)\]\s*(.*)/);
-      if (deptMatch) {
-        // 새로운 [부서] 등장 시 이전 블록 저장
-        if (currentDept) {
-          blocks.push({
-            dept: currentDept,
-            content: currentContent.join("<br>")
-          });
-        }
-        currentDept = deptMatch[1];
-        currentContent = [deptMatch[2]];
-      } else if (currentDept) {
-        // 부서 구간 내부의 추가 줄
-        currentContent.push(line);
-      }
-    }
-
-    // 마지막 블록 저장
-    if (currentDept) {
-      blocks.push({
-        dept: currentDept,
-        content: currentContent.join("<br>")
-      });
-    }
-
-    // ✅ HTML 변환 (CSS 기반)
-    const formattedDesc = blocks
-      .map(
-        b => `
-        <div class="schedule-item">
-          <strong class="schedule-dept">[${b.dept}]</strong><br>
-          <div class="schedule-content">${b.content}</div>
-        </div>`
-      )
-      .join("");
-
-    // ✅ 모달 HTML 구성
-    const html = `
-      <table class="duty-table schedule-table">
-        <tbody>
-          <tr>
-            <td class="schedule-wrapper">${formattedDesc}</td>
-          </tr>
-        </tbody>
-      </table>
-    `;
-
-    document.getElementById("modal-schedule").innerHTML = html;
-  } catch (e) {
-    console.error("오늘일정 불러오기 실패:", e);
-    document.getElementById("modal-schedule").innerHTML =
-      "<p style='color:var(--warning);text-align:center;'>불러오기에 실패했습니다.</p>";
-  }
-}
-
-scheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "flex";
-  loadSchedule(); // 클릭 시 최신 데이터 불러오기
-});
-
-closeScheduleBtn.addEventListener("click", () => {
-  scheduleModal.style.display = "none";
-});
-
-// 배경 클릭 시 닫기
-window.addEventListener("click", (e) => {
-  if (e.target === scheduleModal) {
-    scheduleModal.style.display = "none";
-  }
-});
 
 // // 메모 카드
 // const memoArea = document.getElementById("memoArea");
@@ -936,21 +876,6 @@ function renderMemos() {
   });
 }
 renderMemos();
-
-// 모달 열기 (새 메모 or 수정)
-function openModal(index = null) {
-  editingIndex = index;
-  if (index === null) {
-    // 새 메모
-    memoTitleInput.value = "";
-    memoContentInput.value = "";
-  } else {
-    // 기존 메모 수정
-    memoTitleInput.value = memos[index].title;
-    memoContentInput.value = memos[index].content;
-  }
-  modal.style.display = "flex";
-}
 
 // 모달 닫기
 // closeModal.onclick = () => {
@@ -1004,12 +929,13 @@ function openModal(index = null) {
     // 새 메모
     memoTitleInput.value = "";
     memoContentInput.value = "";
+    saveMemoBtn.textContent = "저장"; // 이전에 수정 모드였다면 라벨 복구
     deleteMemoBtn.style.display = "none"; // 새 메모일 땐 삭제 숨김
   } else {
     // 기존 메모 수정
     memoTitleInput.value = memos[index].title;
     memoContentInput.value = memos[index].content;
-    saveMemoBtn.textContent = "수정"; 
+    saveMemoBtn.textContent = "수정";
     deleteMemoBtn.style.display = "inline-block"; // 수정 모드일 땐 삭제 보이기
   }
   modal.style.display = "flex";
@@ -1100,3 +1026,81 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   renderHiddenList();
 });
+
+// ===== 공통 유틸: HTML 이스케이프 =====
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+const approvalBtn = document.getElementById('approvalBtn');
+const approvalModal = document.getElementById('approvalModal');
+const closeApproval = document.getElementById('closeApproval');
+const closeApprovalBtn = document.getElementById('closeApprovalBtn');
+const situationSelect = document.getElementById('situationSelect');
+const positionSelect = document.getElementById('positionSelect');
+const approvalResult = document.getElementById('approvalResult');
+
+if (approvalBtn) {
+  approvalBtn.addEventListener('click', () => {
+    approvalModal.style.display = 'flex';
+    if (situationSelect.options.length <= 1) initApprovalSelect();
+  });
+}
+[closeApproval, closeApprovalBtn].forEach(el => {
+  if (el) el.addEventListener('click', () => approvalModal.style.display = 'none');
+});
+window.addEventListener('click', (e) => {
+  if (e.target === approvalModal) approvalModal.style.display = 'none';
+});
+
+function initApprovalSelect() {
+  approvalData.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = item.label;
+    situationSelect.appendChild(opt);
+  });
+
+  situationSelect.addEventListener('change', () => {
+    const selected = approvalData.find(d => d.id === situationSelect.value);
+    positionSelect.innerHTML = '<option value="">직급을 선택하세요</option>';
+    approvalResult.innerHTML = '<div class="approval-placeholder">근무상황과 직급을 선택하면 결재선이 표시됩니다.</div>';
+
+    if (!selected) {
+      positionSelect.disabled = true;
+      return;
+    }
+
+    selected.lines.forEach((l, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = l.position;
+      positionSelect.appendChild(opt);
+    });
+    positionSelect.disabled = false;
+
+    if (selected.lines.length === 1) {
+      positionSelect.value = 0;
+      renderApprovalResult(selected, 0);
+    }
+  });
+
+  positionSelect.addEventListener('change', () => {
+    const selected = approvalData.find(d => d.id === situationSelect.value);
+    if (!selected || positionSelect.value === '') return;
+    renderApprovalResult(selected, Number(positionSelect.value));
+  });
+}
+
+function renderApprovalResult(item, idx) {
+  const lineData = item.lines[idx];
+  const noteParts = [item.note, lineData.note].filter(Boolean).join('\n\n');
+
+  approvalResult.innerHTML = `
+    <div class="approval-line">
+      <div class="line-path">${escapeHtml(lineData.line)}</div>
+      ${noteParts ? `<div class="line-note">${escapeHtml(noteParts)}</div>` : ''}
+    </div>
+  `;
+}
