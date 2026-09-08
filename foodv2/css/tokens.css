@@ -1,0 +1,219 @@
+/* =========================================================
+   tokens.css — 디자인 토큰 (색/타이포/간격/모양)
+   이 파일 하나만 고치면 전체 톤이 바뀝니다.
+   ========================================================= */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---------- Typography ---------- */
+  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+               'Apple SD Gothic Neo', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-num: ui-monospace, 'SF Mono', 'Menlo', 'Roboto Mono', monospace;
+
+  --fs-xs: 0.75rem;    /* 12 */
+  --fs-sm: 0.8125rem;  /* 13 */
+  --fs-md: 0.875rem;   /* 14 */
+  --fs-base: 0.9375rem;/* 15 */
+  --fs-lg: 1.0625rem;  /* 17 */
+  --fs-xl: 1.25rem;    /* 20 */
+  --fs-2xl: 1.5rem;    /* 24 */
+  --fs-3xl: 1.875rem;  /* 30 */
+
+  --lh-tight: 1.25;
+  --lh-normal: 1.55;
+
+  --fw-normal: 450;
+  --fw-medium: 550;
+  --fw-semibold: 650;
+  --fw-bold: 750;
+
+  /* ---------- Spacing ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* ---------- Radius ---------- */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-full: 999px;
+
+  /* ---------- Layout ---------- */
+  --page-w: 1080px;
+  --page-w-narrow: 760px;
+  --header-h: 60px;
+
+  /* ---------- Motion ---------- */
+  --ease: cubic-bezier(.32, .72, 0, 1);
+  --t-fast: 120ms var(--ease);
+  --t-base: 200ms var(--ease);
+  --t-slow: 320ms var(--ease);
+
+  /* =========================================================
+     LIGHT PALETTE (기본값 — 반드시 bare :root 에 정의)
+     ========================================================= */
+  --bg: #f5f6f8;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f3f5f7;
+  --surface-3: #e9edf1;
+  --surface-inset: #fafbfc;
+
+  --border: #e4e8ed;
+  --border-strong: #d0d7df;
+  --border-subtle: #eef1f4;
+
+  --text: #14171c;
+  --text-muted: #59626f;
+  --text-subtle: #8b95a2;
+  --text-inverse: #ffffff;
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-active: #3730a3;
+  --accent-soft: #eff0fe;
+  --accent-soft-hover: #e5e7fd;
+  --accent-border: #c9caf9;
+  --on-accent: #ffffff;
+
+  --ok: #047857;
+  --ok-soft: #e6f5ef;
+  --ok-border: #b3e0cd;
+
+  --warn: #b45309;
+  --warn-soft: #fdf4e5;
+  --warn-border: #f2dcae;
+
+  --danger: #d81e46;
+  --danger-soft: #fdeef1;
+  --danger-border: #f7c9d4;
+
+  --info: #0369a1;
+  --info-soft: #e8f3fb;
+  --info-border: #bddcef;
+
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, .04);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, .06), 0 1px 2px rgba(16, 24, 40, .04);
+  --shadow-md: 0 4px 14px -3px rgba(16, 24, 40, .09), 0 2px 5px -2px rgba(16, 24, 40, .05);
+  --shadow-lg: 0 18px 44px -10px rgba(16, 24, 40, .18), 0 6px 14px -6px rgba(16, 24, 40, .08);
+
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+  --ring-danger: 0 0 0 3px color-mix(in srgb, var(--danger) 24%, transparent);
+
+  --backdrop: rgba(14, 18, 26, .42);
+}
+
+/* =========================================================
+   DARK PALETTE
+   1) 시스템 설정이 dark 이고 사용자가 light 를 명시하지 않았을 때
+   2) 사용자가 dark 를 명시했을 때
+   ========================================================= */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0e12;
+    --bg-elevated: #14171d;
+    --surface: #14171d;
+    --surface-2: #1a1e26;
+    --surface-3: #232833;
+    --surface-inset: #101319;
+
+    --border: #262c36;
+    --border-strong: #384252;
+    --border-subtle: #1e232c;
+
+    --text: #e7eaef;
+    --text-muted: #9aa3b2;
+    --text-subtle: #6b7484;
+    --text-inverse: #0c0e12;
+
+    --accent: #7c78f0;
+    --accent-hover: #8f8bf5;
+    --accent-active: #6d68e8;
+    --accent-soft: #1e1f3a;
+    --accent-soft-hover: #26274a;
+    --accent-border: #3b3a6b;
+    --on-accent: #0c0e12;
+
+    --ok: #34d399;
+    --ok-soft: #10261f;
+    --ok-border: #1d4a3b;
+
+    --warn: #fbbf24;
+    --warn-soft: #2a2112;
+    --warn-border: #58421a;
+
+    --danger: #fb7185;
+    --danger-soft: #2c1219;
+    --danger-border: #5c2431;
+
+    --info: #60a5fa;
+    --info-soft: #101f2e;
+    --info-border: #1e3a52;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .5);
+    --shadow-md: 0 4px 14px -3px rgba(0, 0, 0, .55);
+    --shadow-lg: 0 18px 44px -10px rgba(0, 0, 0, .7);
+
+    --backdrop: rgba(0, 0, 0, .6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0c0e12;
+  --bg-elevated: #14171d;
+  --surface: #14171d;
+  --surface-2: #1a1e26;
+  --surface-3: #232833;
+  --surface-inset: #101319;
+
+  --border: #262c36;
+  --border-strong: #384252;
+  --border-subtle: #1e232c;
+
+  --text: #e7eaef;
+  --text-muted: #9aa3b2;
+  --text-subtle: #6b7484;
+  --text-inverse: #0c0e12;
+
+  --accent: #7c78f0;
+  --accent-hover: #8f8bf5;
+  --accent-active: #6d68e8;
+  --accent-soft: #1e1f3a;
+  --accent-soft-hover: #26274a;
+  --accent-border: #3b3a6b;
+  --on-accent: #0c0e12;
+
+  --ok: #34d399;
+  --ok-soft: #10261f;
+  --ok-border: #1d4a3b;
+
+  --warn: #fbbf24;
+  --warn-soft: #2a2112;
+  --warn-border: #58421a;
+
+  --danger: #fb7185;
+  --danger-soft: #2c1219;
+  --danger-border: #5c2431;
+
+  --info: #60a5fa;
+  --info-soft: #101f2e;
+  --info-border: #1e3a52;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .5);
+  --shadow-md: 0 4px 14px -3px rgba(0, 0, 0, .55);
+  --shadow-lg: 0 18px 44px -10px rgba(0, 0, 0, .7);
+
+  --backdrop: rgba(0, 0, 0, .6);
+}

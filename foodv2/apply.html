@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0c0e12" media="(prefers-color-scheme: dark)" />
+  <title>급식 신청</title>
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/calendar.css" />
+</head>
+<body>
+  <div class="app">
+    <div id="headerSlot"></div>
+
+    <main class="app-main">
+      <div id="pageSlot">
+        <div class="empty" style="min-height:50vh; justify-content:center;">
+          <div class="loading-line">권한을 확인하는 중…</div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      급식 신청 시스템 · 문의는 교육정보부장 김형준으로 연락해 주세요.
+    </footer>
+  </div>
+
+  <script type="module" src="js/pages/apply.js"></script>
+</body>
+</html>

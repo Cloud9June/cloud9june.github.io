@@ -1,0 +1,310 @@
+/* =========================================================
+   calendar.css — 달력 그리드 (신청 · 미실시일 설정 · 학생 인원)
+   반응형은 전부 CSS 미디어쿼리로 처리합니다. (JS 재렌더 없음)
+   ========================================================= */
+
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* ---------- 요일 헤더 ---------- */
+
+.cal__dowhead {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-subtle);
+  letter-spacing: .04em;
+}
+.cal__dowhead[data-dow="0"] { color: var(--danger); }
+.cal__dowhead[data-dow="6"] { color: var(--info); }
+
+/* ---------- 셀 공통 ---------- */
+
+.cal__cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-height: 104px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+}
+
+.cal__cell--pad {
+  background: transparent;
+  border-color: transparent;
+  min-height: 0;
+}
+
+.cal__cellhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+}
+
+.cal__date {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1;
+}
+
+.cal__dow {
+  display: none;                 /* 데스크톱: 상단 요일 헤더가 있으므로 숨김 */
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+}
+
+.cal__cell[data-dow="0"] .cal__date { color: var(--danger); }
+.cal__cell[data-dow="6"] .cal__date { color: var(--info); }
+
+.cal__note {
+  margin-left: auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal__body {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* ---------- 상태별 셀 ---------- */
+
+.cal__cell--weekend,
+.cal__cell--blocked {
+  background: var(--surface-inset);
+  border-style: dashed;
+}
+.cal__cell--blocked { background: var(--surface-2); border-style: solid; }
+.cal__cell--weekend .cal__date,
+.cal__cell--blocked .cal__date { color: var(--text-subtle); }
+
+.cal__cell--interactive:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.cal__cell--applied {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.cal__cell--has-reason {
+  background: var(--warn-soft);
+  border-color: var(--warn-border);
+}
+
+.cal__cell--needs-reason {
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+}
+
+/* ---------- 신청 토글 버튼 ---------- */
+
+.cal__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xs);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  transition: all var(--t-fast);
+}
+.cal__toggle:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+.cal__toggle:disabled { opacity: .6; }
+
+.cal__cell--applied .cal__toggle {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: var(--fw-semibold);
+}
+.cal__cell--applied .cal__toggle:hover:not(:disabled) { background: var(--accent-hover); color: var(--on-accent); }
+
+/* ---------- 미신청 사유 버튼 ---------- */
+
+.cal__reason {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 26px;
+  padding: 3px 7px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  text-align: left;
+  transition: all var(--t-fast);
+}
+.cal__reason:hover:not(:disabled) { border-color: var(--warn-border); color: var(--warn); background: var(--warn-soft); }
+
+.cal__reason--filled {
+  border-style: solid;
+  border-color: var(--warn-border);
+  background: color-mix(in srgb, var(--warn-soft) 60%, var(--surface));
+  color: var(--warn);
+}
+
+.cal__reason--missing {
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.cal__reason__icon { flex: none; }
+.cal__reason__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- 읽기 전용 표시 ---------- */
+
+.cal__readonly {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+/* ---------- 관리자: 미실시일 설정 셀 ---------- */
+
+.cal__cell--blockedit { min-height: 96px; }
+.cal__blocknote { margin-top: 4px; }
+.cal__blocknote .input { font-size: var(--fs-xs); min-height: 30px; padding: 4px 8px; }
+
+/* ---------- 관리자: 학생 인원 카운터 ---------- */
+
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+}
+
+.counter__btn {
+  flex: none;
+  width: 26px; height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  transition: all var(--t-fast);
+}
+.counter__btn:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent); }
+
+.counter__value {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--accent);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transition: all var(--t-fast);
+}
+.counter__value:hover { background: var(--surface-2); }
+.counter__value:focus { outline: none; border-color: var(--accent); box-shadow: var(--ring); background: var(--surface); }
+
+.cal__deduct {
+  align-self: center;
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   모바일: 한 줄 리스트로 전환 (JS 개입 없이 CSS 만으로)
+   ========================================================= */
+
+@media (max-width: 720px) {
+  .cal {
+    grid-template-columns: 1fr;
+    gap: var(--sp-2);
+  }
+
+  .cal__dowhead,
+  .cal__cell--pad { display: none; }
+
+  .cal__cell {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 58px;
+    padding: 10px var(--sp-4);
+  }
+
+  .cal__cellhead {
+    flex: none;
+    width: 116px;
+    gap: 5px;
+  }
+
+  .cal__dow { display: inline; }
+
+  .cal__note {
+    margin-left: 0;
+    max-width: none;
+  }
+
+  .cal__body {
+    margin-top: 0;
+    margin-left: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-2);
+    min-width: 0;
+  }
+
+  .cal__toggle { width: 88px; height: 34px; }
+
+  .cal__reason {
+    width: auto;
+    max-width: 150px;
+    min-height: 34px;
+    padding: 4px 10px;
+  }
+
+  .counter { width: 132px; }
+  .cal__cell--blockedit { flex-wrap: wrap; }
+  .cal__blocknote { width: 100%; margin-top: 6px; }
+}
+
+@media (max-width: 400px) {
+  .cal__cellhead { width: 96px; }
+  .cal__toggle { width: 74px; }
+  .cal__reason { max-width: 104px; }
+}

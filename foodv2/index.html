@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0c0e12" media="(prefers-color-scheme: dark)" />
+  <title>로그인 · 급식 관리</title>
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+
+  <style>
+    /* 로그인 페이지 전용 레이아웃 */
+    .login {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: var(--sp-6);
+    }
+    .login__card {
+      width: min(400px, 100%);
+      padding: var(--sp-8);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      animation: login-in .4s var(--ease);
+    }
+    @keyframes login-in { from { opacity: 0; transform: translateY(12px); } }
+
+    .login__mark {
+      width: 52px; height: 52px;
+      margin: 0 auto var(--sp-5);
+      display: grid; place-items: center;
+      border-radius: var(--r-lg);
+      background: var(--accent);
+      color: var(--on-accent);
+      box-shadow: var(--shadow-sm);
+    }
+    .login__title { font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: -.025em; }
+    .login__desc { margin-top: var(--sp-2); font-size: var(--fs-md); color: var(--text-muted); }
+    .login__actions { margin-top: var(--sp-6); }
+
+    .btn-google {
+      width: 100%;
+      height: 48px;
+      gap: var(--sp-3);
+      border-radius: var(--r-md);
+      font-size: var(--fs-base);
+      font-weight: var(--fw-semibold);
+    }
+
+    .login__meta {
+      margin-top: var(--sp-5);
+      padding-top: var(--sp-4);
+      border-top: 1px solid var(--border-subtle);
+      font-size: var(--fs-xs);
+      color: var(--text-subtle);
+      line-height: 1.6;
+    }
+    .login__error { margin-bottom: var(--sp-5); text-align: left; }
+    .login__theme { position: fixed; top: var(--sp-4); right: var(--sp-4); }
+  </style>
+</head>
+<body>
+  <main class="login">
+    <div class="login__theme" id="themeSlot"></div>
+
+    <div class="login__card">
+      <div class="login__mark" id="loginMark"></div>
+      <h1 class="login__title">급식 신청</h1>
+      <p class="login__desc">우리학교 구글 계정으로 로그인하세요.</p>
+
+      <div id="errorSlot"></div>
+
+      <div class="login__actions" id="actionSlot"></div>
+
+      <div class="login__meta" id="metaSlot"></div>
+    </div>
+  </main>
+
+  <script type="module" src="js/pages/login.js"></script>
+</body>
+</html>
