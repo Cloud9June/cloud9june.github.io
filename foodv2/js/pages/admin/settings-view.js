@@ -12,7 +12,8 @@ import {
   getMonthStatuses, setMonthStatus, getBlocked, setBlocked,
   getTeacherYear, setTeacherYear,
 } from "../../repo/settings.js";
-import { getRoster, saveRoster, parseRosterText, rosterToText } from "../../repo/staff.js";
+import { getRoster, saveRoster, parseRosterLines, rosterToText } from "../../repo/staff.js";
+import { errorMessage, errorDetail, isPermissionDenied } from "../../util/errors.js";
 
 const blockedToken = createRenderToken();
 
@@ -358,33 +359,15 @@ function buildRosterCard(refs) {
     rows: 8,
     placeholder: "홍길동, hong@sungil-i.kr\n김영희, kim@sungil-i.kr",
     style: { fontFamily: "var(--font-num)", fontSize: "13px" },
+    onInput: () => clearRosterMessage(refs),
   });
 
   refs.rosterCount = el("span", { class: "badge" }, "0명");
+  refs.rosterMessage = el("div");   // 검증 결과 · 오류 배너 자리
 
   const saveBtn = el("button", {
     class: "btn btn--primary", type: "button",
-    onClick: async () => {
-      const members = parseRosterText(refs.rosterArea.value);
-      if (!members.length) {
-        const answer = await confirmDialog({
-          title: "명부를 비웁니다",
-          message: "입력된 교직원이 없습니다. 명부를 비우면 미신청자 자동 대조 기능이 꺼집니다.",
-          confirmText: "비우기",
-          tone: "danger",
-        });
-        if (answer !== "confirm") return;
-      }
-      try {
-        const saved = await saveRoster(members);
-        refs.rosterArea.value = rosterToText(saved);
-        refs.rosterCount.textContent = `${saved.length}명`;
-        toast(`교직원 ${saved.length}명을 저장했습니다.`, "ok");
-      } catch (e) {
-        console.error(e);
-        toast("명부 저장에 실패했습니다.", "danger");
-      }
-    },
+    onClick: () => saveRosterFromTextarea(refs, saveBtn),
   }, icon("save", 15), "명부 저장");
 
   return el("section", { class: "card stack" },
@@ -392,10 +375,102 @@ function buildRosterCard(refs) {
       "한 줄에 한 명씩 «이름, 이메일» 형식으로 입력합니다. 이 명부가 있어야 " +
       "'한 번도 신청 화면에 들어오지 않은 교사'까지 미신청자로 잡아낼 수 있습니다."),
     el("div", { class: "row row--tight" }, refs.rosterCount,
-      el("span", { class: "hint" }, "쉼표 또는 탭으로 구분")),
+      el("span", { class: "hint" }, "구분자는 쉼표 · 세미콜론 · 탭 모두 인식합니다.")),
+    refs.rosterMessage,
     refs.rosterArea,
     el("div", { class: "row row--end" }, saveBtn),
   );
+}
+
+function clearRosterMessage(refs) {
+  render(refs.rosterMessage);
+}
+
+function showRosterBanner(refs, tone, title, desc, extra = null) {
+  render(refs.rosterMessage,
+    el("div", { class: `banner banner--${tone}` },
+      el("span", { class: "banner__icon" }, icon(tone === "danger" ? "alert" : "info", 16)),
+      el("div", { class: "banner__body" },
+        el("div", { class: "banner__title" }, title),
+        desc ? el("div", { class: "banner__desc" }, desc) : null,
+        extra,
+      ),
+    ),
+  );
+}
+
+async function saveRosterFromTextarea(refs, saveBtn) {
+  clearRosterMessage(refs);
+
+  const raw = refs.rosterArea.value;
+  const { members, skipped } = parseRosterLines(raw);
+
+  /* ---- 1) 입력 형식 검증: 저장을 시도하기 전에 걸러냅니다 ---- */
+  if (!members.length && raw.trim()) {
+    showRosterBanner(refs, "warn",
+      "이메일이 있는 줄을 찾지 못했습니다",
+      "각 줄에 반드시 «@» 가 포함된 실제 이메일 주소가 있어야 합니다. " +
+      "안내 문구(«이름, 이메일»)를 그대로 두면 저장되지 않습니다.",
+      el("div", { class: "dialog__list", style: { marginTop: "10px" } },
+        el("div", null, "올바른 예"),
+        el("div", null, "홍길동, hong@sungil-i.kr"),
+        el("div", null, "김영희, kim@sungil-i.kr"),
+      ),
+    );
+    return;
+  }
+
+  if (!members.length) {
+    const answer = await confirmDialog({
+      title: "명부를 비웁니다",
+      message: "입력된 교직원이 없습니다. 명부를 비우면 미신청자 자동 대조 기능이 꺼집니다.",
+      confirmText: "비우기",
+      tone: "danger",
+    });
+    if (answer !== "confirm") return;
+  }
+
+  /* ---- 2) 저장 ---- */
+  saveBtn.disabled = true;
+  const originalChildren = [...saveBtn.childNodes];
+  saveBtn.replaceChildren(el("span", { class: "btn__spinner" }), "저장 중…");
+
+  try {
+    const saved = await saveRoster(members);
+    refs.rosterArea.value = rosterToText(saved);
+    refs.rosterCount.textContent = `${saved.length}명`;
+    toast(`교직원 ${saved.length}명을 저장했습니다.`, "ok");
+
+    if (skipped.length) {
+      showRosterBanner(refs, "warn",
+        `${skipped.length}개 줄을 건너뛰었습니다`,
+        "아래 줄은 이메일을 찾지 못했거나 중복이라 저장되지 않았습니다.",
+        el("div", { class: "dialog__list", style: { marginTop: "10px" } },
+          ...skipped.map((s) => el("div", null, `${s.line}행: ${s.text}  → ${s.why}`)),
+        ),
+      );
+    }
+  } catch (e) {
+    console.error("[roster] 저장 실패:", e);
+    const detail = errorDetail(e, "명부를 저장하지 못했습니다");
+
+    showRosterBanner(refs, "danger", detail.title, detail.desc,
+      isPermissionDenied(e)
+        ? el("div", { class: "dialog__list", style: { marginTop: "10px" } },
+            el("div", null, "확인 순서"),
+            el("div", null, "① firestore.rules 에 match /staff/{docId} 블록이 있는지"),
+            el("div", null, "② 규칙을 배포했는지 (firebase deploy --only firestore:rules)"),
+            el("div", null, "③ roles/<내 이메일> 문서의 role 값이 정확히 admin 인지"),
+            detail.code ? el("div", null, `오류 코드: ${detail.code}`) : null,
+          )
+        : (detail.code ? el("div", { class: "hint", style: { marginTop: "8px" } }, `오류 코드: ${detail.code}`) : null),
+    );
+
+    toast(errorMessage(e, "명부 저장 실패"), "danger", 6000);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.replaceChildren(...originalChildren);
+  }
 }
 
 async function loadRoster(refs) {
@@ -404,7 +479,10 @@ async function loadRoster(refs) {
     refs.rosterArea.value = rosterToText(members);
     refs.rosterCount.textContent = `${members.length}명`;
   } catch (e) {
-    console.error(e);
-    toast("교직원 명부를 불러오지 못했습니다.", "warn");
+    console.error("[roster] 조회 실패:", e);
+    const detail = errorDetail(e, "명부를 불러오지 못했습니다");
+    showRosterBanner(refs, "danger", detail.title,
+      `${detail.desc}${detail.code ? ` (${detail.code})` : ""}`);
+    refs.rosterCount.textContent = "읽기 실패";
   }
 }

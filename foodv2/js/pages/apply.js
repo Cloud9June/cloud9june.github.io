@@ -21,6 +21,7 @@ import {
 } from "../util/date.js";
 import { getTeacherYear, getMonthStatuses, getBlocked } from "../repo/settings.js";
 import { getMyRequest, saveMyRequest } from "../repo/requests.js";
+import { errorMessage, warnIfSlow } from "../util/errors.js";
 
 initTheme();
 
@@ -174,22 +175,54 @@ function syncPickerSelection() {
   }
 }
 
-/** 이번 달이 열려 있으면 자동 선택, 아니면 열린 첫 달 */
+/**
+ * 처음 들어왔을 때 어떤 달을 열어 줄지 결정합니다.
+ *
+ * ⚠️ 반드시 "신청 가능한 달" 을 우선해야 합니다.
+ *    9월 말에 10월 신청을 받는 상황(9월=조회전용, 10월=신청중)에서
+ *    이번 달을 먼저 고르면 마감된 9월 화면이 열려, 교사가 10월 버튼을
+ *    눌러야 한다는 사실을 모른 채 나가 버립니다.
+ *
+ * 우선순위
+ *   1) 이번 달이 신청중이면 이번 달
+ *   2) 이번 달 이후의 신청중인 달 중 가장 가까운 달   ← 다음 달 신청 시나리오
+ *   3) 그 외 신청중인 달 중 가장 이른 달
+ *   4) 신청중인 달이 하나도 없으면 이번 달(조회전용)
+ */
+export function pickInitialMonth(statuses, thisMonth) {
+  const months = Object.keys(statuses).map(Number).sort((a, b) => a - b);
+  const openMonths = months.filter((m) => statuses[m] === MONTH_STATUS.OPEN);
+
+  if (openMonths.includes(thisMonth)) return thisMonth;
+
+  const upcoming = openMonths.find((m) => m > thisMonth);
+  if (upcoming) return upcoming;
+
+  if (openMonths.length) return openMonths[0];
+
+  if (statuses[thisMonth] === MONTH_STATUS.READONLY) return thisMonth;
+
+  const readonly = months.find((m) => statuses[m] === MONTH_STATUS.READONLY);
+  return readonly ?? null;
+}
+
 function autoSelectMonth() {
-  const thisMonth = new Date().getMonth() + 1;
-  const openable = (m) => {
-    const s = state.statuses[m];
-    return s === MONTH_STATUS.OPEN || s === MONTH_STATUS.READONLY;
-  };
+  const picked = pickInitialMonth(state.statuses, new Date().getMonth() + 1);
+  if (picked !== null) return selectMonth(picked);
 
-  if (openable(thisMonth)) return selectMonth(thisMonth);
-
-  const first = Object.keys(state.statuses)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .find((m) => state.statuses[m] === MONTH_STATUS.OPEN);
-
-  if (first) selectMonth(first);
+  // 열린 달이 하나도 없는 경우 — 빈 화면 대신 이유를 알려 줍니다
+  render(refs.applySlot,
+    el("div", { class: "card" },
+      el("div", { class: "banner banner--info" },
+        el("span", { class: "banner__icon" }, icon("lock", 16)),
+        el("div", { class: "banner__body" },
+          el("div", { class: "banner__title" }, "아직 신청이 열린 달이 없습니다"),
+          el("div", { class: "banner__desc" },
+            "급식 신청 기간이 시작되면 위 월 버튼이 활성화됩니다. 담당자에게 문의해 주세요."),
+        ),
+      ),
+    ),
+  );
 }
 
 async function selectMonth(month) {
@@ -687,6 +720,12 @@ async function handleSave() {
   btn.disabled = true;
   btn.replaceChildren(el("span", { class: "btn__spinner" }), "저장 중…");
 
+  // 네트워크가 끊기면 setDoc 은 무한정 대기합니다. 12초 넘으면 상황을 알려 줍니다.
+  const cancelSlowWarning = warnIfSlow(12000, () => {
+    toast("저장이 지연되고 있습니다. 네트워크 연결을 확인해 주세요. "
+      + "연결이 회복되면 자동으로 전송되니 창을 닫지 말고 기다려 주세요.", "warn", 9000);
+  });
+
   try {
     await saveMyRequest(state.access.user, state.year, state.month, {
       days: current.days,
@@ -703,8 +742,9 @@ async function handleSave() {
     toast("저장되었습니다.", "ok");
   } catch (e) {
     console.error("[apply] 저장 실패:", e);
-    toast(`저장에 실패했습니다. ${e?.message || "다시 시도해 주세요."}`, "danger", 4200);
+    toast(errorMessage(e, "저장 실패"), "danger", 6000);
   } finally {
+    cancelSlowWarning();
     btn.disabled = false;
     btn.replaceChildren(...originalChildren);
     paintSummary();

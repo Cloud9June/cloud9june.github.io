@@ -107,8 +107,10 @@
   --shadow-md: 0 4px 14px -3px rgba(16, 24, 40, .09), 0 2px 5px -2px rgba(16, 24, 40, .05);
   --shadow-lg: 0 18px 44px -10px rgba(16, 24, 40, .18), 0 6px 14px -6px rgba(16, 24, 40, .08);
 
-  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
-  --ring-danger: 0 0 0 3px color-mix(in srgb, var(--danger) 24%, transparent);
+  /* 커스텀 속성은 선언 단위 폴백이 통하지 않으므로 고정 rgba 를 씁니다
+     (color-mix 미지원 브라우저에서 포커스 링이 통째로 사라지는 것을 방지) */
+  --ring: 0 0 0 3px rgba(79, 70, 229, .26);
+  --ring-danger: 0 0 0 3px rgba(216, 30, 70, .26);
 
   --backdrop: rgba(14, 18, 26, .42);
 }

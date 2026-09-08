@@ -14,7 +14,7 @@ import {
 import { sectionHead } from "../../ui/shell.js";
 import { yearOptions, pad2 } from "../../util/date.js";
 import { computeTotals, saveTotals, toCsv } from "../../repo/totals.js";
-import { getRoster, findNonApplicants } from "../../repo/staff.js";
+import { getRosterSafe, findNonApplicants } from "../../repo/staff.js";
 
 const token = createRenderToken();
 
@@ -324,7 +324,7 @@ async function load(state, refs) {
   try {
     const [result, roster] = await Promise.all([
       computeTotals(state.year, state.month),   // 읽기 전용
-      getRoster(),
+      getRosterSafe(),
     ]);
 
     if (token.isStale(myToken)) return;

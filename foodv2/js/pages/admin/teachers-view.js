@@ -11,7 +11,7 @@ import {
 } from "../../util/date.js";
 import { listMonthRequests, adminRemoveDay, adminAddDay } from "../../repo/requests.js";
 import { getBlocked } from "../../repo/settings.js";
-import { getRoster, findNonApplicants } from "../../repo/staff.js";
+import { getRosterSafe, findNonApplicants } from "../../repo/staff.js";
 
 const token = createRenderToken();
 
@@ -428,7 +428,7 @@ async function load(state, refs) {
     const [requests, blockedDoc, roster] = await Promise.all([
       listMonthRequests(state.year, state.month),
       getBlocked(state.year, state.month),
-      getRoster(),
+      getRosterSafe(),
     ]);
 
     if (token.isStale(myToken)) return;

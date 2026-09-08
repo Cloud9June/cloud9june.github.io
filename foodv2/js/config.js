@@ -13,7 +13,21 @@ export const FIREBASE_CONFIG = {
   projectId: "mealmanager-cda3b",
 };
 
-/** 로그인 허용 도메인. 모든 페이지가 이 배열 하나만 참조합니다. */
+/**
+ * 로그인 허용 도메인. 모든 페이지가 이 배열 하나만 참조합니다.
+ *
+ * ⚠️ firestore.rules 의 isSchoolUser() 와 반드시 일치해야 합니다.
+ *    현재 운영 중인 규칙은 @sungil-i.kr 만 허용하므로 여기서도 그것만 둡니다.
+ *
+ *    (v1 의 index.html 은 @sungil.kr 로도 로그인을 허용했지만, 보안 규칙이
+ *     막고 있어서 로그인 직후 모든 조회·저장이 permission-denied 로 실패하는
+ *     상태였습니다. "로그인은 되는데 아무것도 안 되는" 화면을 없애기 위해
+ *     규칙 쪽 기준으로 맞췄습니다.)
+ *
+ *    @sungil.kr 계정도 실제로 쓰신다면 아래 배열에 "sungil.kr" 을 추가하고,
+ *    firestore.rules 의 isSchoolUser() 정규식도 함께 고쳐야 합니다.
+ *    (규칙 파일 하단 [선택] ③ 항목에 수정본을 적어 두었습니다)
+ */
 export const ALLOWED_DOMAINS = ["sungil-i.kr"];
 
 /** 관리자 페이지 접근을 허용할 도메인 (교내 주 도메인만) */
@@ -63,6 +77,7 @@ export const REASON_PRESETS = [
   "조퇴",
   "외부 회의",
   "개인 사정",
+  "재택근무",
   "학교 행사",
 ];
 

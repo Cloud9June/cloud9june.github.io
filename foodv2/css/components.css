@@ -90,7 +90,7 @@
   --btn-bg: var(--danger-soft);
   --btn-fg: var(--danger);
   --btn-bd: var(--danger-border);
-  --btn-bg-hover: color-mix(in srgb, var(--danger-soft) 80%, var(--danger) 8%);
+  --btn-bg-hover: var(--danger-border);
 }
 .btn--danger:focus-visible { box-shadow: var(--ring-danger); }
 
@@ -676,6 +676,7 @@
   flex-wrap: wrap;
   margin-top: var(--sp-5);
   padding: var(--sp-3) var(--sp-4);
+  background: var(--surface); /* 폴백 */
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

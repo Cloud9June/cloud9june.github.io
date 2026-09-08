@@ -165,6 +165,7 @@
 .cal__reason--filled {
   border-style: solid;
   border-color: var(--warn-border);
+  background: var(--warn-soft); /* 폴백 */
   background: color-mix(in srgb, var(--warn-soft) 60%, var(--surface));
   color: var(--warn);
 }

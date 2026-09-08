@@ -15,20 +15,32 @@ import { COL } from "../config.js";
 
 const rosterRef = () => doc(db, COL.STAFF, "roster");
 
-/** @returns {Promise<Array<{name:string, email:string}>>} */
+/**
+ * 명부 조회.
+ * 실패하면 예외를 그대로 던집니다 — 호출하는 화면이 원인(권한/네트워크)을
+ * 사용자에게 보여줄 수 있어야 하기 때문입니다.
+ * 명부가 없어도 나머지 기능은 동작해야 하는 화면에서는 getRosterSafe() 를 쓰세요.
+ *
+ * @returns {Promise<Array<{name:string, email:string}>>}
+ */
 export async function getRoster() {
+  const snap = await getDoc(rosterRef());
+  if (!snap.exists() || !Array.isArray(snap.data().members)) return [];
+  return snap.data().members
+    .map((m) => ({
+      name: String(m?.name ?? "").trim(),
+      email: String(m?.email ?? "").trim().toLowerCase(),
+    }))
+    .filter((m) => m.email)
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+}
+
+/** 조회 실패를 빈 명부로 처리 (명부가 없어도 나머지가 동작해야 하는 화면용) */
+export async function getRosterSafe() {
   try {
-    const snap = await getDoc(rosterRef());
-    if (!snap.exists() || !Array.isArray(snap.data().members)) return [];
-    return snap.data().members
-      .map((m) => ({
-        name: String(m?.name ?? "").trim(),
-        email: String(m?.email ?? "").trim().toLowerCase(),
-      }))
-      .filter((m) => m.email)
-      .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+    return await getRoster();
   } catch (e) {
-    console.warn("[staff] 명부 조회 실패:", e);
+    console.warn("[staff] 명부 조회 실패 — 빈 명부로 진행합니다:", e);
     return [];
   }
 }
@@ -46,25 +58,66 @@ export async function saveRoster(members) {
   return clean;
 }
 
-/** "홍길동, hong@sungil-i.kr" 형태의 여러 줄 텍스트 → 배열 */
-export function parseRosterText(text) {
-  const out = [];
-  for (const rawLine of String(text || "").split(/\r?\n/)) {
+/**
+ * "홍길동, hong@sungil-i.kr" 형태의 여러 줄 텍스트를 파싱합니다.
+ * 쉼표(,) · 탭 · 세미콜론(;) · 전각쉼표(，) · 공백 여러 칸을 모두 구분자로 봅니다.
+ *
+ * @returns {{members: Array<{name:string,email:string}>, skipped: Array<{line:number,text:string,why:string}>}}
+ *   skipped — 이메일을 못 찾아 건너뛴 줄. 화면에 그대로 보여 주면 원인 파악이 쉽습니다.
+ */
+export function parseRosterLines(text) {
+  const members = [];
+  const skipped = [];
+  const seen = new Set();
+
+  const lines = String(text || "").split(/\r?\n/);
+
+  // 구분자(공백·쉼표·세미콜론·탭·전각쉼표)를 포함하지 않는 실제 이메일만 추출
+  const EMAIL_RE = /[^\s,;，、\t]+@[^\s,;，、\t]+\.[^\s,;，、\t]+/;
+
+  lines.forEach((rawLine, index) => {
     const line = rawLine.trim();
-    if (!line) continue;
+    if (!line) return;
 
-    const parts = line.split(/[,\t]/).map((s) => s.trim());
-    let name = "";
-    let email = "";
+    /*
+       구분자를 먼저 쪼개지 않고 이메일부터 찾습니다.
+       "김영희 kim@sungil-i.kr" 처럼 공백 한 칸으로 붙여 쓴 경우,
+       구분자 기준으로 나누면 줄 전체가 이메일로 잡히기 때문입니다.
+    */
+    const found = line.match(EMAIL_RE);
 
-    for (const part of parts) {
-      if (part.includes("@")) email = part.toLowerCase();
-      else if (!name) name = part;
+    if (!found) {
+      const why = line.includes("@")
+        ? "이메일 형식이 올바르지 않음 (도메인에 . 이 없음)"
+        : "이메일(@)을 찾지 못함";
+      skipped.push({ line: index + 1, text: line, why });
+      return;
     }
-    if (!email) continue;
-    out.push({ name: name || email.split("@")[0], email });
-  }
-  return out;
+
+    const email = found[0].toLowerCase();
+
+    // 이메일을 뺀 나머지에서 이름을 추출 (구분자와 여분 공백 제거)
+    const name = line
+      .replace(found[0], " ")
+      .replace(/[,;，、\t]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (seen.has(email)) {
+      skipped.push({ line: index + 1, text: line, why: "이메일 중복" });
+      return;
+    }
+
+    seen.add(email);
+    members.push({ name: name || email.split("@")[0], email });
+  });
+
+  return { members, skipped };
+}
+
+/** 하위 호환용 — 회원 배열만 필요할 때 */
+export function parseRosterText(text) {
+  return parseRosterLines(text).members;
 }
 
 export function rosterToText(members) {
