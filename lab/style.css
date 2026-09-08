@@ -140,13 +140,28 @@ button, select {
 }
 .btn-icon:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-.is-guest .btn-icon,
-.is-guest .time-slot,
-.is-guest .seat.normal,
-.is-guest .seat.error,
-.is-guest .seat.hidden-seat {
+/* 지금 보고 있는 실습실을 관리할 권한이 없을 때(.lab-detail.is-guest)는
+   수정 가능한 요소들의 커서를 기본값으로 되돌려 "눌러도 되는 것처럼" 보이지 않게 한다. */
+.lab-detail.is-guest .btn-icon,
+.lab-detail.is-guest .time-slot,
+.lab-detail.is-guest .seat.normal,
+.lab-detail.is-guest .seat.error,
+.lab-detail.is-guest .seat.hidden-seat {
     cursor: default;
 }
+
+.manager-badge {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--success-bg);
+    color: var(--success);
+}
+.manager-badge[hidden] { display: none; }
 
 /* ==========================================================================
    메인 레이아웃
@@ -551,6 +566,67 @@ button, select {
     color: var(--text-secondary);
     font-weight: 600;
 }
+
+/* ==========================================================================
+   담당자 관리 모달 (넓은 버전)
+   ========================================================================== */
+.modal-content--wide {
+    width: 480px;
+    max-width: calc(100vw - 40px);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+.modal-content__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+.modal-content__header h3 { margin: 0; }
+.modal-content__desc {
+    margin: 8px 0 16px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.teacher-list {
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+}
+.teacher-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--border);
+}
+.teacher-row__name {
+    flex: 0 0 96px;
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+.teacher-row__emails {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    overflow-wrap: break-word;
+}
+.teacher-row__emails--empty { color: var(--text-muted); }
+.teacher-row__edit {
+    flex: none;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.teacher-row__edit:hover { background: var(--bg-subtle); color: var(--text-primary); }
 
 select {
     width: 100%;

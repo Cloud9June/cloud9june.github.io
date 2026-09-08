@@ -17,6 +17,7 @@
         <div class="app-header__user">
             <img id="user-avatar" class="user-avatar" alt="" hidden>
             <span id="user-info" class="user-info">로그인이 필요합니다</span>
+            <button id="manage-teachers-btn" class="btn btn-ghost" hidden>담당자 관리</button>
             <button id="login-btn" class="btn btn-google">Google 로그인</button>
             <button id="logout-btn" class="btn btn-ghost" hidden>로그아웃</button>
         </div>
@@ -41,7 +42,10 @@
             <div class="lab-detail__header">
                 <button id="back-btn" class="btn-icon" title="목록으로">←</button>
                 <div class="lab-detail__title">
-                    <h2 id="current-lab-title">실습실 선택</h2>
+                    <h2 id="current-lab-title">
+                        <span id="lab-name-text">실습실 선택</span>
+                        <span id="manager-badge" class="manager-badge" hidden>담당 선생님</span>
+                    </h2>
                     <p id="current-lab-desc" class="lab-desc"></p>
                 </div>
                 <button id="edit-info-btn" class="btn-icon" title="설명 수정">✏️</button>
@@ -75,6 +79,17 @@
                 <button id="cancel-btn" class="btn btn-cancel">취소</button>
                 <button id="save-btn" class="btn btn-save">저장</button>
             </div>
+        </div>
+    </div>
+
+    <div id="teacher-modal" class="modal hidden">
+        <div class="modal-content modal-content--wide">
+            <div class="modal-content__header">
+                <h3>실습실 담당자 관리</h3>
+                <button id="close-teacher-modal-btn" class="btn-icon" title="닫기">✕</button>
+            </div>
+            <p class="modal-content__desc">실습실별로 좌석 상태·시점·전달사항을 수정할 수 있는 선생님을 배정합니다. 이메일은 쉼표(,)로 구분해 여러 명 입력할 수 있습니다.</p>
+            <div id="teacher-list" class="teacher-list"></div>
         </div>
     </div>
 
