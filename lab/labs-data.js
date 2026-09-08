@@ -27,15 +27,27 @@ export const labs = [
 // ⚠️ value는 Firestore의 seat.status 필드에 그대로 저장되므로 반드시 서로 달라야 함
 //    (원본 코드는 "모니터 고장"과 "키보드/마우스 고장"이 둘 다 value="hardware" 로 겹쳐 있었음 → 아래에서 분리)
 export const ISSUE_OPTIONS = [
-  { value: "normal", label: "✅ 정상 (수리완료)" },
-  { value: "booting", label: "❌ 부팅 안됨" },
-  { value: "power", label: "🔌 전원 안 켜짐" },
-  { value: "monitor", label: "🖥️ 모니터 고장/파손" },
-  { value: "network", label: "🌐 인터넷/네트워크 오류" },
-  { value: "sw", label: "💾 프로그램 없음/오류" },
-  { value: "peripheral", label: "⌨️ 키보드/마우스 고장" },
+  { value: "normal", label: "정상 (수리완료)" },
+  { value: "booting", label: "부팅 안됨" },
+  { value: "power", label: "전원 안 켜짐" },
+  { value: "monitor", label: "모니터 고장/파손" },
+  { value: "network", label: "인터넷/네트워크 오류" },
+  { value: "sw", label: "프로그램 없음/오류" },
+  { value: "peripheral", label: "키보드/마우스 고장" },
   { value: "etc", label: "기타" },
 ];
 
 export const HIDDEN_OPTION = { value: "hidden", label: "❌ 이 자리를 비우기 (건너뛰기)" };
 export const RESTORE_OPTION = { value: "restore", label: "✅ 다시 좌석으로 사용" };
+
+// 실습실 사양 정보 입력 폼/표시에서 공통으로 쓰는 필드 정의.
+// key는 Firestore의 labs/{id}.specs.{key}에 그대로 저장된다.
+export const SPEC_FIELDS = [
+  { key: "cpu", label: "CPU", placeholder: "예: Intel i5-12400" },
+  { key: "ram", label: "메모리(RAM)", placeholder: "예: 16GB" },
+  { key: "storage", label: "저장장치", placeholder: "예: SSD 512GB" },
+  { key: "gpu", label: "그래픽카드", placeholder: "예: 내장그래픽 / GTX 1650" },
+  { key: "monitor", label: "모니터", placeholder: "예: 24인치 FHD" },
+  { key: "os", label: "운영체제", placeholder: "예: Windows 11" },
+  { key: "note", label: "비고", placeholder: "추가로 적어둘 내용", multiline: true },
+];

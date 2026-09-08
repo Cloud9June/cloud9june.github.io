@@ -9,17 +9,19 @@
 <body>
 
     <header class="app-header">
-        <div id="brand-btn" class="app-header__brand" title="처음 화면으로">
-            <span class="brand-mark">🖥️</span>
-            <h1>실습실 관리 시스템</h1>
-        </div>
+        <div class="app-header__inner">
+            <div id="brand-btn" class="app-header__brand" title="처음 화면으로">
+                <span class="brand-mark">🖥️</span>
+                <h1>실습실 관리 시스템</h1>
+            </div>
 
-        <div class="app-header__user">
-            <img id="user-avatar" class="user-avatar" alt="" hidden>
-            <span id="user-info" class="user-info">로그인이 필요합니다</span>
-            <button id="manage-teachers-btn" class="btn btn-ghost" hidden>담당자 관리</button>
-            <button id="login-btn" class="btn btn-google">Google 로그인</button>
-            <button id="logout-btn" class="btn btn-ghost" hidden>로그아웃</button>
+            <div class="app-header__user">
+                <img id="user-avatar" class="user-avatar" alt="" hidden>
+                <span id="user-info" class="user-info">로그인이 필요합니다</span>
+                <button id="manage-teachers-btn" class="btn btn-ghost" hidden>담당자 관리</button>
+                <button id="login-btn" class="btn btn-google">Google 로그인</button>
+                <button id="logout-btn" class="btn btn-ghost" hidden>로그아웃</button>
+            </div>
         </div>
     </header>
 
@@ -57,11 +59,31 @@
 
             <div id="time-slot-row" class="time-slot-row"></div>
 
+            <div class="info-columns">
+                <section class="info-card">
+                    <div class="info-card__header">
+                        <h3>실습실 사양</h3>
+                        <button id="edit-specs-btn" class="btn-icon" title="사양 정보 수정" hidden>✏️</button>
+                    </div>
+                    <div id="specs-list" class="specs-list"></div>
+                </section>
+
+                <section class="info-card">
+                    <div class="info-card__header">
+                        <h3>설치 프로그램</h3>
+                    </div>
+                    <div id="programs-list" class="programs-list"></div>
+                    <button id="add-program-btn" class="btn btn-ghost btn-add-program" hidden>+ 프로그램 추가</button>
+                </section>
+            </div>
+
             <div class="seat-legend">
                 <span class="legend-chip"><span class="dot dot--normal"></span>정상</span>
                 <span class="legend-chip"><span class="dot dot--error"></span>고장/점검</span>
                 <span class="legend-chip"><span class="dot dot--hidden"></span>빈 자리(제외)</span>
             </div>
+
+            <div class="board-hint">▲ 교탁 / 칠판 방향</div>
 
             <div id="seat-grid" class="seat-grid"></div>
         </section>
@@ -78,6 +100,38 @@
             <div class="modal-buttons">
                 <button id="cancel-btn" class="btn btn-cancel">취소</button>
                 <button id="save-btn" class="btn btn-save">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="specs-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>실습실 사양 정보</h3>
+
+            <label for="spec-cpu">CPU</label>
+            <input id="spec-cpu" type="text" class="text-input" placeholder="예: Intel i5-12400">
+
+            <label for="spec-ram">메모리(RAM)</label>
+            <input id="spec-ram" type="text" class="text-input" placeholder="예: 16GB">
+
+            <label for="spec-storage">저장장치</label>
+            <input id="spec-storage" type="text" class="text-input" placeholder="예: SSD 512GB">
+
+            <label for="spec-gpu">그래픽카드</label>
+            <input id="spec-gpu" type="text" class="text-input" placeholder="예: 내장그래픽 / GTX 1650">
+
+            <label for="spec-monitor">모니터</label>
+            <input id="spec-monitor" type="text" class="text-input" placeholder="예: 24인치 FHD">
+
+            <label for="spec-os">운영체제</label>
+            <input id="spec-os" type="text" class="text-input" placeholder="예: Windows 11">
+
+            <label for="spec-note">비고</label>
+            <textarea id="spec-note" class="text-input" rows="2" placeholder="추가로 적어둘 내용"></textarea>
+
+            <div class="modal-buttons">
+                <button id="specs-cancel-btn" class="btn btn-cancel">취소</button>
+                <button id="specs-save-btn" class="btn btn-save">저장</button>
             </div>
         </div>
     </div>

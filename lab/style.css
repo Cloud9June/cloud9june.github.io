@@ -56,13 +56,20 @@ button, select {
     position: sticky;
     top: 0;
     z-index: 20;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+}
+
+/* 배경/보더는 화면 끝까지, 내부 콘텐츠(로고·로그인 영역)는
+   아래 .app-main과 동일한 최대폭으로 맞춰서 좌우 끝이 일치하게 정렬 */
+.app-header__inner {
+    max-width: 1160px;
+    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px 32px;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
 }
 
 .app-header__brand {
@@ -139,6 +146,9 @@ button, select {
     transition: all 0.15s ease;
 }
 .btn-icon:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* .btn-icon는 display:flex를 직접 지정하므로, hidden 속성을 켰을 때
+   [hidden]의 기본 display:none이 밀리지 않도록 명시적으로 덮어쓴다. */
+.btn-icon[hidden] { display: none; }
 
 /* 지금 보고 있는 실습실을 관리할 권한이 없을 때(.lab-detail.is-guest)는
    수정 가능한 요소들의 커서를 기본값으로 되돌려 "눌러도 되는 것처럼" 보이지 않게 한다. */
@@ -475,6 +485,104 @@ button, select {
 .slot-desc.empty { color: var(--text-muted); font-weight: 400; }
 
 /* ==========================================================================
+   실습실 사양 / 설치 프로그램
+   ========================================================================== */
+.info-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.info-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+}
+.info-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.info-card__header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+.info-card .btn-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+}
+
+.empty-hint {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.specs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.spec-row {
+    display: flex;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+.spec-row__label {
+    flex: 0 0 88px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+.spec-row__value {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.programs-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.program-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-subtle);
+    border-radius: var(--radius-pill);
+    padding: 5px 8px 5px 12px;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+}
+.program-chip__remove {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    padding: 3px;
+    border-radius: 50%;
+    line-height: 1;
+}
+.program-chip__remove:hover { color: var(--error); background: rgba(0, 0, 0, 0.06); }
+
+.btn-add-program {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 700px) {
+    .info-columns { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
    좌석 그리드
    ========================================================================== */
 .seat-grid {
@@ -487,27 +595,35 @@ button, select {
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 16px 12px;
+    padding: 20px 12px 16px;
     text-align: center;
     cursor: pointer;
     position: relative;
+    overflow: hidden;
     transition: all 0.15s ease;
 }
 .seat:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
 
-.seat-num { font-size: 1.15rem; font-weight: 700; margin: 8px 0 2px; color: var(--text-primary); }
+.seat-icon { font-size: 1rem; line-height: 1; margin-bottom: 4px; opacity: 0.35; filter: grayscale(0.4); }
+.seat-num { font-size: 1.15rem; font-weight: 700; margin: 0 0 2px; color: var(--text-primary); }
 .issue-text { font-size: 0.78rem; color: var(--text-secondary); min-height: 16px; font-weight: 500; }
-.indicator {
-    width: 8px; height: 8px; border-radius: 50%;
-    position: absolute; top: 12px; right: 12px;
+
+/* 상단 컬러 바 — 상태를 한눈에 스캔할 수 있도록 작은 점 대신 카드 상단 전체에 표시 */
+.seat::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--border-strong);
 }
 
-.seat.normal .indicator { background: var(--success); }
-.seat.normal .issue-text { color: var(--success); }
+.seat.normal::before { background: var(--success); }
+.seat.normal .issue-text { color: var(--text-muted); }
 
 .seat.error { background: var(--error-bg); border-color: var(--error); }
+.seat.error::before { background: var(--error); }
 .seat.error .seat-num { color: var(--error); }
-.seat.error .indicator { background: var(--error); }
+.seat.error .seat-icon { opacity: 1; filter: none; }
 .seat.error .issue-text { color: var(--error); font-weight: 700; }
 
 .seat.hidden-seat {
@@ -515,14 +631,27 @@ button, select {
     border: 1px dashed var(--border-strong);
     opacity: 0.55;
 }
+.seat.hidden-seat::before { content: none; }
 .seat.hidden-seat:hover { opacity: 1; }
-.seat.hidden-seat .indicator,
+.seat.hidden-seat .seat-icon,
 .seat.hidden-seat .seat-num,
 .seat.hidden-seat .issue-text { display: none; }
 .seat.hidden-seat::after {
     content: "빈 자리";
     color: var(--text-muted);
     font-size: 0.78rem;
+}
+
+/* 교탁/칠판 방향 안내 — 좌석 그리드가 어느 쪽을 보고 앉는 배치인지 알려주는 힌트 바 */
+.board-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 8px;
+    margin-bottom: 14px;
 }
 
 .maintenance-box {
@@ -552,6 +681,8 @@ button, select {
 
 .modal-content {
     width: 340px;
+    max-height: 85vh;
+    overflow-y: auto;
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -565,6 +696,18 @@ button, select {
     font-size: 0.8rem;
     color: var(--text-secondary);
     font-weight: 600;
+}
+.text-input {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
 }
 
 /* ==========================================================================
@@ -664,7 +807,7 @@ select {
 }
 
 @media (max-width: 560px) {
-    .app-header { padding: 14px 18px; }
+    .app-header__inner { padding: 14px 16px; }
     .app-main { padding: 24px 16px 70px; }
     .kpi-row { grid-template-columns: repeat(2, 1fr); }
     .seat-grid { grid-template-columns: repeat(3, 1fr); }

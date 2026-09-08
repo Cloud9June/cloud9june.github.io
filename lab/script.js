@@ -6,12 +6,17 @@ import {
   doc,
   getDocs,
   setDoc,
+  addDoc,
+  deleteDoc,
   onSnapshot,
   writeBatch,
+  query,
+  orderBy,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 import { initAuth, getIsSuperAdmin, getUserEmail } from "./auth.js";
-import { labs, ISSUE_OPTIONS, HIDDEN_OPTION, RESTORE_OPTION } from "./labs-data.js";
+import { labs, ISSUE_OPTIONS, HIDDEN_OPTION, RESTORE_OPTION, SPEC_FIELDS } from "./labs-data.js";
 
 // ----------------------------------------------------------
 // DOM 참조
@@ -41,6 +46,15 @@ const manageTeachersBtn = document.getElementById("manage-teachers-btn");
 const teacherModal = document.getElementById("teacher-modal");
 const teacherListEl = document.getElementById("teacher-list");
 const closeTeacherModalBtn = document.getElementById("close-teacher-modal-btn");
+
+const specsListEl = document.getElementById("specs-list");
+const editSpecsBtn = document.getElementById("edit-specs-btn");
+const specsModal = document.getElementById("specs-modal");
+const specsCancelBtn = document.getElementById("specs-cancel-btn");
+const specsSaveBtn = document.getElementById("specs-save-btn");
+
+const programsListEl = document.getElementById("programs-list");
+const addProgramBtn = document.getElementById("add-program-btn");
 
 // ----------------------------------------------------------
 // 인증 초기화
@@ -95,8 +109,13 @@ function requireSuperAdmin() {
 /** 현재 실습실에 대한 권한 상태를 좌석/시점/편집 버튼의 커서 등 화면에 반영한다. */
 function updateLabAccessUI() {
   const canManage = canManageActiveLab();
+  const isSuper = getIsSuperAdmin();
   labView.classList.toggle("is-guest", !canManage);
-  managerBadgeEl.hidden = !(canManage && !getIsSuperAdmin());
+  managerBadgeEl.hidden = !(canManage && !isSuper);
+  // 사양 정보 · 설치 프로그램 모두 좌석과 같은 등급(전체관리자 + 해당 실습실 담당 선생님)만 수정 가능.
+  editSpecsBtn.hidden = !canManage;
+  addProgramBtn.hidden = !canManage;
+  renderPrograms(); // 삭제(✕) 버튼 표시 여부가 canManage에 따라 달라지므로 다시 그린다.
 }
 
 // ----------------------------------------------------------
@@ -126,6 +145,8 @@ let currentDocId = null;
 let activeLab = null;
 let activeNoticeText = "";
 let activeLabManagers = [];
+let activeSpecs = {};
+let activeProgramsData = []; // [{ id, name, addedBy }]
 
 // ----------------------------------------------------------
 // 화면 전환
@@ -138,6 +159,8 @@ function goToDashboard() {
   activeLab = null;
   activeNoticeText = "";
   activeLabManagers = [];
+  activeSpecs = {};
+  activeProgramsData = [];
   labView.classList.remove("is-guest");
   dashboardView.style.display = "block";
   labView.style.display = "none";
@@ -284,10 +307,13 @@ function loadLab(lab) {
 
   currentLabId = lab.id;
   activeLab = lab;
-  // 이전 실습실의 담당자 정보가 잠깐이라도 새 실습실에 잘못 적용되지 않도록 먼저 비워둔다.
-  // (곧 아래 onSnapshot이 이 실습실의 실제 담당자 목록으로 다시 채운다)
+  // 이전 실습실의 담당자/사양/프로그램 정보가 잠깐이라도 새 실습실에 잘못 적용되지 않도록 먼저 비워둔다.
+  // (곧 아래 onSnapshot들이 이 실습실의 실제 데이터로 다시 채운다)
   activeLabManagers = [];
+  activeSpecs = {};
+  activeProgramsData = [];
   updateLabAccessUI();
+  renderSpecs();
 
   dashboardView.style.display = "none";
   labView.style.display = "block";
@@ -309,7 +335,7 @@ function loadLab(lab) {
     }
   };
 
-  // 1. 실습실 설명 & 시간표(시점) & 담당 선생님 정보 구독
+  // 1. 실습실 설명 & 시간표(시점) & 담당 선생님 & 사양 정보 구독
   const unsubDesc = onSnapshot(
     doc(db, "labs", lab.id),
     (docSnapshot) => {
@@ -317,15 +343,28 @@ function loadLab(lab) {
       descEl.textContent = data.description || "";
       activeNoticeText = data.notice || "";
       activeLabManagers = data.managers || [];
+      activeSpecs = data.specs || {};
       updateLabAccessUI();
       renderNotice(lab, activeNoticeText);
       renderTimeSlots(lab, data.timeSlots || {});
+      renderSpecs();
     },
     (error) => console.error("실습실 정보 구독 오류:", error)
   );
   activeUnsubscribers.push(unsubDesc);
 
-  // 2. 수리 중인 실습실은 좌석을 표시하지 않는다.
+  // 2. 설치 프로그램 목록 구독 (등록된 순서대로 표시)
+  const unsubPrograms = onSnapshot(
+    query(collection(db, `labs/${lab.id}/programs`), orderBy("addedAt", "asc")),
+    (snapshot) => {
+      activeProgramsData = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderPrograms();
+    },
+    (error) => console.error("프로그램 목록 구독 오류:", error)
+  );
+  activeUnsubscribers.push(unsubPrograms);
+
+  // 3. 수리 중인 실습실은 좌석을 표시하지 않는다.
   if (lab.rows === 0 && lab.cols === 0) {
     seatGridEl.style.display = "block";
     seatGridEl.innerHTML = `
@@ -337,7 +376,7 @@ function loadLab(lab) {
     return;
   }
 
-  // 3. 좌석 목록 구독
+  // 4. 좌석 목록 구독
   seatGridEl.style.display = "grid";
   seatGridEl.style.gridTemplateColumns = `repeat(${lab.cols}, 1fr)`;
 
@@ -453,6 +492,141 @@ async function editNotice(lab, currentText) {
   }
 }
 
+// ----------------------------------------------------------
+// 🖥️ 실습실 사양 (좌석 상태와 같은 등급 — 전체관리자 + 해당 실습실 담당 선생님도 입력 가능)
+// ----------------------------------------------------------
+function renderSpecs() {
+  specsListEl.innerHTML = "";
+
+  const entries = SPEC_FIELDS.map(({ key, label }) => ({
+    label,
+    value: (activeSpecs[key] || "").trim(),
+  })).filter((entry) => entry.value);
+
+  if (entries.length === 0) {
+    const p = document.createElement("p");
+    p.className = "empty-hint";
+    p.textContent = "등록된 사양 정보가 없습니다.";
+    specsListEl.appendChild(p);
+    return;
+  }
+
+  entries.forEach(({ label, value }) => {
+    const row = document.createElement("div");
+    row.className = "spec-row";
+
+    const labelEl = document.createElement("span");
+    labelEl.className = "spec-row__label";
+    labelEl.textContent = label;
+
+    const valueEl = document.createElement("span");
+    valueEl.className = "spec-row__value";
+    valueEl.textContent = value;
+
+    row.appendChild(labelEl);
+    row.appendChild(valueEl);
+    specsListEl.appendChild(row);
+  });
+}
+
+editSpecsBtn.addEventListener("click", () => {
+  if (!requireCanManage()) return;
+  SPEC_FIELDS.forEach(({ key }) => {
+    const input = document.getElementById(`spec-${key}`);
+    if (input) input.value = activeSpecs[key] || "";
+  });
+  specsModal.classList.remove("hidden");
+});
+
+specsCancelBtn.addEventListener("click", () => {
+  specsModal.classList.add("hidden");
+});
+
+specsSaveBtn.addEventListener("click", async () => {
+  if (!requireCanManage()) return;
+
+  const newSpecs = {};
+  SPEC_FIELDS.forEach(({ key }) => {
+    const input = document.getElementById(`spec-${key}`);
+    newSpecs[key] = input ? input.value.trim() : "";
+  });
+
+  try {
+    await setDoc(doc(db, "labs", currentLabId), { specs: newSpecs }, { merge: true });
+    specsModal.classList.add("hidden");
+  } catch (error) {
+    console.error("사양 정보 저장 실패:", error);
+    alert("사양 정보를 저장하지 못했습니다: " + error.message);
+  }
+});
+
+// ----------------------------------------------------------
+// 💾 설치 프로그램 (좌석 상태와 같은 등급 — 담당 선생님도 추가·삭제 가능)
+// ----------------------------------------------------------
+function renderPrograms() {
+  const canManage = canManageActiveLab();
+  programsListEl.innerHTML = "";
+
+  if (activeProgramsData.length === 0) {
+    const p = document.createElement("p");
+    p.className = "empty-hint";
+    p.textContent = "등록된 프로그램이 없습니다.";
+    programsListEl.appendChild(p);
+    return;
+  }
+
+  activeProgramsData.forEach(({ id, name }) => {
+    const chip = document.createElement("span");
+    chip.className = "program-chip";
+
+    const label = document.createElement("span");
+    label.textContent = name;
+    chip.appendChild(label);
+
+    if (canManage) {
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "program-chip__remove";
+      removeBtn.title = "목록에서 삭제";
+      removeBtn.textContent = "✕";
+      removeBtn.addEventListener("click", () => deleteProgram(id, name));
+      chip.appendChild(removeBtn);
+    }
+
+    programsListEl.appendChild(chip);
+  });
+}
+
+addProgramBtn.addEventListener("click", async () => {
+  if (!requireCanManage()) return;
+  const name = prompt("설치한 프로그램 이름을 입력하세요.\n예: Visual Studio Code, 한글 2020, 파이썬 3.11");
+  if (name === null) return;
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  try {
+    await addDoc(collection(db, `labs/${currentLabId}/programs`), {
+      name: trimmed,
+      addedBy: getUserEmail() || "알 수 없음",
+      addedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("프로그램 등록 실패:", error);
+    alert("프로그램을 등록하지 못했습니다: " + error.message);
+  }
+});
+
+async function deleteProgram(programId, name) {
+  if (!requireCanManage()) return;
+  if (!confirm(`"${name}"을(를) 목록에서 삭제할까요?`)) return;
+
+  try {
+    await deleteDoc(doc(db, `labs/${currentLabId}/programs`, programId));
+  } catch (error) {
+    console.error("프로그램 삭제 실패:", error);
+    alert("삭제하지 못했습니다: " + error.message);
+  }
+}
+
 function renderTimeSlots(lab, slots) {
   timeSlotRowEl.innerHTML = "";
 
@@ -526,7 +700,7 @@ function renderSeatGrid(lab, seatsData, totalNeeded) {
     } else {
       seatDiv.className = `seat ${seat.status === "normal" ? "normal" : "error"}`;
       seatDiv.innerHTML = `
-        <div class="indicator"></div>
+        <div class="seat-icon">🖥️</div>
         <div class="seat-num">${displayCounter}번</div>
         <div class="issue-text">${seat.issue || "정상"}</div>`;
 
