@@ -31,7 +31,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800;900&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/app.css?v=2.0.1">
+<link rel="stylesheet" href="css/app.css?v=2.0.2">
 </head>
 
 <body>
@@ -71,10 +71,10 @@
     </button>
   </header>
 
-  <main class="main" id="main">
-    <div id="screen"></div>
-  </main>
-
+  <!-- 내비를 본문보다 먼저 둡니다.
+       모바일에서는 position:fixed 라 순서가 화면에 영향을 주지 않고,
+       PC 에서는 그리드 자동 배치가 자연스럽게 왼쪽 칸에 놓습니다.
+       (본문이 먼저 오면 자동 배치 커서가 되돌아가지 못해 아래 행으로 밀립니다) -->
   <nav class="tabbar" id="tabbar" aria-label="주요 메뉴">
     <button class="tabbar__item is-active" data-go="all" type="button" aria-current="page">
       <span class="ico" aria-hidden="true">◉</span>전체
@@ -93,6 +93,10 @@
       <span aria-hidden="true">✏️</span>글쓰기
     </button>
   </nav>
+
+  <main class="main" id="main">
+    <div id="screen"></div>
+  </main>
 </div>
 
 <!-- 당겨서 새로고침 -->
@@ -111,6 +115,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=2.0.1"></script>
+<script type="module" src="js/app.js?v=2.0.2"></script>
 </body>
 </html>

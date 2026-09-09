@@ -1,21 +1,20 @@
 {
-  "name": "S:NOW",
+  "id": "/stu/",
+  "name": "S:NOW · 성일정보고",
   "short_name": "S:NOW",
-  "start_url": "index.html",
+  "description": "성일정보고등학교 학생 공지 앱",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "orientation": "portrait",
+  "background_color": "#F4F6FA",
+  "theme_color": "#F4F6FA",
+  "categories": ["education"],
   "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "/stu/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/stu/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/stu/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

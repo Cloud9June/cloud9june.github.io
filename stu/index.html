@@ -1,120 +1,120 @@
 <!DOCTYPE html>
-<html lang="ko">
-
+<html lang="ko" data-tab="all">
 <head>
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#a0c4ff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="S:NOW">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>성일정보고 학생 앱</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>S:NOW · 성일정보고</title>
 
-  <!-- 분리된 CSS -->
-  <link rel="stylesheet" href="style.css?20251202">
+<!-- 보안 정책: XSS가 성공하더라도 외부로 나가지 못하게 막는 2차 방어선 -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://www.gstatic.com https://apis.google.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src https://fonts.gstatic.com;
+  img-src 'self' data: blob: https://api.qrserver.com https://*.googleusercontent.com;
+  media-src 'self';
+  connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com
+              https://www.gstatic.com https://sungilnow.firebaseapp.com;
+  frame-src 'self' https://sungilnow.firebaseapp.com https://accounts.google.com https://apis.google.com;
+  form-action 'none'; object-src 'none'; base-uri 'none'">
+
+<meta name="description" content="성일정보고등학교 학생 공지 앱">
+<meta name="theme-color" content="#F4F6FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0F14" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="S:NOW">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="/stu/icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800;900&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/app.css?v=2.0.2">
 </head>
 
 <body>
-  <!-- ===== 인트로 화면 ===== -->
-  <div id="videoWrapper">
-    <div id="version-label">Beta v3.3</div>
-    <video autoplay muted loop playsinline>
-      <source src="video/intro2.mp4" type="video/mp4">
-      지원하지 않는 브라우저입니다.
-    </video>
-    <div id="loginOverlay">
-      <p id="welcomeText">🌟✨💫🌟<br>성일정보고<br>로그인하고,<br>오늘 하루<br>반짝 시작!<br>✨💫☀️✨</p>
-      <button id="loginBtn">로그인</button>
-      <a id="guestLink">게스트로 둘러보기</a>
-      <div id="introLoading">
-        <div class="spinner"></div>
-        <p>로그인 중입니다...</p>
-      </div>
-    </div>
-  </div>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
 
-  <div id="reloginLoading">
-    <div class="spinner"></div>
-    <p>✨ 곧 글들이 나올거예요<br>잠시만 기다려주세요~ ✨</p>
+<!-- ══ 로그인 화면 ══ -->
+<div class="gate" id="gate" hidden>
+  <div class="gate__bg">
+    <video id="gateVideo" muted loop playsinline preload="none" aria-hidden="true"></video>
   </div>
+  <div class="gate__inner">
+    <div class="gate__mark">S<i>:</i>NOW</div>
+    <p class="gate__tag">성일정보고등학교 공지를<br>한 곳에서 확인하세요.</p>
 
-  <div id="ptrIndicator">⬇️ 당겨서 새로고침</div>
-  
-  <!-- ===== 메인 화면 ===== -->
-  <header id="appHeader" style="display:none;">
-    <div class="header-title">
-      <span id="appTitle">S<span id="extra">UNGIL </span>:NOW</span><span class="beta-badge">BETA3.3</span>
+    <div class="gate__actions">
+      <button class="btn btn--primary btn--full" id="loginBtn" type="button">
+        학교 계정으로 로그인
+      </button>
+      <button class="btn btn--line btn--full" id="guestBtn" type="button">
+        로그인 없이 대외 소식 보기
+      </button>
+      <div class="gate__spinner" id="gateSpinner"><b></b> 확인하는 중…</div>
     </div>
-    <div class="header-controls">
-      <span id="userInfo">1학년 1반 홍길동</span>
-      <button id="logoutBtn"><i class="fas fa-power-off"></i></button>
-      <button id="themeToggle">Dark</button>
-    </div>
+    <p class="gate__note">@sungil-i.kr 계정만 로그인할 수 있습니다.</p>
+  </div>
+</div>
+
+<!-- ══ 앱 ══ -->
+<div class="app" id="app">
+
+  <header class="appbar">
+    <div class="wordmark" aria-label="S:NOW">S<i>:</i>NOW</div>
+    <div class="appbar__spacer"></div>
+    <span class="avatar" id="whoami" hidden></span>
+    <button class="appbar__btn" id="themeBtn" type="button" aria-label="화면 밝기 전환">
+      <span id="themeIcon" aria-hidden="true">◐</span>
+    </button>
   </header>
 
-  <div class="tabs" id="tabs" style="display:none;">
-    <button data-tab="all" class="active">전체</button>
-    <button data-tab="class">우리반</button>
-    <button data-tab="external">대외</button>
-    <button data-tab="help">도움말</button>
-  </div>
+  <!-- 내비를 본문보다 먼저 둡니다.
+       모바일에서는 position:fixed 라 순서가 화면에 영향을 주지 않고,
+       PC 에서는 그리드 자동 배치가 자연스럽게 왼쪽 칸에 놓습니다.
+       (본문이 먼저 오면 자동 배치 커서가 되돌아가지 못해 아래 행으로 밀립니다) -->
+  <nav class="tabbar" id="tabbar" aria-label="주요 메뉴">
+    <button class="tabbar__item is-active" data-go="all" type="button" aria-current="page">
+      <span class="ico" aria-hidden="true">◉</span>전체
+    </button>
+    <button class="tabbar__item" data-go="class" type="button">
+      <span class="ico" aria-hidden="true">◍</span>우리반
+      <span class="dot" id="classDot" hidden></span>
+    </button>
+    <button class="tabbar__item" data-go="external" type="button">
+      <span class="ico" aria-hidden="true">◎</span>대외
+    </button>
+    <button class="tabbar__item" data-go="more" type="button">
+      <span class="ico" aria-hidden="true">☰</span>더보기
+    </button>
+    <button class="fab" id="writeBtn" type="button">
+      <span aria-hidden="true">✏️</span>글쓰기
+    </button>
+  </nav>
 
-  <main id="mainContent" class="blue-border" style="display:none;">
-    <button id="showAllFeedsBtn" class="show-all-btn">🔙 전체보기</button>
-
-    <section id="allFeed"></section>
-    <section id="classFeed" style="display:none;"></section>
-    <section id="externalFeed" style="display:none"></section>
-    <section id="helpFeed" style="display:none;"></section>
+  <main class="main" id="main">
+    <div id="screen"></div>
   </main>
+</div>
 
-  <!-- 피드쓰기 버튼 -->
-  <button id="writeFeedBtn" class="write-feed-btn">✏️</button>
+<!-- 당겨서 새로고침 -->
+<div class="ptr" id="ptr" aria-hidden="true"><i>↻</i></div>
 
-  <!-- 기존 모달 -->
-  <div id="feedModal" class="feed-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>새 피드 작성</h2>
-        <label id="importantWrapper">
-          <input type="checkbox" id="importantCheck"> 중요
-        </label>
-      </div>
+<!-- 토스트 -->
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 
-      <input type="text" id="feedTitle" placeholder="제목을 입력하세요">
-      <textarea id="feedContent" placeholder="내용을 입력하세요"></textarea>
-
-      <!-- ✅ 태그 영역 -->
-      <div class="tag-area">
-        <label for="tagInput">태그 입력</label>
-        <div class="tag-input-wrapper">
-          <input 
-            type="text" 
-            id="tagInput" 
-            placeholder="#1학년만 #전교생공개 #오늘일찍끝난다"
-          >
-          <div id="tagSuggestions" class="tag-suggestions"></div>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button id="cancelFeed">취소</button>
-        <button id="submitFeed">등록</button>
-      </div>
-    </div>
+<!-- 바텀시트 (글쓰기 / 메뉴 / 확인) -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet__scrim" data-close></div>
+  <div class="sheet__panel">
+    <div class="sheet__grip"></div>
+    <h2 class="sheet__title" id="sheetTitle">제목</h2>
+    <div id="sheetBody"></div>
   </div>
+</div>
 
-  <button id="backToTop">🔝</button>
-
-  <!-- 일반 스크립트 -->
-  <script src="main.js"></script>
-  <!-- 모듈 스크립트 -->
-  <script type="module" src="firebase.js?20251202"></script>
+<script type="module" src="js/app.js?v=2.0.2"></script>
 </body>
 </html>

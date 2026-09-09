@@ -534,13 +534,43 @@ function moreScreen() {
   }
   stack.append(account);
 
-  stack.append(el("p", {
-    style: "text-align:center;color:var(--muted);font-size:12px;margin-top:6px",
-    text: `S:NOW v${APP_VERSION} · 성일정보고등학교`,
-  }));
-
+  stack.append(versionLine());
   wrap.append(stack);
   return wrap;
+}
+
+/** 버전 표시 — JS 와 CSS 가 다르면 캐시가 낡은 것입니다. */
+function versionLine() {
+  const cssVer = getComputedStyle(document.documentElement)
+    .getPropertyValue("--css-version").trim().replace(/["']/g, "") || "알 수 없음";
+  const stale = cssVer !== APP_VERSION;
+
+  const line = el("p", {
+    style: "text-align:center;font-size:12px;margin-top:6px;color:"
+      + (stale ? "var(--danger)" : "var(--muted)"),
+    text: stale
+      ? `⚠ 화면 파일이 낡았습니다 (앱 v${APP_VERSION} · 화면 v${cssVer})`
+      : `S:NOW v${APP_VERSION} · 성일정보고등학교`,
+  });
+  if (!stale) return line;
+
+  const fix = el("button", {
+    class: "btn btn--line btn--sm", type: "button",
+    style: "display:block;margin:8px auto 0",
+    text: "캐시 비우고 새로고침",
+    onclick: async () => {
+      try {
+        const regs = await navigator.serviceWorker?.getRegistrations?.() ?? [];
+        await Promise.all(regs.map((r) => r.unregister()));
+        if (window.caches) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch (err) { console.warn(err); }
+      location.reload();
+    },
+  });
+  return el("div", {}, line, fix);
 }
 
 function subtitleFor(p) {
