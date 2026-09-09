@@ -1,0 +1,15 @@
+{
+  "name": "snow-rules-tests",
+  "private": true,
+  "type": "module",
+  "description": "S:NOW Firestore 보안 규칙 테스트",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project snow-test \"node --test rules.test.mjs\"",
+    "setup": "npm install"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.14.1",
+    "firebase-tools": "^13.23.1"
+  }
+}

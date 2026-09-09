@@ -1,0 +1,8 @@
+// 에뮬레이터를 켜기 위한 자리표시자입니다. 실제 테스트에는 쓰이지 않습니다.
+// rules.test.mjs 가 ../firestore.rules 를 직접 읽어 에뮬레이터에 올립니다.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { allow read, write: if false; }
+  }
+}
