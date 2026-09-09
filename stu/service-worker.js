@@ -11,7 +11,7 @@
      app.css?v=... 의 버전 쿼리가 무시됐습니다. 파일을 고쳐도 옛 CSS 가
      계속 나왔습니다. ignoreSearch 는 index.html 대체용으로만 씁니다.
    ============================================================ */
-const VERSION = "2.0.2";
+const VERSION = "2.1.0";
 const SHELL = `snow-shell-${VERSION}`;
 const ASSETS = `snow-assets-${VERSION}`;
 
@@ -28,6 +28,7 @@ const PRECACHE = [
   "./js/db.js",
   "./js/render.js",
   "./js/ui.js",
+  "./js/register.js",
 ];
 
 const isCode = (url) => /\.(?:html|css|js|json)$/.test(url.pathname) || url.pathname.endsWith("/");

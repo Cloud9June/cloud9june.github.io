@@ -99,9 +99,39 @@ const byClassThenNumber = (a, b) =>
   String(a.classKey || "zz").localeCompare(String(b.classKey || "zz"), "ko")
   || (Number(a.number) || 0) - (Number(b.number) || 0);
 
+/** 명부에서 사람 눈으로 잡아야 하는 이상값을 찾습니다.
+    이메일에 학번 정보가 없어 본인 신고를 믿을 수밖에 없으므로,
+    번호 중복·누락을 여기서 잡는 것이 유일한 안전망입니다. */
+function findIssues(users) {
+  const out = [];
+  const byClass = new Map();
+
+  for (const u of users) {
+    if (u.role === "교사") continue;
+    if (!u.classKey) { out.push({ kind: "학년·반 없음", who: [u] }); continue; }
+    const n = Number(u.number);
+    if (!Number.isFinite(n)) { out.push({ kind: "번호 없음", who: [u] }); continue; }
+    if (!byClass.has(u.classKey)) byClass.set(u.classKey, new Map());
+    const m = byClass.get(u.classKey);
+    if (!m.has(n)) m.set(n, []);
+    m.get(n).push(u);
+  }
+
+  for (const [classKey, m] of byClass) {
+    for (const [n, list] of m) {
+      if (list.length > 1) {
+        out.push({ kind: `${classKey.replace("-", "학년 ")}반 ${n}번 중복`, who: list });
+      }
+    }
+  }
+  return out;
+}
+
 function paintRoster() {
   const canEdit = A.isSuper();
   const classes = [...new Set(state.users.map((u) => u.classKey).filter(Boolean))].sort();
+  const pending = state.users.filter((u) => u.status === "pending");
+  const issues = findIssues(state.users);
 
   const search = el("input", {
     class: "search", type: "search", placeholder: "이름 · 이메일 · 번호로 검색",
@@ -118,7 +148,8 @@ function paintRoster() {
     stat(state.users.length, "전체 인원"),
     stat(state.users.filter((u) => u.role === "교사").length, "선생님"),
     stat(state.users.filter((u) => u.role !== "교사").length, "학생"),
-    stat(classes.length, "학급"));
+    stat(classes.length, "학급"),
+    stat(pending.length, "승인 대기"));
 
   const bar = el("div", { class: "toolbar" },
     el("div", { class: "grow" }, search), classSel,
@@ -129,10 +160,66 @@ function paintRoster() {
 
   setWork(
     head("명부 · 권한", canEdit
-      ? "여기 등록된 계정만 로그인할 수 있습니다. 학년 초에 일괄 등록으로 한 번에 올릴 수 있습니다."
+      ? "학생·선생님이 첫 로그인 때 스스로 등록합니다. 선생님은 아래에서 승인해야 교사 권한이 살아납니다."
       : "열람만 가능합니다. 수정은 총관리자에게 요청해 주세요."),
+    pending.length ? pendingPanel(pending, canEdit) : null,
+    issues.length ? issuePanel(issues, canEdit) : null,
     stats, bar, wrap);
   paintTable();
+}
+
+/* 선생님 승인 대기 */
+function pendingPanel(pending, canEdit) {
+  const box = el("div", { class: "admin-card", style: "border-color:var(--danger)" },
+    el("h3", { text: `승인 대기 ${pending.length}명` }),
+    el("div", { class: "meta", text: "승인 전까지는 전체·대외 공지만 보이고, 반별 기능과 글쓰기는 막혀 있습니다." }));
+
+  for (const u of pending) {
+    const want = u.classKey ? `${u.classKey.replace("-", "학년 ")}반 담임 신청` : "담임 반 없음";
+    box.append(el("div", { class: "foot" },
+      el("span", { style: "font-weight:600", text: u.name }),
+      el("span", { class: "meta", text: `${want} · ${u.email}` }),
+      el("div", { class: "grow" }),
+      canEdit ? el("button", {
+        class: "btn btn--primary btn--sm", type: "button", text: "승인",
+        onclick: () => editUser(u, { presetStatus: "active" }),
+      }) : null,
+      canEdit ? el("button", {
+        class: "btn btn--danger btn--sm", type: "button", text: "거절",
+        onclick: async () => {
+          const ok = await askConfirm({
+            title: "신청을 거절할까요?", danger: true, okLabel: "거절",
+            message: `${u.name} (${u.email}) 문서를 삭제합니다. 본인이 다시 신청할 수 있습니다.`,
+          });
+          if (!ok) return;
+          try { await deleteDoc(doc(db, "users", u.email)); toast("거절했어요"); viewRoster(); }
+          catch { toast("처리하지 못했습니다.", "bad"); }
+        },
+      }) : null));
+  }
+  return box;
+}
+
+/* 명부 이상값 */
+function issuePanel(issues, canEdit) {
+  const box = el("div", { class: "admin-card", style: "border-color:var(--high, #B0761B)" },
+    el("h3", { text: `확인이 필요한 항목 ${issues.length}건` }),
+    el("div", { class: "meta", text: "학생이 직접 입력한 값이라 오타나 중복이 생길 수 있습니다. 담임 선생님께 확인 후 고쳐 주세요." }));
+
+  for (const it of issues.slice(0, 20)) {
+    box.append(el("div", { class: "foot" },
+      el("span", { class: "badge badge--soft", text: it.kind }),
+      el("span", { class: "meta", text: it.who.map((u) => `${u.name}(${u.email})`).join("  ·  ") }),
+      el("div", { class: "grow" }),
+      ...(canEdit ? it.who.map((u) => el("button", {
+        class: "btn btn--line btn--sm", type: "button", text: `${u.name} 수정`,
+        onclick: () => editUser(u),
+      })) : [])));
+  }
+  if (issues.length > 20) {
+    box.append(el("div", { class: "meta", style: "margin-top:8px", text: `외 ${issues.length - 20}건` }));
+  }
+  return box;
 }
 
 const stat = (n, label) => el("div", { class: "stat" }, el("b", { text: String(n) }), el("span", { text: label }));
@@ -151,13 +238,16 @@ function paintTable() {
 
   const table = el("table", {},
     el("thead", {}, el("tr", {},
-      ["이름", "학년·반", "번호", "역할", "권한", "이메일", ""].map((h) =>
+      ["이름", "학년·반", "번호", "역할", "상태", "권한", "이메일", ""].map((h) =>
         el("th", { text: h })))),
     el("tbody", {}, rows.map((u) => el("tr", {},
       el("td", { text: u.name || "—" }),
       el("td", { class: "num-c", text: u.classKey ? u.classKey.replace("-", "학년 ") + "반" : "—" }),
       el("td", { class: "num-c", text: u.number ?? "—" }),
       el("td", { text: u.role || "학생" }),
+      el("td", {}, u.status === "pending"
+        ? el("span", { class: "badge badge--important", text: "승인 대기" })
+        : el("span", { class: "badge badge--done", text: "활성" })),
       el("td", {}, (Array.isArray(u.privilege) ? u.privilege : []).map((p) =>
         el("span", { class: "badge badge--soft", text: p }))),
       el("td", { class: "num-c", text: u.email }),
@@ -168,8 +258,8 @@ function paintTable() {
   wrap.append(rows.length ? table : el("p", { style: "padding:28px;text-align:center;color:var(--muted)", text: "조건에 맞는 사람이 없습니다." }));
 }
 
-/* 한 명 추가 / 수정 */
-function editUser(u) {
+/* 한 명 추가 / 수정 / 승인 */
+function editUser(u, opts = {}) {
   const isNew = !u;
   const f = {
     email: input("이메일", u?.email ?? "", { type: "email", placeholder: "id@sungil-i.kr", disabled: !isNew }),
@@ -180,6 +270,11 @@ function editUser(u) {
   };
   const role = el("select", { class: "select", style: "width:100%" },
     ROLES.map((r) => el("option", { value: r, text: r, selected: (u?.role ?? "학생") === r })));
+
+  const startStatus = opts.presetStatus ?? u?.status ?? "active";
+  const status = el("select", { class: "select", style: "width:100%" },
+    el("option", { value: "active", text: "활성 (바로 사용)", selected: startStatus === "active" }),
+    el("option", { value: "pending", text: "승인 대기 (기능 잠김)", selected: startStatus === "pending" }));
 
   const picked = new Set(Array.isArray(u?.privilege) ? u.privilege : []);
   const chips = el("div", { class: "suggest" },
@@ -195,7 +290,13 @@ function editUser(u) {
   const save = el("button", { class: "btn btn--primary", type: "button", text: isNew ? "등록" : "저장" });
   const body = el("div", {},
     f.email.wrap, f.name.wrap,
-    el("div", { class: "field" }, el("label", { text: "역할" }), role),
+    el("div", { style: "display:grid;grid-template-columns:1fr 1fr;gap:10px" },
+      el("div", { class: "field" }, el("label", { text: "역할" }), role),
+      el("div", { class: "field" }, el("label", { text: "상태" }), status)),
+    u?.selfRegistered
+      ? el("p", { class: "lead", style: "margin:-6px 0 12px",
+          text: "본인이 직접 등록한 계정입니다. 학년·반·번호는 학생이 신고한 값이라 담임 확인이 필요할 수 있습니다." })
+      : null,
     el("div", { style: "display:grid;grid-template-columns:repeat(3,1fr);gap:10px" },
       f.grade.wrap, f.class.wrap, f.number.wrap),
     el("div", { class: "field" }, el("label", { text: "권한" }), chips),
@@ -223,10 +324,13 @@ function editUser(u) {
     const payload = clean({
       name,
       role: role.value,
+      status: status.value,
       grade, class: klass,
       classKey: grade && klass ? `${grade}-${klass}` : null,
       number: int(f.number.node.value),
       privilege: [...picked],
+      selfRegistered: u?.selfRegistered === true ? true : null,
+      createdAt: u?.createdAt ?? null,
       updatedAt: serverTimestamp(),
     });
 
@@ -313,6 +417,7 @@ function parseRows(text) {
       data: clean({
         name: cells[1] || "이름 없음",
         role: cells[2] === "교사" ? "교사" : "학생",
+        status: "active",
         grade, class: klass,
         classKey: grade && klass ? `${grade}-${klass}` : null,
         number: int(cells[5]),

@@ -5,6 +5,7 @@ import { TABS, PRESET_TAGS, HELP, PAGE_SIZE, APP_VERSION } from "./config.js";
 import * as A from "./auth.js";
 import * as DB from "./db.js";
 import { el, feedCard, skeletons, emptyState, todayLabel } from "./render.js";
+import { showRegister } from "./register.js";
 import {
   toast, openSheet, closeSheet, initSheet, askConfirm, openActions,
   initTheme, initPullToRefresh, safeGet, safeSet,
@@ -53,6 +54,10 @@ function onSession({ status, reason }) {
     showApp();
     return;
   }
+  if (status === "register") {          // 명부에 없는 학교 계정 → 본인 등록
+    showRegister(A.session.user);
+    return;
+  }
   if (status === "guest" || (status === "out" && A.wasGuest() && !reason)) {
     A.enterGuest();
     showApp();
@@ -93,6 +98,7 @@ function doGuest() {
 /* ── 화면 전환 ─────────────────────────────────────────── */
 function showGate() {
   $("app").classList.remove("is-ready");
+  $("reg").hidden = true;
   $("gate").hidden = false;
   const v = $("gateVideo");
   if (v && !v.src) {                      // 배경 영상은 있으면 틀고 없으면 조용히 넘어갑니다
@@ -103,6 +109,7 @@ function showGate() {
 
 function showApp() {
   $("gate").hidden = true;
+  $("reg").hidden = true;
   $("app").classList.add("is-ready");
 
   const who = $("whoami");
@@ -156,6 +163,7 @@ function paintScreen() {
     el("h1", {}, meta.title, el("span", { text: "." }))));
 
   if (A.session.guest) host.append(guestNotice());
+  if (A.isPending() && state.tab !== "more") host.append(pendingBanner());
 
   if (state.tab === "all") host.append(filterRow());
 
@@ -177,6 +185,12 @@ function guestNotice() {
       type: "button", text: "로그인",
       onclick: () => { A.exitGuest(); showGate(); },
     }));
+}
+
+function pendingBanner() {
+  return el("div", { class: "pending-banner" },
+    el("b", { text: "승인 대기 중입니다" }),
+    el("span", { text: "교육정보부에서 선생님 계정을 승인하면 우리반 기능과 글쓰기가 열립니다. 그전에도 전체·대외 공지는 보실 수 있습니다." }));
 }
 
 function filterRow() {

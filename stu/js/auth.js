@@ -26,14 +26,18 @@ export const session = {
 /* ── 조회 헬퍼 ─────────────────────────────────────────── */
 const privs = () => session.profile?.privilege ?? [];
 
-export const has        = (p) => privs().includes(p);
+/** 승인 대기 중인가 (교사 신청 후 총관리자 승인 전) */
+export const isPending   = () => session.profile?.status === "pending";
+const activeProfile      = () => (isPending() ? null : session.profile);
+
+export const has        = (p) => !isPending() && privs().includes(p);
 export const isSuper    = () => has(PRIV.SUPER);
 export const isAdmin    = () => isSuper() || has(PRIV.ADMIN);
-export const isTeacher  = () => session.profile?.role === "교사";
-export const isStudent  = () => session.profile?.role === "학생";
+export const isTeacher  = () => activeProfile()?.role === "교사";
+export const isStudent  = () => activeProfile()?.role === "학생";
 export const isHomeroom = () => has(PRIV.HOMEROOM);
 export const isClassLead= () => has(PRIV.LEAD) || has(PRIV.SUBLEAD);
-export const myClassKey = () => session.profile?.classKey || "";
+export const myClassKey = () => activeProfile()?.classKey || "";
 export const myNumber   = () => {
   const n = session.profile?.number;
   return typeof n === "number" ? n : null;
@@ -141,19 +145,25 @@ export function watchSession(onChange) {
     session.guest = false;
     localStorage.removeItem(GUEST_KEY);
 
+    // onChange 는 try 밖에서 호출합니다.
+    // 안에서 부르면 화면 그리기 오류까지 "명부 조회 실패"로 둔갑합니다.
+    let outcome;
     try {
       const snap = await getDoc(doc(db, "users", user.email));
-      if (!snap.exists()) {
-        await signOut(auth);
-        onChange({ status: "out", reason: "NOT_REGISTERED" });
-        return;
+      if (snap.exists()) {
+        session.profile = normalize(snap.data(), user);
+        outcome = { status: "in" };
+      } else {
+        // 명부에 없으면 내보내지 않고 "본인 등록" 화면으로 보냅니다.
+        // (로그인 세션이 살아 있어야 본인 문서를 만들 수 있습니다)
+        session.profile = null;
+        outcome = { status: "register" };
       }
-      session.profile = normalize(snap.data(), user);
-      onChange({ status: "in" });
     } catch (err) {
       console.error("[auth] 명부 조회 실패", err);
-      onChange({ status: "out", reason: "PROFILE_FAIL" });
+      outcome = { status: "out", reason: "PROFILE_FAIL" };
     }
+    onChange(outcome);
   });
 }
 
@@ -177,6 +187,8 @@ function normalize(data, user) {
     classKey: data.classKey || (grade && klass ? `${grade}-${klass}` : ""),
     number: num(data.number),
     privilege: priv,
+    status: data.status === "pending" ? "pending" : "active",
+    selfRegistered: data.selfRegistered === true,
   };
 }
 

@@ -32,7 +32,8 @@ const P = {
   s14:      "s14@sungil-i.kr",       // 학생 2-3 · 14번 · 권한 없음
   s20:      "s20@sungil-i.kr",       // 학생 2-3 · 20번 · 권한 없음
   other:    "other@sungil-i.kr",     // 학생 1-1 · 5번
-  ghost:    "ghost@sungil-i.kr",     // 학교 계정이지만 명부에 없음
+  ghost:    "ghost@sungil-i.kr",     // 학교 계정이지만 명부에 없음 (자가등록 대상)
+  pendT:    "pend@sungil-i.kr",      // 교사 신청 후 승인 대기
   outsider: "someone@gmail.com",     // 외부 구글 계정
 };
 
@@ -44,7 +45,21 @@ const ROSTER = {
   [P.s14]:      { name: "이지우", role: "학생", grade: 2, class: 3, classKey: "2-3", number: 14, privilege: [] },
   [P.s20]:      { name: "정민준", role: "학생", grade: 2, class: 3, classKey: "2-3", number: 20, privilege: [] },
   [P.other]:    { name: "최이환", role: "학생", grade: 1, class: 1, classKey: "1-1", number: 5,  privilege: [] },
+  [P.pendT]:    { name: "신입", role: "교사", grade: 2, class: 3, classKey: "2-3",
+                  privilege: [], status: "pending", selfRegistered: true },
 };
+
+/** 본인 등록 문서 한 벌 */
+const selfDoc = (extra = {}) => ({
+  name: "신규",
+  role: "학생",
+  grade: 2, class: 3, classKey: "2-3", number: 30,
+  privilege: [],
+  status: "active",
+  selfRegistered: true,
+  createdAt: serverTimestamp(),
+  ...extra,
+});
 
 /** 로그인한 사람의 Firestore 핸들 */
 const as = (email) =>
@@ -285,5 +300,112 @@ describe("6. 명부 · 권한", () => {
 
   test("교사는 명부 전체를 조회할 수 있다", async () => {
     await assertSucceeds(getDocs(collection(as(P.homeroom), "users")));
+  });
+});
+
+/* ══ 7. 본인 등록 (v2.1) ═════════════════════════════════ */
+describe("7. 본인 등록", () => {
+  const mk = (who, extra) => setDoc(doc(as(who), "users", who), selfDoc(extra));
+
+  test("명부에 없는 학생이 본인 문서를 만들 수 있다", async () => {
+    await assertSucceeds(mk(P.ghost));
+  });
+
+  test("★ 권한을 스스로 주면 거부된다", async () => {
+    await assertFails(mk(P.ghost, { privilege: ["총관리자"] }));
+  });
+
+  test("★ 관리자 권한도 거부된다", async () => {
+    await assertFails(mk(P.ghost, { privilege: ["관리자"] }));
+  });
+
+  test("★ 반장 권한도 스스로 줄 수 없다", async () => {
+    await assertFails(mk(P.ghost, { privilege: ["반장"] }));
+  });
+
+  test("남의 문서는 만들 수 없다", async () => {
+    await assertFails(setDoc(doc(as(P.ghost), "users", "victim@sungil-i.kr"), selfDoc()));
+  });
+
+  test("이미 등록된 계정은 다시 만들 수 없다 (1회 제한)", async () => {
+    await assertFails(setDoc(doc(as(P.s14), "users", P.s14), selfDoc()));
+  });
+
+  test("등록 후 본인이 학년·반을 고칠 수 없다", async () => {
+    await assertFails(updateDoc(doc(as(P.s14), "users", P.s14), { classKey: "1-1" }));
+  });
+
+  test("classKey 가 학년·반과 다르면 거부된다", async () => {
+    await assertFails(mk(P.ghost, { grade: 2, class: 3, classKey: "1-1" }));
+  });
+
+  test("학년 4 는 거부된다", async () => {
+    await assertFails(mk(P.ghost, { grade: 4, classKey: "4-3" }));
+  });
+
+  test("번호 0 은 거부된다", async () => {
+    await assertFails(mk(P.ghost, { number: 0 }));
+  });
+
+  test("selfRegistered 를 빼면 거부된다", async () => {
+    const d = selfDoc(); delete d.selfRegistered;
+    await assertFails(setDoc(doc(as(P.ghost), "users", P.ghost), d));
+  });
+
+  test("createdAt 을 임의 시각으로 넣으면 거부된다", async () => {
+    await assertFails(mk(P.ghost, { createdAt: new Date("2020-01-01") }));
+  });
+
+  test("★ 학생이 status 를 pending 으로 만들 수 없다", async () => {
+    await assertFails(mk(P.ghost, { status: "pending" }));
+  });
+
+  test("★ 교사는 status active 로 스스로 등록할 수 없다", async () => {
+    await assertFails(setDoc(doc(as(P.ghost), "users", P.ghost), selfDoc({
+      role: "교사", status: "active", grade: null, class: null, number: null,
+    })));
+  });
+
+  test("교사는 pending 으로만 신청할 수 있다", async () => {
+    await assertSucceeds(setDoc(doc(as(P.ghost), "users", P.ghost), {
+      name: "새선생", role: "교사", privilege: [], status: "pending",
+      selfRegistered: true, createdAt: serverTimestamp(),
+      grade: 1, class: 2, classKey: "1-2",
+    }));
+  });
+
+  test("외부 구글 계정은 등록할 수 없다", async () => {
+    await assertFails(setDoc(doc(as(P.outsider), "users", P.outsider), selfDoc()));
+  });
+});
+
+/* ══ 8. 승인 대기 상태 ═══════════════════════════════════ */
+describe("8. 승인 대기(pending) 제한", () => {
+  test("승인 대기 교사도 전체 공지는 읽을 수 있다", async () => {
+    await assertSucceeds(getDoc(doc(as(P.pendT), "feeds", "f1")));
+  });
+
+  test("★ 승인 대기 교사는 반별 피드를 읽을 수 없다", async () => {
+    await assertFails(getDoc(doc(as(P.pendT), "classFeeds", "2-3", "items", "c1")));
+  });
+
+  test("★ 승인 대기 교사는 반별 피드에 쓸 수 없다", async () => {
+    await assertFails(addDoc(collection(as(P.pendT), "classFeeds", "2-3", "items"), post(P.pendT)));
+  });
+
+  test("★ 승인 대기 교사는 명부를 훑을 수 없다", async () => {
+    await assertFails(getDocs(collection(as(P.pendT), "users")));
+  });
+
+  test("총관리자는 승인(status: active)할 수 있다", async () => {
+    await assertSucceeds(setDoc(doc(as(P.super), "users", P.pendT), {
+      ...ROSTER[P.pendT], status: "active", privilege: ["담임"],
+    }));
+  });
+
+  test("관리자(총관리자 아님)는 승인할 수 없다", async () => {
+    await assertFails(setDoc(doc(as(P.admin), "users", P.pendT), {
+      ...ROSTER[P.pendT], status: "active",
+    }));
   });
 });

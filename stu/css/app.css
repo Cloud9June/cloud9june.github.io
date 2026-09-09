@@ -9,7 +9,7 @@
 :root{
   /* 이 파일의 버전. 더보기 화면 맨 아래에 표시됩니다.
      JS 버전과 다르면 브라우저가 옛 CSS 를 캐시에서 쓰고 있다는 뜻입니다. */
-  --css-version:"2.0.2";
+  --css-version:"2.1.0";
 
   /* 중립 (푸른기 살짝) */
   --bg:#F4F6FA;
@@ -488,6 +488,70 @@ ul{margin:0;padding:0;list-style:none}
   border:2px solid var(--line);border-top-color:var(--tab);
   animation:spin .8s linear infinite;
 }
+
+/* 본인 등록 화면 */
+.reg{
+  position:fixed;inset:0;z-index:110;
+  background:var(--bg);overflow-y:auto;
+  padding:0 20px calc(40px + var(--safe-b));
+}
+.reg__inner{max-width:440px;margin:0 auto;padding-top:52px}
+.reg__mark{
+  font-family:"Gothic A1",sans-serif;font-weight:900;font-size:22px;
+  letter-spacing:-.03em;color:var(--ink);margin-bottom:26px;
+}
+.reg__mark i{font-style:normal;color:var(--tab)}
+.reg__title{font-size:27px;line-height:1.3}
+.reg__lead{margin-top:10px;color:var(--ink-2);font-size:14.5px;white-space:pre-line}
+.reg__hint{color:var(--muted);font-size:13px;margin-bottom:14px}
+
+.reg__roles{display:flex;flex-direction:column;gap:10px;margin-top:26px}
+.reg__role{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  padding:18px;border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow-1);transition:border-color .15s, transform .12s;
+}
+.reg__role:hover{border-color:var(--tab)}
+.reg__role:active{transform:scale(.99)}
+.reg__role-ico{font-size:26px;line-height:1;flex:0 0 auto}
+.reg__role b{display:block;font-size:16.5px;font-weight:700}
+.reg__role small{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+.reg__role-go{margin-left:auto;color:var(--muted);font-size:20px;flex:0 0 auto}
+
+.reg .field{margin-top:20px;margin-bottom:0}
+.reg__picks{display:flex;flex-wrap:wrap;gap:6px}
+
+.reg__confirm{
+  margin-top:24px;padding:22px 20px;border-radius:var(--r-lg);
+  background:var(--tab-soft);text-align:center;
+}
+.reg__confirm-line{
+  font-family:"Gothic A1",sans-serif;font-weight:800;font-size:21px;
+  color:var(--tab-ink);letter-spacing:-.02em;line-height:1.4;
+}
+.reg__confirm-mail{margin-top:7px;font-size:12.5px;color:var(--tab-ink);opacity:.75}
+
+.reg__warn{
+  margin-top:14px;padding:14px 16px;border-radius:var(--r-md);
+  background:var(--danger-soft);color:var(--danger);
+  font-size:13px;line-height:1.6;
+}
+.reg__warn b{display:block;font-size:13.5px;margin-bottom:3px}
+.reg__warn span{color:var(--ink-2)}
+
+.reg__actions{display:flex;gap:8px;margin-top:26px}
+.reg__actions .btn{flex:1}
+.reg__actions .btn--primary{flex:2}
+.reg__done{font-size:56px;text-align:center;margin:34px 0}
+
+/* 승인 대기 안내 */
+.pending-banner{
+  margin:0 var(--gutter) 12px;padding:13px 15px;
+  background:var(--danger-soft);border-radius:var(--r-md);
+  font-size:13px;line-height:1.6;color:var(--ink-2);
+}
+.pending-banner b{display:block;color:var(--danger);font-size:13.5px;margin-bottom:3px}
 
 /* 도움말 / 더보기 */
 .stack{padding:0 var(--gutter) 26px;display:flex;flex-direction:column;gap:10px}

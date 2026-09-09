@@ -2,7 +2,7 @@
    config.js — 설정과 고정 데이터만. 로직 없음.
    ============================================================ */
 
-export const APP_VERSION = "2.0.2";
+export const APP_VERSION = "2.1.0";
 
 /* Firebase 설정: 공개되는 값이 맞습니다.
    실제 보안 경계는 firestore.rules 와 App Check 입니다. */

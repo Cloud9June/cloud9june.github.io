@@ -9,7 +9,7 @@
    ============================================================ */
 import {
   collection, doc, query, orderBy, limit, startAfter,
-  getDocs, addDoc, updateDoc, deleteDoc,
+  getDocs, addDoc, updateDoc, deleteDoc, setDoc,
   serverTimestamp, arrayRemove, where, onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -109,6 +109,39 @@ export async function removeFeed({ tab, classKey, id }) {
 /** 학생이 중요 알림을 확인 — 본인 번호만 빠집니다 (규칙이 검증) */
 export async function confirmRead({ classKey, id, number }) {
   await updateDoc(docRef("class", classKey, id), { students: arrayRemove(number) });
+}
+
+/* ── 본인 등록 ─────────────────────────────────────────── */
+
+/**
+ * 로그인한 본인이 명부 문서를 "최초 1회" 만듭니다.
+ * 이미 문서가 있으면 규칙이 거부합니다 (create 는 신규일 때만 성공).
+ * privilege 는 빈 배열로 고정 — 규칙도 이를 강제합니다.
+ */
+export async function registerSelf({ email, name, role, grade, klass, number }) {
+  const payload = {
+    name,
+    role,
+    privilege: [],
+    status: role === "교사" ? "pending" : "active",
+    selfRegistered: true,
+    createdAt: serverTimestamp(),
+  };
+
+  if (role === "학생") {
+    payload.grade = grade;
+    payload.class = klass;
+    payload.classKey = `${grade}-${klass}`;
+    payload.number = number;
+  } else if (grade && klass) {
+    // 담임 신청 (총관리자가 승인하면서 확인합니다)
+    payload.grade = grade;
+    payload.class = klass;
+    payload.classKey = `${grade}-${klass}`;
+  }
+
+  await setDoc(doc(db, "users", email), payload);
+  return payload;
 }
 
 /* ── 명부 ──────────────────────────────────────────────── */
