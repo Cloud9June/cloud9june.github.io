@@ -19,8 +19,8 @@ export const labs = [
   { id: "lab_12", name: "컴퓨터 12실", rows: 5, cols: 6 },
   { id: "lab_13", name: "컴퓨터 13실", rows: 5, cols: 6 },
   { id: "lab_14", name: "컴퓨터 14실", rows: 5, cols: 6 },
-  { id: "lab_15", name: "미디어실습실", rows: 5, cols: 6 },
   { id: "lab_multi", name: "멀티미디어실", rows: 5, cols: 6 },
+  { id: "lab_15", name: "미디어실습실", rows: 5, cols: 6 },
 ];
 
 // 좌석 상태 변경 모달에서 사용하는 고장 사유 옵션.
@@ -39,6 +39,10 @@ export const ISSUE_OPTIONS = [
 
 export const HIDDEN_OPTION = { value: "hidden", label: "❌ 이 자리를 비우기 (건너뛰기)" };
 export const RESTORE_OPTION = { value: "restore", label: "✅ 다시 좌석으로 사용" };
+
+// 한 학급 정원. 대시보드 카드에서 "고장난 자리가 있어도 수업 진행에는 지장이 없는지"를
+// 판단하는 기준으로 쓰인다 (사용 가능한 좌석 수가 이 값 이상이면 "정상 운영"으로 표시).
+export const CLASS_CAPACITY = 22;
 
 // 실습실 사양 정보 입력 폼/표시에서 공통으로 쓰는 필드 정의.
 // key는 Firestore의 labs/{id}.specs.{key}에 그대로 저장된다.

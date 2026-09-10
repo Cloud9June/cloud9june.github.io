@@ -11,12 +11,13 @@ import {
   onSnapshot,
   writeBatch,
   query,
+  where,
   orderBy,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 import { initAuth, getIsSuperAdmin, getUserEmail } from "./auth.js";
-import { labs, ISSUE_OPTIONS, HIDDEN_OPTION, RESTORE_OPTION, SPEC_FIELDS } from "./labs-data.js";
+import { labs, ISSUE_OPTIONS, HIDDEN_OPTION, RESTORE_OPTION, SPEC_FIELDS, CLASS_CAPACITY } from "./labs-data.js";
 
 // ----------------------------------------------------------
 // DOM 참조
@@ -56,6 +57,8 @@ const specsSaveBtn = document.getElementById("specs-save-btn");
 const programsListEl = document.getElementById("programs-list");
 const addProgramBtn = document.getElementById("add-program-btn");
 
+const userInfoEl = document.getElementById("user-info");
+
 // ----------------------------------------------------------
 // 인증 초기화
 // ----------------------------------------------------------
@@ -63,7 +66,7 @@ initAuth(
   {
     loginBtn: document.getElementById("login-btn"),
     logoutBtn: document.getElementById("logout-btn"),
-    userInfoEl: document.getElementById("user-info"),
+    userInfoEl,
     avatarEl: document.getElementById("user-avatar"),
   },
   (isSuperAdmin) => {
@@ -75,8 +78,35 @@ initAuth(
       renderNotice(activeLab, activeNoticeText);
       updateLabAccessUI();
     }
+    // 전체관리자가 아니면, 이 계정이 담당하고 있는 실습실이 있는지 확인해서
+    // 상단 표시를 "3실 관리자 · 이름"처럼 전체관리자와 같은 방식으로 보여준다.
+    updateManagerHeaderLabel(isSuperAdmin);
   }
 );
+
+/** 로그인한 사용자가 전체관리자가 아니면, 담당 중인 실습실이 있는지 확인해 상단 표시를 갱신한다. */
+async function updateManagerHeaderLabel(isSuperAdmin) {
+  if (isSuperAdmin) return; // 전체관리자 표시는 auth.js가 이미 처리함
+  const email = getUserEmail();
+  if (!email) return; // 로그아웃 상태 (auth.js가 이미 "로그인이 필요합니다"로 표시함)
+
+  try {
+    const snap = await getDocs(query(collection(db, "labs"), where("managers", "array-contains", email)));
+    if (snap.empty) return; // 담당 실습실이 없으면 이름만 표시된 상태를 유지 (게스트)
+    if (getUserEmail() !== email) return; // 조회하는 동안 로그아웃/재로그인 등으로 상태가 바뀌었으면 무시
+
+    const managedNames = snap.docs
+      .map((docSnap) => labs.find((lab) => lab.id === docSnap.id))
+      .filter(Boolean)
+      .map((lab) => shortLabName(lab.name));
+    if (managedNames.length === 0) return;
+
+    const baseName = userInfoEl.textContent; // auth.js가 이미 넣어둔 순수 이름
+    userInfoEl.textContent = `${managedNames.join("·")} 관리자 · ${baseName}`;
+  } catch (error) {
+    console.error("담당 실습실 확인 중 오류:", error);
+  }
+}
 
 /**
  * 현재 로그인한 사용자가 지금 보고 있는 실습실을 관리할 권한이 있는지 여부.
@@ -281,15 +311,24 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList }
   }
 
   const errorCount = errorList.length;
-  const pillClass = errorCount > 0 ? "status-pill--error" : "status-pill--normal";
-  const pillText = errorCount > 0 ? `고장 ${errorCount}` : "정상 운영";
+  // 고장난 자리가 있어도, 한 학급(CLASS_CAPACITY)이 앉을 좌석은 충분히 남아있으면
+  // "정상 운영"은 그대로 두고 옆에 "고장 n대"만 작게 덧붙인다.
+  // 남은 좌석이 정원보다 부족할 때만 "고장 n"으로 전체 상태를 바꾼다.
+  const hasEnoughForClass = available >= CLASS_CAPACITY;
+  const showAsNormal = errorCount === 0 || hasEnoughForClass;
+  const pillClass = showAsNormal ? "status-pill--normal" : "status-pill--error";
+  const pillText = showAsNormal ? "정상 운영" : `고장 ${errorCount}`;
+  const showWarningBadge = errorCount > 0 && showAsNormal;
   const ratio = total > 0 ? Math.round((available / total) * 100) : 0;
 
   return `
     <button class="lab-card" data-lab-id="${lab.id}">
       <div class="lab-card__top">
         <span class="lab-card__name">${lab.name}</span>
-        <span class="status-pill ${pillClass}">${pillText}</span>
+        <div class="lab-card__badges">
+          <span class="status-pill ${pillClass}">${pillText}</span>
+          ${showWarningBadge ? `<span class="status-pill status-pill--warning">고장 ${errorCount}대</span>` : ""}
+        </div>
       </div>
       <div class="lab-card__meter"><div class="lab-card__meter-fill" style="width:${ratio}%"></div></div>
       <div class="lab-card__stats">

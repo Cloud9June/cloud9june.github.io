@@ -256,10 +256,11 @@ button, select {
 .lab-card__top {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px 8px;
 }
-.lab-card__name { font-weight: 700; font-size: 0.98rem; }
+.lab-card__name { font-weight: 700; font-size: 0.98rem; white-space: nowrap; }
 
 .status-pill {
     font-size: 0.7rem;
@@ -270,8 +271,17 @@ button, select {
 }
 .status-pill--normal { background: var(--success-bg); color: var(--success); }
 .status-pill--error { background: var(--error-bg); color: var(--error); }
+.status-pill--warning { background: var(--warning-bg); color: var(--warning); }
 .status-pill--maintenance { background: var(--warning-bg); color: var(--warning); }
 .status-pill--unknown { background: var(--bg-subtle); color: var(--text-muted); }
+
+.lab-card__badges {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
 
 .lab-card__meter {
     height: 6px;
@@ -342,6 +352,7 @@ button, select {
 
 .lab-switcher {
     display: flex;
+    justify-content: center;
     gap: 8px;
     overflow-x: auto;
     padding-bottom: 10px;
