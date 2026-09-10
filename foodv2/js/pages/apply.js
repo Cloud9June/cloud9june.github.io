@@ -517,7 +517,8 @@ function paintBanner() {
       el("div", { class: "banner__body" },
         el("div", { class: "banner__title" }, "신청 모드"),
         el("div", { class: "banner__desc" },
-          "급식을 먹는 날을 선택하고, 먹지 않는 날에는 사유를 입력해 주세요."),
+          "급식을 먹는 날을 선택해 주세요. 하루라도 신청하면, 신청하지 않는 나머지 날짜는 사유를 반드시 입력해야 저장됩니다. "
+          + "(이번 달 전체를 신청하지 않을 경우엔 사유가 필요 없습니다.)"),
       ),
     ),
   );
@@ -552,6 +553,8 @@ function paintSummary() {
 }
 
 function countMissingReasons() {
+  // 이번 달 전체를 신청하지 않는 경우(선택한 날이 0일)에는 사유가 필요 없습니다.
+  if (state.selected.size === 0) return 0;
   return state.schoolDays.filter(
     (d) => !state.selected.has(d) && !(state.reasons.get(d) || "").trim(),
   ).length;
@@ -681,38 +684,39 @@ async function handleSave() {
     return;
   }
 
-  /* 미신청 사유가 비어 있는 날 확인 */
-  const missing = state.schoolDays.filter(
-    (d) => !state.selected.has(d) && !(state.reasons.get(d) || "").trim(),
-  );
-
-  if (missing.length) {
-    const answer = await confirmDialog({
-      title: "미신청 사유가 비어 있습니다",
-      message: `${missing.length}일의 사유가 입력되지 않았습니다. 사유 없이 저장할까요?`,
-      listItems: missing.map((d) => `${state.month}월 ${d}일 (${DOW_LABEL[dowOf(state.year, state.month, d)]})`),
-      confirmText: "사유 없이 저장",
-      extraText: "사유 입력하기",
-      cancelText: "취소",
-    });
-
-    if (answer === "cancel") return;
-    if (answer === "extra") {
-      const first = missing[0];
-      cellMap.get(first)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      await editReason(first);
-      return;
-    }
-  }
-
   if (current.days.length === 0) {
+    /* 이번 달 전체를 신청하지 않는 경우 — "정말 안 먹는 게 맞는지"만 확인하고,
+       사유 입력은 요구하지 않습니다. */
     const answer = await confirmDialog({
       title: state.hasExisting ? "신청 내역을 모두 취소합니다" : "이번 달 급식을 신청하지 않습니다",
-      message: "선택된 날짜가 하나도 없습니다. 이대로 저장할까요?",
-      confirmText: "저장",
+      message: "이번 달은 급식을 신청하지 않는 것이 맞나요? 이 경우 미신청 사유는 입력하지 않아도 됩니다.",
+      confirmText: state.hasExisting ? "신청 취소" : "예, 신청하지 않습니다",
+      cancelText: "취소",
       tone: "danger",
     });
     if (answer !== "confirm") return;
+  } else {
+    /* 하루라도 신청한 경우 — 신청하지 않는 나머지 날짜는 사유 입력이 필수입니다. */
+    const missing = state.schoolDays.filter(
+      (d) => !state.selected.has(d) && !(state.reasons.get(d) || "").trim(),
+    );
+
+    if (missing.length) {
+      const answer = await confirmDialog({
+        title: "미신청 사유를 입력해야 저장할 수 있습니다",
+        message: `이번 달 일부 날짜만 신청하셨습니다. 신청하지 않는 날에는 사유를 반드시 입력해야 저장됩니다. (${missing.length}일 남음)`,
+        listItems: missing.map((d) => `${state.month}월 ${d}일 (${DOW_LABEL[dowOf(state.year, state.month, d)]})`),
+        confirmText: "지금 입력하기",
+        cancelText: "취소",
+      });
+
+      if (answer === "confirm") {
+        const first = missing[0];
+        cellMap.get(first)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        await editReason(first);
+      }
+      return; // 사유를 모두 입력한 뒤 저장 버튼을 다시 눌러야 합니다.
+    }
   }
 
   const btn = refs.saveBtn;
