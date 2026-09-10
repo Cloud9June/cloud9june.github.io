@@ -7,6 +7,7 @@
    - 오래된 비동기 응답이 최신 화면을 덮지 않도록 렌더 토큰 사용
    - alert/confirm 대신 <dialog> · 토스트
    - ✨ 신규: 신청하지 않은 날짜에 "미신청 사유" 입력
+   - ✨ 신규: 장기 미신청(연속 미신청) 등록/해제
    ========================================================= */
 
 import { MONTH_STATUS, MONTH_STATUS_LABEL, REASON_PRESETS } from "../config.js";
@@ -21,6 +22,9 @@ import {
 } from "../util/date.js";
 import { getTeacherYear, getMonthStatuses, getBlocked } from "../repo/settings.js";
 import { getMyRequest, saveMyRequest } from "../repo/requests.js";
+import {
+  getMyStandingSkip, isStandingSkipActive, setStandingSkip, clearStandingSkip,
+} from "../repo/standingSkip.js";
 import { errorMessage, warnIfSlow } from "../util/errors.js";
 
 initTheme();
@@ -45,6 +49,9 @@ const state = {
   savedAt: null,
   dirty: false,
   loading: false,
+  standingSkip: null,       // 장기 미신청 등록 정보 (없으면 null)
+  standingSkipApplies: false, // 지금 보고 있는 달에 실제로 적용되는지
+  exceptionMode: false,      // "이번 달만 예외로 신청하기"를 눌렀는지
 };
 
 const monthToken = createRenderToken();
@@ -78,7 +85,12 @@ const refs = {};
   try {
     state.year = await getTeacherYear();
     refs.yearLabel.textContent = `${state.year}년`;
-    state.statuses = await getMonthStatuses(state.year);
+    const [statuses, standingSkip] = await Promise.all([
+      getMonthStatuses(state.year),
+      getMyStandingSkip(access.user),
+    ]);
+    state.statuses = statuses;
+    state.standingSkip = standingSkip;
     renderMonthPicker();
     autoSelectMonth();
   } catch (e) {
@@ -268,7 +280,16 @@ async function selectMonth(month) {
     );
     state.original = snapshot();
 
-    renderApplyArea();
+    // 실제로 저장된 신청 문서가 있으면 그게 항상 우선 — 장기 미신청보다 먼저 확인
+    state.exceptionMode = false;
+    state.standingSkipApplies = !state.hasExisting
+      && isStandingSkipActive(state.standingSkip, state.year, month);
+
+    if (state.standingSkipApplies) {
+      renderStandingSkipNotice();
+    } else {
+      renderApplyArea();
+    }
   } catch (e) {
     console.error("[apply] 달력 로딩 실패:", e);
     if (monthToken.isStale(token)) return;
@@ -283,6 +304,60 @@ async function selectMonth(month) {
         ),
       ),
     );
+  }
+}
+
+/* =========================================================
+   장기 미신청 안내
+   ========================================================= */
+
+function renderStandingSkipNotice() {
+  const skip = state.standingSkip;
+
+  const card = el("section", { class: "card stack" },
+    sectionHead(null, `${state.year}년 ${state.month}월 급식 신청`,
+      "장기 미신청으로 등록되어 있어 이 달은 자동으로 미신청 처리됩니다."),
+    el("div", { class: "banner banner--warn" },
+      el("span", { class: "banner__icon" }, icon("lock", 16)),
+      el("div", { class: "banner__body" },
+        el("div", { class: "banner__title" }, "장기 미신청 등록됨"),
+        el("div", { class: "banner__desc" },
+          `${skip.fromMonth}월부터 이번 학년도가 끝날 때까지 급식을 신청하지 않는 것으로 `
+          + "등록되어 있습니다. 이 달만 예외로 신청하려면 아래 버튼을 눌러 주세요."),
+      ),
+    ),
+    el("div", { class: "row row--tight" },
+      el("button", {
+        class: "btn btn--primary", type: "button",
+        onClick: () => { state.exceptionMode = true; renderApplyArea(); },
+      }, icon("check", 14), "이번 달만 예외로 신청하기"),
+      el("button", { class: "btn", type: "button", onClick: handleClearStandingSkip },
+        icon("x", 14), "장기 미신청 해제"),
+    ),
+  );
+
+  render(refs.applySlot, card);
+}
+
+async function handleClearStandingSkip() {
+  const answer = await confirmDialog({
+    title: "장기 미신청을 해제할까요?",
+    message: "해제하면 이 달부터 다시 매번 직접 신청 여부를 선택해야 합니다.",
+    confirmText: "해제",
+    cancelText: "취소",
+    tone: "danger",
+  });
+  if (answer !== "confirm") return;
+
+  try {
+    await clearStandingSkip(state.access.user);
+    state.standingSkip = null;
+    state.standingSkipApplies = false;
+    toast("장기 미신청을 해제했습니다.", "ok");
+    renderApplyArea();
+  } catch (e) {
+    console.error("[apply] 장기 미신청 해제 실패:", e);
+    toast(errorMessage(e, "해제 실패"), "danger");
   }
 }
 
@@ -701,6 +776,37 @@ async function handleSave() {
     state.reasons.clear();
     current.reasons = {};
     for (const day of state.schoolDays) paintCell(day);
+
+    // 아직 장기 미신청으로 등록되어 있지 않다면, 이후 달도 계속 이어갈지 한 번 물어봅니다.
+    const alreadyStanding = isStandingSkipActive(state.standingSkip, state.year, state.month);
+    if (!alreadyStanding) {
+      const keepGoing = await confirmDialog({
+        title: "이후 남은 달도 계속 미신청으로 처리할까요?",
+        message: `${state.month}월부터 이번 학년도가 끝날 때까지, 매번 신청하지 않아도 자동으로 `
+          + "미신청 처리됩니다. 나중에 언제든 해제할 수 있어요.",
+        confirmText: "예, 계속 미신청",
+        cancelText: "이번 달만",
+      });
+
+      if (keepGoing === "confirm") {
+        try {
+          await setStandingSkip(state.access.user, state.year, state.month);
+          state.standingSkip = {
+            uid: state.access.user.uid,
+            name: state.access.user.displayName || "",
+            email: state.access.user.email || "",
+            active: true,
+            year: state.year,
+            fromMonth: state.month,
+            updatedAt: new Date(),
+          };
+          toast("이후 달은 자동으로 미신청 처리됩니다.", "ok", 4000);
+        } catch (e) {
+          console.error("[apply] 장기 미신청 등록 실패:", e);
+          toast(errorMessage(e, "장기 미신청 등록에 실패했습니다"), "danger");
+        }
+      }
+    }
   } else {
     /* 하루라도 신청한 경우 — 신청하지 않는 나머지 날짜는 사유 입력이 필수입니다. */
     const missing = state.schoolDays.filter(

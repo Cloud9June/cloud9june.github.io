@@ -12,6 +12,7 @@ import {
 import { listMonthRequests, adminRemoveDay, adminAddDay } from "../../repo/requests.js";
 import { getBlocked } from "../../repo/settings.js";
 import { getRosterSafe, findNonApplicants } from "../../repo/staff.js";
+import { listStandingSkips } from "../../repo/standingSkip.js";
 
 const token = createRenderToken();
 
@@ -26,6 +27,7 @@ export async function mount(container, ctx) {
     roster: [],
     blocked: [],
     schoolDays: [],
+    standingSkips: [],
   };
 
   const refs = {};
@@ -243,7 +245,17 @@ function buildNonApplicantsCard(refs) {
 }
 
 function paintNonApplicants(state, refs) {
-  const { noRequest, emptyDays, usingRoster } = findNonApplicants(state.roster, state.requests);
+  // 장기 미신청으로 등록되어 이번 (연, 월)에 실제로 적용되는 사람들 — 이미 설명이
+  // 붙어 있으므로 아래 "미신청 교직원" 나머지 두 그룹에서는 제외합니다.
+  const standingActive = state.standingSkips.filter(
+    (s) => s.year === state.year && state.month >= s.fromMonth,
+  );
+  const standingEmails = new Set(standingActive.map((s) => s.email.toLowerCase()));
+
+  const { noRequest: noRequestAll, emptyDays: emptyDaysAll, usingRoster } =
+    findNonApplicants(state.roster, state.requests);
+  const noRequest = noRequestAll.filter((m) => !standingEmails.has(m.email.toLowerCase()));
+  const emptyDays = emptyDaysAll.filter((r) => !standingEmails.has(String(r.email || "").toLowerCase()));
 
   const blocks = [];
 
@@ -261,7 +273,7 @@ function paintNonApplicants(state, refs) {
     );
   }
 
-  const nameList = (items, tone, title, desc) => {
+  const nameList = (items, tone, title, desc, labelFn) => {
     if (!items.length) return null;
     return el("div", { class: "stack-2" },
       el("div", { class: "row row--tight" },
@@ -269,7 +281,7 @@ function paintNonApplicants(state, refs) {
         el("span", { class: "strong small" }, title)),
       el("div", { class: "hint" }, desc),
       el("div", { class: "chip-group" },
-        ...items.map((m) => el("span", { class: "chip", title: m.email }, m.name))),
+        ...items.map((m) => el("span", { class: "chip", title: m.email }, labelFn ? labelFn(m) : m.name))),
     );
   };
 
@@ -278,6 +290,9 @@ function paintNonApplicants(state, refs) {
       "신청 화면에 한 번도 접속하지 않았습니다. 개별 안내가 필요합니다."),
     nameList(emptyDays, "warn", "0일로 저장함",
       "화면에는 들어왔으나 신청한 날짜가 없습니다."),
+    nameList(standingActive, "accent", "장기 미신청 등록됨",
+      "본인이 신청 화면에서 직접 등록했습니다 — 이후 달도 자동으로 미신청 처리되므로 별도 확인이 필요 없습니다.",
+      (m) => `${m.name} (${m.fromMonth}월~)`),
   ].filter(Boolean);
 
   if (!sections.length) {
@@ -425,16 +440,18 @@ async function load(state, refs) {
 
   try {
     // 컬렉션 읽기는 1회만 — v1 은 같은 데이터를 3번 읽었습니다.
-    const [requests, blockedDoc, roster] = await Promise.all([
+    const [requests, blockedDoc, roster, standingSkips] = await Promise.all([
       listMonthRequests(state.year, state.month),
       getBlocked(state.year, state.month),
       getRosterSafe(),
+      listStandingSkips(),
     ]);
 
     if (token.isStale(myToken)) return;
 
     state.requests = requests;
     state.roster = roster;
+    state.standingSkips = standingSkips;
     state.blocked = blockedDoc.days;
     state.schoolDays = getSchoolDays(state.year, state.month, state.blocked);
 

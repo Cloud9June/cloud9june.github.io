@@ -68,6 +68,7 @@ export const COL = {
   STUDENTS_DAILY_EFFECTIVE: "studentsDailyEffective",// `${y}-${MM}` — v1 호환용 미러
   STUDENT_ABSENCES: "studentAbsences",              // `${y}-${MM}`
   TOTALS: "totals",                                 // `${y}-${MM}`
+  MEAL_STANDING_SKIP: "mealStandingSkip",           // v2 신규 — 문서 ID: uid (장기 미신청)
 };
 
 /** 미신청 사유 빠른 선택 프리셋 */
