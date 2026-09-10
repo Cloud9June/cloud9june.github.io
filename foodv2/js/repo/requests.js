@@ -41,6 +41,9 @@ const userDoc = (year, month, docId) =>
  * - days 를 정수 유니크 오름차순으로
  * - reasons 는 "신청하지 않은 날" 에 대해서만 유효하게 (v1 이 merge 저장하며
  *   남긴 낡은 사유가 화면에 섞이지 않도록 읽는 쪽에서 정리)
+ * - 이번 달 전체를 신청하지 않은 문서(days 가 0개)는 사유도 항상 빈 값으로 취급
+ *   (정책상 전체 미신청은 사유가 필요 없음 — 예전 버그로 문서에 사유가 남아
+ *   있더라도 화면에는 표시하지 않음)
  */
 export function normalizeRequest(docId, raw) {
   const data = raw || {};
@@ -50,11 +53,13 @@ export function normalizeRequest(docId, raw) {
   const applied = new Set(days);
 
   const reasons = {};
-  for (const [k, v] of Object.entries(data.reasons || {})) {
-    const day = Number(k);
-    if (!Number.isInteger(day) || applied.has(day)) continue;
-    const text = String(v ?? "").trim();
-    if (text) reasons[String(day)] = text;
+  if (days.length > 0) {
+    for (const [k, v] of Object.entries(data.reasons || {})) {
+      const day = Number(k);
+      if (!Number.isInteger(day) || applied.has(day)) continue;
+      const text = String(v ?? "").trim();
+      if (text) reasons[String(day)] = text;
+    }
   }
 
   return {
@@ -84,12 +89,17 @@ export async function saveMyRequest(user, year, month, { days, reasons }) {
   const cleanDays = [...new Set(days.map(Number).filter(Number.isInteger))].sort((a, b) => a - b);
   const applied = new Set(cleanDays);
 
+  // 이번 달 전체를 신청하지 않는 경우(0일)는 사유가 필요 없는 정책이므로,
+  // 화면 쪽 상태(state.reasons)에 무엇이 남아 있든 여기서 확실히 비웁니다.
+  // (신청 화면을 오가며 지우는 걸 깜빡해도 저장 문서에는 절대 남지 않도록 하는 안전장치)
   const cleanReasons = {};
-  for (const [k, v] of Object.entries(reasons || {})) {
-    const day = Number(k);
-    if (!Number.isInteger(day) || applied.has(day)) continue;
-    const text = String(v ?? "").trim();
-    if (text) cleanReasons[String(day)] = text.slice(0, 60);
+  if (cleanDays.length > 0) {
+    for (const [k, v] of Object.entries(reasons || {})) {
+      const day = Number(k);
+      if (!Number.isInteger(day) || applied.has(day)) continue;
+      const text = String(v ?? "").trim();
+      if (text) cleanReasons[String(day)] = text.slice(0, 60);
+    }
   }
 
   await setDoc(userDoc(year, month, requestDocId(user)), {

@@ -695,6 +695,12 @@ async function handleSave() {
       tone: "danger",
     });
     if (answer !== "confirm") return;
+
+    // 전체 미신청은 사유가 필요 없는 정책 — 화면에 지우다 만 사유가 남아 있어도
+    // 저장 시점에는 확실히 비웁니다. (repo/requests.js 에서도 한 번 더 강제합니다)
+    state.reasons.clear();
+    current.reasons = {};
+    for (const day of state.schoolDays) paintCell(day);
   } else {
     /* 하루라도 신청한 경우 — 신청하지 않는 나머지 날짜는 사유 입력이 필수입니다. */
     const missing = state.schoolDays.filter(
