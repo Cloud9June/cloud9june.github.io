@@ -7,7 +7,6 @@
    - 오래된 비동기 응답이 최신 화면을 덮지 않도록 렌더 토큰 사용
    - alert/confirm 대신 <dialog> · 토스트
    - ✨ 신규: 신청하지 않은 날짜에 "미신청 사유" 입력
-   - ✨ 신규: 장기 미신청(연속 미신청) 등록/해제
    ========================================================= */
 
 import { MONTH_STATUS, MONTH_STATUS_LABEL, REASON_PRESETS } from "../config.js";
@@ -521,8 +520,8 @@ function paintCell(day, cellArg = null) {
     "aria-label": `${state.month}월 ${day}일 ${applied ? "신청 취소" : "급식 신청"}`,
     onClick: () => toggleDay(day),
   },
-    applied ? icon("check", 13) : null,
-    applied ? "신청" : "미신청",
+    applied ? icon("check", 13) : icon("plus", 13),
+    applied ? "신청 취소" : "신청하기",
   );
   body.appendChild(toggle);
 
