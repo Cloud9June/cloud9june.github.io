@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>정보보호주간 아카이브</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #060a12;
+            --bg-deep: #02040a;
+            --core: #5eeaff;
+            --core-soft: rgba(94, 234, 255, 0.35);
+            --core-dim: #1c6f9c;
+            --core-line: rgba(94, 234, 255, 0.16);
+            --text: #d7f0fb;
+            --text-dim: #4d7c96;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .stage {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(ellipse 95% 80% at 50% 46%, var(--bg) 0%, var(--bg-deep) 100%);
+        }
+
+        canvas#field {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .vignette {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse 62% 58% at 50% 48%, transparent 40%, rgba(2, 4, 10, 0.88) 100%);
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.07;
+            mix-blend-mode: overlay;
+            background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.55) 0px, rgba(255, 255, 255, 0.55) 1px, transparent 2px, transparent 4px);
+        }
+
+        .hud-frame {
+            position: absolute;
+            inset: 3.2vmin;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .bracket {
+            position: absolute;
+            width: 4.6vmin;
+            height: 4.6vmin;
+            filter: drop-shadow(0 0 5px var(--core-soft));
+        }
+
+        .view {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .view.active {
+            opacity: 1;
+            z-index: 2;
+            pointer-events: auto;
+        }
+
+        .menu-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3.2vmin;
+            padding: 0 4vmin;
+        }
+
+        .menu-eyebrow {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(0.54rem, 1.1vmin, 0.68rem);
+            letter-spacing: 0.24em;
+            padding-left: 0.24em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .menu-title {
+            font-family: 'Black Han Sans', 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: clamp(1.5rem, 4vmin, 2.6rem);
+            letter-spacing: 0.1em;
+            padding-left: 0.1em;
+            color: var(--text);
+            text-shadow: 0 0 18px var(--core-soft);
+            margin-top: 0.6vmin;
+            text-align: center;
+        }
+
+        .menu-sub {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(0.66rem, 1.3vmin, 0.9rem);
+            letter-spacing: 0.22em;
+            padding-left: 0.22em;
+            color: var(--core);
+            opacity: 0.9;
+            margin-top: -1vmin;
+            text-align: center;
+        }
+
+        .icon-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2.6vmin;
+            width: 100%;
+            align-items: center;
+        }
+
+        .icon-card {
+            width: 82%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2vmin;
+            padding: 2.6vmin 2vmin 2vmin;
+            background: rgba(10, 16, 26, 0.5);
+            border: 1px solid var(--core-line);
+            border-radius: 10px;
+            transition: border-color 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
+        }
+
+        .icon-card.next {
+            border-color: var(--core);
+            box-shadow: 0 0 3vmin var(--core-soft);
+            transform: translateY(-0.4vmin);
+        }
+
+        .icon-glyph {
+            width: 5.2vmin;
+            height: 5.2vmin;
+            opacity: 0.55;
+            transition: opacity 0.5s ease;
+        }
+
+        .icon-card.next .icon-glyph {
+            opacity: 1;
+        }
+
+        .icon-glyph path,
+        .icon-glyph rect,
+        .icon-glyph circle {
+            stroke: var(--core);
+            fill: none;
+            stroke-width: 1.6;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .icon-label {
+            font-family: 'Black Han Sans', 'Rajdhani', sans-serif;
+            font-size: clamp(0.95rem, 1.9vmin, 1.3rem);
+            letter-spacing: 0.02em;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .icon-caption {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(0.54rem, 0.95vmin, 0.66rem);
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+            color: var(--text-dim);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background: var(--core-line);
+            margin-top: 0.6vmin;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--core);
+        }
+
+        .corner-readout {
+            position: absolute;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(0.52rem, 0.9vmin, 0.7rem);
+            line-height: 1.6;
+            letter-spacing: 0.04em;
+            color: var(--text-dim);
+        }
+
+        .corner-readout .hi {
+            color: var(--core);
+        }
+
+        .corner-readout.tl-readout {
+            top: 5.4vmin;
+            left: 3.2vmin;
+        }
+
+        .corner-readout.br-readout {
+            bottom: 5.4vmin;
+            right: 3.2vmin;
+            text-align: right;
+        }
+
+        .slider-view {
+            background: #000;
+        }
+
+        .img-box {
+            position: absolute;
+            inset: 0;
+        }
+
+        .img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            will-change: opacity;
+            transition: opacity 1s ease-in-out;
+            z-index: 0;
+        }
+
+        .img-box img.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        .slide-readout {
+            position: absolute;
+            right: 4vmin;
+            bottom: 1vmin;
+            z-index: 3;
+            display: flex;
+            align-items: baseline;
+            gap: 0.8vmin;
+            background: rgba(6, 10, 18, 0.6);
+            border: 1px solid var(--core-line);
+            border-radius: 5px;
+            padding: 0.5vmin 1.2vmin;
+        }
+
+        .readout-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(0.56rem, 0.95vmin, 0.74rem);
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        .readout-num {
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .readout-cur {
+            font-size: clamp(1.05rem, 2.6vmin, 1.7rem);
+            color: #f5b301;
+            text-shadow: 0 0 1.4vh rgba(245, 179, 1, 0.4);
+        }
+
+        .readout-total {
+            font-size: clamp(0.6rem, 1.1vmin, 0.85rem);
+            color: var(--text-dim);
+            margin-left: 0.1em;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .icon-card,
+            .icon-glyph,
+            .view {
+                transition: opacity 0.2s linear !important;
+            }
+
+            .progress-fill {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stage">
+        <canvas id="field"></canvas>
+        <div class="vignette"></div>
+        <div class="scanlines"></div>
+        <div class="hud-frame">
+            <span class="bracket tl"></span><span class="bracket tr"></span>
+            <span class="bracket bl"></span><span class="bracket br"></span>
+        </div>
+
+        <div class="view menu-view active" id="menuView">
+            <div class="corner-readout tl-readout">ARCHIVE <span class="hi">ONLINE</span><br />NODE <span
+                    class="hi">07</span></div>
+            <div class="corner-readout br-readout">SYNC <span class="hi">OK</span><br />LOOP <span
+                    class="hi">ACTIVE</span></div>
+
+            <div class="menu-eyebrow">SUNGIL INFORMATION HIGH SCHOOL</div>
+            <div class="menu-title">정보보호주간</div>
+            <div class="menu-sub" id="menuSub">재생 준비 중</div>
+
+            <div class="icon-row">
+                <div class="icon-card" id="menuCardRock">
+                    <svg class="icon-glyph" viewBox="0 0 48 48">
+                        <circle cx="16" cy="34" r="6" />
+                        <circle cx="34" cy="30" r="6" />
+                        <path d="M22 34V10l18-4v24" />
+                        <path d="M22 16l18-4" />
+                    </svg>
+                    <div class="icon-label">락 스타일기</div>
+                    <div class="icon-caption">ROCK STYLE · 6</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="fillRock"></div>
+                    </div>
+                </div>
+                <div class="icon-card" id="menuCardNews">
+                    <svg class="icon-glyph" viewBox="0 0 48 48">
+                        <rect x="6" y="10" width="26" height="34" rx="3" />
+                        <rect x="16" y="4" width="26" height="34" rx="3" />
+                        <path d="M21 12h12" />
+                        <path d="M21 18h12" />
+                        <path d="M21 24h8" />
+                    </svg>
+                    <div class="icon-label">정보보호주간 카드뉴스</div>
+                    <div class="icon-caption">CARD NEWS · 6</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="fillNews"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view slider-view" id="rockView">
+            <div class="img-box" id="rockBox"></div>
+            <div class="slide-readout" id="rockReadout">
+                <span class="readout-label">락 스타일기</span>
+                <span class="readout-num"><span class="readout-cur">01</span><span
+                        class="readout-total">/06</span></span>
+            </div>
+        </div>
+
+        <div class="view slider-view" id="cardView">
+            <div class="img-box" id="cardBox"></div>
+            <div class="slide-readout" id="cardReadout">
+                <span class="readout-label">정보보호주간 카드뉴스</span>
+                <span class="readout-num"><span class="readout-cur">01</span><span
+                        class="readout-total">/06</span></span>
+            </div>
+        </div>
+
+        <script>
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const ROCK_COUNT = 6;
+            const CARD_COUNT = 6;
+            const SLIDE_INTERVAL = 14000; // 사진 한 장당 노출 시간
+            const MENU_WAIT = 3000; // 메뉴 화면에 머무는 시간
+
+            function buildImgs(boxEl, prefix, count, ext) {
+                let html = '';
+                for (let i = 1; i <= count; i++) {
+                    html += `<img src="images/${prefix}${i}.${ext}" alt="${prefix} ${i}">`;
+                }
+                boxEl.innerHTML = html;
+                return boxEl.getElementsByTagName('img');
+            }
+
+            const rockImgs = buildImgs(document.getElementById('rockBox'), 'rock', ROCK_COUNT, 'png');
+            const cardImgs = buildImgs(document.getElementById('cardBox'), 'card', CARD_COUNT, 'jpg');
+
+            function setView(id) {
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            }
+
+            function playSequence(imgs, count, curEl, onDone) {
+                let idx = 0;
+
+                function step() {
+                    if (idx > 0) imgs[idx - 1].classList.remove('active');
+                    imgs[idx].classList.add('active');
+                    curEl.textContent = String(idx + 1).padStart(2, '0');
+                    idx++;
+                    if (idx < count) {
+                        setTimeout(step, SLIDE_INTERVAL);
+                    } else {
+                        setTimeout(() => {
+                            imgs[count - 1].classList.remove('active');
+                            onDone();
+                        }, SLIDE_INTERVAL);
+                    }
+                }
+                step();
+            }
+
+            function highlightCard(key) {
+                document.getElementById('menuCardRock').classList.toggle('next', key === 'rock');
+                document.getElementById('menuCardNews').classList.toggle('next', key === 'card');
+
+                const fill = document.getElementById(key === 'rock' ? 'fillRock' : 'fillNews');
+                const otherFill = document.getElementById(key === 'rock' ? 'fillNews' : 'fillRock');
+
+                otherFill.style.transition = 'none';
+                otherFill.style.width = '0%';
+
+                fill.style.transition = 'none';
+                fill.style.width = '0%';
+                void fill.offsetWidth;
+                fill.style.transition = reduceMotion ? 'none' : `width ${MENU_WAIT}ms linear`;
+                fill.style.width = '100%';
+            }
+
+            function showMenuThen(nextKey, cb) {
+                setView('menuView');
+                highlightCard(nextKey);
+                document.getElementById('menuSub').textContent =
+                    nextKey === 'rock' ? '락 스타일기 재생 준비 중' : '정보보호주간 카드뉴스 재생 준비 중';
+                setTimeout(cb, MENU_WAIT);
+            }
+
+            function runRock() {
+                setView('rockView');
+                const curEl = document.querySelector('#rockReadout .readout-cur');
+                playSequence(rockImgs, ROCK_COUNT, curEl, () => {
+                    showMenuThen('card', runCard);
+                });
+            }
+
+            function runCard() {
+                setView('cardView');
+                const curEl = document.querySelector('#cardReadout .readout-cur');
+                playSequence(cardImgs, CARD_COUNT, curEl, () => {
+                    showMenuThen('rock', runRock);
+                });
+            }
+
+            showMenuThen('rock', runRock);
+
+            const canvas = document.getElementById('field');
+            const ctx = canvas.getContext('2d');
+            let W = 0,
+                H = 0,
+                DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+            function resize() {
+                W = window.innerWidth;
+                H = window.innerHeight;
+                canvas.width = W * DPR;
+                canvas.height = H * DPR;
+                canvas.style.width = W + 'px';
+                canvas.style.height = H + 'px';
+                ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const N = 60;
+            const particles = Array.from({
+                length: N
+            }, () => ({
+                x: Math.random(),
+                y: Math.random(),
+                vx: (Math.random() - 0.5) * 0.00016,
+                vy: (Math.random() - 0.5) * 0.00016,
+                r: 0.6 + Math.random() * 1.2
+            }));
+            const LINK_DIST = 0.11;
+
+            function drawField() {
+                ctx.clearRect(0, 0, W, H);
+                for (let i = 0; i < N; i++) {
+                    const p = particles[i];
+                    if (!reduceMotion) {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        if (p.x < 0) p.x = 1;
+                        if (p.x > 1) p.x = 0;
+                        if (p.y < 0) p.y = 1;
+                        if (p.y > 1) p.y = 0;
+                    }
+                }
+                for (let i = 0; i < N; i++) {
+                    for (let j = i + 1; j < N; j++) {
+                        const a = particles[i],
+                            b = particles[j];
+                        const dx = a.x - b.x,
+                            dy = a.y - b.y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < LINK_DIST) {
+                            ctx.strokeStyle = `rgba(94, 234, 255, ${0.14 * (1 - d / LINK_DIST)})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(a.x * W, a.y * H);
+                            ctx.lineTo(b.x * W, b.y * H);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                for (let i = 0; i < N; i++) {
+                    const p = particles[i];
+                    ctx.fillStyle = 'rgba(215, 240, 251, 0.55)';
+                    ctx.beginPath();
+                    ctx.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                if (!reduceMotion) requestAnimationFrame(drawField);
+            }
+            drawField();
+        </script>
+</body>
+
+</html>

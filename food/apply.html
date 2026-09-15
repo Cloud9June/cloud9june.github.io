@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0c0e12" media="(prefers-color-scheme: dark)" />
-  <title>관리자 · 급식 관리</title>
+  <title>급식 신청</title>
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet"
@@ -20,19 +20,18 @@
     <div id="headerSlot"></div>
 
     <main class="app-main">
-      <div class="stack-6">
-        <nav id="tabsSlot" role="tablist" aria-label="관리 메뉴"></nav>
-        <div id="viewSlot">
-          <div class="empty" style="min-height:40vh; justify-content:center;">
-            <div class="loading-line">권한을 확인하는 중…</div>
-          </div>
+      <div id="pageSlot">
+        <div class="empty" style="min-height:50vh; justify-content:center;">
+          <div class="loading-line">권한을 확인하는 중…</div>
         </div>
       </div>
     </main>
 
-    <footer class="app-footer">급식 관리자 · 변경 사항은 즉시 반영됩니다.</footer>
+    <footer class="app-footer">
+      © 2026 성일정보고등학교 급식 신청 시스템 · 개발 김형준
+    </footer>
   </div>
 
-  <script type="module" src="js/pages/admin.js"></script>
+  <script type="module" src="js/pages/apply.js"></script>
 </body>
 </html>
