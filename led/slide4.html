@@ -7,15 +7,13 @@
         html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
         .poster-wrap { width:100%; height:100%; display:flex; justify-content:center; align-items:center; overflow:hidden; }
         .img-box { width:100%; height:100%; position:relative; overflow:hidden; }
-        .img-box img { 
-            width:100%; height:100%; object-fit:fill; 
-            position:absolute; top:0; left:0; 
-            opacity:0; 
-            will-change: opacity;
-            transition: opacity 1s ease-in-out; 
-            z-index: 0;
+        .img-box img {
+            width:100%; height:100%; object-fit:fill;
+            position:absolute; top:0; left:0;
+            transform: translateX(100%);
+            will-change: transform;
+            backface-visibility: hidden;
         }
-        .img-box img.active { opacity:1; z-index:1; }
     </style>
 </head>
 <body>
@@ -23,49 +21,71 @@
     <div class='poster-wrap'>
         <div class='img-box' id='student-slider-box'></div>
     </div>
-    
+
     <script>
-        function initSyncedSlider(boxId, totalImages, intervalTime) {
+        function initSyncedSlider(boxId, totalImages, intervalTime, slideTime) {
             const box = document.getElementById(boxId);
+            const EASE = `transform ${slideTime}ms cubic-bezier(0.45, 0, 0.15, 1)`;
             let imgHTML = '';
 
             // 이미지 동적 생성
             for (let i = 1; i <= totalImages; i++) {
-                imgHTML += `<img src="images/student (${i}).jpg" alt="학생 사진 ${i}">`;
+                imgHTML += `<img src="images/move/move${i}.png" alt="학생 사진 ${i}">`;
             }
             box.innerHTML = imgHTML;
 
             const imgs = box.getElementsByTagName('img');
             let lastIndex = -1;
 
-            // 밀리초 단위로 현재 시간을 체크하여 동기화 (화면 주사율에 맞춰 부드럽게 체크)
+            // x: 퍼센트 위치, animate: 전환 애니메이션 사용 여부
+            function place(el, x, animate) {
+                el.style.transition = animate ? EASE : 'none';
+                el.style.transform = `translateX(${x}%)`;
+            }
+
+            // 밀리초 단위로 현재 시간을 체크하여 동기화
             function sync() {
                 const now = Date.now();
-                
+
                 // 전체 루프 주기 (16장 * 8초 = 128초) 중 현재 지나고 있는 위치 계산
                 const totalCycleTime = totalImages * intervalTime;
                 const currentCycleProgress = now % totalCycleTime;
-                
+
                 // 현재 몇 번째 이미지가 나와야 하는지 인덱스 계산 (0 ~ 15)
                 const currentIndex = Math.floor(currentCycleProgress / intervalTime);
 
-                // 인덱스가 바뀔 때만 클래스 교체
+                // 인덱스가 바뀔 때만 슬라이드 이동
                 if (currentIndex !== lastIndex) {
-                    if (lastIndex !== -1 && imgs[lastIndex]) {
-                        imgs[lastIndex].classList.remove('active');
+                    const cur = imgs[currentIndex];
+
+                    if (lastIndex === -1) {
+                        // 최초 진입: 애니메이션 없이 바로 표시
+                        cur.style.zIndex = 1;
+                        place(cur, 0, false);
+                    } else {
+                        // 이전 이미지는 왼쪽으로 밀려 나감
+                        const prev = imgs[lastIndex];
+                        prev.style.zIndex = 1;
+                        place(prev, -100, true);
+
+                        // 새 이미지는 오른쪽에 대기시킨 뒤 왼쪽으로 들어옴
+                        cur.style.zIndex = 2;
+                        place(cur, 100, false);
+                        void cur.offsetWidth; // 강제 리플로우 (transition 적용 보장)
+                        place(cur, 0, true);
                     }
-                    imgs[currentIndex].classList.add('active');
+
                     lastIndex = currentIndex;
                 }
-                
+
                 requestAnimationFrame(sync);
             }
-            
+
             sync();
         }
 
-        // 함수 실행: 박스ID, 총 16장, 전환 속도 8초(8000ms)
-        initSyncedSlider('student-slider-box', 16, 8000);
+        // 함수 실행: 박스ID, 총 16장, 전환 주기 8초, 슬라이드 이동 시간 1초
+        initSyncedSlider('student-slider-box', 6, 8000, 1000);
     </script>
 </body>
 </html>
