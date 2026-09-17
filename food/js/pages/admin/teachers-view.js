@@ -7,9 +7,11 @@ import {
 } from "../../util/dom.js";
 import { sectionHead } from "../../ui/shell.js";
 import {
-  DOW_LABEL, dowOf, yearOptions, formatDateTime, getSchoolDays,
+  DOW_LABEL, dowOf, yearOptions, formatDateTime, getSchoolDays, pad2,
 } from "../../util/date.js";
-import { listMonthRequests, adminRemoveDay, adminAddDay } from "../../repo/requests.js";
+import {
+  listMonthRequests, adminRemoveDay, adminAddDay, teacherRequestsToCsv,
+} from "../../repo/requests.js";
 import { getBlocked } from "../../repo/settings.js";
 import { getRosterSafe, findNonApplicants } from "../../repo/staff.js";
 import { listStandingSkips } from "../../repo/standingSkip.js";
@@ -78,12 +80,39 @@ function buildFilterCard(state, refs) {
     onClick: () => load(state, refs),
   }, icon("refresh", 14), "새로고침");
 
+  refs.csvBtn = el("button", {
+    class: "btn btn--sm", type: "button", disabled: true,
+    onClick: () => downloadCsv(state),
+  }, icon("download", 14), "CSV 내려받기");
+
   return el("section", { class: "card" },
     sectionHead(1, "조회 조건", "연·월을 바꾸면 자동으로 다시 불러옵니다."),
     el("div", { class: "row" },
       yearSel, monthSel, refs.daySelect, nameInput,
-      el("span", { class: "spacer" }), refs.reloadBtn),
+      el("span", { class: "spacer" }), refs.reloadBtn, refs.csvBtn),
   );
+}
+
+/* =========================================================
+   CSV
+   ========================================================= */
+
+function downloadCsv(state) {
+  if (!state.requests.length) return;
+
+  // BOM 을 붙여 엑셀에서 한글이 깨지지 않도록
+  const blob = new Blob(["﻿" + teacherRequestsToCsv(state.month, state.requests)],
+    { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = el("a", {
+    href: url,
+    download: `급식신청현황_${state.year}-${pad2(state.month)}.csv`,
+  });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 /* =========================================================
@@ -436,6 +465,7 @@ function paintAddOptions(state, refs) {
 
 async function load(state, refs) {
   const myToken = token.next();
+  refs.csvBtn.disabled = true;
   render(refs.requestsBody, el("tr", null, el("td", { colSpan: 5 }, ...skeletonRows(4))));
 
   try {
@@ -460,6 +490,7 @@ async function load(state, refs) {
     paintRequests(state, refs);
     paintNonApplicants(state, refs);
     paintReasons(state, refs);
+    refs.csvBtn.disabled = state.requests.length === 0;
   } catch (e) {
     console.error("[teachers] 로딩 실패:", e);
     if (token.isStale(myToken)) return;

@@ -210,3 +210,78 @@ export function groupReasonsByDay(requests) {
   }
   return byDay;
 }
+
+/**
+ * 같은 사유가 연속된 날짜에 걸쳐 있으면 "9/1~9/2 경진대회 출장" 처럼 한 줄로
+ * 묶어 줍니다. 연속되지 않거나 사유가 다르면 별도 항목으로 남깁니다.
+ */
+function summarizeReasons(month, reasons) {
+  const entries = Object.entries(reasons)
+    .map(([dayStr, reason]) => [Number(dayStr), reason])
+    .sort((a, b) => a[0] - b[0]);
+
+  const groups = [];
+  for (const [day, reason] of entries) {
+    const last = groups[groups.length - 1];
+    if (last && last.reason === reason && day === last.end + 1) {
+      last.end = day;
+    } else {
+      groups.push({ start: day, end: day, reason });
+    }
+  }
+
+  return groups
+    .map((g) => {
+      const range = g.start === g.end
+        ? `${month}/${g.start}`
+        : `${month}/${g.start}~${month}/${g.end}`;
+      return `${range} ${g.reason}`;
+    })
+    .join("; ");
+}
+
+/**
+ * 날짜별 총 식수(신청 교사 수) 두 줄 — 일자 나열 줄과 그 아래 인원수 나열 줄,
+ * 맨 끝에 전체 합계를 붙입니다.
+ */
+function dailyCountRows(requests) {
+  const perDay = countTeachersPerDay(requests);
+  const days = Object.keys(perDay).map(Number).sort((a, b) => a - b);
+  const counts = days.map((d) => perDay[String(d)]);
+  const total = counts.reduce((sum, c) => sum + c, 0);
+
+  const dateRow = ["일자", ...days].join(",");
+  const countRow = ["신청인원", ...counts, total].join(",");
+  return [dateRow, countRow];
+}
+
+/**
+ * 관리자 다운로드용 CSV — 교사별 신청 현황.
+ * 이름 다음에 신청한 날짜를 한 칸에 하나씩 나열합니다. 가장 많이 신청한 사람의
+ * 일수(maxDays)만큼 날짜 칸 수를 고정하고, 모자란 사람은 빈 칸으로 채워서
+ * 급식수 · 미신청사유가 모든 행에서 항상 같은 열에 오도록 맞춥니다.
+ * 맨 아래에는 날짜별 총 식수 통계를 두 줄(일자 / 신청인원·합계)로 덧붙입니다.
+ */
+export function teacherRequestsToCsv(month, requests) {
+  const esc = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const maxDays = requests.reduce((max, r) => Math.max(max, r.days.length), 0);
+
+  const header = [
+    "이름",
+    ...Array.from({ length: maxDays }, (_, i) => `일자${i + 1}`),
+    "급식수",
+    "미신청사유",
+  ].join(",");
+
+  const lines = requests.map((r) => {
+    const dayCells = Array.from({ length: maxDays }, (_, i) => r.days[i] ?? "");
+    return [
+      esc(r.name),
+      ...dayCells,
+      r.days.length,
+      esc(summarizeReasons(month, r.reasons)),
+    ].join(",");
+  });
+
+  return [header, ...lines, "", ...dailyCountRows(requests)].join("\n");
+}
