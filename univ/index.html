@@ -107,7 +107,6 @@
 </head>
 <body>
 
-  <!-- 로그인 전/비인가 상태에서 보이는 게이트 -->
   <div id="gateOverlay">
     <div id="gateCard">
       <div id="loadingState">
@@ -125,7 +124,7 @@
     </div>
   </div>
 
-  <!-- 인가된 사용자에게만 보이는 상단 바 + iframe -->
+
   <div id="signOutBar">
     <span id="userEmailLabel"></span>
     <button id="signOutBtn">로그아웃</button>
@@ -139,11 +138,6 @@
   ></iframe>
 
   <script type="module">
-    /* =========================================================
-       급식관리 시스템(mealmanager-cda3b)의 Firebase Auth 를 그대로
-       재사용합니다. Firestore 는 전혀 건드리지 않고, 로그인 여부와
-       이메일 도메인만 확인하는 순수 게이트 역할만 합니다.
-       ========================================================= */
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -156,14 +150,12 @@
       signOut,
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // config.js 의 FIREBASE_CONFIG 와 동일한 값 (급식관리 프로젝트 재사용)
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
       authDomain: "mealmanager-cda3b.firebaseapp.com",
       projectId: "mealmanager-cda3b",
     };
 
-    // config.js 의 ALLOWED_DOMAINS 와 동일하게 유지하세요.
     const ALLOWED_DOMAINS = ["sungil-i.kr"];
     const TARGET_URL = "https://sungil-univ.pages.dev/";
 
@@ -226,8 +218,6 @@
     loginBtn.addEventListener('click', () => {
       errorMsg.style.display = 'none';
       const provider = new GoogleAuthProvider();
-      // hd 파라미터는 계정 선택 화면에서 해당 도메인을 우선 보여주는 힌트일 뿐,
-      // 실제 접근 차단은 위 onAuthStateChanged 의 이메일 도메인 검사가 담당합니다.
       provider.setCustomParameters({ hd: ALLOWED_DOMAINS[0], prompt: 'select_account' });
 
       signInWithPopup(auth, provider).catch((err) => {
@@ -243,7 +233,6 @@
       signOut(auth);
     });
 
-    // 리다이렉트 로그인 복귀 처리 (팝업 차단 환경 대응)
     getRedirectResult(auth).catch((err) => {
       console.warn('Redirect login error:', err);
     });
