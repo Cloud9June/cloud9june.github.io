@@ -6,20 +6,247 @@
 <title>성일정보고 대입 진학 관리</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; }
+  html, body { width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif; }
+
   iframe {
     width: 100%;
     height: 100%;
     border: none;
     display: block;
   }
+
+  #gateOverlay {
+    position: fixed;
+    inset: 0;
+    background: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #gateCard {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px 32px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  #gateCard h2 {
+    font-size: 18px;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+
+  #gateCard p {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  #loginBtn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: white;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+  #loginBtn:hover { background: #f9fafb; }
+  #loginBtn img { width: 18px; height: 18px; }
+
+  #errorMsg {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #dc2626;
+    display: none;
+  }
+
+  #loadingMsg {
+    color: #94a3b8;
+    font-size: 13px;
+  }
+
+  #signOutBar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(15, 23, 42, 0.85);
+    color: white;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-bottom-left-radius: 8px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family: monospace;
+  }
+  #signOutBar button {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
+
+  <!-- 로그인 전/비인가 상태에서 보이는 게이트 -->
+  <div id="gateOverlay">
+    <div id="gateCard">
+      <div id="loadingState">
+        <p id="loadingMsg">인증 확인 중...</p>
+      </div>
+      <div id="loginState" style="display:none;">
+        <h2>성일정보고 대입 진학 관리</h2>
+        <p>학교 계정(@sungil-i.kr)으로 로그인해야<br>이용하실 수 있습니다.</p>
+        <button id="loginBtn">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
+          <span>Google 계정으로 로그인</span>
+        </button>
+        <p id="errorMsg"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 인가된 사용자에게만 보이는 상단 바 + iframe -->
+  <div id="signOutBar">
+    <span id="userEmailLabel"></span>
+    <button id="signOutBtn">로그아웃</button>
+  </div>
   <iframe
-    src="https://sungil-univ.pages.dev/"
+    id="univFrame"
+    src="about:blank"
     title="성일정보고 대입 진학 관리 시스템"
     allow="clipboard-write"
+    style="display:none;"
   ></iframe>
+
+  <script type="module">
+    /* =========================================================
+       급식관리 시스템(mealmanager-cda3b)의 Firebase Auth 를 그대로
+       재사용합니다. Firestore 는 전혀 건드리지 않고, 로그인 여부와
+       이메일 도메인만 확인하는 순수 게이트 역할만 합니다.
+       ========================================================= */
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      signOut,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // config.js 의 FIREBASE_CONFIG 와 동일한 값 (급식관리 프로젝트 재사용)
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBRAOzrMccWaw-l5Z6YtHgpW9Gr80UTRhw",
+      authDomain: "mealmanager-cda3b.firebaseapp.com",
+      projectId: "mealmanager-cda3b",
+    };
+
+    // config.js 의 ALLOWED_DOMAINS 와 동일하게 유지하세요.
+    const ALLOWED_DOMAINS = ["sungil-i.kr"];
+    const TARGET_URL = "https://sungil-univ.pages.dev/";
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(app);
+
+    const gateOverlay = document.getElementById('gateOverlay');
+    const loadingState = document.getElementById('loadingState');
+    const loginState = document.getElementById('loginState');
+    const loginBtn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const signOutBar = document.getElementById('signOutBar');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const userEmailLabel = document.getElementById('userEmailLabel');
+    const univFrame = document.getElementById('univFrame');
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.style.display = 'block';
+    }
+
+    function isAllowedEmail(email) {
+      const lower = (email || '').toLowerCase();
+      return ALLOWED_DOMAINS.some((domain) => lower.endsWith('@' + domain));
+    }
+
+    function grantAccess(user) {
+      gateOverlay.style.display = 'none';
+      signOutBar.style.display = 'flex';
+      userEmailLabel.textContent = user.email;
+      if (univFrame.src === 'about:blank') {
+        univFrame.src = TARGET_URL;
+      }
+      univFrame.style.display = 'block';
+    }
+
+    function denyAccess(message) {
+      gateOverlay.style.display = 'flex';
+      loadingState.style.display = 'none';
+      loginState.style.display = 'block';
+      signOutBar.style.display = 'none';
+      univFrame.style.display = 'none';
+      univFrame.src = 'about:blank';
+      if (message) showError(message);
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        if (isAllowedEmail(user.email)) {
+          grantAccess(user);
+        } else {
+          signOut(auth);
+          denyAccess('학교 계정(@' + ALLOWED_DOMAINS.join(', @') + ')으로만 접근할 수 있습니다.');
+        }
+      } else {
+        denyAccess();
+      }
+    });
+
+    loginBtn.addEventListener('click', () => {
+      errorMsg.style.display = 'none';
+      const provider = new GoogleAuthProvider();
+      // hd 파라미터는 계정 선택 화면에서 해당 도메인을 우선 보여주는 힌트일 뿐,
+      // 실제 접근 차단은 위 onAuthStateChanged 의 이메일 도메인 검사가 담당합니다.
+      provider.setCustomParameters({ hd: ALLOWED_DOMAINS[0], prompt: 'select_account' });
+
+      signInWithPopup(auth, provider).catch((err) => {
+        if (err.code === 'auth/popup-blocked') {
+          signInWithRedirect(auth, provider);
+        } else if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+          showError('로그인 중 오류가 발생했습니다: ' + err.message);
+        }
+      });
+    });
+
+    signOutBtn.addEventListener('click', () => {
+      signOut(auth);
+    });
+
+    // 리다이렉트 로그인 복귀 처리 (팝업 차단 환경 대응)
+    getRedirectResult(auth).catch((err) => {
+      console.warn('Redirect login error:', err);
+    });
+  </script>
 </body>
 </html>
