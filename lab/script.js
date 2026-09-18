@@ -4,6 +4,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   setDoc,
   addDoc,
@@ -29,6 +30,7 @@ const backBtn = document.getElementById("back-btn");
 
 const kpiRowEl = document.getElementById("kpi-row");
 const labGridEl = document.getElementById("lab-grid");
+const adminNoticeEl = document.getElementById("admin-notice");
 
 const labSwitcherEl = document.getElementById("lab-switcher");
 const noticeEl = document.getElementById("lab-notice");
@@ -84,27 +86,148 @@ initAuth(
   }
 );
 
+// 로그인한 사용자가 "어떤 실습실이든" 담당 선생님으로 등록되어 있는지 여부.
+// 대시보드 전용(전체관리자 전용) 공지를 볼 수 있는지 판단하는 데도 쓰인다.
+let isAnyLabManagerGlobal = false;
+
 /** 로그인한 사용자가 전체관리자가 아니면, 담당 중인 실습실이 있는지 확인해 상단 표시를 갱신한다. */
 async function updateManagerHeaderLabel(isSuperAdmin) {
-  if (isSuperAdmin) return; // 전체관리자 표시는 auth.js가 이미 처리함
+  if (isSuperAdmin) {
+    // 전체관리자 표시는 auth.js가 이미 처리함. 이 플래그는 전체관리자에게는 의미가 없다
+    // (canViewAdminNotice()가 getIsSuperAdmin()을 별도로 확인하므로).
+    isAnyLabManagerGlobal = false;
+    loadAdminNotice();
+    return;
+  }
+
   const email = getUserEmail();
-  if (!email) return; // 로그아웃 상태 (auth.js가 이미 "로그인이 필요합니다"로 표시함)
+  if (!email) {
+    // 로그아웃 상태 (auth.js가 이미 "로그인이 필요합니다"로 표시함)
+    isAnyLabManagerGlobal = false;
+    loadAdminNotice();
+    return;
+  }
 
   try {
     const snap = await getDocs(query(collection(db, "labs"), where("managers", "array-contains", email)));
-    if (snap.empty) return; // 담당 실습실이 없으면 이름만 표시된 상태를 유지 (게스트)
     if (getUserEmail() !== email) return; // 조회하는 동안 로그아웃/재로그인 등으로 상태가 바뀌었으면 무시
 
-    const managedNames = snap.docs
-      .map((docSnap) => labs.find((lab) => lab.id === docSnap.id))
-      .filter(Boolean)
-      .map((lab) => shortLabName(lab.name));
-    if (managedNames.length === 0) return;
+    isAnyLabManagerGlobal = !snap.empty;
 
-    const baseName = userInfoEl.textContent; // auth.js가 이미 넣어둔 순수 이름
-    userInfoEl.textContent = `${managedNames.join("·")} 관리자 · ${baseName}`;
+    if (!snap.empty) {
+      const managedNames = snap.docs
+        .map((docSnap) => labs.find((lab) => lab.id === docSnap.id))
+        .filter(Boolean)
+        .map((lab) => shortLabName(lab.name));
+      if (managedNames.length > 0) {
+        const baseName = userInfoEl.textContent; // auth.js가 이미 넣어둔 순수 이름
+        userInfoEl.textContent = `${managedNames.join("·")} 관리자 · ${baseName}`;
+      }
+    }
+
+    loadAdminNotice();
   } catch (error) {
     console.error("담당 실습실 확인 중 오류:", error);
+    isAnyLabManagerGlobal = false;
+    loadAdminNotice();
+  }
+}
+
+// ----------------------------------------------------------
+// 🔒 전체관리자 전용 공지 (실습실 종합 현황 전용)
+//    - 작성·수정: 전체관리자만
+//    - 열람: 전체관리자 + 실습실 담당 선생님만 (학생·일반 방문자에게는 아예 보이지 않음)
+// ----------------------------------------------------------
+function canViewAdminNotice() {
+  return getIsSuperAdmin() || isAnyLabManagerGlobal;
+}
+
+async function loadAdminNotice() {
+  if (!canViewAdminNotice()) {
+    adminNoticeEl.hidden = true;
+    return;
+  }
+  try {
+    const snap = await getDoc(doc(db, "settings", "dashboard_notice"));
+    renderAdminNotice(snap.exists() ? snap.data().text || "" : "");
+  } catch (error) {
+    console.error("담당자 전용 공지 로딩 실패:", error);
+    adminNoticeEl.hidden = true;
+  }
+}
+
+function renderAdminNotice(text) {
+  const canEdit = getIsSuperAdmin();
+  adminNoticeEl.innerHTML = "";
+
+  if (!text) {
+    if (!canEdit) {
+      // 담당 선생님은 보기 전용이라, 내용이 없으면 아무것도 보여줄 필요가 없다.
+      adminNoticeEl.hidden = true;
+      return;
+    }
+    adminNoticeEl.hidden = false;
+    adminNoticeEl.className = "admin-notice admin-notice--empty";
+    const addBtn = document.createElement("button");
+    addBtn.className = "admin-notice__add";
+    addBtn.textContent = "+ 담당자 전용 공지 추가";
+    addBtn.addEventListener("click", () => editAdminNotice(""));
+    adminNoticeEl.appendChild(addBtn);
+    return;
+  }
+
+  adminNoticeEl.hidden = false;
+  adminNoticeEl.className = "admin-notice";
+
+  const icon = document.createElement("span");
+  icon.className = "admin-notice__icon";
+  icon.textContent = "🔒";
+
+  const body = document.createElement("div");
+  body.className = "admin-notice__body";
+  const label = document.createElement("div");
+  label.className = "admin-notice__label";
+  label.textContent = "담당자 전용 공지";
+  const p = document.createElement("p");
+  p.className = "admin-notice__text";
+  p.textContent = text;
+  body.appendChild(label);
+  body.appendChild(p);
+
+  adminNoticeEl.appendChild(icon);
+  adminNoticeEl.appendChild(body);
+
+  if (canEdit) {
+    const editBtn = document.createElement("button");
+    editBtn.className = "admin-notice__edit";
+    editBtn.title = "공지 수정";
+    editBtn.textContent = "✏️";
+    editBtn.addEventListener("click", () => editAdminNotice(text));
+    adminNoticeEl.appendChild(editBtn);
+  }
+}
+
+async function editAdminNotice(currentText) {
+  if (!getIsSuperAdmin()) {
+    alert("이 공지는 전체관리자만 작성·수정할 수 있습니다.");
+    return;
+  }
+
+  const newText = prompt(
+    "실습실 종합 현황 화면에만 표시되는 담당자 전용 공지입니다.\n" +
+      "전체관리자와 실습실 담당 선생님만 볼 수 있고, 다른 방문자에게는 보이지 않습니다.\n" +
+      "(비워두고 저장하면 삭제됩니다)",
+    currentText
+  );
+  if (newText === null) return; // 취소
+
+  const trimmed = newText.trim();
+  try {
+    await setDoc(doc(db, "settings", "dashboard_notice"), { text: trimmed, updatedAt: serverTimestamp() });
+    renderAdminNotice(trimmed);
+  } catch (error) {
+    console.error("담당자 전용 공지 저장 실패:", error);
+    alert("공지를 저장하지 못했습니다: " + error.message);
   }
 }
 
@@ -839,6 +962,10 @@ async function openTeacherModal() {
     snapshot.forEach((docSnap) => {
       labManagersMap.set(docSnap.id, docSnap.data().managers || []);
     });
+    // 담당자 전용 공지 기능을 처음 추가한 시점에는 settings/lab_managers 집계 문서가
+    // 아직 없을 수 있으므로, 관리 화면을 열 때마다 한 번씩 동기화해 기존 배정도 즉시 반영한다.
+    // (조용히 실행 — 실패해도 화면을 여는 것뿐이므로 알림을 띄우지 않는다)
+    syncLabManagersAggregate(true);
   } catch (error) {
     console.error("담당자 명단 로딩 실패:", error);
     teacherListEl.innerHTML = '<p class="loading-msg">불러오지 못했습니다. 다시 시도해주세요.</p>';
@@ -888,9 +1015,34 @@ async function editLabManagers(labId) {
     await setDoc(doc(db, "labs", labId), { managers: emails }, { merge: true });
     labManagersMap.set(labId, emails);
     renderTeacherList();
+    await syncLabManagersAggregate();
   } catch (error) {
     console.error("담당자 저장 실패:", error);
     alert("담당자를 저장하지 못했습니다: " + error.message);
+  }
+}
+
+/**
+ * settings/lab_managers 문서에 "어떤 실습실이든 담당 중인 모든 선생님 이메일"을 모아 저장한다.
+ * Firestore 보안 규칙은 다른 문서(예: 담당자 전용 공지)를 읽을 권한을 검사할 때 실습실 16개를
+ * 일일이 조회할 수 없으므로, 이 집계 문서 하나만 보고 "이 사람이 어떤 실습실이든 담당자인가?"를
+ * 판단할 수 있도록 담당자가 바뀔 때마다 이 함수로 동기화해둔다.
+ * (labManagersMap은 담당자 관리 화면을 열 때 모든 실습실 기준으로 이미 채워져 있으므로,
+ *  여기서는 방금 수정한 값이 반영된 최신 상태를 그대로 합치기만 하면 된다.)
+ */
+async function syncLabManagersAggregate(silent = false) {
+  const allEmails = new Set();
+  labManagersMap.forEach((emails) => emails.forEach((email) => allEmails.add(email)));
+  try {
+    await setDoc(doc(db, "settings", "lab_managers"), { emails: Array.from(allEmails) });
+  } catch (error) {
+    console.error("담당자 전체 명단 동기화 실패:", error);
+    if (!silent) {
+      alert(
+        "담당자는 저장되었지만, 전체 명단 동기화에 실패했습니다: " + error.message +
+          "\n담당자 전용 공지 열람 권한이 즉시 반영되지 않을 수 있습니다."
+      );
+    }
   }
 }
 
