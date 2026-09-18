@@ -598,13 +598,25 @@
                 .trim();
         },
 
-        // 표시 대상 날짜 : 기본은 오늘, 설정 시각 이후면 내일, 주말이면 다음 평일
-        pickTarget() {
+        // 1단계 : 후보 날짜 — 기본은 오늘, 설정 시각 이후면 내일, 주말이면 다음 평일
+        firstCandidate() {
             const now = nowKST();
             let d = dateOnly(now);
             if (now.getHours() >= CONFIG.meal.switchToTomorrowHour) d = addDays(d, 1);
             while (d.getDay() === 0 || d.getDay() === 6) d = addDays(d, 1);
             return d;
+        },
+
+        // 2단계 : 후보부터 훑어서 '실제로 급식이 등록된' 첫 날을 찾음
+        // (공휴일·재량휴업일·시험 단축수업 등으로 비어 있는 평일을 건너뜁니다)
+        // 기간 안에 하나도 없으면 후보를 그대로 돌려줘서 안내 문구가 뜨게 합니다.
+        pickTarget(from, meals) {
+            for (let i = 0; i <= CONFIG.meal.lookAheadDays; i++) {
+                const d = addDays(from, i);
+                if (d.getDay() === 0 || d.getDay() === 6) continue;
+                if (meals[ymd(d)]) return d;
+            }
+            return from;
         },
 
         labelFor(target) {
@@ -657,37 +669,44 @@
             const titleEl = $('todayMealTitle');
             if (!textEl) return;
 
-            const target = this.pickTarget();
-            const targetYmd = ymd(target);
-            this.range = this.weekRange(target);
-            const fromYmd = ymd(this.range.mon);
-            const toYmd = ymd(this.range.fri);
+            const first = this.firstCandidate();
             const todayYmd = ymd(nowKST());
 
-            if (titleEl) titleEl.textContent = this.labelFor(target);
+            // 조회 범위 : 후보가 속한 주의 월요일 ~ 그로부터 lookAheadDays + 4일
+            // (후보가 금요일이어도 탐색 마지막 날의 그 주 금요일까지 덮도록 +4)
+            const scanFrom = this.weekRange(first).mon;
+            const scanTo = addDays(scanFrom, CONFIG.meal.lookAheadDays + 4);
+            const fromYmd = ymd(scanFrom);
+            const toYmd = ymd(scanTo);
 
-            // 1) 캐시 (같은 날 + 같은 주 범위일 때만 재사용)
+            // 불러오는 동안 임시 제목 (데이터가 와야 최종 대상이 정해집니다)
+            if (titleEl) titleEl.textContent = this.labelFor(first);
+
+            // 1) 캐시 (같은 날 + 같은 조회 범위일 때만 재사용)
             const cache = Store.get('meal.cache', null);
             if (cache && cache.savedAt === todayYmd && cache.from === fromYmd && cache.to === toYmd) {
                 this.weekMeals = cache.meals || {};
-                this.renderWidget(targetYmd);
-                return;
+            } else {
+                textEl.textContent = '🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중…';
+
+                // 2) API 호출 (한 번에 받아 위젯·주간 모달이 함께 사용)
+                try {
+                    this.weekMeals = await this.fetchRange(fromYmd, toYmd);
+                    Store.set('meal.cache', {
+                        savedAt: todayYmd, from: fromYmd, to: toYmd, meals: this.weekMeals
+                    });
+                } catch (e) {
+                    console.error('[Meal] 급식 정보를 불러오지 못했습니다:', e);
+                    this.weekMeals = {};
+                    Store.remove('meal.cache');
+                }
             }
 
-            textEl.textContent = '🍚 오늘은 어떤 반찬이 기다릴까요? 로딩 중…';
-
-            // 2) API 호출 (한 번에 주간 전체를 받아 위젯·모달이 함께 사용)
-            try {
-                this.weekMeals = await this.fetchRange(fromYmd, toYmd);
-                Store.set('meal.cache', {
-                    savedAt: todayYmd, from: fromYmd, to: toYmd, meals: this.weekMeals
-                });
-            } catch (e) {
-                console.error('[Meal] 급식 정보를 불러오지 못했습니다:', e);
-                this.weekMeals = {};
-                Store.remove('meal.cache');
-            }
-            this.renderWidget(targetYmd);
+            // 3) 급식이 실제로 있는 날로 대상 확정
+            const target = this.pickTarget(first, this.weekMeals);
+            this.range = this.weekRange(target);
+            if (titleEl) titleEl.textContent = this.labelFor(target);
+            this.renderWidget(ymd(target));
         },
 
         renderWidget(targetYmd) {
@@ -696,7 +715,7 @@
             const menu = this.weekMeals[targetYmd];
             textEl.textContent = menu
                 ? menu
-                : '등록된 급식 정보가 없습니다. (방학·행사일이거나 NEIS 점검 중일 수 있어요)';
+                : '당분간 등록된 급식이 없습니다. (방학 중이거나 NEIS 점검 중일 수 있어요)';
         },
 
         renderWeekModal() {

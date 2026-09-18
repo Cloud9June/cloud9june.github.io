@@ -16,6 +16,14 @@
 */
 
 const CONFIG = {
+    // ===== 저장소 접두어 =====
+    // localStorage 는 '출처(도메인)' 단위로 공유됩니다.
+    // 베타를 같은 도메인의 다른 경로(/beta 등)에 두면 운영본과 저장소가 겹치므로,
+    // 베타 빌드에서는 이 값을 'eduinfo.beta.' 로 바꿔 서로 침범하지 않게 하세요.
+    //   운영본 : 'eduinfo.'        (비워두면 이 값이 쓰입니다)
+    //   베타   : 'eduinfo.beta.'
+    storagePrefix: 'eduinfo.',
+
     // ===== 학교 기본 정보 =====
     school: {
         name: '성일정보고등학교',
@@ -49,7 +57,10 @@ const CONFIG = {
     // ===== 급식 위젯 동작 =====
     meal: {
         appUrl: '/food',            // 급식 신청·조회 시스템
-        switchToTomorrowHour: 13    // 이 시각(KST)이 지나면 '내일 급식'으로 전환
+        // 이 시각(KST)이 지나면 다음 급식일로 전환
+        // 점심시간이 12:50~13:50 이라 배식이 끝난 뒤인 14시로 둡니다.
+        switchToTomorrowHour: 14,
+        lookAheadDays: 14           // 급식이 없는 날(공휴일·행사일)은 이 기간 안에서 다음 급식일을 찾음
     },
 
     // ===== 개인화 제한 =====
