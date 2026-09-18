@@ -57,13 +57,15 @@ const StaffSearch = (function () {
     }
 
     /* ---------- title → 부서 / 직위 ---------- */
+    // ※ 여기의 dept 값은 staff-data.js 의 STAFF_LOCATIONS / STAFF_DEPT_ORDER
+    //    키와 정확히 같아야 위치 표시와 정렬이 맞습니다.
     const ADMIN_TITLES = {
         '교장': { dept: '교장', role: '교장', rank: 0 },
         '교감': { dept: '교감', role: '교감', rank: 0 },
-        '행정실장': { dept: '행정실', role: '실장', rank: 0 },
-        '행정부장': { dept: '행정실', role: '부장', rank: 1 },
-        '주무관': { dept: '행정실', role: '주무관', rank: 2 },
-        '행정실무사': { dept: '행정실', role: '실무사', rank: 3 }
+        '행정실장': { dept: '교육행정실', role: '실장', rank: 0 },
+        '행정부장': { dept: '교육행정실', role: '부장', rank: 1 },
+        '주무관': { dept: '교육행정실', role: '주무관', rank: 2 },
+        '행정실무사': { dept: '교육행정실', role: '실무사', rank: 3 }
     };
 
     function parseTitle(title) {
@@ -83,14 +85,25 @@ const StaffSearch = (function () {
         }
         const order = (typeof STAFF_DEPT_ORDER !== 'undefined') ? STAFF_DEPT_ORDER : [];
         const locations = (typeof STAFF_LOCATIONS !== 'undefined') ? STAFF_LOCATIONS : {};
+        const phone = (typeof CONFIG !== 'undefined' && CONFIG.phone) || {};
+
+        // 내선번호 → 외부에서 거는 전체 번호 (staff-data.js 의 tel 값이 있으면 그쪽 우선)
+        const toNumber = (pattern, ext, override) => {
+            if (override) return override;
+            if (!pattern) return ext;
+            return pattern.replace('{ext}', ext);
+        };
 
         return STAFF.map(p => {
             const meta = parseTitle(p.title);
             const deptIdx = order.indexOf(meta.dept);
+            const ext = String(p.ext || '');
             return {
                 title: p.title,
                 name: p.name,
-                ext: String(p.ext || ''),
+                ext: ext,
+                dial: toNumber(phone.dialPattern, ext, p.tel && p.tel.replace(/[^0-9+]/g, '')),
+                dialLabel: toNumber(phone.displayPattern, ext, p.tel),
                 dept: meta.dept,
                 role: meta.role,
                 rank: meta.rank,
@@ -167,12 +180,16 @@ const StaffSearch = (function () {
             const tdName = document.createElement('td');
             tdName.textContent = p.name;
 
-            // 내선번호는 모바일에서 바로 걸 수 있게 tel: 링크
+            // 표에는 내선번호를 보여주고, 실제로 거는 건 외부 발신 전체 번호
             const tdExt = document.createElement('td');
             const tel = document.createElement('a');
             tel.className = 'staff-ext';
-            tel.href = 'tel:' + p.ext;
+            tel.href = 'tel:' + p.dial;
             tel.textContent = p.ext;
+            if (p.dialLabel && p.dialLabel !== p.ext) {
+                tel.title = `${p.name} · ${p.dialLabel}`;   // 마우스를 올리면 전체 번호
+                tel.setAttribute('aria-label', `${p.name} ${p.dialLabel} 전화 걸기`);
+            }
             tdExt.appendChild(tel);
 
             tr.append(tdDept, tdName, tdExt);
