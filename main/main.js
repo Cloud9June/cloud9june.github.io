@@ -1111,11 +1111,41 @@
         lastOpenAt: 0,
         LOCK_MS: 600,
 
+        // 선택된 엔진을 화면에 반영 (버튼 강조 + 입력창 안내 문구)
         highlight() {
-            $('qsGoogle')?.classList.toggle('is-active', this.engine === 'google');
-            $('qsNaver')?.classList.toggle('is-active', this.engine === 'naver');
+            const g = $('qsGoogle'), n = $('qsNaver'), input = $('qsInput');
+            const isNaver = (this.engine === 'naver');
+
+            g?.classList.toggle('is-active', !isNaver);
+            n?.classList.toggle('is-active', isNaver);
+            g?.setAttribute('aria-pressed', String(!isNaver));
+            n?.setAttribute('aria-pressed', String(isNaver));
+
+            // 어느 엔진으로 검색되는지 입력창에서도 보이게
+            if (input) {
+                input.placeholder = isNaver
+                    ? '네이버에서 검색 (Enter)'
+                    : '구글에서 검색 (Enter)';
+            }
         },
 
+        // 기본 엔진 변경 — 버튼을 눌렀을 때만 호출됩니다
+        setEngine(engine) {
+            this.engine = (engine === 'naver') ? 'naver' : 'google';
+            Store.set('search.default', this.engine);
+            this.highlight();
+        },
+
+        // 버튼 클릭 : 검색어가 없어도 일단 엔진을 바꾸고, 있으면 바로 검색
+        choose(engine) {
+            this.setEngine(engine);
+            const input = $('qsInput');
+            const val = (input?.value || '').trim();
+            if (val) this.open(engine, val);
+            else input?.focus();
+        },
+
+        // 실제 검색 — 기본 엔진은 건드리지 않습니다
         open(engine, keyword) {
             const input = $('qsInput');
             if (!input) return;
@@ -1131,9 +1161,6 @@
                 : `https://www.google.com/search?q=${enc}`;
 
             window.open(url, '_blank', 'noopener');
-            this.engine = engine;
-            Store.set('search.default', engine);
-            this.highlight();
             input.value = '';
         },
 
@@ -1142,7 +1169,7 @@
             const val = (input?.value || '').trim();
             if (!val) { input?.focus(); return; }
 
-            // 'g 검색어' / 'ㄴ 검색어' 형태의 접두어 처리
+            // 'g 검색어' / 'ㄴ 검색어' 접두어는 이번 한 번만 적용 (기본값은 그대로)
             const m = val.match(/^([gnGNㄱㄴㅎㅜ])\s+(.*)$/);
             if (m) {
                 const k = m[1].toLowerCase();
@@ -1167,8 +1194,8 @@
                 this.smart();
             }, { passive: false });
 
-            on($('qsGoogle'), 'click', () => this.open('google', input?.value));
-            on($('qsNaver'), 'click', () => this.open('naver', input?.value));
+            on($('qsGoogle'), 'click', () => this.choose('google'));
+            on($('qsNaver'), 'click', () => this.choose('naver'));
 
             // 검색바 아무 곳이나 클릭하면 입력창 포커스
             on(document.querySelector('.quick-search'), 'click', (e) => {

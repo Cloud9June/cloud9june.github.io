@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>추석 연휴 단축수업 시정표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%;
+    overflow:hidden;
+    background:#05060a;
+    font-family:'Noto Sans KR', sans-serif;
+  }
+
+  .stage {
+    position:relative;
+    width:100vw; height:100vh;
+    display:flex; flex-direction:column;
+    background: linear-gradient(180deg, #0b0f1a 0%, #05060a 100%);
+    overflow:hidden;
+  }
+
+  /* ---------------- 상단: 시정표 ---------------- */
+  .sheet {
+    flex:1 1 auto;
+    display:flex; flex-direction:column;
+    padding: 2.2vh 2.6vw 1vh;
+    min-height:0;
+  }
+
+  .title-row {
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:1.1vh;
+  }
+  .title {
+    font-family:'Black Han Sans', sans-serif;
+    font-size:3.6vh;
+    letter-spacing:0.01em;
+    color:#f3f6fb;
+    text-shadow: 0 0 1.6vh rgba(245,179,1,0.28);
+  }
+  .date {
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size:1.7vh;
+    color:#8a97ab;
+  }
+
+  .badge-row { margin-bottom:1.4vh; }
+  .badge {
+    display:inline-block;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:900;
+    font-size:1.7vh;
+    color:#1a1206;
+    background: linear-gradient(135deg, #ffb86b, #f5b301);
+    padding:0.5vh 1.6vh;
+    border-radius: 999px;
+    letter-spacing:0.02em;
+    box-shadow: 0 0.4vh 1.2vh rgba(245,179,1,0.35);
+  }
+
+  table {
+    width:100%;
+    border-collapse:collapse;
+    border:0.18vh solid rgba(255,255,255,0.18);
+    flex:1 1 auto;
+    table-layout:fixed;
+  }
+  thead th {
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:900;
+    font-size:1.9vh;
+    color:#eef3fb;
+    background:#12161f;
+    border:0.1vh solid rgba(255,255,255,0.14);
+    padding:0.9vh 0.4vh;
+  }
+  tbody td {
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size:1.85vh;
+    color:#dfe6f0;
+    text-align:center;
+    border:0.1vh solid rgba(255,255,255,0.08);
+    padding:0.65vh 0.4vh;
+    background:#0d1017;
+  }
+  tr.morning td { background:rgba(255,154,90,0.16); color:#ffc79a; }
+  tr.bell td { background:rgba(123,226,107,0.16); color:#a8f09a; }
+  tr.bell td.bell-span {
+    background:rgba(123,226,107,0.22);
+    color:#c3f7b6;
+    font-weight:900;
+    line-height:1.35;
+  }
+  tr.lunch td { background:rgba(255,209,102,0.16); color:#ffe4a0; }
+  tr.dismiss td { background:rgba(255,154,90,0.16); color:#ffc79a; }
+  tr.dismiss td.dismiss-note {
+    font-weight:900;
+    color:#ff8a7a;
+    background:rgba(255,107,107,0.2);
+    text-shadow: 0 0 1vh rgba(255,107,107,0.4);
+  }
+
+  /* ---------------- 하단: 추석 인사 배너 ---------------- */
+  .greeting {
+    position:relative;
+    flex:0 0 22vh;
+    display:flex; align-items:center; justify-content:center; gap:2.4vw;
+    background: linear-gradient(135deg, #2a1608, #4a2a10 55%, #6e3f16);
+    border-top: 0.1vh solid rgba(255,255,255,0.1);
+    overflow:hidden;
+  }
+  .greeting::before{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse 60% 90% at 82% 50%, rgba(255,214,140,0.35), transparent 70%);
+    pointer-events:none;
+  }
+
+  .moon {
+    position:relative;
+    width:11vh; height:11vh;
+    border-radius:50%;
+    flex:0 0 auto;
+    background: radial-gradient(circle at 35% 32%, #fff8e0, #ffe9a8 55%, #f3cf74 100%);
+    box-shadow:
+      0 0 2.2vh rgba(255, 224, 150, 0.55),
+      0 0 5vh rgba(255, 200, 110, 0.35);
+    animation: moonGlow 4.5s ease-in-out infinite;
+  }
+  @keyframes moonGlow{
+    0%, 100% {
+      box-shadow:
+        0 0 2.2vh rgba(255, 224, 150, 0.5),
+        0 0 5vh rgba(255, 200, 110, 0.28);
+    }
+    50% {
+      box-shadow:
+        0 0 3.4vh rgba(255, 230, 165, 0.8),
+        0 0 8vh rgba(255, 205, 120, 0.5);
+    }
+  }
+  .moon .rabbit { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:5.4vh; }
+
+  .greeting-text { position:relative; z-index:2; text-align:left; }
+  .greeting-title {
+    font-family:'Black Han Sans', sans-serif;
+    font-size:3.3vh;
+    color:#fff7e6;
+    text-shadow: 0 0.3vh 1vh rgba(0,0,0,0.35);
+    margin-bottom:0.6vh;
+  }
+  .greeting-sub {
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size:1.75vh;
+    color:#ffe8bf;
+  }
+
+  .spark {
+    position:absolute;
+    color:#fff2cf;
+    text-shadow:0 0 1vh rgba(255,240,200,0.9);
+    animation: twinkle 2.6s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes twinkle{
+    0%,100%{ opacity:0; transform:scale(0.5); }
+    50%{ opacity:1; transform:scale(1); }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+
+    <div class="sheet">
+      <div class="title-row">
+        <div class="title">성일정보고등학교 시정표</div>
+        <div class="date">2026. 9. 23.</div>
+      </div>
+      <div class="badge-row">
+        <span class="badge">추석 연휴 앞둔 단축수업</span>
+      </div>
+
+      <table>
+        <colgroup>
+          <col style="width:34%">
+          <col style="width:34%">
+          <col style="width:32%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>내 용</th>
+            <th>시 간</th>
+            <th>소요시간(분)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="morning">
+            <td>아침맞이</td>
+            <td>08:20~08:50</td>
+            <td>30</td>
+          </tr>
+          <tr class="bell">
+            <td>등교예비타종</td>
+            <td>08:45</td>
+            <td class="bell-span" rowspan="2">아침조회<br>08:45~08:55</td>
+          </tr>
+          <tr class="bell">
+            <td>1교시예비타종</td>
+            <td>08:55</td>
+          </tr>
+          <tr>
+            <td>1교시</td><td>09:00~09:45</td><td>45</td>
+          </tr>
+          <tr>
+            <td>2교시</td><td>09:55~10:40</td><td>45</td>
+          </tr>
+          <tr>
+            <td>3교시</td><td>10:50~11:35</td><td>45</td>
+          </tr>
+          <tr>
+            <td>4교시</td><td>11:45~12:30</td><td>45</td>
+          </tr>
+          <tr class="lunch">
+            <td>중 식</td><td>12:30~13:20</td><td>50</td>
+          </tr>
+          <tr>
+            <td>5교시</td><td>13:20~14:05</td><td>45</td>
+          </tr>
+          <tr class="dismiss">
+            <td>종례 및 하교</td>
+            <td>~14:20</td>
+            <td class="dismiss-note">전학급 하교 시간 준수</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="greeting" id="greeting">
+      <div class="moon"><div class="rabbit">🐇</div></div>
+      <div class="greeting-text">
+        <div class="greeting-title">풍성한 한가위 보내세요!</div>
+        <div class="greeting-sub">즐겁고 편안한 명절, 가족과 함께 행복한 시간 되시길 바랍니다 🌕</div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  // 인사 배너 위에 작은 반짝임 랜덤 배치
+  (function(){
+    const el = document.getElementById('greeting');
+    const glyphs = ['✦','✧','✨'];
+    for (let i = 0; i < 6; i++){
+      const s = document.createElement('div');
+      s.className = 'spark';
+      s.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
+      s.style.fontSize = (1 + Math.random()*1.4) + 'vh';
+      s.style.left = (4 + Math.random()*30) + '%';
+      s.style.top  = (10 + Math.random()*80) + '%';
+      s.style.animationDuration = (2 + Math.random()*2) + 's';
+      s.style.animationDelay = (Math.random()*3) + 's';
+      el.appendChild(s);
+    }
+  })();
+</script>
+</body>
+</html>
