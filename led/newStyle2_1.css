@@ -34,15 +34,15 @@ body, html {
     display: grid;
     width: 100vw;
     height: 100vh;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 2fr;
     grid-template-rows: 1fr 1fr;
-    gap: var(--gap);           /* 기존 2px 그대로. 바깥 padding은 추가하지 않음(기존 크기 유지) */
+    gap: var(--gap);
     background: var(--wall-bg);
     padding: 20px;
 
     grid-template-areas:
-        "calendar     meal     merged"
-        "calendar     d-day    merged";
+        "merged    meal      calendar"
+        "merged    d-day     calendar";
 }
 
 /* ---------------- 공통 패널(카드) 스타일 ---------------- */
