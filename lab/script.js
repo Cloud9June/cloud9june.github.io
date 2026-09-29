@@ -49,6 +49,24 @@ const manageTeachersBtn = document.getElementById("manage-teachers-btn");
 const teacherModal = document.getElementById("teacher-modal");
 const teacherListEl = document.getElementById("teacher-list");
 const closeTeacherModalBtn = document.getElementById("close-teacher-modal-btn");
+const manageRosterBtn = document.getElementById("manage-roster-btn");
+
+const rosterModal = document.getElementById("roster-modal");
+const rosterListEl = document.getElementById("roster-list");
+const closeRosterModalBtn = document.getElementById("close-roster-modal-btn");
+const rosterNameInput = document.getElementById("roster-name-input");
+const rosterEmailInput = document.getElementById("roster-email-input");
+const addRosterBtn = document.getElementById("add-roster-btn");
+const rosterBulkInput = document.getElementById("roster-bulk-input");
+const addRosterBulkBtn = document.getElementById("add-roster-bulk-btn");
+
+const assignModal = document.getElementById("assign-modal");
+const assignModalTitle = document.getElementById("assign-modal-title");
+const assignSearchInput = document.getElementById("assign-search-input");
+const assignListEl = document.getElementById("assign-list");
+const closeAssignModalBtn = document.getElementById("close-assign-modal-btn");
+const assignCancelBtn = document.getElementById("assign-cancel-btn");
+const assignSaveBtn = document.getElementById("assign-save-btn");
 
 const specsListEl = document.getElementById("specs-list");
 const editSpecsBtn = document.getElementById("edit-specs-btn");
@@ -938,6 +956,11 @@ document.getElementById("save-btn").addEventListener("click", async () => {
 // 👩‍🏫 실습실 담당자 배정 (전체관리자 전용)
 // ----------------------------------------------------------
 let labManagersMap = new Map(); // labId -> string[]
+let teacherRoster = []; // [{ name, email }] - settings/teacher_roster에 미리 등록해둔 선생님 명단
+let assignTargetLabId = null; // 담당자 지정 모달이 현재 다루고 있는 실습실 id
+// 명단에 없는 이메일로(예: 예전에 직접 입력해) 이미 배정되어 있던 담당자.
+// 화면에는 더 이상 편집 UI를 보여주지 않지만, 저장할 때 실수로 해제되지 않도록 그대로 들고 있는다.
+let assignExtraEmails = [];
 
 manageTeachersBtn.addEventListener("click", openTeacherModal);
 closeTeacherModalBtn.addEventListener("click", () => {
@@ -957,7 +980,7 @@ async function openTeacherModal() {
     // labs 컬렉션을 한 번에 조회해 실습실별 개별 조회(최대 16회)를 피한다.
     // (설명/시점/전달사항을 한 번도 설정하지 않은 실습실은 문서 자체가 없을 수 있으므로,
     //  아래 renderTeacherList에서는 정적 목록인 labs-data.js의 labs를 기준으로 순회한다.)
-    const snapshot = await getDocs(collection(db, "labs"));
+    const [snapshot] = await Promise.all([getDocs(collection(db, "labs")), loadTeacherRoster()]);
     labManagersMap = new Map();
     snapshot.forEach((docSnap) => {
       labManagersMap.set(docSnap.id, docSnap.data().managers || []);
@@ -976,10 +999,16 @@ async function openTeacherModal() {
 }
 
 function renderTeacherList() {
+  const nameByEmail = new Map(teacherRoster.map((t) => [t.email.toLowerCase(), t.name]));
+
   teacherListEl.innerHTML = labs
     .map((lab) => {
       const managers = labManagersMap.get(lab.id) || [];
-      const managerText = managers.length > 0 ? managers.join(", ") : "지정된 담당자 없음";
+      // 명단에 등록된 이메일은 이름으로, 명단에 없는(직접 입력했던) 이메일은 그대로 보여준다.
+      const managerText =
+        managers.length > 0
+          ? managers.map((email) => nameByEmail.get(email.toLowerCase()) || email).join(", ")
+          : "지정된 담당자 없음";
       const emptyClass = managers.length > 0 ? "" : "teacher-row__emails--empty";
       return `
         <div class="teacher-row">
@@ -995,32 +1024,282 @@ function renderTeacherList() {
   });
 }
 
-async function editLabManagers(labId) {
+// ----------------------------------------------------------
+// 📇 선생님 명단 (settings/teacher_roster) — 이름 ↔ 이메일 미리 등록
+// ----------------------------------------------------------
+async function loadTeacherRoster() {
+  try {
+    const snap = await getDoc(doc(db, "settings", "teacher_roster"));
+    const list = snap.exists() ? snap.data().teachers || [] : [];
+    teacherRoster = list.slice().sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  } catch (error) {
+    console.error("선생님 명단 로딩 실패:", error);
+    teacherRoster = [];
+  }
+}
+
+manageRosterBtn.addEventListener("click", openRosterModal);
+closeRosterModalBtn.addEventListener("click", () => rosterModal.classList.add("hidden"));
+
+function openRosterModal() {
+  rosterModal.classList.remove("hidden");
+  rosterNameInput.value = "";
+  rosterEmailInput.value = "";
+  rosterBulkInput.value = "";
+  renderRosterList();
+}
+
+function renderRosterList() {
+  rosterListEl.innerHTML = "";
+
+  if (teacherRoster.length === 0) {
+    const p = document.createElement("p");
+    p.className = "roster-empty-hint";
+    p.textContent = "등록된 선생님이 없습니다. 위에서 이름과 이메일을 입력해 추가하세요.";
+    rosterListEl.appendChild(p);
+    return;
+  }
+
+  teacherRoster.forEach((teacher, idx) => {
+    const row = document.createElement("div");
+    row.className = "roster-row";
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "roster-row__name";
+    nameEl.textContent = teacher.name;
+
+    const emailEl = document.createElement("span");
+    emailEl.className = "roster-row__email";
+    emailEl.textContent = teacher.email;
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "roster-row__delete";
+    delBtn.title = "명단에서 삭제";
+    delBtn.textContent = "✕";
+    delBtn.addEventListener("click", () => deleteRosterEntry(idx));
+
+    row.appendChild(nameEl);
+    row.appendChild(emailEl);
+    row.appendChild(delBtn);
+    rosterListEl.appendChild(row);
+  });
+}
+
+addRosterBtn.addEventListener("click", async () => {
+  const name = rosterNameInput.value.trim();
+  const email = rosterEmailInput.value.trim().toLowerCase();
+  if (!name || !email) {
+    alert("이름과 이메일을 모두 입력하세요.");
+    return;
+  }
+  if (teacherRoster.some((t) => t.email.toLowerCase() === email)) {
+    alert("이미 등록된 이메일입니다.");
+    return;
+  }
+
+  const updated = [...teacherRoster, { name, email }].sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  try {
+    await setDoc(doc(db, "settings", "teacher_roster"), { teachers: updated });
+    teacherRoster = updated;
+    rosterNameInput.value = "";
+    rosterEmailInput.value = "";
+    renderRosterList();
+  } catch (error) {
+    console.error("선생님 명단 저장 실패:", error);
+    alert("추가하지 못했습니다: " + error.message);
+  }
+});
+
+/**
+ * 구글 시트에서 "이름[탭]이메일" 형태로 복사해 붙여넣은 여러 줄의 텍스트를 파싱한다.
+ * 탭뿐 아니라 쉼표로 구분한 경우도 지원하고, 이메일(@ 포함)이 없는 줄은
+ * (예: 시트의 머리글 줄 "이름 / 이메일") 조용히 건너뛴다.
+ */
+function parseBulkRosterInput(text) {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parts = line.includes("\t") ? line.split("\t") : line.split(",");
+      const name = (parts[0] || "").trim();
+      const email = (parts[1] || "").trim().toLowerCase();
+      return { name, email };
+    })
+    .filter((entry) => entry.name && entry.email.includes("@"));
+}
+
+addRosterBulkBtn.addEventListener("click", async () => {
+  const parsed = parseBulkRosterInput(rosterBulkInput.value);
+  if (parsed.length === 0) {
+    alert("추가할 내용이 없습니다. 이름과 이메일을 탭이나 쉼표로 구분해 한 줄에 한 명씩 붙여넣어주세요.");
+    return;
+  }
+
+  const existingEmails = new Set(teacherRoster.map((t) => t.email.toLowerCase()));
+  const added = [];
+  let duplicateCount = 0;
+
+  parsed.forEach((entry) => {
+    if (existingEmails.has(entry.email)) {
+      duplicateCount++;
+      return;
+    }
+    existingEmails.add(entry.email);
+    added.push(entry);
+  });
+
+  if (added.length === 0) {
+    alert(`추가할 새 항목이 없습니다. (${duplicateCount}명은 이미 등록되어 있습니다)`);
+    return;
+  }
+
+  const updated = [...teacherRoster, ...added].sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  try {
+    await setDoc(doc(db, "settings", "teacher_roster"), { teachers: updated });
+    teacherRoster = updated;
+    rosterBulkInput.value = "";
+    renderRosterList();
+    alert(
+      `${added.length}명을 추가했습니다.` + (duplicateCount > 0 ? `\n(이미 등록되어 있던 ${duplicateCount}명은 건너뛰었습니다)` : "")
+    );
+  } catch (error) {
+    console.error("선생님 명단 일괄 저장 실패:", error);
+    alert("일괄 추가하지 못했습니다: " + error.message);
+  }
+});
+
+async function deleteRosterEntry(idx) {
+  const target = teacherRoster[idx];
+  if (!target) return;
+  if (
+    !confirm(`"${target.name}"을(를) 명단에서 삭제할까요?\n(이미 배정되어 있는 실습실 담당자에서는 자동으로 해제되지 않습니다)`)
+  ) {
+    return;
+  }
+
+  const updated = teacherRoster.filter((_, i) => i !== idx);
+  try {
+    await setDoc(doc(db, "settings", "teacher_roster"), { teachers: updated });
+    teacherRoster = updated;
+    renderRosterList();
+  } catch (error) {
+    console.error("선생님 명단 삭제 실패:", error);
+    alert("삭제하지 못했습니다: " + error.message);
+  }
+}
+
+// ----------------------------------------------------------
+// ✅ 담당자 지정 모달 (명단에서 이름으로 선택 + 명단에 없는 이메일 직접 추가)
+// ----------------------------------------------------------
+function editLabManagers(labId) {
   const lab = labs.find((l) => l.id === labId);
   if (!lab) return;
 
-  const current = labManagersMap.get(labId) || [];
-  const input = prompt(
-    `${lab.name}을(를) 관리할 선생님의 이메일을 쉼표(,)로 구분해 입력하세요.\n(비워두고 저장하면 담당자가 모두 해제됩니다)`,
-    current.join(", ")
-  );
-  if (input === null) return; // 취소
+  assignTargetLabId = labId;
+  assignModalTitle.textContent = `${lab.name} 담당자 지정`;
 
-  const emails = input
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const current = labManagersMap.get(labId) || [];
+  const currentSet = new Set(current.map((e) => e.toLowerCase()));
+  renderAssignList(currentSet);
+
+  // 명단에 없는 이메일로(예: 예전에 직접 입력해) 이미 배정되어 있던 담당자는 화면에
+  // 보여주지 않지만, 저장할 때 실수로 해제되지 않도록 그대로 기억해둔다.
+  const rosterEmails = new Set(teacherRoster.map((t) => t.email.toLowerCase()));
+  assignExtraEmails = current.filter((email) => !rosterEmails.has(email.toLowerCase()));
+
+  assignSearchInput.value = "";
+  assignModal.classList.remove("hidden");
+}
+
+function renderAssignList(currentSet) {
+  assignListEl.innerHTML = "";
+
+  if (teacherRoster.length === 0) {
+    const p = document.createElement("p");
+    p.className = "roster-empty-hint";
+    p.textContent = '등록된 선생님이 없습니다. "선생님 명단 관리"에서 먼저 추가해주세요.';
+    assignListEl.appendChild(p);
+    return;
+  }
+
+  teacherRoster.forEach((teacher) => {
+    const row = document.createElement("label");
+    row.className = "assign-row";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = teacher.email;
+    checkbox.checked = currentSet.has(teacher.email.toLowerCase());
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "assign-row__name";
+    nameEl.textContent = teacher.name;
+
+    const emailEl = document.createElement("span");
+    emailEl.className = "assign-row__email";
+    emailEl.textContent = teacher.email;
+
+    row.appendChild(checkbox);
+    row.appendChild(nameEl);
+    row.appendChild(emailEl);
+    assignListEl.appendChild(row);
+  });
+}
+
+/** 담당자 지정 모달의 이름 검색창 — 명단이 길어도 입력한 글자가 이름·이메일에 포함된 항목만 남긴다. */
+function filterAssignList(searchText) {
+  const term = searchText.trim().toLowerCase();
+  const rows = assignListEl.querySelectorAll(".assign-row");
+  let anyVisible = false;
+
+  rows.forEach((row) => {
+    const name = row.querySelector(".assign-row__name").textContent.toLowerCase();
+    const email = row.querySelector(".assign-row__email").textContent.toLowerCase();
+    const match = !term || name.includes(term) || email.includes(term);
+    row.style.display = match ? "" : "none";
+    if (match) anyVisible = true;
+  });
+
+  let emptyHint = assignListEl.querySelector(".assign-search-empty");
+  if (rows.length > 0 && !anyVisible) {
+    if (!emptyHint) {
+      emptyHint = document.createElement("p");
+      emptyHint.className = "roster-empty-hint assign-search-empty";
+      emptyHint.textContent = "검색 결과가 없습니다.";
+      assignListEl.appendChild(emptyHint);
+    }
+  } else if (emptyHint) {
+    emptyHint.remove();
+  }
+}
+
+assignSearchInput.addEventListener("input", () => filterAssignList(assignSearchInput.value));
+
+closeAssignModalBtn.addEventListener("click", () => assignModal.classList.add("hidden"));
+assignCancelBtn.addEventListener("click", () => assignModal.classList.add("hidden"));
+
+assignSaveBtn.addEventListener("click", async () => {
+  if (!assignTargetLabId) return;
+
+  const checkedEmails = Array.from(assignListEl.querySelectorAll('input[type="checkbox"]:checked')).map(
+    (cb) => cb.value
+  );
+
+  const merged = Array.from(new Set([...checkedEmails, ...assignExtraEmails]));
+  const labId = assignTargetLabId;
 
   try {
-    await setDoc(doc(db, "labs", labId), { managers: emails }, { merge: true });
-    labManagersMap.set(labId, emails);
+    await setDoc(doc(db, "labs", labId), { managers: merged }, { merge: true });
+    labManagersMap.set(labId, merged);
     renderTeacherList();
+    assignModal.classList.add("hidden");
     await syncLabManagersAggregate();
   } catch (error) {
     console.error("담당자 저장 실패:", error);
     alert("담당자를 저장하지 못했습니다: " + error.message);
   }
-}
+});
 
 /**
  * settings/lab_managers 문서에 "어떤 실습실이든 담당 중인 모든 선생님 이메일"을 모아 저장한다.

@@ -840,6 +840,125 @@ button, select {
 }
 .teacher-row__edit:hover { background: var(--bg-subtle); color: var(--text-primary); }
 
+.btn-roster-manage {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   선생님 명단 모달
+   ========================================================================== */
+.roster-add-form {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+.roster-add-form__name { flex: 0 0 110px; margin-top: 0; }
+.roster-add-form__email { flex: 1; margin-top: 0; }
+.roster-add-form__btn { flex: none; padding: 10px 16px; margin-top: 0; }
+
+.roster-bulk {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+}
+.roster-bulk summary {
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+.roster-bulk summary:hover { color: var(--text-primary); }
+.roster-bulk__desc {
+    margin: 8px 0 0;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+.roster-bulk__textarea {
+    margin-top: 8px;
+    font-family: inherit;
+    white-space: pre;
+}
+.roster-bulk__btn {
+    margin-top: 8px;
+    width: 100%;
+}
+
+.roster-list {
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+}
+.roster-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border);
+}
+.roster-row__name {
+    flex: 0 0 96px;
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+.roster-row__email {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    overflow-wrap: break-word;
+}
+.roster-row__delete {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.roster-row__delete:hover { background: var(--error-bg); color: var(--error); border-color: var(--error); }
+.roster-empty-hint { padding: 16px 4px; color: var(--text-muted); font-size: 0.85rem; }
+
+/* ==========================================================================
+   담당자 지정 모달 (이름 체크박스)
+   ========================================================================== */
+.assign-search {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+.assign-list {
+    overflow-y: auto;
+    max-height: 260px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+}
+.assign-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+}
+.assign-row:last-child { border-bottom: none; }
+.assign-row input[type="checkbox"] {
+    flex: none;
+    width: 17px;
+    height: 17px;
+    accent-color: var(--accent);
+}
+.assign-row__name { flex: 0 0 96px; font-weight: 700; font-size: 0.88rem; }
+.assign-row__email { flex: 1; min-width: 0; font-size: 0.8rem; color: var(--text-muted); overflow-wrap: break-word; }
+
 select {
     width: 100%;
     padding: 10px 12px;
