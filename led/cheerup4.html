@@ -291,18 +291,46 @@
 
   // 다음에 띄울 풍등 순서를 미리 섞어서 준비합니다. 베스트로 선정된 메시지는
   // BEST_WEIGHT배 더 자주 섞여 들어가서, 계속 보고 있어도 자연스럽게 더 자주 보입니다.
+  // 한 바퀴(이번에 섞은 묶음) 안에서는 모든 메시지가 딱 한 번씩만 나오고,
+  // 그 한 바퀴를 다 돌고 나서야 다음 묶음으로 다시 섞입니다.
   function rebuildQueue() {
-    const items = [];
+    const pool = [];
     currentData.forEach(item => {
-      items.push(item);
+      pool.push(item);
       if (isBestItem(item)) {
-        for (let i = 1; i < BEST_WEIGHT; i++) items.push(item);
+        for (let i = 1; i < BEST_WEIGHT; i++) pool.push(item);
       }
     });
-    for (let i = items.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [items[i], items[j]] = [items[j], items[i]];
+
+    // 한 바퀴가 끝나고 다음 바퀴로 넘어갈 때, 이전 바퀴의 마지막 풍등과
+    // 이번 바퀴의 첫 풍등이 같은 메시지가 되지 않도록 기억해둡니다.
+    const prevLast = spawnQueue.length ? spawnQueue[spawnQueue.length - 1] : null;
+
+    // 메시지별로 이번 바퀴에 몇 번 나와야 하는지(베스트는 BEST_WEIGHT번) 세어둡니다.
+    const groups = [];
+    pool.forEach(item => {
+      const g = groups.find(g => g.item === item);
+      if (g) g.count++; else groups.push({ item, count: 1 });
+    });
+
+    // 매 자리마다 "직전에 놓인 메시지와 다르면서 아직 남은 횟수가 가장 많은"
+    // 메시지를 골라 채웁니다(동률이면 무작위로). 이렇게 하면 같은 메시지가
+    // 바로 옆자리에 연달아 오는 일을, 가능한 경우라면 항상 피할 수 있고
+    // (샘플이 적을 때 특히 중요합니다), 이전 바퀴의 마지막과도 자연스럽게
+    // 이어지지 않습니다.
+    const items = [];
+    let last = prevLast;
+    for (let step = 0; step < pool.length; step++) {
+      let candidates = groups.filter(g => g.count > 0 && g.item !== last);
+      if (candidates.length === 0) candidates = groups.filter(g => g.count > 0);
+      const maxCount = Math.max(...candidates.map(g => g.count));
+      const topCandidates = candidates.filter(g => g.count === maxCount);
+      const picked = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+      picked.count--;
+      items.push(picked.item);
+      last = picked.item;
     }
+
     spawnQueue = items;
     queuePos = 0;
   }
