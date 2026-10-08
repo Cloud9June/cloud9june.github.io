@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>응원의 밤하늘 · 소원 풍등</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%;
+    overflow:hidden;
+    background:#050a0f;
+    color:#fff;
+    font-family:'Noto Sans KR', sans-serif;
+  }
+
+  .stage {
+    position:relative;
+    width:100vw; height:100vh;
+    display:flex; flex-direction:column;
+    background: linear-gradient(to bottom, #050a0f 0%, #0b1a2b 55%, #16293f 100%);
+    overflow:hidden;
+  }
+
+  canvas#stars { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+
+  /* ---------------- 상단 타이틀 ---------------- */
+  .header {
+    position:relative; z-index:3;
+    flex:0 0 auto;
+    display:flex; align-items:baseline; justify-content:center; gap:0.8vmin;
+    padding: 2.4vh 2vw 1vh;
+  }
+  .header .title {
+    font-family:'Black Han Sans', sans-serif;
+    font-size: 3vmin;
+    color:#fff;
+    text-shadow: 0 0 1.8vmin rgba(255,200,120,0.45);
+    letter-spacing:0.02em;
+  }
+  .header .subtitle {
+    font-family:'Nanum Pen Script', cursive;
+    font-size: 2.1vmin;
+    color: rgba(255,214,150,0.75);
+  }
+
+  /* ---------------- 풍등이 떠오르는 영역 ---------------- */
+  .sky {
+    position:relative;
+    z-index:2;
+    flex:1 1 auto;
+    overflow:hidden;
+  }
+
+  .empty-state {
+    position:absolute; inset:0; z-index:4;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; padding: 0 6vw;
+    transition: opacity 0.6s ease;
+  }
+  .empty-state.hide { opacity:0; pointer-events:none; }
+  .empty-state p {
+    font-family:'Nanum Pen Script', cursive;
+    font-size: 2.8vmin;
+    line-height:1.5;
+    color: rgba(255,230,180,0.65);
+  }
+
+  /* ---------------- 풍등 ---------------- */
+  .lantern {
+    position:absolute;
+    bottom:-38vmin;
+    width:21vmin;
+    animation: riseUp var(--dur, 20s) linear forwards;
+    pointer-events:none;
+    z-index:3;
+  }
+  .lantern.best { width:27vmin; }
+
+  @keyframes riseUp {
+    0%   { transform: translate(0, 0) rotate(0deg); opacity:0; }
+    6%   { opacity:1; }
+    25%  { transform: translate(calc(var(--sway, 4) * 1px), -25vh) rotate(calc(var(--sway, 4) * 0.5deg)); }
+    50%  { transform: translate(calc(var(--sway, 4) * -1px), -55vh) rotate(calc(var(--sway, 4) * -0.5deg)); }
+    75%  { transform: translate(calc(var(--sway, 4) * 1px), -85vh) rotate(calc(var(--sway, 4) * 0.5deg)); }
+    92%  { opacity:1; }
+    100% { transform: translate(0, -118vh) rotate(0deg); opacity:0; }
+  }
+
+  .lantern-crown {
+    position:absolute; top:-1.8vmin; left:50%; transform:translateX(-50%) rotate(-8deg);
+    font-size:2.4vmin;
+    filter: drop-shadow(0 0.3vmin 0.6vmin rgba(0,0,0,0.5));
+    z-index:5;
+  }
+  .lantern-new {
+    position:absolute; top:0.3vmin; right:0.3vmin;
+    background:#ff4444; color:#fff;
+    font-family:'Noto Sans KR', sans-serif; font-weight:800;
+    font-size:1.1vmin; padding:0.3vmin 0.8vmin; border-radius:999px;
+    letter-spacing:0.02em;
+    animation: blink 1s infinite;
+    z-index:5;
+  }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
+
+  .lantern-body {
+    position:relative;
+    width:100%;
+    aspect-ratio: 1 / 1.15;
+    border-radius: 46% 46% 38% 38% / 50% 50% 46% 46%;
+    background: radial-gradient(ellipse at 50% 35%, rgba(255,218,150,0.96), rgba(255,170,60,0.82) 58%, rgba(214,116,26,0.62) 100%);
+    box-shadow: 0 0 2.6vmin rgba(255,190,110,0.55), inset 0 -1vmin 2.2vmin rgba(120,50,10,0.35);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 2vmin 1.8vmin;
+    animation: flicker 2.6s ease-in-out infinite;
+  }
+  .lantern-body::before, .lantern-body::after {
+    content:"";
+    position:absolute; left:50%; transform:translateX(-50%);
+    width:60%; height:0.55vmin;
+    background: rgba(90,40,10,0.4);
+    border-radius:999px;
+  }
+  .lantern-body::before { top: 15%; }
+  .lantern-body::after  { bottom: 15%; }
+  @keyframes flicker {
+    0%, 100% { filter:brightness(1); }
+    50%      { filter:brightness(1.12); }
+  }
+
+  .lantern.best .lantern-body {
+    background: radial-gradient(ellipse at 50% 35%, #fff6d8, #ffd84d 55%, #e6a300 100%);
+    box-shadow: 0 0 4.4vmin rgba(255,215,0,0.85), 0 0 7.5vmin rgba(255,255,255,0.3), inset 0 -1vmin 2.2vmin rgba(150,90,0,0.3);
+    animation: bestFlicker 1.7s ease-in-out infinite;
+  }
+  @keyframes bestFlicker {
+    0%, 100% { filter:brightness(1); }
+    50%      { filter:brightness(1.26); }
+  }
+
+  .lantern-content {
+    width:100%;
+    min-width:0;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:800;
+    font-size: 2.15vmin;
+    line-height:1.26;
+    color:#2c1d06;
+    text-align:center;
+    display:-webkit-box;
+    -webkit-line-clamp:6;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    word-break:keep-all;
+    overflow-wrap:break-word;
+    text-shadow: 0 0.15vmin 0 rgba(255,255,255,0.25);
+  }
+
+  /* ---------------- 풍등 아래 매달린 바구니(이름표) ---------------- */
+  /* 열기구처럼 풍등 몸통과 바구니를 가는 줄로 연결해, 내용(몸통)과
+     작성자 이름(바구니)이 형태 자체로 분리되어 보이게 합니다. */
+  .lantern-rig {
+    width:68%;
+    height:1.4vmin;
+    margin:0 auto;
+    display:flex; justify-content:space-between;
+  }
+  .lantern-rig::before, .lantern-rig::after {
+    content:"";
+    width:1.5px; height:100%;
+    background: rgba(255,214,150,0.6);
+  }
+
+  .lantern-basket {
+    width:85%;
+    margin:0 auto;
+    background: linear-gradient(160deg, #9a6a38, #6b4420 65%, #4a2d12 100%);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 0.55vmin),
+      linear-gradient(160deg, #9a6a38, #6b4420 65%, #4a2d12 100%);
+    border-radius: 0.5vmin;
+    box-shadow: 0 0.35vmin 0.9vmin rgba(0,0,0,0.5), inset 0 0.15vmin 0 rgba(255,255,255,0.18);
+    padding: 0.5vmin 0.4vmin;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lantern.best .lantern-basket {
+    background: linear-gradient(160deg, #e6c468, #a67a1e 65%, #704f10 100%);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 0.55vmin),
+      linear-gradient(160deg, #e6c468, #a67a1e 65%, #704f10 100%);
+  }
+
+  .lantern-author {
+    width:100%;
+    min-width:0;
+    font-family:'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size:1.7vmin;
+    color:#ffedc8;
+    text-shadow: 0 0.1vmin 0.2vmin rgba(0,0,0,0.4);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:100%;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <canvas id="stars"></canvas>
+
+    <div class="header">
+      <span class="title">응원의 밤하늘</span>
+      <span class="subtitle">· 우리가 띄운 소원 풍등</span>
+    </div>
+
+    <div class="sky" id="sky">
+      <div class="empty-state" id="emptyState">
+        <p>아직 띄워진 풍등이 없어요<br>곧 친구들의 응원이 하나둘 떠오를 거예요</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* =========================================================
+     풍등 응원 보드 설정
+     - API_URL : 응원 메시지를 받아오는 구글 앱스스크립트 주소 (기존 그대로 유지)
+     - SPAWN_INTERVAL : 풍등이 새로 떠오르는 간격(ms)
+     - BEST_WEIGHT : 선생님이 "베스트"로 고른 메시지(시트의 best 열이 'O')가
+       일반 메시지보다 몇 배 더 자주 등장할지
+     각 풍등은 독립적인 애니메이션으로 아래에서 위로 떠오르고, 다 떠오르면 스스로
+     사라집니다. 20초마다 새 메시지를 다시 불러오는데, 이미 떠 있는 풍등은 그대로
+     두고 "다음에 새로 띄울 풍등" 목록만 갱신하기 때문에 화면이 갑자기 튀거나
+     어긋나는 일이 없습니다.
+  ========================================================= */
+  const API_URL = "https://script.google.com/macros/s/AKfycbz7XXajn2CGbUjlrcNbdiUuD2oop8v0lIr4HxHfPeqaf7Fvtu_hE2TOisD5JvSWFOVFLw/exec";
+  const SPAWN_INTERVAL = 3000;
+  const BEST_WEIGHT = 3;
+  // 화면에 동시에 떠 있을 수 있는 풍등 최대 개수(쌓임 방지 안전장치). 아래
+  // visibilitychange 처리와 함께, 어떤 이유로든 풍등이 한꺼번에 몰려도
+  // 화면이 뒤덮이지 않도록 막아줍니다.
+  const MAX_LANTERNS = 10;
+
+  let currentData = [];
+  let spawnQueue = [];
+  let queuePos = 0;
+  let spawnTimer = null;
+  let loadTimer = null;
+
+  // 학생이 제출한 텍스트를 그대로 innerHTML에 넣지 않고 이스케이프합니다.
+  // (제출 내용에 <, > 같은 문자가 섞여 있어도 화면이 깨지거나 임의의 태그가
+  //  실행되지 않도록 하기 위한 안전장치입니다)
+  function escapeHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function isBestItem(item) {
+    return String(item.best || '').trim().toUpperCase() === 'O';
+  }
+
+  async function loadMessages() {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : [];
+      if (JSON.stringify(list) !== JSON.stringify(currentData)) {
+        currentData = list;
+        rebuildQueue();
+      }
+      updateEmptyState();
+    } catch (e) {
+      console.error('응원 메시지 로드 실패', e);
+      updateEmptyState();
+    }
+  }
+
+  function updateEmptyState() {
+    const el = document.getElementById('emptyState');
+    if (currentData.length > 0) el.classList.add('hide');
+    else el.classList.remove('hide');
+  }
+
+  // 다음에 띄울 풍등 순서를 미리 섞어서 준비합니다. 베스트로 선정된 메시지는
+  // BEST_WEIGHT배 더 자주 섞여 들어가서, 계속 보고 있어도 자연스럽게 더 자주 보입니다.
+  function rebuildQueue() {
+    const items = [];
+    currentData.forEach(item => {
+      items.push(item);
+      if (isBestItem(item)) {
+        for (let i = 1; i < BEST_WEIGHT; i++) items.push(item);
+      }
+    });
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    spawnQueue = items;
+    queuePos = 0;
+  }
+
+  function createLantern(item) {
+    const sky = document.getElementById('sky');
+    const isBest = isBestItem(item);
+
+    // 풍등이 MAX_LANTERNS개를 넘어가면 가장 오래 떠 있던 것부터 정리합니다.
+    // (다른 탭/창에 갔다 왔을 때처럼 타이머가 밀렸다 한꺼번에 몰려도
+    //  화면이 풍등으로 뒤덮이는 일을 막아줍니다)
+    const existing = sky.querySelectorAll('.lantern');
+    if (existing.length >= MAX_LANTERNS) {
+      existing[0].remove();
+    }
+
+    const dateObj = new Date(item.date);
+    const hasValidDate = !isNaN(dateObj.getTime());
+    const isNew = hasValidDate && (Date.now() - dateObj.getTime()) < (60 * 60 * 1000);
+
+    // 풍등 바구니/몸통에 실제로 깨짐 없이 들어가는 글자수에 맞춘 안전장치입니다.
+    // (입력 폼의 maxlength와 맞춰져 있어 평소에는 거의 발동하지 않고,
+    //  혹시 더 긴 데이터가 들어와도 레이아웃이 깨지지 않도록 막아줍니다)
+    const rawName = item.name || '';
+    const rawContent = item.content || '';
+    const cleanName = rawName.length > 10 ? rawName.slice(0, 10) + '..' : rawName;
+    const cleanContent = rawContent.length > 36 ? rawContent.slice(0, 36) + '...' : rawContent;
+
+    const el = document.createElement('div');
+    el.className = 'lantern' + (isBest ? ' best' : '');
+
+    const leftPct = (4 + Math.random() * 78).toFixed(1);
+    const dur = (isBest ? (23 + Math.random() * 4) : (16 + Math.random() * 8)).toFixed(1);
+    const sway = (Math.random() * 10 - 5).toFixed(1);
+    el.style.left = leftPct + '%';
+    el.style.setProperty('--dur', dur + 's');
+    el.style.setProperty('--sway', sway);
+
+    el.innerHTML = `
+      ${isBest ? '<div class="lantern-crown">👑</div>' : ''}
+      ${isNew ? '<div class="lantern-new">NEW</div>' : ''}
+      <div class="lantern-body">
+        <div class="lantern-content">${escapeHtml(cleanContent)}</div>
+      </div>
+      <div class="lantern-rig"></div>
+      <div class="lantern-basket">
+        <div class="lantern-author">${escapeHtml(cleanName)}</div>
+      </div>`;
+
+    el.addEventListener('animationend', (ev) => {
+      // riseUp 애니메이션이 끝났을 때만 제거 (flicker 등 다른 애니메이션과 혼동 방지)
+      if (ev.animationName === 'riseUp') el.remove();
+    });
+
+    sky.appendChild(el);
+  }
+
+  function spawnNext() {
+    if (!spawnQueue.length) return;
+    if (queuePos >= spawnQueue.length) rebuildQueue();
+    if (!spawnQueue.length) return;
+    const item = spawnQueue[queuePos++];
+    createLantern(item);
+  }
+
+  function startTimers() {
+    stopTimers();
+    spawnTimer = setInterval(spawnNext, SPAWN_INTERVAL);
+    loadTimer = setInterval(loadMessages, 20000);
+  }
+
+  function stopTimers() {
+    if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+    if (loadTimer) { clearInterval(loadTimer); loadTimer = null; }
+  }
+
+  // 다른 탭이나 다른 프로그램으로 전환했다가 돌아오면, 화면이 안 보이는 동안
+  // 브라우저가 절전을 위해 타이머 실행을 미뤘다가 한꺼번에 몰아서 처리하는
+  // 경우가 있어 풍등이 우르르 쏟아지듯 나타날 수 있습니다. 이를 막기 위해
+  // 화면이 안 보이는 동안은 타이머를 아예 꺼두고, 다시 보일 때 혹시 쌓여있을
+  // 수 있는 풍등을 정리한 뒤 깨끗하게 다시 시작합니다.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopTimers();
+    } else {
+      document.querySelectorAll('.lantern').forEach(el => el.remove());
+      loadMessages();
+      spawnNext();
+      startTimers();
+    }
+  });
+
+  window.onload = () => {
+    updateEmptyState();
+    loadMessages();
+    spawnNext();
+    startTimers();
+  };
+
+  /* ---------- 배경 별빛 파티클 ---------- */
+  (function(){
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W * DPR; canvas.height = H * DPR;
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const N = 70;
+    const stars = Array.from({ length: N }, () => ({
+      x: Math.random(), y: Math.random() * 0.75,
+      r: 0.35 + Math.random() * 0.9,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.5 + Math.random() * 0.8
+    }));
+
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      for (const s of stars) {
+        const tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 0.001 * s.speed + s.phase));
+        ctx.fillStyle = `rgba(240, 220, 170, ${0.55 * tw})`;
+        ctx.beginPath();
+        ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  })();
+</script>
+</body>
+</html>
