@@ -55,3 +55,10 @@ export const SPEC_FIELDS = [
   { key: "os", label: "운영체제", placeholder: "예: Windows 11" },
   { key: "note", label: "비고", placeholder: "추가로 적어둘 내용", multiline: true },
 ];
+
+// 실습실 사양을 한눈에 비교할 수 있도록 매기는 등급. S가 가장 높고 F로 갈수록 낮다.
+// S를 제외한 등급은 +/0/- 세 단계로 더 세분화할 수 있다 (예: "B+", "B0", "B-").
+// S는 이미 최상위라 세분화 없이 단독으로 쓴다.
+// Firestore에는 labs/{id}.grade에 이 중 하나의 값(또는 미평가 시 빈 문자열)으로 저장된다.
+export const GRADE_LETTERS = ["S", "A", "B", "C", "D", "E", "F"];
+export const GRADE_MODIFIERS = ["+", "0", "-"];

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실습실 관리 시스템</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="app-header__inner">
+            <div id="brand-btn" class="app-header__brand" title="처음 화면으로">
+                <span class="brand-mark">🖥️</span>
+                <h1>실습실 관리 시스템</h1>
+            </div>
+
+            <div class="app-header__user">
+                <img id="user-avatar" class="user-avatar" alt="" hidden>
+                <span id="user-info" class="user-info">로그인이 필요합니다</span>
+                <button id="manage-teachers-btn" class="btn btn-ghost" hidden>담당자 관리</button>
+                <button id="login-btn" class="btn btn-google">Google 로그인</button>
+                <button id="logout-btn" class="btn btn-ghost" hidden>로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+
+        <section id="dashboard-view" class="dashboard">
+            <div class="dashboard__intro">
+                <h2>실습실 종합 현황</h2>
+                <p>카드를 선택하면 해당 실습실의 좌석 상태를 확인하고 관리할 수 있습니다.</p>
+            </div>
+
+            <div id="admin-notice" class="admin-notice" hidden></div>
+
+            <div id="kpi-row" class="kpi-row"></div>
+
+            <div id="lab-grid" class="lab-grid">
+                <p class="loading-msg">데이터를 불러오는 중입니다... ⏳</p>
+            </div>
+        </section>
+
+        <section id="lab-view" class="lab-detail" style="display: none;">
+            <div class="lab-detail__header">
+                <button id="back-btn" class="btn-icon" title="목록으로">←</button>
+                <div class="lab-detail__title">
+                    <h2 id="current-lab-title">
+                        <span id="lab-name-text">실습실 선택</span>
+                        <span id="manager-badge" class="manager-badge" hidden>담당 선생님</span>
+                    </h2>
+                    <p id="current-lab-desc" class="lab-desc"></p>
+                </div>
+                <button id="toggle-closed-btn" class="btn-icon" title="점검/공사 처리" hidden>🚧</button>
+                <button id="edit-info-btn" class="btn-icon" title="설명 수정">✏️</button>
+            </div>
+
+            <nav id="lab-switcher" class="lab-switcher"></nav>
+
+            <div id="lab-notice" class="lab-notice" hidden></div>
+
+            <div id="time-slot-row" class="time-slot-row"></div>
+
+            <div class="info-columns">
+                <section class="info-card">
+                    <div class="info-card__header">
+                        <div class="info-card__title">
+                            <h3>실습실 사양</h3>
+                            <span id="spec-grade-badge" class="grade-badge" hidden></span>
+                        </div>
+                        <button id="edit-specs-btn" class="btn-icon" title="사양 정보 수정" hidden>✏️</button>
+                    </div>
+                    <div id="specs-list" class="specs-list"></div>
+                </section>
+
+                <section class="info-card">
+                    <div class="info-card__header">
+                        <h3>설치 프로그램</h3>
+                    </div>
+                    <div id="programs-list" class="programs-list"></div>
+                    <button id="add-program-btn" class="btn btn-ghost btn-add-program" hidden>+ 프로그램 추가</button>
+                </section>
+            </div>
+
+            <div class="seat-legend">
+                <span class="legend-chip"><span class="dot dot--normal"></span>정상</span>
+                <span class="legend-chip"><span class="dot dot--error"></span>고장/점검</span>
+                <span class="legend-chip"><span class="dot dot--substitute"></span>장비 교체(가급적 비권장)</span>
+                <span class="legend-chip"><span class="dot dot--hidden"></span>빈 자리(제외)</span>
+            </div>
+
+            <div class="board-hint">▲ 교탁 / 칠판 방향</div>
+
+            <div id="seat-grid" class="seat-grid"></div>
+        </section>
+
+    </main>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>좌석 상태 변경</h3>
+
+            <label for="issue-select">상태 선택</label>
+            <select id="issue-select"></select>
+
+            <div id="substitute-field" class="substitute-field">
+                <label class="substitute-toggle">
+                    <input type="checkbox" id="substitute-checkbox">
+                    <span>🔄 다른 장비로 임시 교체되어 있어요</span>
+                </label>
+                <input id="substitute-note" type="text" class="text-input" placeholder="예: 모니터 - 보관함 여분품 사용 중" hidden>
+            </div>
+
+            <div class="modal-buttons">
+                <button id="cancel-btn" class="btn btn-cancel">취소</button>
+                <button id="save-btn" class="btn btn-save">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="specs-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>실습실 사양 정보</h3>
+
+            <label for="spec-grade">실습실 등급</label>
+            <select id="spec-grade">
+                <option value="">미평가</option>
+            </select>
+
+            <label for="spec-cpu">CPU</label>
+            <input id="spec-cpu" type="text" class="text-input" placeholder="예: Intel i5-12400">
+
+            <label for="spec-ram">메모리(RAM)</label>
+            <input id="spec-ram" type="text" class="text-input" placeholder="예: 16GB">
+
+            <label for="spec-storage">저장장치</label>
+            <input id="spec-storage" type="text" class="text-input" placeholder="예: SSD 512GB">
+
+            <label for="spec-gpu">그래픽카드</label>
+            <input id="spec-gpu" type="text" class="text-input" placeholder="예: 내장그래픽 / GTX 1650">
+
+            <label for="spec-monitor">모니터</label>
+            <input id="spec-monitor" type="text" class="text-input" placeholder="예: 24인치 FHD">
+
+            <label for="spec-os">운영체제</label>
+            <input id="spec-os" type="text" class="text-input" placeholder="예: Windows 11">
+
+            <label for="spec-note">비고</label>
+            <textarea id="spec-note" class="text-input" rows="2" placeholder="추가로 적어둘 내용"></textarea>
+
+            <div class="modal-buttons">
+                <button id="specs-cancel-btn" class="btn btn-cancel">취소</button>
+                <button id="specs-save-btn" class="btn btn-save">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="teacher-modal" class="modal hidden">
+        <div class="modal-content modal-content--wide">
+            <div class="modal-content__header">
+                <h3>실습실 담당자 관리</h3>
+                <button id="close-teacher-modal-btn" class="btn-icon" title="닫기">✕</button>
+            </div>
+            <p class="modal-content__desc">실습실별로 좌석 상태·시점·전달사항을 수정할 수 있는 선생님을 배정합니다. 이름을 선택해 담당자를 지정하세요.</p>
+            <button id="manage-roster-btn" class="btn btn-ghost btn-roster-manage">👤 선생님 명단 관리</button>
+            <div id="teacher-list" class="teacher-list"></div>
+        </div>
+    </div>
+
+    <div id="roster-modal" class="modal hidden">
+        <div class="modal-content modal-content--wide">
+            <div class="modal-content__header">
+                <h3>선생님 명단</h3>
+                <button id="close-roster-modal-btn" class="btn-icon" title="닫기">✕</button>
+            </div>
+            <p class="modal-content__desc">여기에 등록해두면, 실습실 담당자를 지정할 때 이메일 대신 이름으로 고를 수 있습니다.</p>
+
+            <div class="roster-add-form">
+                <input id="roster-name-input" type="text" class="text-input roster-add-form__name" placeholder="이름 (예: 홍길동)">
+                <input id="roster-email-input" type="text" class="text-input roster-add-form__email" placeholder="이메일 (예: teacher@school.kr)">
+                <button id="add-roster-btn" class="btn btn-save roster-add-form__btn">추가</button>
+            </div>
+
+            <details class="roster-bulk">
+                <summary>여러 명 한 번에 붙여넣기 (구글 시트에서 복사)</summary>
+                <p class="roster-bulk__desc">시트에서 이름·이메일 두 열을 선택해 복사한 뒤 아래에 그대로 붙여넣으세요. (한 줄에 한 명씩, 이름과 이메일 사이는 탭 또는 쉼표)</p>
+                <textarea id="roster-bulk-input" class="text-input roster-bulk__textarea" rows="5" placeholder="홍길동	teacher1@school.kr&#10;김철수	teacher2@school.kr"></textarea>
+                <button id="add-roster-bulk-btn" class="btn btn-save roster-bulk__btn">붙여넣은 명단 일괄 추가</button>
+            </details>
+
+            <div id="roster-list" class="roster-list"></div>
+        </div>
+    </div>
+
+    <div id="assign-modal" class="modal hidden">
+        <div class="modal-content modal-content--wide">
+            <div class="modal-content__header">
+                <h3 id="assign-modal-title">담당자 지정</h3>
+                <button id="close-assign-modal-btn" class="btn-icon" title="닫기">✕</button>
+            </div>
+            <p class="modal-content__desc">담당할 선생님을 이름으로 선택하세요. 명단에 없는 선생님은 "선생님 명단 관리"에서 먼저 추가해주세요.</p>
+
+            <input id="assign-search-input" type="text" class="text-input assign-search" placeholder="🔍 이름 검색">
+
+            <div id="assign-list" class="assign-list"></div>
+
+            <div class="modal-buttons">
+                <button id="assign-cancel-btn" class="btn btn-cancel">취소</button>
+                <button id="assign-save-btn" class="btn btn-save">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

@@ -52,6 +52,7 @@
                     </h2>
                     <p id="current-lab-desc" class="lab-desc"></p>
                 </div>
+                <button id="toggle-closed-btn" class="btn-icon" title="점검/공사 처리" hidden>🚧</button>
                 <button id="edit-info-btn" class="btn-icon" title="설명 수정">✏️</button>
             </div>
 
@@ -64,7 +65,10 @@
             <div class="info-columns">
                 <section class="info-card">
                     <div class="info-card__header">
-                        <h3>실습실 사양</h3>
+                        <div class="info-card__title">
+                            <h3>실습실 사양</h3>
+                            <span id="spec-grade-badge" class="grade-badge" hidden></span>
+                        </div>
                         <button id="edit-specs-btn" class="btn-icon" title="사양 정보 수정" hidden>✏️</button>
                     </div>
                     <div id="specs-list" class="specs-list"></div>
@@ -82,6 +86,7 @@
             <div class="seat-legend">
                 <span class="legend-chip"><span class="dot dot--normal"></span>정상</span>
                 <span class="legend-chip"><span class="dot dot--error"></span>고장/점검</span>
+                <span class="legend-chip"><span class="dot dot--substitute"></span>장비 교체(가급적 비권장)</span>
                 <span class="legend-chip"><span class="dot dot--hidden"></span>빈 자리(제외)</span>
             </div>
 
@@ -99,6 +104,14 @@
             <label for="issue-select">상태 선택</label>
             <select id="issue-select"></select>
 
+            <div id="substitute-field" class="substitute-field">
+                <label class="substitute-toggle">
+                    <input type="checkbox" id="substitute-checkbox">
+                    <span>🔄 다른 장비로 임시 교체되어 있어요</span>
+                </label>
+                <input id="substitute-note" type="text" class="text-input" placeholder="예: 모니터 - 보관함 여분품 사용 중" hidden>
+            </div>
+
             <div class="modal-buttons">
                 <button id="cancel-btn" class="btn btn-cancel">취소</button>
                 <button id="save-btn" class="btn btn-save">저장</button>
@@ -109,6 +122,11 @@
     <div id="specs-modal" class="modal hidden">
         <div class="modal-content">
             <h3>실습실 사양 정보</h3>
+
+            <label for="spec-grade">실습실 등급</label>
+            <select id="spec-grade">
+                <option value="">미평가</option>
+            </select>
 
             <label for="spec-cpu">CPU</label>
             <input id="spec-cpu" type="text" class="text-input" placeholder="예: Intel i5-12400">

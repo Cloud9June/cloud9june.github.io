@@ -18,7 +18,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 import { initAuth, getIsSuperAdmin, getUserEmail } from "./auth.js";
-import { labs, ISSUE_OPTIONS, HIDDEN_OPTION, RESTORE_OPTION, SPEC_FIELDS, CLASS_CAPACITY } from "./labs-data.js";
+import {
+  labs,
+  ISSUE_OPTIONS,
+  HIDDEN_OPTION,
+  RESTORE_OPTION,
+  SPEC_FIELDS,
+  GRADE_LETTERS,
+  GRADE_MODIFIERS,
+  CLASS_CAPACITY,
+} from "./labs-data.js";
 
 // ----------------------------------------------------------
 // DOM 참조
@@ -40,10 +49,14 @@ const labNameTextEl = document.getElementById("lab-name-text");
 const managerBadgeEl = document.getElementById("manager-badge");
 const descEl = document.getElementById("current-lab-desc");
 const editInfoBtn = document.getElementById("edit-info-btn");
+const toggleClosedBtn = document.getElementById("toggle-closed-btn");
 
 const modal = document.getElementById("modal");
 const modalTitle = document.querySelector("#modal .modal-content h3");
 const issueSelect = document.getElementById("issue-select");
+const substituteFieldEl = document.getElementById("substitute-field");
+const substituteCheckbox = document.getElementById("substitute-checkbox");
+const substituteNoteInput = document.getElementById("substitute-note");
 
 const manageTeachersBtn = document.getElementById("manage-teachers-btn");
 const teacherModal = document.getElementById("teacher-modal");
@@ -69,10 +82,33 @@ const assignCancelBtn = document.getElementById("assign-cancel-btn");
 const assignSaveBtn = document.getElementById("assign-save-btn");
 
 const specsListEl = document.getElementById("specs-list");
+const specGradeBadgeEl = document.getElementById("spec-grade-badge");
+const specGradeSelect = document.getElementById("spec-grade");
 const editSpecsBtn = document.getElementById("edit-specs-btn");
 const specsModal = document.getElementById("specs-modal");
 const specsCancelBtn = document.getElementById("specs-cancel-btn");
 const specsSaveBtn = document.getElementById("specs-save-btn");
+
+// 등급 선택 옵션은 labs-data.js의 GRADE_LETTERS/GRADE_MODIFIERS로 한 번만 채워둔다.
+// S는 세분화 없이 단독 옵션으로, 나머지는 "A+/A0/A-"처럼 글자별로 묶어(optgroup) 보여준다.
+GRADE_LETTERS.forEach((letter) => {
+  if (letter === "S") {
+    const opt = document.createElement("option");
+    opt.value = "S";
+    opt.textContent = "S";
+    specGradeSelect.appendChild(opt);
+    return;
+  }
+  const group = document.createElement("optgroup");
+  group.label = letter;
+  GRADE_MODIFIERS.forEach((modifier) => {
+    const opt = document.createElement("option");
+    opt.value = `${letter}${modifier}`;
+    opt.textContent = `${letter}${modifier}`;
+    group.appendChild(opt);
+  });
+  specGradeSelect.appendChild(group);
+});
 
 const programsListEl = document.getElementById("programs-list");
 const addProgramBtn = document.getElementById("add-program-btn");
@@ -277,6 +313,11 @@ function requireSuperAdmin() {
   return true;
 }
 
+/** rows/cols가 0으로 등록된(애초에 좌석을 배치한 적 없는) 실습실인지 여부 — 이런 곳은 점검 토글 대상이 아니다. */
+function isStructurallyEmptyLab() {
+  return !!activeLab && activeLab.rows === 0 && activeLab.cols === 0;
+}
+
 /** 현재 실습실에 대한 권한 상태를 좌석/시점/편집 버튼의 커서 등 화면에 반영한다. */
 function updateLabAccessUI() {
   const canManage = canManageActiveLab();
@@ -287,6 +328,12 @@ function updateLabAccessUI() {
   editSpecsBtn.hidden = !canManage;
   addProgramBtn.hidden = !canManage;
   renderPrograms(); // 삭제(✕) 버튼 표시 여부가 canManage에 따라 달라지므로 다시 그린다.
+
+  // 점검/공사 토글 버튼 — 좌석을 아예 배치한 적 없는 실습실에는 의미가 없으므로 숨긴다.
+  toggleClosedBtn.hidden = !canManage || isStructurallyEmptyLab();
+  toggleClosedBtn.classList.toggle("is-closed-active", activeClosed);
+  toggleClosedBtn.textContent = activeClosed ? "✅" : "🚧";
+  toggleClosedBtn.title = activeClosed ? "점검/공사 종료하고 다시 운영" : "점검/공사 중으로 표시";
 }
 
 // ----------------------------------------------------------
@@ -317,6 +364,9 @@ let activeLab = null;
 let activeNoticeText = "";
 let activeLabManagers = [];
 let activeSpecs = {};
+let activeGrade = ""; // "" | "S" | "A" | ... | "F"
+let activeClosed = false; // 공사/점검 등으로 실습실 전체를 일시적으로 사용 중지했는지 여부
+let activeClosedReason = "";
 let activeProgramsData = []; // [{ id, name, addedBy }]
 
 // ----------------------------------------------------------
@@ -331,6 +381,9 @@ function goToDashboard() {
   activeNoticeText = "";
   activeLabManagers = [];
   activeSpecs = {};
+  activeGrade = "";
+  activeClosed = false;
+  activeClosedReason = "";
   activeProgramsData = [];
   labView.classList.remove("is-guest");
   dashboardView.style.display = "block";
@@ -345,6 +398,7 @@ function goToLab(lab) {
 // ----------------------------------------------------------
 // 📊 대시보드 (실습실 전체 현황 카드)
 // ----------------------------------------------------------
+
 async function loadDashboardData() {
   if (!labGridEl) return;
   labGridEl.innerHTML = '<p class="loading-msg">데이터를 불러오는 중입니다... ⏳</p>';
@@ -353,10 +407,24 @@ async function loadDashboardData() {
   // 한 실습실 조회가 실패해도 나머지 카드 표시에 영향이 없도록 개별적으로 오류를 처리한다.
   const results = await Promise.all(
     labs.map(async (lab) => {
-      if (lab.rows === 0 && lab.cols === 0) {
-        labStatusCache.set(lab.id, "maintenance");
-        return { lab, maintenance: true };
+      const isStructurallyEmpty = lab.rows === 0 && lab.cols === 0;
+
+      // 등급·점검 상태는 좌석 조회 전에 먼저 알아야 한다 — 점검 중이면 좌석은 조회할 필요가 없다.
+      let labData = {};
+      try {
+        const labSnap = await getDoc(doc(db, "labs", lab.id));
+        labData = labSnap.exists() ? labSnap.data() : {};
+      } catch (error) {
+        console.error(`${lab.name} 정보 조회 실패:`, error);
       }
+      const grade = labData.grade || "";
+      const isClosed = isStructurallyEmpty || labData.closed === true;
+
+      if (isClosed) {
+        labStatusCache.set(lab.id, "maintenance");
+        return { lab, maintenance: true, grade, closedReason: labData.closedReason || "" };
+      }
+
       try {
         const snapshot = await getDocs(collection(db, `labs/${lab.id}/seats`));
         const seatsData = [];
@@ -383,11 +451,11 @@ async function loadDashboardData() {
         });
 
         labStatusCache.set(lab.id, errorList.length > 0 ? "error" : "normal");
-        return { lab, total, available, errorList };
+        return { lab, total, available, errorList, grade };
       } catch (error) {
         console.error(`${lab.name} 현황 로딩 실패:`, error);
         labStatusCache.set(lab.id, "unknown");
-        return { lab, failed: true };
+        return { lab, failed: true, grade: "" };
       }
     })
   );
@@ -435,15 +503,32 @@ function kpiTile(label, value, extraClass = "") {
     </div>`;
 }
 
-function renderLabCard({ lab, maintenance, failed, total, available, errorList }) {
+// 색상은 "B+"/"B0"/"B-" 모두 같은 B 색으로 — 맨 앞 글자만 보고 등급 색을 정한다.
+function gradeBadgeHtml(grade) {
+  return grade ? `<span class="grade-badge grade-badge--${grade.charAt(0)}">${grade}</span>` : "";
+}
+
+// 대시보드 카드 전체를 문자열로 조립해 innerHTML에 넣는 방식이라, 선생님이 직접 입력하는
+// 점검 사유 같은 자유 텍스트는 그대로 끼워 넣지 않고 이스케이프해서 안전하게 넣는다.
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function renderLabCard({ lab, maintenance, failed, total, available, errorList, grade, closedReason }) {
   if (maintenance) {
+    const note = closedReason ? escapeHtml(closedReason) : "리모델링 / 공사 중";
     return `
       <button class="lab-card lab-card--maintenance" data-lab-id="${lab.id}">
         <div class="lab-card__top">
-          <span class="lab-card__name">${lab.name}</span>
+          <div class="lab-card__title">
+            ${gradeBadgeHtml(grade)}
+            <span class="lab-card__name">${lab.name}</span>
+          </div>
           <span class="status-pill status-pill--maintenance">점검중</span>
         </div>
-        <p class="lab-card__note">🚧 리모델링 / 공사 중</p>
+        <p class="lab-card__note">🚧 ${note}</p>
       </button>`;
   }
 
@@ -451,7 +536,10 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList }
     return `
       <button class="lab-card lab-card--failed" data-lab-id="${lab.id}">
         <div class="lab-card__top">
-          <span class="lab-card__name">${lab.name}</span>
+          <div class="lab-card__title">
+            ${gradeBadgeHtml(grade)}
+            <span class="lab-card__name">${lab.name}</span>
+          </div>
           <span class="status-pill status-pill--unknown">확인 필요</span>
         </div>
         <p class="lab-card__note">⚠️ 데이터를 불러오지 못했습니다</p>
@@ -465,14 +553,17 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList }
   const hasEnoughForClass = available >= CLASS_CAPACITY;
   const showAsNormal = errorCount === 0 || hasEnoughForClass;
   const pillClass = showAsNormal ? "status-pill--normal" : "status-pill--error";
-  const pillText = showAsNormal ? "정상 운영" : `고장 ${errorCount}`;
+  const pillText = showAsNormal ? "운영중" : `고장 ${errorCount}`;
   const showWarningBadge = errorCount > 0 && showAsNormal;
   const ratio = total > 0 ? Math.round((available / total) * 100) : 0;
 
   return `
     <button class="lab-card" data-lab-id="${lab.id}">
       <div class="lab-card__top">
-        <span class="lab-card__name">${lab.name}</span>
+        <div class="lab-card__title">
+          ${gradeBadgeHtml(grade)}
+          <span class="lab-card__name">${lab.name}</span>
+        </div>
         <div class="lab-card__badges">
           <span class="status-pill ${pillClass}">${pillText}</span>
           ${showWarningBadge ? `<span class="status-pill status-pill--warning">고장 ${errorCount}대</span>` : ""}
@@ -498,6 +589,9 @@ function loadLab(lab) {
   // (곧 아래 onSnapshot들이 이 실습실의 실제 데이터로 다시 채운다)
   activeLabManagers = [];
   activeSpecs = {};
+  activeGrade = "";
+  activeClosed = false;
+  activeClosedReason = "";
   activeProgramsData = [];
   updateLabAccessUI();
   renderSpecs();
@@ -509,6 +603,9 @@ function loadLab(lab) {
   descEl.textContent = "";
 
   renderLabSwitcher(lab.id);
+
+  // 좌석을 애초에 배치한 적 없는(rows/cols=0) 실습실은 점검 토글과 무관하게 항상 고정 안내만 보여준다.
+  const isStructurallyEmpty = lab.rows === 0 && lab.cols === 0;
 
   editInfoBtn.onclick = async () => {
     if (!requireCanManage()) return;
@@ -522,7 +619,39 @@ function loadLab(lab) {
     }
   };
 
-  // 1. 실습실 설명 & 시간표(시점) & 담당 선생님 & 사양 정보 구독
+  // 공사/고장 등으로 실습실 전체를 일시적으로 점검 중 상태로 바꾸는 토글.
+  // 좌석 데이터는 그대로 남아있고, 화면 표시만 "점검 중" 안내로 바뀐다 (운영 재개 시 그대로 복원).
+  toggleClosedBtn.onclick = async () => {
+    if (!requireCanManage()) return;
+    if (activeClosed) {
+      if (!confirm(`${lab.name}의 점검/공사 처리를 해제하고 다시 운영 상태로 되돌릴까요?`)) return;
+      try {
+        await setDoc(doc(db, "labs", lab.id), { closed: false, closedReason: "" }, { merge: true });
+      } catch (error) {
+        console.error("점검 해제 실패:", error);
+        alert("처리하지 못했습니다: " + error.message);
+      }
+    } else {
+      const reason = prompt(
+        `${lab.name}을(를) 점검/공사 중으로 표시합니다.\n` +
+          "실습실 종합 현황과 이 화면에 안내 문구로 표시되며, 좌석 정보는 그대로 보관되었다가 운영을 재개하면 복원됩니다.\n" +
+          "(사유는 비워둬도 됩니다. 예: 전체 리모델링 공사)",
+        ""
+      );
+      if (reason === null) return; // 취소
+      try {
+        await setDoc(doc(db, "labs", lab.id), { closed: true, closedReason: reason.trim() }, { merge: true });
+      } catch (error) {
+        console.error("점검 처리 실패:", error);
+        alert("처리하지 못했습니다: " + error.message);
+      }
+    }
+  };
+
+  // 좌석 리스너 — 점검 중에는 해제했다가, 운영을 재개하면 다시 연결한다.
+  let seatsUnsub = null;
+
+  // 1. 실습실 설명 & 시간표(시점) & 담당 선생님 & 사양 정보 & 점검 상태 구독
   const unsubDesc = onSnapshot(
     doc(db, "labs", lab.id),
     (docSnapshot) => {
@@ -531,10 +660,59 @@ function loadLab(lab) {
       activeNoticeText = data.notice || "";
       activeLabManagers = data.managers || [];
       activeSpecs = data.specs || {};
+      activeGrade = data.grade || "";
+      activeClosed = data.closed === true;
+      activeClosedReason = data.closedReason || "";
       updateLabAccessUI();
       renderNotice(lab, activeNoticeText);
       renderTimeSlots(lab, data.timeSlots || {});
       renderSpecs();
+
+      if (isStructurallyEmpty) return; // 3번에서 고정 안내를 이미 표시했으므로 여기선 손대지 않는다.
+
+      if (activeClosed) {
+        // 점검 중으로 바뀌면 좌석 리스너를 끊고 안내 박스로 교체한다 (좌석 데이터는 그대로 남아있음).
+        if (seatsUnsub) {
+          seatsUnsub();
+          seatsUnsub = null;
+        }
+        seatGridEl.style.display = "block";
+        seatGridEl.innerHTML = `
+          <div class="maintenance-box">
+            <span class="maintenance-icon">🚧</span>
+            <h3>실습실 전체 점검/공사 중</h3>
+          </div>`;
+        const reasonEl = document.createElement("p");
+        if (activeClosedReason) {
+          reasonEl.textContent = activeClosedReason;
+        } else {
+          reasonEl.innerHTML = "현재 이 실습실은 이용하실 수 없습니다.<br>관리자에게 문의해주세요.";
+        }
+        seatGridEl.querySelector(".maintenance-box").appendChild(reasonEl);
+      } else if (!seatsUnsub) {
+        // 처음 들어왔거나, 점검이 해제되어 다시 운영 중으로 바뀌었을 때 좌석 그리드를 (다시) 구독한다.
+        seatGridEl.style.display = "grid";
+        seatGridEl.style.gridTemplateColumns = `repeat(${lab.cols}, 1fr)`;
+
+        seatsUnsub = onSnapshot(
+          collection(db, `labs/${lab.id}/seats`),
+          (snapshot) => {
+            const seatsData = [];
+            snapshot.forEach((docSnap) => seatsData.push(docSnap.data()));
+            seatsData.sort((a, b) => a.id - b.id);
+
+            const totalNeeded = lab.rows * lab.cols;
+            if (seatsData.length < totalNeeded) {
+              ensureSeatsExist(lab, seatsData.length, totalNeeded);
+              return; // 배치 쓰기가 끝나면 스냅샷이 다시 발생해 이 함수가 재실행된다.
+            }
+
+            renderSeatGrid(lab, seatsData, totalNeeded);
+          },
+          (error) => console.error("좌석 정보 구독 오류:", error)
+        );
+        activeUnsubscribers.push(seatsUnsub);
+      }
     },
     (error) => console.error("실습실 정보 구독 오류:", error)
   );
@@ -551,8 +729,8 @@ function loadLab(lab) {
   );
   activeUnsubscribers.push(unsubPrograms);
 
-  // 3. 수리 중인 실습실은 좌석을 표시하지 않는다.
-  if (lab.rows === 0 && lab.cols === 0) {
+  // 3. 좌석을 애초에 배치한 적 없는 실습실은 점검 토글과 무관하게 항상 고정 안내만 표시한다.
+  if (isStructurallyEmpty) {
     seatGridEl.style.display = "block";
     seatGridEl.innerHTML = `
       <div class="maintenance-box">
@@ -560,31 +738,7 @@ function loadLab(lab) {
         <h3>실습실 전체 수리 중</h3>
         <p>현재 이 실습실은 이용하실 수 없습니다.<br>관리자에게 문의해주세요.</p>
       </div>`;
-    return;
   }
-
-  // 4. 좌석 목록 구독
-  seatGridEl.style.display = "grid";
-  seatGridEl.style.gridTemplateColumns = `repeat(${lab.cols}, 1fr)`;
-
-  const unsubSeats = onSnapshot(
-    collection(db, `labs/${lab.id}/seats`),
-    (snapshot) => {
-      const seatsData = [];
-      snapshot.forEach((docSnap) => seatsData.push(docSnap.data()));
-      seatsData.sort((a, b) => a.id - b.id);
-
-      const totalNeeded = lab.rows * lab.cols;
-      if (seatsData.length < totalNeeded) {
-        ensureSeatsExist(lab, seatsData.length, totalNeeded);
-        return; // 배치 쓰기가 끝나면 스냅샷이 다시 발생해 이 함수가 재실행된다.
-      }
-
-      renderSeatGrid(lab, seatsData, totalNeeded);
-    },
-    (error) => console.error("좌석 정보 구독 오류:", error)
-  );
-  activeUnsubscribers.push(unsubSeats);
 }
 
 // 스위처는 가로 폭이 좁아 "컴퓨터" 접두어를 떼어내 최대한 많은 실습실이 한 번에 보이게 한다.
@@ -683,6 +837,15 @@ async function editNotice(lab, currentText) {
 // 🖥️ 실습실 사양 (좌석 상태와 같은 등급 — 전체관리자 + 해당 실습실 담당 선생님도 입력 가능)
 // ----------------------------------------------------------
 function renderSpecs() {
+  // 사양 목록 "앞에서" 한눈에 보이도록, 사양 카드 제목 옆에 등급 배지를 함께 표시한다.
+  if (activeGrade) {
+    specGradeBadgeEl.hidden = false;
+    specGradeBadgeEl.className = `grade-badge grade-badge--${activeGrade.charAt(0)}`;
+    specGradeBadgeEl.textContent = activeGrade;
+  } else {
+    specGradeBadgeEl.hidden = true;
+  }
+
   specsListEl.innerHTML = "";
 
   const entries = SPEC_FIELDS.map(({ key, label }) => ({
@@ -718,6 +881,7 @@ function renderSpecs() {
 
 editSpecsBtn.addEventListener("click", () => {
   if (!requireCanManage()) return;
+  specGradeSelect.value = activeGrade || "";
   SPEC_FIELDS.forEach(({ key }) => {
     const input = document.getElementById(`spec-${key}`);
     if (input) input.value = activeSpecs[key] || "";
@@ -737,9 +901,10 @@ specsSaveBtn.addEventListener("click", async () => {
     const input = document.getElementById(`spec-${key}`);
     newSpecs[key] = input ? input.value.trim() : "";
   });
+  const newGrade = specGradeSelect.value; // "" | "S" ~ "F"
 
   try {
-    await setDoc(doc(db, "labs", currentLabId), { specs: newSpecs }, { merge: true });
+    await setDoc(doc(db, "labs", currentLabId), { specs: newSpecs, grade: newGrade }, { merge: true });
     specsModal.classList.add("hidden");
   } catch (error) {
     console.error("사양 정보 저장 실패:", error);
@@ -859,6 +1024,8 @@ async function ensureSeatsExist(lab, existingCount, totalNeeded) {
         isHidden: false,
         status: "normal",
         issue: "",
+        isSubstituted: false,
+        substituteNote: "",
       });
     }
     await batch.commit();
@@ -891,6 +1058,17 @@ function renderSeatGrid(lab, seatsData, totalNeeded) {
         <div class="seat-num">${displayCounter}번</div>
         <div class="issue-text">${seat.issue || "정상"}</div>`;
 
+      // 고장난 건 아니지만(정상/고장과는 별개로), 여분 장비로 임시 교체된 좌석은 대개 원래보다
+      // 낮은 사양일 가능성이 높으므로 "가급적 비권장"이라는 의도를 함께 전달한다.
+      // (빨간 "고장"만큼 다급하게 보이지 않도록, 문구와 은은한 주황 톤으로만 표시)
+      if (seat.isSubstituted) {
+        seatDiv.classList.add("substituted");
+        const noteEl = document.createElement("div");
+        noteEl.className = "seat-substitute-note";
+        noteEl.textContent = "⚠️ 가급적 비권장 · " + (seat.substituteNote || "장비 교체됨");
+        seatDiv.appendChild(noteEl);
+      }
+
       const currentNum = displayCounter;
       seatDiv.addEventListener("click", () => {
         if (!requireCanManage()) return;
@@ -920,7 +1098,22 @@ function openModal(seatData, displayNum) {
 
   modalTitle.textContent = seatData.isHidden ? "빈 공간 설정" : `좌석 상태 변경 (${displayNum}번)`;
   issueSelect.innerHTML = buildIssueOptionsHtml(seatData);
+
+  // "장비 임시 교체"는 빈 자리 설정과는 무관한 개념이라, 빈 자리를 다룰 때는 아예 숨긴다.
+  if (seatData.isHidden) {
+    substituteFieldEl.hidden = true;
+  } else {
+    substituteFieldEl.hidden = false;
+    substituteCheckbox.checked = !!seatData.isSubstituted;
+    substituteNoteInput.value = seatData.substituteNote || "";
+    substituteNoteInput.hidden = !substituteCheckbox.checked;
+  }
 }
+
+substituteCheckbox.addEventListener("change", () => {
+  substituteNoteInput.hidden = !substituteCheckbox.checked;
+  if (substituteCheckbox.checked) substituteNoteInput.focus();
+});
 
 document.getElementById("cancel-btn").addEventListener("click", () => {
   modal.classList.add("hidden");
@@ -933,14 +1126,26 @@ document.getElementById("save-btn").addEventListener("click", async () => {
   const issueText = issueSelect.options[issueSelect.selectedIndex]?.text || "";
   const docRef = doc(db, `labs/${currentLabId}/seats`, `pos_${currentDocId}`);
 
+  // 장비 교체 여부는 상태(정상/고장) 선택과 별개의 체크박스이므로 따로 읽어온다.
+  // 빈 자리로 만들거나(비우기) 빈 자리를 복구할 때는 의미가 없으므로 항상 초기화한다.
+  const isSubstituted = !substituteFieldEl.hidden && substituteCheckbox.checked;
+  const substituteNote = isSubstituted ? substituteNoteInput.value.trim() : "";
+
   let payload;
   if (issueValue === HIDDEN_OPTION.value) {
-    payload = { id: currentDocId, isHidden: true, status: "normal", issue: "" };
+    payload = { id: currentDocId, isHidden: true, status: "normal", issue: "", isSubstituted: false, substituteNote: "" };
   } else if (issueValue === RESTORE_OPTION.value) {
-    payload = { id: currentDocId, isHidden: false, status: "normal", issue: "" };
+    payload = { id: currentDocId, isHidden: false, status: "normal", issue: "", isSubstituted: false, substituteNote: "" };
   } else {
     const newStatus = issueValue === "normal" ? "normal" : "error";
-    payload = { id: currentDocId, isHidden: false, status: newStatus, issue: newStatus === "normal" ? "" : issueText };
+    payload = {
+      id: currentDocId,
+      isHidden: false,
+      status: newStatus,
+      issue: newStatus === "normal" ? "" : issueText,
+      isSubstituted,
+      substituteNote,
+    };
   }
 
   try {
