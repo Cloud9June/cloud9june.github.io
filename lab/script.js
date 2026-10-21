@@ -516,7 +516,21 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// 대시보드 카드는 제목(이름) + 상태 뱃지가 한 줄을 나눠 써야 해서, 폭이 좁은 카드에서
+// 이름이 길면 줄바꿈이 생기기 쉽다. 카드 안에서만 더 짧은 이름으로 줄여 쓰고,
+// 실습실 상세 화면 제목·스위처 등 다른 곳은 원래 이름을 그대로 쓴다.
+const DASHBOARD_NAME_OVERRIDES = {
+  멀티미디어실: "멀티실",
+  미디어실습실: "미디어실",
+};
+function dashboardLabName(name) {
+  if (DASHBOARD_NAME_OVERRIDES[name]) return DASHBOARD_NAME_OVERRIDES[name];
+  return name.startsWith("컴퓨터 ") ? `컴${name.slice(4)}` : name;
+}
+
 function renderLabCard({ lab, maintenance, failed, total, available, errorList, grade, closedReason }) {
+  const cardName = dashboardLabName(lab.name);
+
   if (maintenance) {
     const note = closedReason ? escapeHtml(closedReason) : "리모델링 / 공사 중";
     return `
@@ -524,7 +538,7 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
         <div class="lab-card__top">
           <div class="lab-card__title">
             ${gradeBadgeHtml(grade)}
-            <span class="lab-card__name">${lab.name}</span>
+            <span class="lab-card__name">${cardName}</span>
           </div>
           <span class="status-pill status-pill--maintenance">점검중</span>
         </div>
@@ -538,7 +552,7 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
         <div class="lab-card__top">
           <div class="lab-card__title">
             ${gradeBadgeHtml(grade)}
-            <span class="lab-card__name">${lab.name}</span>
+            <span class="lab-card__name">${cardName}</span>
           </div>
           <span class="status-pill status-pill--unknown">확인 필요</span>
         </div>
@@ -548,13 +562,24 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
 
   const errorCount = errorList.length;
   // 고장난 자리가 있어도, 한 학급(CLASS_CAPACITY)이 앉을 좌석은 충분히 남아있으면
-  // "정상 운영"은 그대로 두고 옆에 "고장 n대"만 작게 덧붙인다.
+  // 전체 상태는 "운영중"으로 두되, 고장 사실은 같은 뱃지 안에 "· 고장 n대"로 덧붙인다.
+  // (뱃지를 두 개로 나누면 실습실명이 긴 곳에서 줄바꿈이 생기므로 뱃지는 항상 1개만 둔다)
   // 남은 좌석이 정원보다 부족할 때만 "고장 n"으로 전체 상태를 바꾼다.
   const hasEnoughForClass = available >= CLASS_CAPACITY;
   const showAsNormal = errorCount === 0 || hasEnoughForClass;
-  const pillClass = showAsNormal ? "status-pill--normal" : "status-pill--error";
-  const pillText = showAsNormal ? "운영중" : `고장 ${errorCount}`;
-  const showWarningBadge = errorCount > 0 && showAsNormal;
+  const hasPartialError = errorCount > 0 && showAsNormal;
+  let pillClass;
+  let pillText;
+  if (!showAsNormal) {
+    pillClass = "status-pill--error";
+    pillText = `고장 ${errorCount}`;
+  } else if (hasPartialError) {
+    pillClass = "status-pill--warning";
+    pillText = `운영중 · 고장 ${errorCount}대`;
+  } else {
+    pillClass = "status-pill--normal";
+    pillText = "운영중";
+  }
   const ratio = total > 0 ? Math.round((available / total) * 100) : 0;
 
   return `
@@ -562,11 +587,10 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
       <div class="lab-card__top">
         <div class="lab-card__title">
           ${gradeBadgeHtml(grade)}
-          <span class="lab-card__name">${lab.name}</span>
+          <span class="lab-card__name">${cardName}</span>
         </div>
         <div class="lab-card__badges">
           <span class="status-pill ${pillClass}">${pillText}</span>
-          ${showWarningBadge ? `<span class="status-pill status-pill--warning">고장 ${errorCount}대</span>` : ""}
         </div>
       </div>
       <div class="lab-card__meter"><div class="lab-card__meter-fill" style="width:${ratio}%"></div></div>
