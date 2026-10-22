@@ -4,23 +4,25 @@
 //    이 파일만 수정하면 되도록 구성
 // ==========================================================
 
+// location은 실습실이 물리적으로 있는 건물/층. 거의 바뀌지 않는 고정 정보라
+// (Firestore가 아니라) 이름/행렬처럼 이 정적 파일에 함께 둔다.
 export const labs = [
-  { id: "lab_01", name: "컴퓨터 1실", rows: 5, cols: 6 },
-  { id: "lab_02", name: "컴퓨터 2실", rows: 8, cols: 6 },
-  { id: "lab_03", name: "컴퓨터 3실", rows: 5, cols: 6 },
-  { id: "lab_04", name: "컴퓨터 4실", rows: 5, cols: 6 },
-  { id: "lab_05", name: "컴퓨터 5실", rows: 5, cols: 6 },
-  { id: "lab_06", name: "컴퓨터 6실", rows: 5, cols: 6 },
-  { id: "lab_07", name: "컴퓨터 7실", rows: 5, cols: 6 },
-  { id: "lab_08", name: "컴퓨터 8실", rows: 5, cols: 6 },
-  { id: "lab_09", name: "컴퓨터 9실", rows: 5, cols: 6 },
-  { id: "lab_10", name: "컴퓨터 10실", rows: 5, cols: 6 },
-  { id: "lab_11", name: "컴퓨터 11실", rows: 5, cols: 6 },
-  { id: "lab_12", name: "컴퓨터 12실", rows: 5, cols: 6 },
-  { id: "lab_13", name: "컴퓨터 13실", rows: 5, cols: 6 },
-  { id: "lab_14", name: "컴퓨터 14실", rows: 5, cols: 6 },
-  { id: "lab_multi", name: "멀티미디어실", rows: 5, cols: 6 },
-  { id: "lab_15", name: "미디어실습실", rows: 5, cols: 6 },
+  { id: "lab_01", name: "컴퓨터 1실", location: "본관 5층", rows: 5, cols: 6 },
+  { id: "lab_02", name: "컴퓨터 2실", location: "본관 지하", rows: 8, cols: 6 },
+  { id: "lab_03", name: "컴퓨터 3실", location: "별관 4층", rows: 5, cols: 6 },
+  { id: "lab_04", name: "컴퓨터 4실", location: "별관 2층", rows: 5, cols: 6 },
+  { id: "lab_05", name: "컴퓨터 5실", location: "별관 2층", rows: 5, cols: 6 },
+  { id: "lab_06", name: "컴퓨터 6실", location: "별관 2층", rows: 5, cols: 6 },
+  { id: "lab_07", name: "컴퓨터 7실", location: "별관 2층", rows: 5, cols: 6 },
+  { id: "lab_08", name: "컴퓨터 8실", location: "별관 2층", rows: 5, cols: 6 },
+  { id: "lab_09", name: "컴퓨터 9실", location: "별관 3층", rows: 5, cols: 6 },
+  { id: "lab_10", name: "컴퓨터 10실", location: "별관 3층", rows: 5, cols: 6 },
+  { id: "lab_11", name: "컴퓨터 11실", location: "별관 3층", rows: 5, cols: 6 },
+  { id: "lab_12", name: "컴퓨터 12실", location: "별관 4층", rows: 5, cols: 6 },
+  { id: "lab_13", name: "컴퓨터 13실", location: "별관 4층", rows: 5, cols: 6 },
+  { id: "lab_14", name: "컴퓨터 14실", location: "별관 3층", rows: 5, cols: 6 },
+  { id: "lab_multi", name: "멀티미디어실", location: "별관 3층", rows: 5, cols: 6 },
+  { id: "lab_15", name: "미디어실습실", location: "자미원", rows: 5, cols: 6 },
 ];
 
 // 좌석 상태 변경 모달에서 사용하는 고장 사유 옵션.

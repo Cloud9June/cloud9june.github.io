@@ -181,6 +181,20 @@ button, select {
 }
 .manager-badge[hidden] { display: none; }
 
+/* 실습실이 있는 건물/층. 담당자 뱃지(초록)와 구분되게 중립색으로 표시 */
+.location-badge {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+}
+.location-badge[hidden] { display: none; }
+
 /* ==========================================================================
    메인 레이아웃
    ========================================================================== */
@@ -239,7 +253,9 @@ button, select {
 
 .lab-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    /* 카드 한 줄에 등급·이름·위치·상태를 모두 담기 때문에, 카드가 너무 좁아지면
+       (230px) 줄바꿈이 생길 수 있어 최소 폭을 260px로 넉넉하게 잡는다. */
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 14px;
 }
 
@@ -268,8 +284,16 @@ button, select {
     justify-content: space-between;
     gap: 6px 8px;
 }
-.lab-card__title { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.lab-card__title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 7px; min-width: 0; }
 .lab-card__name { font-weight: 700; font-size: 0.98rem; white-space: nowrap; }
+
+/* 등급·이름과 같은 줄에 붙는 위치 표기. 폭이 너무 좁으면 title 안에서만 다음 줄로 떨어진다 */
+.lab-card__location-inline {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
 
 /* ==========================================================================
    실습실 등급 배지 (S ~ F) — 사양을 한눈에 비교할 수 있도록 매기는 등급
@@ -308,14 +332,6 @@ button, select {
 .status-pill--warning { background: var(--warning-bg); color: var(--warning); }
 .status-pill--maintenance { background: var(--warning-bg); color: var(--warning); }
 .status-pill--unknown { background: var(--bg-subtle); color: var(--text-muted); }
-
-.lab-card__badges {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
 
 .lab-card__meter {
     height: 6px;

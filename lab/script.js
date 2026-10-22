@@ -46,6 +46,7 @@ const noticeEl = document.getElementById("lab-notice");
 const timeSlotRowEl = document.getElementById("time-slot-row");
 const seatGridEl = document.getElementById("seat-grid");
 const labNameTextEl = document.getElementById("lab-name-text");
+const labLocationBadgeEl = document.getElementById("lab-location-badge");
 const managerBadgeEl = document.getElementById("manager-badge");
 const descEl = document.getElementById("current-lab-desc");
 const editInfoBtn = document.getElementById("edit-info-btn");
@@ -530,6 +531,9 @@ function dashboardLabName(name) {
 
 function renderLabCard({ lab, maintenance, failed, total, available, errorList, grade, closedReason }) {
   const cardName = dashboardLabName(lab.name);
+  // 등급 · 이름 · 위치 · 상태(운영중/점검중 등)를 모두 한 줄에 담는다.
+  // 뱃지에 숫자를 섞지 않고 항상 짧은 단어 하나만 쓰기 때문에, 위치가 붙어도 줄바꿈 없이 들어간다.
+  const locationHtml = lab.location ? `<span class="lab-card__location-inline">📍 ${lab.location}</span>` : "";
 
   if (maintenance) {
     const note = closedReason ? escapeHtml(closedReason) : "리모델링 / 공사 중";
@@ -539,6 +543,7 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
           <div class="lab-card__title">
             ${gradeBadgeHtml(grade)}
             <span class="lab-card__name">${cardName}</span>
+            ${locationHtml}
           </div>
           <span class="status-pill status-pill--maintenance">점검중</span>
         </div>
@@ -553,6 +558,7 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
           <div class="lab-card__title">
             ${gradeBadgeHtml(grade)}
             <span class="lab-card__name">${cardName}</span>
+            ${locationHtml}
           </div>
           <span class="status-pill status-pill--unknown">확인 필요</span>
         </div>
@@ -562,24 +568,13 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
 
   const errorCount = errorList.length;
   // 고장난 자리가 있어도, 한 학급(CLASS_CAPACITY)이 앉을 좌석은 충분히 남아있으면
-  // 전체 상태는 "운영중"으로 두되, 고장 사실은 같은 뱃지 안에 "· 고장 n대"로 덧붙인다.
-  // (뱃지를 두 개로 나누면 실습실명이 긴 곳에서 줄바꿈이 생기므로 뱃지는 항상 1개만 둔다)
-  // 남은 좌석이 정원보다 부족할 때만 "고장 n"으로 전체 상태를 바꾼다.
+  // 상단 상태는 "운영중"으로 두고, "고장 n대"는 카드 맨 아랫줄에 따로 적는다.
+  // 남은 좌석이 정원보다 부족할 때만 상단 상태 자체를 "고장"으로 바꾼다.
+  // (어떤 자리가 고장인지는 세부 번호 대신 개수만 보여주고, 자세한 건 실습실에 들어가서 확인한다)
   const hasEnoughForClass = available >= CLASS_CAPACITY;
   const showAsNormal = errorCount === 0 || hasEnoughForClass;
-  const hasPartialError = errorCount > 0 && showAsNormal;
-  let pillClass;
-  let pillText;
-  if (!showAsNormal) {
-    pillClass = "status-pill--error";
-    pillText = `고장 ${errorCount}`;
-  } else if (hasPartialError) {
-    pillClass = "status-pill--warning";
-    pillText = `운영중 · 고장 ${errorCount}대`;
-  } else {
-    pillClass = "status-pill--normal";
-    pillText = "운영중";
-  }
+  const pillClass = showAsNormal ? "status-pill--normal" : "status-pill--error";
+  const pillText = showAsNormal ? "운영중" : "고장";
   const ratio = total > 0 ? Math.round((available / total) * 100) : 0;
 
   return `
@@ -588,15 +583,14 @@ function renderLabCard({ lab, maintenance, failed, total, available, errorList, 
         <div class="lab-card__title">
           ${gradeBadgeHtml(grade)}
           <span class="lab-card__name">${cardName}</span>
+          ${locationHtml}
         </div>
-        <div class="lab-card__badges">
-          <span class="status-pill ${pillClass}">${pillText}</span>
-        </div>
+        <span class="status-pill ${pillClass}">${pillText}</span>
       </div>
       <div class="lab-card__meter"><div class="lab-card__meter-fill" style="width:${ratio}%"></div></div>
       <div class="lab-card__stats">
         <span>${available}/${total}석 사용 가능</span>
-        ${errorCount > 0 ? `<span class="lab-card__error-list">${errorList.join(", ")}번</span>` : ""}
+        ${errorCount > 0 ? `<span class="lab-card__error-list">고장 ${errorCount}대</span>` : ""}
       </div>
     </button>`;
 }
@@ -624,6 +618,12 @@ function loadLab(lab) {
   labView.style.display = "block";
 
   labNameTextEl.textContent = lab.name;
+  if (lab.location) {
+    labLocationBadgeEl.textContent = `📍 ${lab.location}`;
+    labLocationBadgeEl.hidden = false;
+  } else {
+    labLocationBadgeEl.hidden = true;
+  }
   descEl.textContent = "";
 
   renderLabSwitcher(lab.id);
