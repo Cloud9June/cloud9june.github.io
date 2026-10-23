@@ -9,26 +9,13 @@
 <body>
     <div class="container">
 
-        <!-- <div class="item merged-area" data-accent="core">
+        <div class="item merged-area" data-accent="core">
             <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
             <div class="video-wrap">
                 <video id="rasVideo" loop muted playsinline style="width: 100%; height: 100%; object-fit: fill; display: block;">
                     <source src="video/ras.mp4" type="video/mp4">
                 </video>
                 <button id="rasPlayBtn" class="video-play-btn" aria-label="재생">▶</button>
-            </div>
-        </div> -->
-
-        <div class="item merged-area" data-accent="core">
-            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-            <div class="merged-cycle">
-                <img id="mergedImg" class="merged-img" src="eventImg/mystory.png" alt="행사">
-                <div class="video-wrap" id="mergedVideoWrap" style="display:none;">
-                    <video id="rasVideo" playsinline style="width:100%;height:100%;object-fit:fill;display:block;">
-                        <source src="video/ras.mp4" type="video/mp4">
-                    </video>
-                    <button id="rasPlayBtn" class="video-play-btn hide" aria-label="재생">▶</button>
-                </div>
             </div>
         </div>
 
@@ -58,49 +45,12 @@
     </div>
 
     <script>
-        // const rasVideo = document.getElementById('rasVideo');
-        // const rasPlayBtn = document.getElementById('rasPlayBtn');
-        // rasPlayBtn.addEventListener('click', () => {
-        //     rasVideo.play();
-        //     rasPlayBtn.classList.add('hide');
-        // });
-
-        (function () {
-            const IMAGE_DURATION = 8000; // 이미지 보여줄 시간(ms). 원하는 길이로 조절
-            const mergedImg   = document.getElementById('mergedImg');
-            const videoWrap    = document.getElementById('mergedVideoWrap');
-            const rasVideo      = document.getElementById('rasVideo');
-            const rasPlayBtn   = document.getElementById('rasPlayBtn');
-            let imageTimer = null;
-
-            function showImage() {
-            rasVideo.pause();
-            rasVideo.currentTime = 0;
-            videoWrap.style.display = 'none';
-            mergedImg.style.display = 'block';
-            clearTimeout(imageTimer);
-            imageTimer = setTimeout(showVideo, IMAGE_DURATION);
-            }
-
-            function showVideo() {
-            mergedImg.style.display = 'none';
-            videoWrap.style.display = 'block';
-            rasVideo.play().then(() => {
-                rasPlayBtn.classList.add('hide');
-            }).catch(() => {
-                // 자동재생이 막히면 버튼을 보여줌 (보통 하루 중 맨 처음 1번만 발생)
-                rasPlayBtn.classList.remove('hide');
-            });
-            }
-
-            rasVideo.addEventListener('ended', showImage);
-            rasPlayBtn.addEventListener('click', () => {
+        const rasVideo = document.getElementById('rasVideo');
+        const rasPlayBtn = document.getElementById('rasPlayBtn');
+        rasPlayBtn.addEventListener('click', () => {
             rasVideo.play();
             rasPlayBtn.classList.add('hide');
-            });
-
-            showImage(); // 처음엔 이미지부터 시작
-        })();
+        });
     </script>    
 
 </body>
