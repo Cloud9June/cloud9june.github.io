@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sungil Information High School Live Billboard - Meal</title>
+    <!-- 뉴스 보드(원본)와 완전히 동일한 폰트/프레임/색상 체계를 그대로 사용 -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 뉴스 보드와 동일한 블루 악센트 — 색상 구성을 바꾸지 않음 */
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.35);
+            --bg: #05060a;
+            --panel: rgba(15, 23, 42, 0.55);
+            --border: rgba(59, 130, 246, 0.22);
+            --text: #eef2ff;
+            --sub-text: #94a3b8;
+            --faint: #4b5567;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            height: 100vh;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 메인보드 프레임 — 뉴스 보드와 동일, 비디오월 슬롯 높이를 항상 꽉 채움 */
+        .news-board {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(160deg, #0b1220, var(--bg));
+            display: flex;
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 0 26px var(--primary-glow), inset 0 0 46px rgba(59, 130, 246, 0.05);
+            position: relative;
+        }
+
+        /* 왼쪽 로고/정보 영역 — 뉴스 보드와 동일한 구조 */
+        .head-label {
+            position: relative;
+            background: radial-gradient(ellipse 120% 90% at 30% 0%, rgba(59, 130, 246, 0.16), transparent 70%);
+            width: 15%;
+            min-width: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid var(--border);
+            z-index: 10;
+            padding: 10px 8px;
+            text-align: center;
+        }
+
+        .head-label p {
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            margin-bottom: 2px;
+            color: var(--sub-text);
+            font-weight: 700;
+        }
+
+        .head-label h2 {
+            font-size: 2.2rem;
+            line-height: 0.9;
+            color: var(--primary);
+            font-weight: 900;
+            text-shadow: 0 0 16px var(--primary-glow), 0 0 34px var(--primary-glow);
+        }
+
+        #date {
+            font-size: 0.85rem;
+            color: var(--faint);
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .meal-time-mini {
+            font-size: 0.7rem;
+            color: var(--sub-text);
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* 메뉴 영역 — 슬라이드 없이, 왼쪽은 오늘/오른쪽은 내일 급식을 한 화면에 고정 표시 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            background: linear-gradient(90deg, #0d1424 0%, #05060a 100%);
+        }
+
+        .news-column {
+            flex: 1;
+            height: 100%;
+            min-width: 0;
+            overflow: hidden;
+            border-right: 1px solid rgba(148, 163, 184, 0.12);
+            display: flex;
+            flex-direction: column;
+            padding: 22px 36px;
+        }
+
+        .news-column:last-child { border-right: none; }
+
+        /* 내일 급식 컬럼 — food.html의 내일 메뉴 모드(is-tomorrow)와 동일한 핑크/레드 계열로 전환.
+           --primary/--primary-glow/--border를 이 컬럼 안에서만 덮어써서, 아래의 col-title/idx/
+           강조 요소들이 전부(다른 CSS 수정 없이) 자동으로 이 색을 따라가도록 함 */
+        .news-column.tomorrow-col {
+            --primary: #ff0077;
+            --primary-glow: rgba(255, 0, 119, 0.35);
+            --border: rgba(255, 0, 119, 0.22);
+        }
+
+        .col-header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .col-title {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--primary-glow);
+            display: flex;
+            align-items: center;
+        }
+
+        .col-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px; height: 2px;
+            background: var(--primary);
+            margin-right: 8px;
+            box-shadow: 0 0 6px var(--primary-glow);
+        }
+
+        .col-meta {
+            font-size: 0.85rem;
+            color: var(--sub-text);
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
+        }
+
+        /* 메뉴 리스트 — 항목 수에 맞춰 fitRows()가 --row-font를 자동 조절해서
+           슬라이드 없이도 컬럼 안에 전부 들어가도록 함 (food.html의 fitRows와 동일한 방식) */
+        .menu-list {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.35em;
+            overflow: hidden;
+        }
+
+        /* 간략 모드 — 번호/알레르기 정보 없이, 메뉴 이름만 가운데 점(·)으로 이어서 나열 */
+        .menu-text {
+            font-size: var(--row-font, 1.6rem);
+            color: var(--text);
+            font-weight: 700;
+            line-height: 1.5;
+            word-break: keep-all;
+        }
+
+        .menu-empty {
+            color: var(--sub-text);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* 우측 상태창 패널 — 뉴스 보드와 동일 */
+        .status-panel {
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            position: relative;
+        }
+
+        .on-air {
+            font-size: 0.7rem;
+            font-weight: 900;
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 1px;
+        }
+
+        .on-air::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: #ff4d4d;
+            border-radius: 50%;
+            animation: blink 0.8s infinite;
+        }
+
+        .weather-mini {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Courier New', monospace;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        #clock {
+            font-size: 1.3rem;
+            color: var(--text);
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="news-board">
+        <div class="head-label">
+            <p>SUNGIL</p>
+            <h2>MEAL</h2>
+            <div id="date">0000/00/00</div>
+            <div class="meal-time-mini">급식시간 12:50 - 13:50</div>
+        </div>
+
+        <div class="content-area">
+            <div class="news-column">
+                <div class="col-header">
+                    <div class="col-title">Today</div>
+                    <div class="col-meta"><span id="dateLabel-today"></span> · <span id="kcal-today">-- Kcal</span></div>
+                </div>
+                <div class="menu-list" id="menu-today"></div>
+            </div>
+            <div class="news-column tomorrow-col">
+                <div class="col-header">
+                    <div class="col-title">Tomorrow</div>
+                    <div class="col-meta"><span id="dateLabel-tomorrow"></span> · <span id="kcal-tomorrow">-- Kcal</span></div>
+                </div>
+                <div class="menu-list" id="menu-tomorrow"></div>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <div class="on-air">ON AIR</div>
+            <div id="clock">00:00:00</div>
+            <div id="todayWeather" class="weather-mini">--°C · LOADING</div>
+        </div>
+    </div>
+
+    <script>
+        // [설정] food.html(급식 페이지)과 완전히 동일한 NEIS API 정보를 그대로 사용
+        // — 이 페이지는 food.html을 가끔 못 쓸 때 대체용으로 쓰는 것이므로 데이터 소스는 반드시 동일해야 함
+        const officeCode = "J10";
+        const schoolCode = "7530167";
+        const key = "bdcd0ca692e6441a8522db4496c56216";
+
+        // 급식 페이지(food.html)를 못 쓸 때 쓰는 간략 버전이라, 번호와 알레르기 정보는 빼고
+        // NEIS DDISH_NM에서 요리명만 뽑아낸다. "요리명 (알레르기번호.번호...)" 형태에서
+        // 괄호 안 알레르기 코드와 * 표시만 제거.
+        function parseDishName(line) {
+            return line
+                .replace(/\([\d.\s]+\)/g, '')
+                .replace(/\*/g, '')
+                .trim();
+        }
+
+        // 항목 개수(=메뉴 분량)에 맞춰 --row-font를 자동으로 맞추는 함수 (food.html의 fitRows와 동일 방식).
+        // 슬라이드 없이도 .menu-list(고정 크기 영역)를 벗어나지 않는 선에서 가장 큰 글자 크기를 찾는다.
+        function fitRows(wrap) {
+            if (!wrap) return;
+            const maxPx = 30;
+            const minPx = 13;
+            let fontSize = maxPx;
+            wrap.style.setProperty('--row-font', fontSize + 'px');
+
+            while (fontSize > minPx && wrap.scrollHeight > wrap.clientHeight) {
+                fontSize -= 1;
+                wrap.style.setProperty('--row-font', fontSize + 'px');
+            }
+        }
+
+        // 메뉴 이름들을 가운데 점(·)으로 이어서 한 줄(또는 자동 줄바꿈)로 나열.
+        // 점 앞은 줄바꿈 안 되는 공백( )을 써서 "· 포도"처럼 점이 혼자 줄 맨 앞에
+        // 남는 걸 막고, 점 뒤의 일반 공백에서만 줄이 바뀌도록 함.
+        function buildMenuText(names) {
+            return `<div class="menu-text">${names.join(' · ')}</div>`;
+        }
+
+        // dateObj 기준(오늘 또는 내일)으로 급식 정보를 가져와 dayType(today/tomorrow)에 해당하는
+        // 컬럼에 고정 리스트로 렌더링. 슬라이드/티커 없이 한 번에 전부 보여줌.
+        // (예전엔 이 매개변수 이름이 'key'라서 바깥의 NEIS API 키 상수 `key`를 가려버렸고,
+        //  그 결과 요청이 ?KEY=today / ?KEY=tomorrow 로 나가서 급식 정보가 전혀 안 나왔음)
+        async function loadMealInto(dateObj, dayType) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const yyyymmdd = `${year}${month}${day}`;
+
+            const listEl = document.getElementById(`menu-${dayType}`);
+            const kcalEl = document.getElementById(`kcal-${dayType}`);
+            const dateLabelEl = document.getElementById(`dateLabel-${dayType}`);
+            dateLabelEl.textContent = `${month}/${day}`;
+
+            try {
+                const reqUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${key}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${yyyymmdd}`;
+                const response = await fetch(reqUrl);
+                const data = await response.json();
+
+                if (data.mealServiceDietInfo) {
+                    const row = data.mealServiceDietInfo[1].row[0];
+                    const names = row.DDISH_NM.split('<br/>').map(parseDishName).filter(Boolean);
+
+                    // CAL_INFO엔 이미 "Kcal" 단위가 포함되어 내려오므로 중복 표기 방지
+                    kcalEl.textContent = row.CAL_INFO.replace(/kcal/i, '').trim() + ' Kcal';
+                    listEl.innerHTML = buildMenuText(names);
+                } else {
+                    kcalEl.textContent = '-';
+                    listEl.innerHTML = `<div class="menu-empty">급식 정보가 없습니다 🍱</div>`;
+                }
+            } catch (error) {
+                kcalEl.textContent = '-';
+                listEl.innerHTML = `<div class="menu-empty">데이터 로딩 실패</div>`;
+                console.error('급식 데이터 로드 에러:', error);
+            }
+
+            // 행이 실제로 그려진 뒤 크기를 기준으로 맞춰야 하므로 다음 프레임에 실행
+            requestAnimationFrame(() => fitRows(listEl));
+        }
+
+        async function fetchMeals() {
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, '0');
+            const d = String(today.getDate()).padStart(2, '0');
+            document.getElementById('date').textContent = `${y}/${m}/${d}`;
+
+            await Promise.all([
+                loadMealInto(today, 'today'),
+                loadMealInto(tomorrow, 'tomorrow')
+            ]);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // --- 날씨 --- 뉴스 보드 / food.html과 완전히 동일한 설정(같은 좌표, 같은 API, 같은 필드)
+        const WEATHER_KEY = "ed175a454d98c792477c333a80a7305d1f49e0ef31e8a3d75110c111023879bd";
+        const weatherNx = 63, weatherNy = 124;
+
+        function getLiveBaseDateTime() {
+            const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+            let h = now.getHours();
+            const m = now.getMinutes();
+            if (m < 45) {
+                h -= 1;
+                if (h < 0) { h = 23; now.setDate(now.getDate() - 1); }
+            }
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, "0");
+            const day = String(now.getDate()).padStart(2, "0");
+            return { date: `${year}${month}${day}`, time: String(h).padStart(2, "0") + "30" };
+        }
+
+        async function fetchWeather() {
+            try {
+                const { date, time } = getLiveBaseDateTime();
+                const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${WEATHER_KEY}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${date}&base_time=${time}&nx=${weatherNx}&ny=${weatherNy}`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+                const items = data?.response?.body?.items?.item;
+
+                if (items) {
+                    const getVal = (cat) => items.find(i => i.category === cat)?.fcstValue;
+                    const sky = getVal("SKY");
+                    const pty = getVal("PTY");
+                    const tmp = getVal("T1H");
+
+                    let weatherText = "CLEAR";
+                    if (pty > 0) {
+                        if (pty == 1 || pty == 4) weatherText = "RAIN";
+                        else if (pty == 2 || pty == 3) weatherText = "SNOW";
+                    } else {
+                        if (sky == 1) weatherText = "SUNNY";
+                        else if (sky == 3) weatherText = "CLOUDY";
+                        else if (sky == 4) weatherText = "OVERCAST";
+                    }
+
+                    document.getElementById("todayWeather").innerHTML = `${tmp}°C · ${weatherText}`;
+                }
+            } catch (e) {
+                console.log("날씨 로드 실패");
+            }
+        }
+
+        // 패널 크기가 바뀌거나(비디오월 슬롯 리사이즈) 폰트가 늦게 로드돼도 다시 맞춤
+        window.addEventListener('resize', () => {
+            fitRows(document.getElementById('menu-today'));
+            fitRows(document.getElementById('menu-tomorrow'));
+        });
+
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        fetchWeather();
+        setInterval(fetchWeather, 3600000);
+
+        fetchMeals();
+        setInterval(fetchMeals, 1800000); // 급식 정보는 자주 바뀌지 않으므로 30분마다 갱신
+    </script>
+</body>
+</html>

@@ -35,14 +35,14 @@ body, html {
     width: 100vw;
     height: 100vh;
     grid-template-columns: 1fr 1fr 2fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: 1fr;
     gap: var(--gap);
     background: var(--wall-bg);
     padding: 20px;
 
     grid-template-areas:
         "merged    meal      calendar"
-        "merged    d-day     calendar";
+        "merged    meal      calendar";
 }
 
 /* ---------------- 공통 패널(카드) 스타일 ---------------- */
