@@ -180,6 +180,15 @@
             font-weight: 700;
         }
 
+        /* [임시] 소풍 안내 멘트 — 급식 메뉴 대신 표시. 소풍 끝나면 PICNIC_MODE만 false로 */
+        .menu-text .picnic-sub {
+            display: block;
+            font-size: 0.7em;
+            color: var(--sub-text);
+            font-weight: 600;
+            margin-top: 0.3em;
+        }
+
         /* 우측 상태창 패널 — 뉴스 보드와 동일 */
         .status-panel {
             width: 150px;
@@ -262,7 +271,7 @@
                 </div>
                 <div class="menu-list" id="menu-tomorrow"></div>
             </div>
-        </div>
+        </div><!-- /.content-area (원본에서 닫는 태그가 빠져 있던 부분 보완) -->
 
         <div class="status-panel">
             <div class="on-air">ON AIR</div>
@@ -277,6 +286,25 @@
         const officeCode = "J10";
         const schoolCode = "7530167";
         const key = "bdcd0ca692e6441a8522db4496c56216";
+
+        // ==========================================================
+        // [임시] 소풍 전날 모드 — 오늘 급식은 정상, 내일 칸에 소풍 안내 멘트
+        // 소풍이 끝나면 false로 바꾸면 원래대로 NEIS 급식이 나옴
+        // ==========================================================
+        const PICNIC_MODE = true;
+        const PICNIC_MESSAGE = `내일은 소풍으로 급식이 없습니다 🌤️
+            <span class="picnic-sub">친구들과 즐거운 하루 보내고, 안전하게 다녀오세요! 💛</span>`;
+
+        function showPicnic(dateObj, dayType) {
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            document.getElementById(`dateLabel-${dayType}`).textContent = `${month}/${day}`;
+            document.getElementById(`kcal-${dayType}`).textContent = '-';
+
+            const listEl = document.getElementById(`menu-${dayType}`);
+            listEl.innerHTML = `<div class="menu-text">${PICNIC_MESSAGE}</div>`;
+            requestAnimationFrame(() => fitRows(listEl));
+        }
 
         // 급식 페이지(food.html)를 못 쓸 때 쓰는 간략 버전이라, 번호와 알레르기 정보는 빼고
         // NEIS DDISH_NM에서 요리명만 뽑아낸다. "요리명 (알레르기번호.번호...)" 형태에서
@@ -304,16 +332,12 @@
         }
 
         // 메뉴 이름들을 가운데 점(·)으로 이어서 한 줄(또는 자동 줄바꿈)로 나열.
-        // 점 앞은 줄바꿈 안 되는 공백( )을 써서 "· 포도"처럼 점이 혼자 줄 맨 앞에
-        // 남는 걸 막고, 점 뒤의 일반 공백에서만 줄이 바뀌도록 함.
         function buildMenuText(names) {
-            return `<div class="menu-text">${names.join(' · ')}</div>`;
+            return `<div class="menu-text">${names.join(' · ')}</div>`;
         }
 
         // dateObj 기준(오늘 또는 내일)으로 급식 정보를 가져와 dayType(today/tomorrow)에 해당하는
         // 컬럼에 고정 리스트로 렌더링. 슬라이드/티커 없이 한 번에 전부 보여줌.
-        // (예전엔 이 매개변수 이름이 'key'라서 바깥의 NEIS API 키 상수 `key`를 가려버렸고,
-        //  그 결과 요청이 ?KEY=today / ?KEY=tomorrow 로 나가서 급식 정보가 전혀 안 나왔음)
         async function loadMealInto(dateObj, dayType) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -360,6 +384,16 @@
             const m = String(today.getMonth() + 1).padStart(2, '0');
             const d = String(today.getDate()).padStart(2, '0');
             document.getElementById('date').textContent = `${y}/${m}/${d}`;
+
+            if (PICNIC_MODE) {
+                // 오늘 급식은 정상 표시
+                await loadMealInto(today, 'today');
+
+                // [임시] 내일은 소풍 — 급식 대신 안내 멘트 (소풍 끝나면 PICNIC_MODE = false)
+                // loadMealInto(tomorrow, 'tomorrow');
+                showPicnic(tomorrow, 'tomorrow');
+                return;
+            }
 
             await Promise.all([
                 loadMealInto(today, 'today'),
