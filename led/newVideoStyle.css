@@ -34,15 +34,19 @@ body, html {
     display: grid;
     width: 100vw;
     height: 100vh;
-    grid-template-columns: 1fr 1fr 2fr;
-    grid-template-rows: 1fr;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
     gap: var(--gap);
     background: var(--wall-bg);
     padding: 20px;
 
-    grid-template-areas:
+    /* grid-template-areas:
         "merged    meal      calendar"
-        "merged    meal      calendar";
+        "merged    d-day     calendar"; */
+
+    grid-template-areas:
+        "calendar   meal    merged"
+        "calendar   d-day   merged";
 }
 
 /* ---------------- 공통 패널(카드) 스타일 ---------------- */
