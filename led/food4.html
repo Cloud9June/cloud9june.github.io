@@ -282,7 +282,7 @@
 
         async function getMeal() {
             const now = new Date();
-            const isTomorrowMode = now.getHours() >= 14;
+            const isTomorrowMode = now.getHours() >= 17;
 
             if (isTomorrowMode) {
                 now.setDate(now.getDate() + 1);

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>크리에이터 영상</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+        --navy: #070b18;
+        --navy-2: #0f1b38;
+        --gold: #ffd166;
+        --blue: #4f8bff;
+        --blue-glow: rgba(79, 139, 255, 0.45);
+        --text: #f5f7ff;
+    }
+
+    html, body {
+        width: 100%; height: 100%;
+        overflow: hidden;
+        font-family: 'Noto Sans KR', sans-serif;
+        background: linear-gradient(165deg, var(--navy-2) 0%, var(--navy) 55%, #050815 100%);
+    }
+
+    /* 이 페이지도 .item 슬롯에 그대로 끼워짐 — 모서리/테두리는 바깥 .item이 처리하므로
+       여기선 배경+영상만 채움. 치수는 vmin 기준이라 슬롯이 정사각형이든 와이드든 대응됨 */
+    .video-frame {
+        position: relative;
+        width: 100%; height: 100%;
+    }
+
+    .video-frame iframe {
+        width: 100%; height: 100%;
+        border: 0; display: block;
+    }
+
+    .video-caption {
+        position: absolute; top: 3vmin; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center; gap: 0.6vmin;
+        background: rgba(10, 16, 32, 0.72);
+        border: 0.12vmin solid rgba(79, 139, 255, 0.4);
+        color: var(--text);
+        font-weight: 800; font-size: 2.4vmin; letter-spacing: 0.1vmin;
+        padding: 0.8vmin 1.8vmin;
+        border-radius: 999px;
+        z-index: 4;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    .video-placeholder {
+        position: absolute; inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.6vmin;
+        text-align: center;
+        padding: 4vmin;
+        color: #5b6a93;
+        background: radial-gradient(ellipse at center, rgba(79,139,255,0.08), transparent 70%), #070b18;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .video-placeholder svg { width: 10vmin; height: 10vmin; opacity: 0.7; }
+    .video-placeholder p {
+        font-size: 2.2vmin; font-weight: 700; line-height: 1.6; color: #8a97bd;
+    }
+
+    .unmute-btn {
+        position: absolute; right: 2.4vmin; bottom: 2.4vmin;
+        display: flex; align-items: center; gap: 0.6vmin;
+        background: rgba(10, 16, 32, 0.78);
+        border: 0.12vmin solid rgba(255, 209, 102, 0.5);
+        color: var(--gold);
+        font-weight: 800; font-size: 2.1vmin;
+        padding: 1vmin 1.8vmin;
+        border-radius: 999px;
+        cursor: pointer;
+        z-index: 5;
+        white-space: nowrap;
+    }
+    .unmute-btn.hide { display: none; }
+</style>
+</head>
+<body>
+
+    <div class="video-frame">
+        <!-- 영상 자체는 복잡한 Player API 없이 iframe을 직접 심는 방식.
+             비디오월 운영 경험상 이 방식이 가장 안정적으로 재생됨.
+             영상 바꾸고 싶으면 아래 VIDEO_ID만 교체하면 됨 (11자리) -->
+        <div class="video-placeholder" id="videoPlaceholder">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 15l5.19-3L10 9v6zm11-9.5c.3 1.5.5 3.2.5 5s-.2 3.5-.5 5c-.3 1.4-1.4 2.4-2.8 2.6-2.1.3-4.5.4-6.7.4s-4.6-.1-6.7-.4C3.4 17.9 2.3 16.9 2 15.5c-.3-1.5-.5-3.2-.5-5s.2-3.5.5-5C2.3 4.1 3.4 3.1 4.8 2.9 6.9 2.6 9.3 2.5 11.5 2.5s4.6.1 6.7.4c1.4.2 2.5 1.2 2.8 2.6z"/></svg>
+            <p id="videoPlaceholderText">영상을 불러오는 중입니다...</p>
+        </div>
+        <iframe id="ytFrame" allow="autoplay; encrypted-media" frameborder="0"></iframe>
+        <!-- <div class="video-caption">🎬 허성범님의 영상</div>
+        <button class="unmute-btn hide" id="unmuteBtn">🔇 소리 켜기</button> -->
+    </div>
+
+    <script>
+        // ====================================================================
+        // 유튜브 영상 설정 — 이 영상 ID만 바꾸면 다른 영상으로 교체 가능
+        // (현재 허성범님 영상 1개로 설정되어 있음)
+        // ====================================================================
+        const YOUTUBE_SINGLE_VIDEO_ID = 'EtZ2P0RPWsg';
+
+        const ytFrame = document.getElementById('ytFrame');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const videoPlaceholderText = document.getElementById('videoPlaceholderText');
+        const unmuteBtn = document.getElementById('unmuteBtn');
+
+        // 비디오월 전체 시스템에서 안정적으로 동작 확인된, 가장 단순한 iframe 직접 삽입 방식.
+        // enablejsapi=1 만 추가해서 소리 켜기 버튼(postMessage)만 살려둠.
+        const params = new URLSearchParams({
+            autoplay: '1',
+            mute: '1',
+            loop: '1',
+            playlist: YOUTUBE_SINGLE_VIDEO_ID,
+            controls: '0',
+            modestbranding: '1',
+            rel: '0',
+            iv_load_policy: '3',
+            playsinline: '1',
+            enablejsapi: '1',
+            cc_load_policy: '0',   // 자동 자막(CC/AI 자막) 기본적으로 끄기
+            hl: 'ko',
+            cc_lang_pref: 'ko'
+        });
+        ytFrame.src = `https://www.youtube-nocookie.com/embed/${YOUTUBE_SINGLE_VIDEO_ID}?${params.toString()}`;
+
+        // iframe 문서 자체가 로드되면 안내문구를 치우고 소리 켜기 버튼을 노출.
+        // (실제 재생 성공 여부와 100% 동일하진 않지만, 네트워크/차단 문제로 완전히
+        //  멈춰있는 상태와는 구분 가능한 가장 가벼운 신호)
+        ytFrame.addEventListener('load', () => {
+            videoPlaceholder.style.display = 'none';
+            unmuteBtn.classList.remove('hide');
+
+            // cc_load_policy=0 으로도 자막이 남아있는 경우를 대비한 보조 조치 —
+            // 플레이어가 준비될 시간을 두고 자막 모듈을 끄도록 한 번 더 요청
+            setTimeout(() => {
+                sendYTCommand('unloadModule', ['captions']);
+                sendYTCommand('setOption', ['captions', 'track', {}]);
+            }, 1500);
+        });
+
+        setTimeout(() => {
+            if (videoPlaceholder.style.display !== 'none') {
+                videoPlaceholderText.innerHTML = '영상 연결이 지연되고 있어요.<br>잠시 후 자동으로 표시됩니다.';
+            }
+        }, 7000);
+
+        function sendYTCommand(func, args = []) {
+            try {
+                ytFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
+            } catch (e) { /* 무시 */ }
+        }
+
+        unmuteBtn.addEventListener('click', () => {
+            sendYTCommand('unMute');
+            sendYTCommand('setVolume', [100]);
+            unmuteBtn.classList.add('hide');
+        });
+    </script>
+</body>
+</html>
