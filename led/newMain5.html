@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>비디오월 분할 레이아웃</title>
-    <link rel="stylesheet" href="newStyle2.css">
+    <link rel="stylesheet" href="newStyle4.css">
 </head>
 <body>
     <div class="container">
@@ -20,15 +20,19 @@
             <iframe src="https://script.google.com/macros/s/AKfycbxbl77EdIwvi2UlHv_xqPiQFFk_hE4qyhVH_L5ah4Qw4Y2pQaKc3wel-YppMdRhglQJ/exec" frameborder="0"></iframe>
         </div>
 
-        <div class="item calendar-area" data-accent="calendar">
-            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <!-- 달력을 빼고, 이미지 1장(좌) + 슬라이드쇼(우)를 절반씩 좌우로 분할.
+             둘 다 각각 완전히 독립된 카드(모서리 브라켓 포함)로 보이도록 .item을 재사용함.
+             아래 두 iframe의 src를 각자 만드신 파일명으로 바꿔 끼우기만 하면 됨 -->
+        <div class="calendar-area">
             <div class="calendar-split">
-                <iframe class="billboard-frame" src="billboard2.html" frameborder="0"></iframe>
-                <iframe
-                    class="calendar-main"
-                    src="https://script.google.com/macros/s/AKfycbxH6WjtAaNGqegZAdlU-6SrbBJi5DkP5onZVQOZ6BnVtIWfd19RcFtkgtMUqhkuNvcW/exec"
-                    frameborder="0"
-                ></iframe>
+                <div class="item" data-accent="calendar">
+                    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+                    <img src="eventImg/plogging.png" alt="행사" style="width: 100%; height: 100%; object-fit: fill; display: block;">
+                </div>
+                <div class="item" data-accent="calendar">
+                    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+                    <iframe class="slideshow-frame" src="slide2.html" frameborder="0"></iframe>
+                </div>
             </div>
         </div>
 
