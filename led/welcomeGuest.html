@@ -53,26 +53,6 @@
         pointer-events: none;
     }
 
-    .rec-badge {
-        position: absolute; top: 1vmin; left: 50%; transform: translateX(-50%);
-        display: flex; align-items: center; gap: 0.5vmin;
-        background: rgba(10, 16, 32, 0.78);
-        border: 0.12vmin solid rgba(255, 59, 92, 0.6);
-        color: #ff8095;
-        font-weight: 800; font-size: 1.7vmin; letter-spacing: 0.2vmin;
-        padding: 0.5vmin 1.3vmin;
-        border-radius: 999px;
-        z-index: 3;
-        white-space: nowrap;
-    }
-    .rec-badge .dot {
-        width: 0.9vmin; height: 0.9vmin; border-radius: 50%;
-        background: var(--red);
-        box-shadow: 0 0 1vmin var(--red);
-        animation: blink 1s infinite;
-    }
-    @keyframes blink { 50% { opacity: 0.25; } }
-
     .confetti-layer { position: absolute; inset: 0; overflow: hidden; z-index: 1; pointer-events: none; }
     .confetti {
         position: absolute;
@@ -193,31 +173,31 @@
 
     .eyebrow {
         margin-top: 0;
-        font-size: 2.5vmin;
-        letter-spacing: 0.6vmin;
+        font-size: 3vmin;
+        letter-spacing: 0.72vmin;
         font-weight: 700;
         color: var(--gold);
-        text-shadow: 0 0 1.4vmin var(--gold-soft);
+        text-shadow: 0 0 1.68vmin var(--gold-soft);
     }
 
     .role-tags {
-        margin-top: 1vmin;
+        margin-top: 1.2vmin;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 0.7vmin;
+        gap: 0.85vmin;
     }
 
     .role-pill {
         display: inline-flex;
         align-items: center;
-        gap: 0.4vmin;
-        font-size: 1.7vmin;
+        gap: 0.48vmin;
+        font-size: 2.04vmin;
         font-weight: 700;
         color: var(--sub);
         background: rgba(255,255,255,0.05);
         border: 0.1vmin solid rgba(255,255,255,0.1);
-        padding: 0.5vmin 1.3vmin;
+        padding: 0.6vmin 1.56vmin;
         border-radius: 999px;
         white-space: nowrap;
     }
@@ -236,9 +216,9 @@
     .guest-name .accent { color: var(--gold); text-shadow: 0 0 2.2vmin var(--gold-soft); }
 
     .welcome-line {
-        margin-top: 1.4vmin;
+        margin-top: 1.68vmin;
         font-weight: 700;
-        font-size: 2.3vmin;
+        font-size: 2.76vmin;
         line-height: 1.5;
         color: var(--sub);
         word-break: keep-all;
@@ -249,31 +229,31 @@
     }
 
     .divider {
-        margin-top: 1.6vmin;
-        width: 5vmin; height: 0.35vmin;
+        margin-top: 1.92vmin;
+        width: 6vmin; height: 0.42vmin;
         border-radius: 999px;
         background: linear-gradient(90deg, var(--blue), var(--gold));
-        box-shadow: 0 0 1.1vmin var(--blue-glow);
+        box-shadow: 0 0 1.32vmin var(--blue-glow);
     }
 
     .social-row {
-        margin-top: 1.5vmin;
+        margin-top: 1.8vmin;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 0.9vmin;
+        gap: 1.08vmin;
     }
 
     .social-pill {
         display: inline-flex;
         align-items: center;
-        gap: 0.5vmin;
-        font-size: 1.8vmin;
+        gap: 0.6vmin;
+        font-size: 2.16vmin;
         font-weight: 700;
         color: var(--sub);
         background: rgba(255, 255, 255, 0.05);
         border: 0.1vmin solid rgba(255, 255, 255, 0.12);
-        padding: 0.6vmin 1.5vmin;
+        padding: 0.72vmin 1.8vmin;
         border-radius: 999px;
         text-decoration: none;
         white-space: nowrap;
@@ -305,7 +285,6 @@
     <div class="banner-row">
         <!-- 유튜브 채널 배너 이미지 — 카드 맨 위, 가로 100% -->
         <img src="images/events/banner_horang.jpg" alt="허성범 크리에이터 채널 배너">
-        <div class="rec-badge"><span class="dot"></span>NOW FILMING</div>
     </div>
 
     <div class="content">
@@ -350,7 +329,7 @@
         </div>
     </div>
 
-    <div class="footer">성일정보고등학교 <span>·</span> 전교생 일동</div>
+    <div class="footer">오늘은 성일정보고등학교 <span>유튜브 촬영</span>하는 날!</div>
 
     <script>
         // 컨페티 생성 — 골드/블루/레드 3색, 랜덤 위치·속도·회전
