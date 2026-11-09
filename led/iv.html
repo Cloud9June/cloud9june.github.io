@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}*,*::before,*::after{box-sizing:border-box}</style>
+<title>면접 채점</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: 조(5명) 단위 카드 + 하단 고정 합계 바. 탭 한 번 = 점수 하나 */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --fg:#17202a; --muted:#5d6b78; --line:#d6dde4;
+  --accent:#1f5fae; --accent-ink:#ffffff; --chip:#e8eef6; --warn:#b4541a;
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171d; --surface:#1b222a; --fg:#e6ebf0; --muted:#94a3b1; --line:#2d3743;
+  --accent:#6aa4ea; --accent-ink:#0b1220; --chip:#24303c; --warn:#f0a06a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171d; --surface:#1b222a; --fg:#e6ebf0; --muted:#94a3b1; --line:#2d3743;
+  --accent:#6aa4ea; --accent-ink:#0b1220; --chip:#24303c; --warn:#f0a06a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px 96px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font-size:20px;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg);
+  border-radius:8px;padding:8px 12px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+label.cnt{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+#count{width:64px}
+.groups{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.groups button{flex:none;padding:6px 12px;font-size:14px;font-variant-numeric:tabular-nums}
+.groups button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.groups button.done::after{content:" ✓";color:var(--accent)}
+.groups button.on.done::after{color:inherit}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.complete{border-color:var(--accent)}
+.head{display:flex;gap:8px;align-items:center}
+.no{font-family:var(--mono);font-weight:600;font-size:18px;min-width:2.2em}
+.head input{flex:1;min-width:0}
+.total{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;min-width:3.4em;text-align:right}
+.total.part{color:var(--warn)}
+.row{display:flex;flex-direction:column;gap:4px}
+.lab{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;letter-spacing:.02em}
+.seg{display:flex;gap:3px}
+.seg button{flex:1;min-width:0;padding:7px 0;font-family:var(--mono);font-size:13px;border-radius:6px;background:var(--chip);border-color:transparent;font-variant-numeric:tabular-nums}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.sec{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;border-top:1px dashed var(--line);padding-top:8px}
+.quick{display:flex;gap:6px}
+.quick button{font-size:12px;padding:5px 8px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted)}
+.bar b{color:var(--fg);font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);max-width:min(900px,92vw);width:100%}
+.tblwrap{overflow-x:auto;max-height:60vh}
+table{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:center;white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);font-weight:600}
+.confirm{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--warn)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>소프트웨어개발과 면접 채점</h1>
+      <div class="sub">점수를 탭하면 바로 저장되고 총점이 계산됩니다. 같은 점수를 다시 탭하면 지워집니다.</div>
+    </div>
+    <div class="tools">
+      <label class="cnt">인원 <input id="count" type="number" min="1" max="200" value="41"></label>
+      <button id="showTable" class="primary">전체 결과표</button>
+      <button id="resetBtn">초기화</button>
+      <span id="confirmBox" class="confirm" hidden>모든 점수를 지울까요? <button id="resetYes">지우기</button><button id="resetNo">취소</button></span>
+    </div>
+  </header>
+  <nav class="groups" id="groups" aria-label="조 선택"></nav>
+  <section class="cards" id="cards"></section>
+</div>
+
+<div class="bar">
+  <span>채점 완료 <b id="doneCnt">0</b> / <b id="allCnt">41</b>명</span>
+  <span>평균 <b id="avg">–</b>점</span>
+  <span style="display:flex;gap:8px"><button id="prev">◀ 이전 조</button><button id="next" class="primary">다음 조 ▶</button></span>
+</div>
+
+<dialog id="dlg">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <b>전체 결과표</b>
+    <span style="display:flex;gap:8px"><button id="copyBtn" class="primary">표 복사 (엑셀·한글 붙여넣기)</button><button id="closeDlg">닫기</button></span>
+  </div>
+  <div class="tblwrap"><table id="tbl"></table></div>
+  <textarea id="copyArea" readonly hidden style="width:100%;height:120px;margin-top:8px"></textarea>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const AREAS=[
+  {k:"job",  sec:"서류",     name:"취업희망분야", max:20, opts:[20,17,14,11,8], norm:14},
+  {k:"mot",  sec:"서류",     name:"지원동기",     max:20, opts:[20,17,14,11,8], norm:14},
+  {k:"pre",  sec:"인성면접", name:"응답전 관찰",   max:15, opts:[15,14,13,12,11], norm:13},
+  {k:"resp", sec:"인성면접", name:"응답과정",     max:15, opts:[15,14,13,12,11], norm:13},
+  {k:"sub",  sec:"적성면접", name:"교과소양·전문성", max:15, opts:[15,14.5,14,13.5,13,12.5,12,11.5,11], norm:13},
+  {k:"plan", sec:"적성면접", name:"향후 계획성",   max:15, opts:[15,14.5,14,13.5,13,12.5,12,11.5,11], norm:13},
+];
+const KEY="sw-interview-2026-11-09";
+let state={count:41,group:0,stu:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stu)state=s;}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}};
+const $=id=>document.getElementById(id);
+const stu=n=>(state.stu[n]??={name:"",s:{}});
+const total=n=>{const s=stu(n).s;return AREAS.reduce((a,x)=>a+(s[x.k]??0),0);};
+const filled=n=>AREAS.filter(x=>stu(n).s[x.k]!=null).length;
+const groupsN=()=>Math.ceil(state.count/5);
+const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
+
+function renderGroups(){
+  const g=$("groups");g.innerHTML="";
+  for(let i=0;i<groupsN();i++){
+    const b=document.createElement("button");
+    const a=i*5+1,z=Math.min(state.count,i*5+5);
+    b.textContent=`${i+1}조 (${a}–${z})`;
+    let all=true;for(let n=a;n<=z;n++)if(filled(n)<AREAS.length)all=false;
+    if(i===state.group)b.classList.add("on");
+    if(all)b.classList.add("done");
+    b.onclick=()=>{state.group=i;save();render();};
+    g.appendChild(b);
+  }
+}
+function card(n){
+  const c=document.createElement("div");c.className="card";
+  const st=stu(n);
+  const h=document.createElement("div");h.className="head";
+  h.innerHTML=`<span class="no">${n}</span>`;
+  const inp=document.createElement("input");inp.id="name-"+n;inp.placeholder="이름 / 수험번호";inp.value=st.name;
+  inp.oninput=()=>{st.name=inp.value;save();};
+  const t=document.createElement("span");t.className="total";
+  h.append(inp,t);c.appendChild(h);
+  const upd=()=>{const f=filled(n);t.textContent=f?fmt(total(n)):"–";t.classList.toggle("part",f>0&&f<AREAS.length);
+    c.classList.toggle("complete",f===AREAS.length);t.title=f<AREAS.length?`${AREAS.length-f}개 영역 미입력`:"";};
+  let last="";
+  AREAS.forEach(a=>{
+    if(a.sec!==last){const s=document.createElement("div");s.className="sec";s.textContent=a.sec+(a.sec==="서류"?" (취업희망서·추천서)":"");c.appendChild(s);last=a.sec;}
+    const r=document.createElement("div");r.className="row";
+    r.innerHTML=`<div class="lab"><span>${a.name}</span><span>${a.max}점</span></div>`;
+    const seg=document.createElement("div");seg.className="seg";
+    a.opts.forEach(v=>{
+      const b=document.createElement("button");b.textContent=fmt(v);
+      if(st.s[a.k]===v)b.classList.add("on");
+      b.onclick=()=>{st.s[a.k]=st.s[a.k]===v?undefined:v;if(st.s[a.k]===undefined)delete st.s[a.k];
+        seg.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b&&st.s[a.k]!=null));
+        save();upd();renderGroups();renderBar();};
+      seg.appendChild(b);
+    });
+    r.appendChild(seg);c.appendChild(r);
+  });
+  const q=document.createElement("div");q.className="quick";
+  const fill=document.createElement("button");fill.textContent="빈 칸을 '보통'으로";
+  fill.onclick=()=>{AREAS.forEach(a=>{if(st.s[a.k]==null)st.s[a.k]=a.norm;});save();render();};
+  const clr=document.createElement("button");clr.textContent="이 학생 지우기";
+  clr.onclick=()=>{st.s={};save();render();};
+  q.append(fill,clr);c.appendChild(q);
+  upd();return c;
+}
+function renderCards(){
+  const box=$("cards");box.innerHTML="";
+  const a=state.group*5+1,z=Math.min(state.count,state.group*5+5);
+  for(let n=a;n<=z;n++)box.appendChild(card(n));
+}
+function renderBar(){
+  let d=0,sum=0;
+  for(let n=1;n<=state.count;n++)if(filled(n)===AREAS.length){d++;sum+=total(n);}
+  $("doneCnt").textContent=d;$("allCnt").textContent=state.count;
+  $("avg").textContent=d?(sum/d).toFixed(1):"–";
+}
+function render(){
+  if(state.group>=groupsN())state.group=groupsN()-1;
+  $("count").value=state.count;renderGroups();renderCards();renderBar();
+}
+$("count").onchange=e=>{const v=Math.max(1,Math.min(200,parseInt(e.target.value)||41));state.count=v;save();render();};
+$("prev").onclick=()=>{if(state.group>0){state.group--;save();render();scrollTo(0,0);}};
+$("next").onclick=()=>{if(state.group<groupsN()-1){state.group++;save();render();scrollTo(0,0);}};
+$("resetBtn").onclick=()=>{$("confirmBox").hidden=false;$("resetBtn").hidden=true;};
+$("resetNo").onclick=()=>{$("confirmBox").hidden=true;$("resetBtn").hidden=false;};
+$("resetYes").onclick=()=>{state={count:state.count,group:0,stu:{}};save();$("confirmBox").hidden=true;$("resetBtn").hidden=false;render();toast("초기화했습니다");};
+
+function rows(){
+  const head=["번호","이름/수험번호",...AREAS.map(a=>a.name),"총점","순위","비고"];
+  const list=[];
+  for(let n=1;n<=state.count;n++){const f=filled(n);list.push({n,name:stu(n).name,s:stu(n).s,t:total(n),f});}
+  const ranked=list.filter(r=>r.f===AREAS.length).map(r=>r.t).sort((a,b)=>b-a);
+  const body=list.map(r=>[r.n,r.name,...AREAS.map(a=>r.s[a.k]!=null?fmt(r.s[a.k]):""),
+    r.f?fmt(r.t):"", r.f===AREAS.length?ranked.indexOf(r.t)+1:"", r.f&&r.f<AREAS.length?"미입력 "+(AREAS.length-r.f):(r.f?"":"미채점")]);
+  return [head,...body];
+}
+$("showTable").onclick=()=>{
+  const r=rows();
+  $("tbl").innerHTML="<thead><tr>"+r[0].map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+
+    r.slice(1).map(x=>"<tr>"+x.map(v=>`<td>${String(v).replace(/</g,"&lt;")}</td>`).join("")+"</tr>").join("")+"</tbody>";
+  $("copyArea").hidden=true;$("dlg").showModal();
+};
+$("closeDlg").onclick=()=>$("dlg").close();
+$("copyBtn").onclick=()=>{
+  const tsv=rows().map(r=>r.join("\t")).join("\n");
+  navigator.clipboard.writeText(tsv).then(()=>toast("복사했습니다. 엑셀이나 한글 표에 붙여넣으세요"))
+  .catch(()=>{const t=$("copyArea");t.value=tsv;t.hidden=false;t.select();toast("아래 칸을 Ctrl+C로 복사하세요");});
+};
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2200);}
+render();
+</script>
+</body>
+</html>

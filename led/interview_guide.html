@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>신입생 면접실 안내</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;800;900&display=swap">
+<style>
+/* Layout: 비디오월 16:9 한 화면 — 상단 제목 띠, 4열 학과 카드 그리드(7개 + 실기 안내 1칸). 어두운 단일 테마(LED 가독성 우선). */
+:root {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --panel: #161c25;
+  --line: #273140;
+  --fg: #f3f6fa;
+  --muted: #9aa7b8;
+  --accent: #ffd34d;
+  --sign-bg: #ffffff;
+  --sign-fg: #10151c;
+  --font: "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  /* 학과별 색 — 학생이 색으로 자기 학과를 찾도록 서로 확실히 다른 색상 */
+  --c-beauty: #ff7ab6;
+  --c-army: #7fbf5a;
+  --c-global: #4fb3ff;
+  --c-account: #ffb347;
+  --c-market: #c38bff;
+  --c-ai: #3fd9c5;
+  --c-soft: #ff6b5e;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: clamp(14px, 1.05vw, 26px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: clamp(12px, 1.6vw, 40px);
+  box-sizing: border-box;
+  word-break: keep-all;
+}
+.wrap {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(12px, 1.3vw, 32px);
+  max-width: 2400px;
+  margin: 0 auto;
+}
+
+/* 제목 */
+header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 3px solid var(--line);
+  padding-bottom: clamp(8px, 0.9vw, 22px);
+}
+.eyebrow {
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 1.15em;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.3em;
+}
+h1 {
+  margin: 0;
+  font-weight: 900;
+  font-size: clamp(30px, 3.4vw, 84px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.clock {
+  text-align: right;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 1.2em;
+  font-variant-numeric: tabular-nums;
+}
+.clock b {
+  display: block;
+  color: var(--fg);
+  font-weight: 900;
+  font-size: 2.6em;
+  line-height: 1;
+}
+
+/* 학과 카드 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: clamp(10px, 1.1vw, 28px);
+  min-height: 0;
+}
+.card {
+  --c: var(--accent);
+  background: var(--panel);
+  border-radius: 14px;
+  border-top: clamp(8px, 0.55vw, 14px) solid var(--c);
+  padding: clamp(12px, 1.2vw, 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  min-width: 0;
+  min-height: 0;
+}
+.card h2 {
+  margin: 0;
+  color: var(--c);
+  font-weight: 900;
+  font-size: 2.3em;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+/* 위치: 건물 + 층을 가장 크게 */
+.loc {
+  margin-top: auto;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 0.25em;
+  line-height: 1;
+}
+.bld {
+  font-weight: 800;
+  font-size: 2.4em;
+}
+.floor {
+  font-weight: 900;
+  font-size: 5.2em;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.side {
+  font-weight: 800;
+  font-size: 1.7em;
+  color: var(--muted);
+  margin-left: 0.15em;
+}
+
+/* 교실 문에 붙을 표지 모양 */
+.sign-wrap {
+  display: grid;
+  gap: 0.3em;
+}
+.sign-cap {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--muted);
+}
+.sign {
+  background: var(--sign-bg);
+  color: var(--sign-fg);
+  border-left: 0.5em solid var(--c);
+  border-radius: 6px;
+  padding: 0.35em 0.7em;
+  font-weight: 900;
+  font-size: 1.35em;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+/* 안내 칸 */
+.info {
+  background: transparent;
+  border: 2px dashed var(--line);
+  justify-content: space-between;
+}
+.info h3 {
+  margin: 0 0 0.5em;
+  font-weight: 900;
+  font-size: 1.4em;
+  color: var(--c-army);
+}
+.bldg {
+  display: grid;
+  gap: 0.5em;
+}
+.bldg-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.6em;
+}
+.bldg-row b {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 900;
+  font-size: 1.8em;
+  padding: 0.1em 0.45em;
+  border-radius: 8px;
+}
+.bldg-row span {
+  font-weight: 800;
+  font-size: 1.3em;
+  line-height: 1.3;
+}
+.bldg-row.back b {
+  background: transparent;
+  color: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+.info ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4em;
+  font-size: 1.25em;
+  font-weight: 600;
+}
+.info li b { font-weight: 900; }
+.practical {
+  border-top: 1px solid var(--line);
+  padding-top: 0.8em;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 1.25em;
+}
+footer strong { color: var(--accent); font-weight: 800; }
+.fs {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8em;
+  padding: 0.25em 0.8em;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.fs:hover, .fs:focus-visible { color: var(--fg); border-color: var(--muted); outline: none; }
+:fullscreen .fs { display: none; }
+
+/* 좁은 화면(모니터·휴대폰 확인용) */
+@media (max-width: 1100px) {
+  html, body { height: auto; }
+  body { font-size: 15px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
+}
+@media (max-width: 560px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .clock { text-align: left; }
+}
+</style>
+<style>html,body{margin:0}*{box-sizing:border-box}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">성일정보고등학교 · 신입생 특별전형</p>
+      <h1>학과별 면접 대기실 위치</h1>
+    </div>
+    <div class="clock"><span id="date"></span><b id="time">--:--</b></div>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <footer>
+    <span>대기실에서 기다리면 순서에 맞춰 <strong>면접실로 안내</strong>해 드립니다.</span>
+    <span>길을 모르면 중간중간 있는 <strong>재학생 안내 도우미</strong>에게 물어보세요.</span>
+  </footer>
+</div>
+
+<script>
+/* ===== 데이터: 공문 첨부 배치도 기준. 내용이 바뀌면 여기만 고치면 됩니다. =====
+   rooms 는 교사 확인용(학년-반 교실)이며 화면에는 표시되지 않습니다. */
+const DEPTS = [
+  { name: "뷰티스마트케어과", color: "--c-beauty",  building: "본관", floor: 5, side: "좌측", rooms: "대기 2-3 / 면접 2-4" },
+  { name: "부사관과",         color: "--c-army",    building: "본관", floor: 5, side: "좌측", rooms: "대기 2-5 / 면접 2-6" },
+  { name: "글로벌경영과",     color: "--c-global",  building: "본관", floor: 4, side: "좌측", rooms: "대기 2-7, 2-8 / 면접 3-10" },
+  { name: "회계정보과",       color: "--c-account", building: "본관", floor: 4, side: "좌측", rooms: "대기 3-3, 3-4 / 면접 3-9" },
+  { name: "창업마케팅과",     color: "--c-market",  building: "본관", floor: 3, side: "좌측", rooms: "대기 3-5, 3-6 / 면접 2-10" },
+  { name: "AI게임콘텐츠과",   color: "--c-ai",      building: "신관", floor: 2, side: "",     rooms: "대기 1-10 / 면접 1-12" },
+  { name: "소프트웨어개발과", color: "--c-soft",    building: "신관", floor: 3, side: "",     rooms: "대기 1-7, 1-8 / 면접 1-9" },
+];
+const PRACTICAL = {
+  title: "부사관과 실기전형",
+  items: [
+    ["1.2km 달리기", "운동장"],
+    ["앉아 윗몸 앞으로 굽히기", "운동장"],
+  ],
+};
+
+/* ===== 렌더링 ===== */
+const grid = document.getElementById("grid");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+grid.innerHTML = DEPTS.map(d => `
+  <section class="card" style="--c: var(${d.color})">
+    <h2>${esc(d.name)}</h2>
+    <div class="loc">
+      <span class="bld">${esc(d.building)}</span>
+      <span class="floor">${esc(d.floor)}층</span>
+      ${d.side ? `<span class="side">${esc(d.side)}</span>` : ""}
+    </div>
+    <div class="sign-wrap">
+      <span class="sign-cap">이 표지가 붙은 교실을 찾으세요</span>
+      <span class="sign">${esc(d.name)} 대기실</span>
+    </div>
+  </section>`).join("") + `
+  <section class="card info">
+    <div class="bldg">
+      <div class="bldg-row"><b>본관</b><span>지금 이 화면이 있는 건물</span></div>
+      <div class="bldg-row back"><b>신관</b><span>본관 바로 뒷편 건물</span></div>
+    </div>
+    <div class="practical">
+      <h3>${esc(PRACTICAL.title)}</h3>
+      <ul>${PRACTICAL.items.map(([k, v]) => `<li>${esc(k)} — <b>${esc(v)}</b></li>`).join("")}</ul>
+    </div>
+  </section>`;
+
+/* ===== 시계 ===== */
+const days = ["일", "월", "화", "수", "목", "금", "토"];
+function tick() {
+  const n = new Date();
+  document.getElementById("date").textContent = `${n.getMonth() + 1}월 ${n.getDate()}일 (${days[n.getDay()]})`;
+  document.getElementById("time").textContent = `${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
+}
+tick();
+setInterval(tick, 10000);
+
+/* ===== 전체 화면 (버튼 또는 F 키) ===== */
+function goFull() {
+  if (document.fullscreenElement) return document.exitFullscreen().catch(() => {});
+  document.documentElement.requestFullscreen?.().catch(() => {});
+}
+document.getElementById("fs").addEventListener("click", goFull);
+document.addEventListener("keydown", e => { if (e.key === "f" || e.key === "F") goFull(); });
+
+/* 비디오월 화면 꺼짐 방지 */
+try { navigator.wakeLock?.request("screen").catch(() => {}); } catch (e) {}
+</script>
+</body>
+</html>
