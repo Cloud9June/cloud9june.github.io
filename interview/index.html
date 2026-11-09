@@ -53,7 +53,7 @@ input,select{font:inherit;color:var(--fg);background:var(--surface);border:1px s
 .seg.fine button{font-size:12.5px}
 .seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
 .quick{display:flex;gap:6px;margin-top:4px}
-.quick button{flex:1;font-size:13px;padding:6px 4px}
+.quick{align-items:center}.quick button{flex:1;font-size:13px;padding:7px 2px;min-width:0}.quick .clr{color:var(--muted)}.qlab{font-size:11px;color:var(--muted);white-space:nowrap}
 
 .nav{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding-bottom:env(safe-area-inset-bottom,0px)}
 .nav button{height:48px;font-size:16px}
@@ -92,8 +92,11 @@ tr.go{cursor:pointer}
     </div>
     <div id="rows" style="display:flex;flex-direction:column;gap:5px"></div>
     <div class="quick">
-      <button id="fillBtn">빈 칸을 '보통'으로</button>
-      <button id="clearBtn">이 학생 지우기</button>
+      <span class="qlab">한 번에</span>
+      <button data-preset="top">최우수</button>
+      <button data-preset="good">우수</button>
+      <button data-preset="norm">보통</button>
+      <button id="clearBtn" class="clr">지우기</button>
     </div>
   </main>
 
@@ -180,7 +183,9 @@ $("name").oninput=e=>{stu(state.cur).name=e.target.value;save();};
 $("prev").onclick=()=>go(state.cur-1);
 $("next").onclick=()=>{if(state.cur>=state.count){showTable();return;}
   if(filled(state.cur)>0&&filled(state.cur)<AREAS.length)toast(`${state.cur}번: ${AREAS.length-filled(state.cur)}개 영역 미입력`);go(state.cur+1);};
-$("fillBtn").onclick=()=>{const s=stu(state.cur).s;AREAS.forEach(a=>{if(s[a.k]==null)s[a.k]=a.norm;});save();paint();};
+const PRESETS={top:[20,20,15,15,15,15],good:[17,17,14,14,14,14],norm:[14,14,13,13,13,13]};
+document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=()=>{const p=PRESETS[b.dataset.preset],s=stu(state.cur).s;
+  AREAS.forEach((a,i)=>s[a.k]=p[i]);save();paint();});
 $("clearBtn").onclick=()=>{stu(state.cur).s={};save();paint();};
 
 /* 좌우 스와이프로 이동 */
