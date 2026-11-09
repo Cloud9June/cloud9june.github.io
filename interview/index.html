@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}*,*::before,*::after{box-sizing:border-box}</style>
-<title>소프트웨어개발과 면접 채점</title>
+<title>면접 채점</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 /* Layout: 한 화면 = 한 학생. 상단 학생 선택, 가운데 6개 영역, 하단 이전/다음 */
@@ -74,12 +74,12 @@ tr.go{cursor:pointer}
 
 <div class="app">
   <div class="top">
-    <h1>소프트웨어개발과 면접 채점</h1>
+    <h1>면접 채점</h1>
     <button id="showTable">결과표</button>
     <button id="menuBtn" aria-expanded="false">설정</button>
   </div>
   <div class="menu" id="menu" hidden>
-    <label>인원 <input id="count" type="number" min="1" max="200" value="41"></label>
+    <label>인원 <input id="count" type="number" min="1" max="200" value="42"></label>
     <button id="resetBtn">전체 초기화</button>
     <span id="confirmBox" class="confirm" hidden>모든 점수를 지울까요? <button id="resetYes">지우기</button><button id="resetNo">취소</button></span>
   </div>
@@ -99,7 +99,7 @@ tr.go{cursor:pointer}
 
   <div class="nav">
     <button id="prev">◀ 이전</button>
-    <div class="stat">완료 <b id="doneCnt">0</b>/<b id="allCnt">41</b><br>평균 <b id="avg">–</b></div>
+    <div class="stat">완료 <b id="doneCnt">0</b>/<b id="allCnt">42</b><br>평균 <b id="avg">–</b></div>
     <button id="next" class="primary">다음 ▶</button>
   </div>
 </div>
@@ -126,7 +126,7 @@ const AREAS=[
   {k:"plan", sec:"적성면접", name:"향후 계획성",     max:15, opts:[15,14.5,14,13.5,13,12.5,12,11.5,11], norm:13},
 ];
 const KEY="sw-interview-2026-11-09";
-let state={count:41,cur:1,stu:{}};
+let state={count:42,cur:1,stu:{}};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stu){state=Object.assign(state,s);if(!state.cur)state.cur=1;}}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}};
 const $=id=>document.getElementById(id);
@@ -190,7 +190,7 @@ $("card").addEventListener("touchend",e=>{if(sx==null)return;const t=e.changedTo
   if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.5)go(state.cur+(dx<0?1:-1));},{passive:true});
 
 $("menuBtn").onclick=()=>{const m=$("menu");m.hidden=!m.hidden;$("menuBtn").setAttribute("aria-expanded",String(!m.hidden));};
-$("count").onchange=e=>{state.count=Math.max(1,Math.min(200,parseInt(e.target.value)||41));e.target.value=state.count;
+$("count").onchange=e=>{state.count=Math.max(1,Math.min(200,parseInt(e.target.value)||42));e.target.value=state.count;
   if(state.cur>state.count)state.cur=state.count;save();buildPick();go(state.cur);};
 $("resetBtn").onclick=()=>{$("confirmBox").hidden=false;$("resetBtn").hidden=true;};
 $("resetNo").onclick=()=>{$("confirmBox").hidden=true;$("resetBtn").hidden=false;};
