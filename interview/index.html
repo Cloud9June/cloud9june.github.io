@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}*,*::before,*::after{box-sizing:border-box}</style>
+<title>소프트웨어개발과 면접 채점</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: 한 화면 = 한 학생. 상단 학생 선택, 가운데 6개 영역, 하단 이전/다음 */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --fg:#17202a; --muted:#5d6b78; --line:#d6dde4;
+  --accent:#1f5fae; --accent-ink:#ffffff; --chip:#e8eef6; --warn:#b4541a;
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171d; --surface:#1b222a; --fg:#e6ebf0; --muted:#94a3b1; --line:#2d3743;
+  --accent:#6aa4ea; --accent-ink:#0b1220; --chip:#24303c; --warn:#f0a06a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171d; --surface:#1b222a; --fg:#e6ebf0; --muted:#94a3b1; --line:#2d3743;
+  --accent:#6aa4ea; --accent-ink:#0b1220; --chip:#24303c; --warn:#f0a06a; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;overflow:hidden;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:0}
+.app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:8px;padding-block:8px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:6px 10px;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+input,select{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+
+.top{display:flex;align-items:center;gap:6px}
+.top h1{font-size:14px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-weight:600}
+.top button{font-size:13px;padding:5px 9px}
+.menu{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.menu input{width:64px}
+.confirm{color:var(--warn);display:flex;gap:6px;align-items:center}
+
+.card{flex:1;min-height:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;
+  display:flex;flex-direction:column;justify-content:space-between;gap:4px;overflow-y:auto}
+.card.complete{border-color:var(--accent)}
+.head{display:flex;gap:8px;align-items:center}
+.head select{font-family:var(--mono);font-weight:600;font-size:17px;padding:4px 6px}
+.head input{flex:1;min-width:0}
+.total{font-family:var(--mono);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;min-width:3em;text-align:right}
+.total.part{color:var(--warn)}
+.sec{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;border-top:1px dashed var(--line);padding-top:5px;margin-top:2px}
+.row{display:flex;flex-direction:column;gap:3px}
+.lab{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between}
+.lab b{color:var(--fg);font-weight:600}
+.seg{display:flex;gap:3px}
+.seg button{flex:1;min-width:0;padding:0;height:clamp(32px,5.2vh,44px);font-family:var(--mono);font-size:14px;border-radius:6px;background:var(--chip);border-color:transparent;font-variant-numeric:tabular-nums}
+.seg.fine button{font-size:12.5px}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.quick{display:flex;gap:6px;margin-top:4px}
+.quick button{flex:1;font-size:13px;padding:6px 4px}
+
+.nav{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav button{height:48px;font-size:16px}
+.stat{font-size:12px;color:var(--muted);text-align:center;line-height:1.35;font-variant-numeric:tabular-nums}
+.stat b{color:var(--fg)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:5}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);max-width:min(900px,94vw);width:100%;padding:12px}
+.tblwrap{overflow:auto;max-height:65vh}
+table{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:center;white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);font-weight:600}
+tr.go{cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="top">
+    <h1>소프트웨어개발과 면접 채점</h1>
+    <button id="showTable">결과표</button>
+    <button id="menuBtn" aria-expanded="false">설정</button>
+  </div>
+  <div class="menu" id="menu" hidden>
+    <label>인원 <input id="count" type="number" min="1" max="200" value="41"></label>
+    <button id="resetBtn">전체 초기화</button>
+    <span id="confirmBox" class="confirm" hidden>모든 점수를 지울까요? <button id="resetYes">지우기</button><button id="resetNo">취소</button></span>
+  </div>
+
+  <main class="card" id="card">
+    <div class="head">
+      <select id="pick" aria-label="학생 번호"></select>
+      <input id="name" placeholder="이름 / 수험번호">
+      <span class="total" id="total">–</span>
+    </div>
+    <div id="rows" style="display:flex;flex-direction:column;gap:5px"></div>
+    <div class="quick">
+      <button id="fillBtn">빈 칸을 '보통'으로</button>
+      <button id="clearBtn">이 학생 지우기</button>
+    </div>
+  </main>
+
+  <div class="nav">
+    <button id="prev">◀ 이전</button>
+    <div class="stat">완료 <b id="doneCnt">0</b>/<b id="allCnt">41</b><br>평균 <b id="avg">–</b></div>
+    <button id="next" class="primary">다음 ▶</button>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <b>전체 결과표</b>
+    <span style="display:flex;gap:8px"><button id="copyBtn" class="primary">표 복사</button><button id="closeDlg">닫기</button></span>
+  </div>
+  <div class="tblwrap"><table id="tbl"></table></div>
+  <div style="font-size:12px;color:var(--muted);margin-top:6px">행을 누르면 그 학생으로 이동합니다. 복사한 표는 엑셀·한글에 바로 붙여넣을 수 있습니다.</div>
+  <textarea id="copyArea" readonly hidden style="width:100%;height:120px;margin-top:8px"></textarea>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const AREAS=[
+  {k:"job",  sec:"서류 (취업희망서·추천서)", name:"취업희망분야",   max:20, opts:[20,17,14,11,8], norm:14},
+  {k:"mot",  sec:"서류 (취업희망서·추천서)", name:"지원동기",       max:20, opts:[20,17,14,11,8], norm:14},
+  {k:"pre",  sec:"인성면접", name:"응답전 관찰",     max:15, opts:[15,14,13,12,11], norm:13},
+  {k:"resp", sec:"인성면접", name:"응답과정",       max:15, opts:[15,14,13,12,11], norm:13},
+  {k:"sub",  sec:"적성면접", name:"교과소양·전문성", max:15, opts:[15,14.5,14,13.5,13,12.5,12,11.5,11], norm:13},
+  {k:"plan", sec:"적성면접", name:"향후 계획성",     max:15, opts:[15,14.5,14,13.5,13,12.5,12,11.5,11], norm:13},
+];
+const KEY="sw-interview-2026-11-09";
+let state={count:41,cur:1,stu:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stu){state=Object.assign(state,s);if(!state.cur)state.cur=1;}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}};
+const $=id=>document.getElementById(id);
+const stu=n=>(state.stu[n]??={name:"",s:{}});
+const total=n=>AREAS.reduce((a,x)=>a+(stu(n).s[x.k]??0),0);
+const filled=n=>AREAS.filter(x=>stu(n).s[x.k]!=null).length;
+const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
+
+function buildRows(){
+  const box=$("rows");box.innerHTML="";let last="";
+  AREAS.forEach(a=>{
+    if(a.sec!==last){const s=document.createElement("div");s.className="sec";s.textContent=a.sec;box.appendChild(s);last=a.sec;}
+    const r=document.createElement("div");r.className="row";
+    r.innerHTML=`<div class="lab"><span>${a.name}</span><span><b id="v-${a.k}"></b> / ${a.max}</span></div>`;
+    const seg=document.createElement("div");seg.className="seg"+(a.opts.length>5?" fine":"");seg.id="seg-"+a.k;
+    a.opts.forEach(v=>{
+      const b=document.createElement("button");b.textContent=fmt(v);b.dataset.v=v;
+      b.onclick=()=>{const s=stu(state.cur).s;if(s[a.k]===v)delete s[a.k];else s[a.k]=v;save();paint();};
+      seg.appendChild(b);
+    });
+    r.appendChild(seg);box.appendChild(r);
+  });
+}
+function buildPick(){
+  const p=$("pick");p.innerHTML="";
+  for(let n=1;n<=state.count;n++){
+    const o=document.createElement("option");o.value=n;
+    const f=filled(n);o.textContent=`${n}번${f===AREAS.length?" ✓":f?" …":""}`;p.appendChild(o);
+  }
+  p.value=state.cur;
+}
+function paint(){
+  const n=state.cur,st=stu(n),f=filled(n);
+  AREAS.forEach(a=>{
+    $("seg-"+a.k).querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.v===st.s[a.k]));
+    $("v-"+a.k).textContent=st.s[a.k]!=null?fmt(st.s[a.k]):"";
+  });
+  const t=$("total");t.textContent=f?fmt(total(n)):"–";t.classList.toggle("part",f>0&&f<AREAS.length);
+  $("card").classList.toggle("complete",f===AREAS.length);
+  const o=$("pick").options[n-1];if(o)o.textContent=`${n}번${f===AREAS.length?" ✓":f?" …":""}`;
+  $("prev").disabled=n<=1;$("next").textContent=n>=state.count?"끝 ✓":"다음 ▶";
+  let d=0,sum=0;for(let i=1;i<=state.count;i++)if(filled(i)===AREAS.length){d++;sum+=total(i);}
+  $("doneCnt").textContent=d;$("allCnt").textContent=state.count;$("avg").textContent=d?(sum/d).toFixed(1):"–";
+}
+function go(n){
+  state.cur=Math.max(1,Math.min(state.count,n));save();
+  $("pick").value=state.cur;$("name").value=stu(state.cur).name;paint();
+}
+$("pick").onchange=e=>go(+e.target.value);
+$("name").oninput=e=>{stu(state.cur).name=e.target.value;save();};
+$("prev").onclick=()=>go(state.cur-1);
+$("next").onclick=()=>{if(state.cur>=state.count){showTable();return;}
+  if(filled(state.cur)>0&&filled(state.cur)<AREAS.length)toast(`${state.cur}번: ${AREAS.length-filled(state.cur)}개 영역 미입력`);go(state.cur+1);};
+$("fillBtn").onclick=()=>{const s=stu(state.cur).s;AREAS.forEach(a=>{if(s[a.k]==null)s[a.k]=a.norm;});save();paint();};
+$("clearBtn").onclick=()=>{stu(state.cur).s={};save();paint();};
+
+/* 좌우 스와이프로 이동 */
+let sx=null,sy=null;
+$("card").addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+$("card").addEventListener("touchend",e=>{if(sx==null)return;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;sx=null;
+  if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.5)go(state.cur+(dx<0?1:-1));},{passive:true});
+
+$("menuBtn").onclick=()=>{const m=$("menu");m.hidden=!m.hidden;$("menuBtn").setAttribute("aria-expanded",String(!m.hidden));};
+$("count").onchange=e=>{state.count=Math.max(1,Math.min(200,parseInt(e.target.value)||41));e.target.value=state.count;
+  if(state.cur>state.count)state.cur=state.count;save();buildPick();go(state.cur);};
+$("resetBtn").onclick=()=>{$("confirmBox").hidden=false;$("resetBtn").hidden=true;};
+$("resetNo").onclick=()=>{$("confirmBox").hidden=true;$("resetBtn").hidden=false;};
+$("resetYes").onclick=()=>{state={count:state.count,cur:1,stu:{}};save();$("confirmBox").hidden=true;$("resetBtn").hidden=false;buildPick();go(1);toast("초기화했습니다");};
+
+function rows(){
+  const head=["번호","이름/수험번호",...AREAS.map(a=>a.name),"총점","순위","비고"];
+  const list=[];for(let n=1;n<=state.count;n++)list.push({n,name:stu(n).name,s:stu(n).s,t:total(n),f:filled(n)});
+  const ranked=list.filter(r=>r.f===AREAS.length).map(r=>r.t).sort((a,b)=>b-a);
+  const body=list.map(r=>[r.n,r.name,...AREAS.map(a=>r.s[a.k]!=null?fmt(r.s[a.k]):""),
+    r.f?fmt(r.t):"",r.f===AREAS.length?ranked.indexOf(r.t)+1:"",r.f&&r.f<AREAS.length?"미입력 "+(AREAS.length-r.f):(r.f?"":"미채점")]);
+  return [head,...body];
+}
+function showTable(){
+  const r=rows();
+  $("tbl").innerHTML="<thead><tr>"+r[0].map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+
+    r.slice(1).map(x=>`<tr class="go" data-n="${x[0]}">`+x.map(v=>`<td>${String(v).replace(/</g,"&lt;")}</td>`).join("")+"</tr>").join("")+"</tbody>";
+  $("tbl").querySelectorAll("tr.go").forEach(tr=>tr.onclick=()=>{$("dlg").close();go(+tr.dataset.n);});
+  $("copyArea").hidden=true;$("dlg").showModal();
+}
+$("showTable").onclick=showTable;
+$("closeDlg").onclick=()=>$("dlg").close();
+$("copyBtn").onclick=()=>{
+  const tsv=rows().map(r=>r.join("\t")).join("\n");
+  navigator.clipboard.writeText(tsv).then(()=>toast("복사했습니다. 엑셀이나 한글 표에 붙여넣으세요"))
+  .catch(()=>{const t=$("copyArea");t.value=tsv;t.hidden=false;t.select();toast("아래 칸을 길게 눌러 복사하세요");});
+};
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2200);}
+
+$("count").value=state.count;buildRows();buildPick();go(state.cur);
+</script>
+</body>
+</html>
