@@ -35,7 +35,7 @@
 
   /* 문구 */
   #text { position: absolute; left: 900px; width: 1680px; top: 96px; text-align: center; color: #12203a; }
-  .eyebrow { font-size: 40px; font-weight: 600; letter-spacing: .02em; color: #3b5a8c;
+  .eyebrow { font-size: 46px; font-weight: 700; letter-spacing: .01em; color: #1f3a66; margin: 0 -100px;
     animation: rise 1.2s .5s cubic-bezier(.2,.8,.2,1) both; }
   h1 { font-size: 150px; font-weight: 800; line-height: 1.12; margin-top: 18px; letter-spacing: -.01em;
     background: linear-gradient(90deg, #0047A0 0%, #12203a 45%, #12203a 55%, #b30000 100%);
@@ -48,18 +48,18 @@
     box-shadow: 0 10px 30px rgba(20,40,80,.10), inset 0 0 0 2px rgba(18,32,58,.06);
     animation: rise 1.2s 1.1s cubic-bezier(.2,.8,.2,1) both; }
   .eyebrow, h1, h2, .sub span { white-space: nowrap; }
-  .sub .de { font-size: 42px; font-weight: 700; color: #12203a; }
-  .sub .ko { font-size: 36px; font-weight: 500; color: #4a5a76; }
+  .sub .de { font-size: 46px; font-weight: 700; color: #12203a; }
+  .sub .ko { font-size: 46px; font-weight: 600; color: #22314d; }
 
   /* 하단 모서리 정보 */
-  .corner { position: absolute; bottom: 44px; font-size: 32px; font-weight: 600; color: #5a6b88;
+  .corner { position: absolute; bottom: 44px; font-size: 34px; font-weight: 700; color: #3b4a66;
     letter-spacing: .04em; animation: rise 1.2s 1.4s both; }
   #cornerL { left: 150px; }
   #cornerR { right: 150px; text-align: right; }
 
   /* 학교 ↔ 기업 연결 */
   .node-label { font-size: 34px; font-weight: 700; fill: #23324f; }
-  .node-sub { font-size: 28px; font-weight: 500; fill: #5a6b88; }
+  .node-sub { font-size: 34px; font-weight: 600; fill: #3b4a66; }
   .dash { stroke-dasharray: 4 26; animation: dash 2.4s linear infinite; }
   @keyframes dash { to { stroke-dashoffset: -60; } }
   .pulse { animation: pulse 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
@@ -206,7 +206,7 @@ const CONFIG = {
 
   // ---------- 긴 문구는 폭에 맞게 글자 크기 자동 축소 ----------
   function fitText() {
-    const rules = [['eyebrow',1680],['title',1680],['titleKo',1680],['subDe',1560],['subKo',1560],['cornerL',1500],['cornerR',1500]];
+    const rules = [['eyebrow',1880],['title',1680],['titleKo',1680],['subDe',1560],['subKo',1560],['cornerL',1500],['cornerR',1500]];
     for (const [id, max] of rules) {
       const el = $(id); el.style.fontSize = '';
       let fs = parseFloat(getComputedStyle(el).fontSize);
