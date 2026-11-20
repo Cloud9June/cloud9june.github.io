@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실시간 번역 자막</title>
+<style>
+  :root {
+    --fs: 56px;          /* 번역문 글자 크기 */
+    --src-ratio: 0.45;   /* 원문 크기 비율 */
+    --bg: #0b0d12;
+    --fg: #ffffff;
+    --muted: #8a93a6;
+    --accent: #4f8cff;
+    --ok: #2ecc71;
+    --warn: #f5a623;
+    --err: #ff4d4f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg);
+    font-family: "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; overflow: hidden; }
+
+  /* ---------- 자막 영역 ---------- */
+  #stage { position: absolute; inset: 0; display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 4vh 5vw 6vh; gap: 2.2vh; }
+  .line { transition: opacity .4s; }
+  .line .src { font-size: calc(var(--fs) * var(--src-ratio)); color: var(--muted);
+    margin-bottom: .3em; line-height: 1.35; }
+  .line .tgt { font-size: var(--fs); font-weight: 600; line-height: 1.25; word-break: keep-all; }
+  .line .tgt.pending { color: #5a6275; }
+  .line.old { opacity: .45; }
+  body.hide-src .line .src, body.hide-src #live { display: none; }
+  #live { font-size: calc(var(--fs) * var(--src-ratio)); color: #c9d3e6; font-style: italic;
+    min-height: 1.4em; line-height: 1.35; }
+  #live:empty::before { content: ""; }
+
+  #title { position: absolute; top: 3vh; left: 5vw; right: 5vw; font-size: 22px; color: var(--muted);
+    display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+  #status { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+  #dot { width: 12px; height: 12px; border-radius: 50%; background: #555; }
+  #dot.on { background: var(--ok); box-shadow: 0 0 10px var(--ok); animation: pulse 1.6s infinite; }
+  #dot.err { background: var(--err); }
+  @keyframes pulse { 50% { opacity: .4; } }
+
+  #welcome { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 24px; text-align: center; }
+  #welcome h1 { font-size: 44px; font-weight: 600; }
+  #welcome p { color: var(--muted); font-size: 18px; line-height: 1.6; }
+
+  /* ---------- 컨트롤 바 (마우스 움직일 때만 표시) ---------- */
+  #bar { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+    display: flex; gap: 8px; background: rgba(30,34,44,.92); padding: 10px; border-radius: 14px;
+    opacity: 0; transition: opacity .3s; z-index: 10; }
+  body.show-bar #bar, #bar:hover { opacity: 1; }
+  button { font: inherit; font-size: 15px; border: 0; border-radius: 10px; padding: 10px 16px;
+    background: #2a3040; color: #fff; cursor: pointer; }
+  button:hover { background: #363e52; }
+  button.primary { background: var(--accent); }
+  button.primary:hover { background: #3a76e8; }
+  button.danger { background: #b03a3c; }
+  .big { font-size: 22px; padding: 16px 40px; border-radius: 14px; }
+
+  /* ---------- 설정 모달 ---------- */
+  #settings { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none;
+    align-items: center; justify-content: center; z-index: 20; }
+  #settings.open { display: flex; }
+  .panel { background: #161a23; width: min(760px, 94vw); max-height: 92vh; overflow: auto;
+    border-radius: 16px; padding: 28px 32px; font-size: 15px; }
+  .panel h2 { font-size: 22px; margin-bottom: 18px; }
+  .panel h3 { font-size: 15px; color: var(--accent); margin: 22px 0 10px; }
+  .row { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .row.top { align-items: start; }
+  label { color: #c4cbd8; }
+  input[type=text], input[type=password], input[type=number], select, textarea {
+    width: 100%; font: inherit; font-size: 14px; background: #0e1118; color: #fff;
+    border: 1px solid #2c3343; border-radius: 8px; padding: 9px 11px; }
+  textarea { min-height: 84px; resize: vertical; line-height: 1.5; }
+  input[type=range] { width: 100%; }
+  .hint { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 4px; }
+  .actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 24px; }
+  .test { display: flex; gap: 8px; }
+  .test input { flex: 1; }
+  #testOut { margin-top: 8px; color: #e6ecf7; min-height: 1.4em; }
+  #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #2a3040;
+    padding: 12px 20px; border-radius: 10px; font-size: 15px; opacity: 0; transition: opacity .3s; z-index: 30; }
+  #toast.show { opacity: 1; }
+  #toast.err { background: #7a2224; }
+</style>
+</head>
+<body class="show-bar">
+
+<div id="title">
+  <span id="topic"></span>
+  <span id="status"><span id="dot"></span><span id="statusText">대기 중</span></span>
+</div>
+
+<div id="welcome">
+  <h1>실시간 번역 자막</h1>
+  <p>설정에서 번역 엔진과 언어를 확인한 뒤 <b>시작</b>을 누르세요.<br>
+     시작 후에는 이 화면을 클릭하지 말고 PowerPoint 슬라이드 쇼를 실행하세요.</p>
+  <div style="display:flex; gap:12px;">
+    <button class="big primary" id="startBig">시작</button>
+    <button class="big" id="settingsBig">설정</button>
+  </div>
+</div>
+
+<div id="stage" hidden>
+  <div id="lines" style="display:flex; flex-direction:column; gap:2.2vh;"></div>
+  <div id="live"></div>
+</div>
+
+<div id="bar">
+  <button class="primary" id="toggleBtn">시작</button>
+  <button id="settingsBtn">설정</button>
+  <button id="clearBtn">화면 지우기</button>
+  <button id="saveBtn">기록 저장</button>
+  <button id="fsBtn">전체 화면</button>
+</div>
+
+<div id="settings">
+  <div class="panel">
+    <h2>설정</h2>
+
+    <h3>언어</h3>
+    <div class="row">
+      <label>말하는 언어</label>
+      <select id="srcLang">
+        <option value="ko-KR">한국어</option>
+        <option value="en-US">영어</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>번역 언어</label>
+      <select id="tgtLang">
+        <option value="de">독일어 (Deutsch)</option>
+        <option value="en">영어 (English)</option>
+        <option value="ja">일본어 (日本語)</option>
+        <option value="zh-CN">중국어 간체 (中文)</option>
+        <option value="fr">프랑스어 (Français)</option>
+        <option value="es">스페인어 (Español)</option>
+        <option value="vi">베트남어 (Tiếng Việt)</option>
+        <option value="ko">한국어</option>
+      </select>
+    </div>
+
+    <h3>번역 엔진</h3>
+    <div class="row">
+      <label>엔진</label>
+      <select id="engine">
+        <option value="gemini">Gemini (문맥 + 용어집, 추천)</option>
+        <option value="google">Google 번역 (키 없음, 테스트용)</option>
+      </select>
+    </div>
+    <div class="row" data-for="gemini">
+      <label>Gemini API 키</label>
+      <div>
+        <input type="password" id="apiKey" placeholder="AIza...">
+        <div class="hint">aistudio.google.com에서 발급합니다. 이 PC 브라우저에만 저장됩니다.
+          Google Cloud 콘솔에서 키 사용 범위를 이 사이트 주소로 제한해 두세요.</div>
+      </div>
+    </div>
+    <div class="row" data-for="gemini">
+      <label>모델</label>
+      <input type="text" id="model" placeholder="gemini-2.5-flash">
+    </div>
+    <div class="row top" data-for="gemini">
+      <label>발표 주제·상황</label>
+      <textarea id="context" placeholder="예) 한국 성일정보고등학교 소프트웨어개발과 교사가 독일 방문단에게 학교의 도제교육 프로그램을 소개하는 발표"></textarea>
+    </div>
+    <div class="row top" data-for="gemini">
+      <label>용어집</label>
+      <div>
+        <textarea id="glossary" placeholder="성일정보고등학교 = Sungil Information High School&#10;도제반 = duale Ausbildungsklasse&#10;특성화고 = berufsbildende Oberschule"></textarea>
+        <div class="hint">한 줄에 하나씩 <b>원어 = 번역어</b> 형식으로 적습니다. 음성 인식이 자주 틀리는 고유명사도 적어두면 문맥으로 바로잡습니다.</div>
+      </div>
+    </div>
+    <div class="hint" style="margin-bottom:6px">Gemini 호출이 실패하면 그 문장은 자동으로 Google 번역으로 대신 번역합니다.</div>
+
+    <h3>화면</h3>
+    <div class="row">
+      <label>글자 크기 <span id="fsVal"></span></label>
+      <input type="range" id="fontSize" min="28" max="110" step="2">
+    </div>
+    <div class="row">
+      <label>표시 줄 수</label>
+      <input type="number" id="maxLines" min="1" max="10">
+    </div>
+    <div class="row">
+      <label>원문 표시</label>
+      <select id="showSrc">
+        <option value="1">원문(한국어)도 작게 표시</option>
+        <option value="0">번역문만 표시</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>상단 제목</label>
+      <input type="text" id="topicTitle" placeholder="예) Sungil Information High School – Präsentation">
+    </div>
+
+    <h3>번역 테스트 (마이크 없이)</h3>
+    <div class="test">
+      <input type="text" id="testIn" placeholder="한국어 문장을 입력하고 Enter">
+      <button id="testBtn">번역</button>
+    </div>
+    <div id="testOut"></div>
+
+    <div class="actions">
+      <button id="closeSettings">닫기</button>
+      <button class="primary" id="saveSettings">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ================= 설정 =================
+  const DEFAULTS = {
+    srcLang: 'ko-KR', tgtLang: 'de', engine: 'google', apiKey: '', model: 'gemini-2.5-flash',
+    context: '', glossary: '', fontSize: 56, maxLines: 4, showSrc: '1', topicTitle: ''
+  };
+  const LANG_NAMES = { de: 'German', en: 'English', ja: 'Japanese', 'zh-CN': 'Simplified Chinese',
+    fr: 'French', es: 'Spanish', vi: 'Vietnamese', ko: 'Korean' };
+  const STORE_KEY = 'liveTranslate.settings.v1';
+
+  function loadSettings() {
+    try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE_KEY) || '{}') }; }
+    catch { return { ...DEFAULTS }; }
+  }
+  function persist() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch {}
+  }
+  let S = loadSettings();
+
+  const $ = id => document.getElementById(id);
+  const FIELDS = ['srcLang','tgtLang','engine','apiKey','model','context','glossary','fontSize','maxLines','showSrc','topicTitle'];
+
+  function fillForm() {
+    FIELDS.forEach(k => { $(k).value = S[k]; });
+    $('fsVal').textContent = S.fontSize + 'px';
+    toggleEngineRows();
+  }
+  function readForm() {
+    FIELDS.forEach(k => { S[k] = $(k).value; });
+    S.fontSize = +S.fontSize || 56;
+    S.maxLines = Math.min(10, Math.max(1, +S.maxLines || 4));
+    if (!S.model.trim()) S.model = DEFAULTS.model;
+  }
+  function applyView() {
+    document.documentElement.style.setProperty('--fs', S.fontSize + 'px');
+    document.body.classList.toggle('hide-src', S.showSrc === '0');
+    $('topic').textContent = S.topicTitle;
+    trimLines();
+  }
+  function toggleEngineRows() {
+    document.querySelectorAll('[data-for="gemini"]').forEach(el => {
+      el.style.display = $('engine').value === 'gemini' ? '' : 'none';
+    });
+  }
+
+  // ================= 번역 =================
+  const history = [];   // {src, tgt, time}
+
+  async function translateGoogle(text) {
+    const sl = S.srcLang.split('-')[0];
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t'
+      + '&sl=' + encodeURIComponent(sl) + '&tl=' + encodeURIComponent(S.tgtLang)
+      + '&q=' + encodeURIComponent(text);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Google 번역 오류 ' + res.status);
+    const data = await res.json();
+    return (data[0] || []).map(p => p[0]).join('').trim();
+  }
+
+  let geminiNoThinking = true;   // thinkingConfig 미지원 모델이면 자동으로 끔
+  async function translateGemini(text) {
+    if (!S.apiKey) throw new Error('Gemini API 키가 없습니다');
+    const tgtName = LANG_NAMES[S.tgtLang] || S.tgtLang;
+    const srcName = S.srcLang.startsWith('ko') ? 'Korean' : 'English';
+    const recent = history.filter(h => h.tgt).slice(-3)
+      .map(h => `- ${h.src}\n  → ${h.tgt}`).join('\n');
+
+    const system =
+`You are a live subtitle translator for a spoken presentation.
+Translate the ${srcName} speech-recognition transcript into natural, clear ${tgtName} suitable for on-screen subtitles.
+Rules:
+- The input comes from automatic speech recognition: it has no punctuation and may contain misrecognized words. Use the context and glossary to infer the intended meaning.
+- Drop filler words and false starts. Keep the meaning faithful; do not add information.
+- Use the glossary translations exactly when the term (or a likely misrecognition of it) appears.
+- Output ONLY the ${tgtName} translation, one or two sentences, no quotes, no notes.`
+      + (S.context.trim() ? `\n\nPresentation context:\n${S.context.trim()}` : '')
+      + (S.glossary.trim() ? `\n\nGlossary (source = target):\n${S.glossary.trim()}` : '');
+
+    const user = (recent ? `Previous subtitles (for context only, do not repeat):\n${recent}\n\n` : '')
+      + `Translate this:\n${text}`;
+
+    const body = {
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: 'user', parts: [{ text: user }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 400 }
+    };
+    if (geminiNoThinking) body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.model)}:generateContent`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.apiKey },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      if (res.status === 400 && geminiNoThinking && /thinking/i.test(msg)) {
+        geminiNoThinking = false;           // 이 모델은 thinkingConfig를 받지 않음 → 끄고 재시도
+        return translateGemini(text);
+      }
+      throw new Error('Gemini 오류 ' + res.status);
+    }
+    const data = await res.json();
+    const out = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
+    if (!out) throw new Error('Gemini 응답이 비어 있습니다');
+    return out;
+  }
+
+  async function translate(text) {
+    if (S.engine === 'gemini') {
+      try { return await translateGemini(text); }
+      catch (e) {
+        console.warn(e);
+        toast(e.message + ' → Google 번역으로 대체', true);
+        return await translateGoogle(text);
+      }
+    }
+    return await translateGoogle(text);
+  }
+
+  // ================= 자막 표시 =================
+  const linesEl = $('lines'), liveEl = $('live');
+
+  function addLine(src) {
+    const item = { src, tgt: '', time: new Date() };
+    history.push(item);
+
+    const line = document.createElement('div');
+    line.className = 'line';
+    const s = document.createElement('div'); s.className = 'src'; s.textContent = src;
+    const t = document.createElement('div'); t.className = 'tgt pending'; t.textContent = '…';
+    line.append(s, t);
+    linesEl.append(line);
+    trimLines();
+
+    translate(src).then(out => {
+      item.tgt = out;
+      t.textContent = out;
+      t.classList.remove('pending');
+    }).catch(e => {
+      console.error(e);
+      t.textContent = '(번역 실패)';
+      toast(e.message, true);
+    });
+  }
+
+  function trimLines() {
+    while (linesEl.children.length > S.maxLines) linesEl.firstElementChild.remove();
+    const n = linesEl.children.length;
+    [...linesEl.children].forEach((el, i) => el.classList.toggle('old', i < n - 2));
+  }
+
+  const FILLER = /^(음+|어+|아+|그+|저+|에+|네|예|흠+|uh+|um+)$/i;
+  function cleanFinal(text) {
+    const t = text.trim();
+    if (t.replace(/\s/g, '').length < 2) return '';
+    if (FILLER.test(t.replace(/[\s.,…]/g, ''))) return '';
+    return t;
+  }
+
+  // ================= 음성 인식 =================
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, running = false, restartTimer = null;
+
+  function setStatus(state, text) {
+    $('dot').className = state === 'on' ? 'on' : state === 'err' ? 'err' : '';
+    $('statusText').textContent = text;
+  }
+
+  function createRecognizer() {
+    const r = new SR();
+    r.lang = S.srcLang;
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+
+    r.onstart = () => setStatus('on', '듣는 중');
+    r.onresult = e => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) {
+          const t = cleanFinal(res[0].transcript);
+          if (t) addLine(t);
+        } else {
+          interim += res[0].transcript;
+        }
+      }
+      liveEl.textContent = interim;
+    };
+    r.onerror = e => {
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        running = false;
+        setStatus('err', '마이크 권한 없음');
+        toast('마이크 권한이 거부되었습니다. 주소창의 자물쇠 아이콘에서 마이크를 허용하세요.', true);
+        updateToggle();
+        return;
+      }
+      setStatus('err', '오류: ' + e.error);
+      console.warn('SR error', e.error);
+    };
+    r.onend = () => {
+      liveEl.textContent = '';
+      if (running) {
+        // Chrome은 침묵이나 일정 시간 후 인식을 끝내므로 자동으로 다시 시작
+        clearTimeout(restartTimer);
+        restartTimer = setTimeout(() => { try { rec.start(); } catch {} }, 250);
+      } else {
+        setStatus('', '정지됨');
+      }
+    };
+    return r;
+  }
+
+  function start() {
+    if (!SR) { toast('이 브라우저는 음성 인식을 지원하지 않습니다. Windows의 Chrome을 사용하세요.', true); return; }
+    if (S.engine === 'gemini' && !S.apiKey) { toast('Gemini API 키를 먼저 입력하세요.', true); openSettings(); return; }
+    $('welcome').hidden = true;
+    $('stage').hidden = false;
+    rec = createRecognizer();
+    running = true;
+    try { rec.start(); } catch (e) { console.warn(e); }
+    requestWakeLock();
+    updateToggle();
+    hideBarSoon();
+  }
+
+  function stop() {
+    running = false;
+    clearTimeout(restartTimer);
+    try { rec && rec.stop(); } catch {}
+    setStatus('', '정지됨');
+    updateToggle();
+  }
+
+  function updateToggle() {
+    $('toggleBtn').textContent = running ? '정지' : '시작';
+    $('toggleBtn').className = running ? 'danger' : 'primary';
+  }
+
+  // 화면 꺼짐 방지
+  let wakeLock = null;
+  async function requestWakeLock() {
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && running) requestWakeLock();
+  });
+
+  // ================= 기타 UI =================
+  let toastTimer;
+  function toast(msg, isErr) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = 'show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.className = '', 4000);
+  }
+
+  let barTimer;
+  function hideBarSoon() {
+    clearTimeout(barTimer);
+    barTimer = setTimeout(() => { if (running) document.body.classList.remove('show-bar'); }, 2500);
+  }
+  document.addEventListener('mousemove', () => {
+    document.body.classList.add('show-bar');
+    document.body.style.cursor = '';
+    hideBarSoon();
+  });
+
+  function openSettings() { fillForm(); $('settings').classList.add('open'); }
+  function closeSettings() { $('settings').classList.remove('open'); }
+
+  function saveLog() {
+    if (!history.length) { toast('저장할 기록이 없습니다'); return; }
+    const pad = n => String(n).padStart(2, '0');
+    const fmt = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const text = history.map(h => `[${fmt(h.time)}] ${h.src}\n           ${h.tgt}`).join('\n\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    const d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = `번역기록_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen?.();
+  }
+
+  // 이벤트 연결
+  $('startBig').onclick = start;
+  $('settingsBig').onclick = openSettings;
+  $('toggleBtn').onclick = () => running ? stop() : start();
+  $('settingsBtn').onclick = openSettings;
+  $('clearBtn').onclick = () => { linesEl.innerHTML = ''; liveEl.textContent = ''; };
+  $('saveBtn').onclick = saveLog;
+  $('fsBtn').onclick = toggleFullscreen;
+  $('closeSettings').onclick = closeSettings;
+  $('engine').onchange = toggleEngineRows;
+  $('fontSize').oninput = e => {
+    $('fsVal').textContent = e.target.value + 'px';
+    document.documentElement.style.setProperty('--fs', e.target.value + 'px');
+  };
+  $('saveSettings').onclick = () => {
+    const langChanged = $('srcLang').value !== S.srcLang;
+    readForm(); persist(); applyView(); closeSettings();
+    toast('저장했습니다');
+    if (running && langChanged) { stop(); setTimeout(start, 400); }
+  };
+  async function runTest() {
+    const text = $('testIn').value.trim();
+    if (!text) return;
+    readForm();
+    $('testOut').textContent = '번역 중…';
+    try { $('testOut').textContent = await translate(text); }
+    catch (e) { $('testOut').textContent = '실패: ' + e.message; }
+  }
+  $('testBtn').onclick = runTest;
+  $('testIn').addEventListener('keydown', e => { if (e.key === 'Enter') runTest(); });
+
+  // 이 창에 포커스가 있을 때만 동작하는 단축키 (설정창이 열려 있으면 무시)
+  document.addEventListener('keydown', e => {
+    if ($('settings').classList.contains('open')) {
+      if (e.key === 'Escape') closeSettings();
+      return;
+    }
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    if (e.key === 'c' || e.key === 'C') $('clearBtn').click();
+  });
+
+  // 초기화
+  applyView();
+  updateToggle();
+  if (!SR) setStatus('err', '음성 인식 미지원 브라우저');
+})();
+</script>
+</body>
+</html>
